@@ -1,0 +1,1 @@
+export const ignoreSource = ['react-devtools-bridge', 'react-devtools-content-script', 'react-devtools-backend-manager']
