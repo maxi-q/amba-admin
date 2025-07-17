@@ -50,6 +50,12 @@ const defaultSprints: Sprint[] = [
 export default function SprintList({ sprints = defaultSprints }: { sprints?: Sprint[] }) {
   return (
     <div className="p-6">
+      <div className="flex items-center">
+        <h2 className="text-2xl font-bold mb-4">Список спринтов</h2>
+        <div className="flex-1"/>
+        <Link to={'info'} className="underline me-3 cursor-pointer">подробнее</Link>
+        <div className="bg-blue-500 text-white p-1 rounded">Настройка спринтов</div>
+      </div>
       <div className="space-y-4">
         {sprints.map((sprint) => (
           <Link to={`${sprint.id}`} key={sprint.id} className="flex justify-between items-center p-4 border-1 rounded-2xl">

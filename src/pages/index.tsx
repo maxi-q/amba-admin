@@ -5,6 +5,7 @@ import RoomsPage from './rooms'
 import RoomBox from './modules';
 import SprintList from './sprints';
 import SprintSetting from './sprints/slug';
+import SprintInfo from './sprints/info';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -85,6 +86,7 @@ export const Navigation = () => (
 
       <Route index path="sprints" element={<SprintList />} />
       <Route path="sprints/:sprintId" element={<SprintSetting />} />
+      <Route path="sprints/info" element={<SprintInfo />} />
 
       <Route path="events" element={<>events</>} />
       <Route path="*" element={<RoomRedirect />} />
