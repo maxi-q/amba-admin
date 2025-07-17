@@ -1,10 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 
-/**
- * Простейшая вариативная кнопка на Tailwind.
- * — variant: “default” | “ghost”
- * — size: “default” | “icon”
- */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "ghost";
   size?: "default" | "icon";

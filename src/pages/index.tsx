@@ -3,6 +3,8 @@ import { Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 import SettingPage from './settings'
 import RoomsPage from './rooms'
 import RoomBox from './modules';
+import SprintList from './sprints';
+import SprintSetting from './sprints/slug';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -80,7 +82,10 @@ export const Navigation = () => (
     <Route path="rooms/:slug" element={<RoomLayout />}>
       <Route index element={<RoomRedirect />} />
       <Route path="setting" element={<SettingPage />} />
-      <Route path="sprints" element={<>sprints</>} />
+
+      <Route index path="sprints" element={<SprintList />} />
+      <Route path="sprints/:sprintId" element={<SprintSetting />} />
+
       <Route path="events" element={<>events</>} />
       <Route path="*" element={<RoomRedirect />} />
     </Route>
