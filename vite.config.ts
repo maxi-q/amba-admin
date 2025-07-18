@@ -11,6 +11,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@components' : '/src/components',
+      '@messages' : '/src/messages',
+      '@services' : '/src/services',
+      '@store' : '/src/store',
+      '@' : '/src',
     },
 },
 })
