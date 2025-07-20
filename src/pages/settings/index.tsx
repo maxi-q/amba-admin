@@ -1,6 +1,17 @@
 import { useOutletContext, useParams } from "react-router-dom";
 import type { IRoomData } from "..";
-
+import {
+  Box,
+  Typography,
+  TextField,
+  Paper,
+  Stack,
+  IconButton,
+  Link as MuiLink,
+  List,
+  ListItem,
+} from "@mui/material";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 export default function SettingPage() {
   const roomData = useOutletContext<IRoomData>();
@@ -21,66 +32,67 @@ export default function SettingPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[900px] p-6 font-sans antialiased">
-      {/* Название */}
-      <div className="mb-8">
-        <label className="mb-1.5 block text-sm">Название:</label>
-        <input
-          type="text"
+    <Box maxWidth={900} mx="auto" p={3}>
+      <Box mb={4}>
+        <Typography variant="subtitle2" mb={1.5}>
+          Название:
+        </Typography>
+        <TextField
+          fullWidth
           value={roomData.roomName}
           onChange={(e) => changeRoomName(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+          size="medium"
+          variant="outlined"
         />
-      </div>
+      </Box>
 
-      {/* Группы */}
-      <div className="flex flex-col gap-6">
+      <Stack spacing={3}>
         {groups.map((group) => (
-          <div
-            key={group.id}
-            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <h3 className="mb-4 text-lg font-semibold">{group.title}</h3>
+          <Paper key={group.id} elevation={1} sx={{ borderRadius: 3, p: 3 }}>
+            <Typography variant="h6" fontWeight={600} mb={2}>{group.title}</Typography>
 
-            <div className="mb-4 flex items-center gap-3.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-200 font-bold">
+            <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+              <Box sx={{ width: 44, height: 44, borderRadius: "50%", bgcolor: "grey.200", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20 }}>
                 VK
-              </div>
-              <div>
-                <p className="m-0">{group.name}</p>
-                <p className="text-xs text-gray-600">
+              </Box>
+              <Box>
+                <Typography variant="body1" fontWeight={500}>{group.name}</Typography>
+                <Typography variant="caption" color="text.secondary">
                   ID: {group.senlerId}{" "}
-                  <a href="#" className="underline">
+                  <MuiLink href="#" underline="hover">
                     перейти к редактированию
-                  </a>
-                </p>
-              </div>
-            </div>
+                  </MuiLink>
+                </Typography>
+              </Box>
+            </Stack>
 
-            <ol className="mb-4 ml-4 list-decimal space-y-1 text-sm leading-snug">
+            <List sx={{ mb: 2, ml: 2, listStyleType: 'decimal', pl: 2 }}>
               {group.instructions.map((txt, idx) => (
-                <li key={idx}>{txt}</li>
+                <ListItem key={idx} sx={{ display: 'list-item', py: 0, px: 0, fontSize: 14, lineHeight: 1.5 }}>
+                  {txt}
+                </ListItem>
               ))}
-            </ol>
+            </List>
 
-            <div className="flex items-center">
-              <input
-                type="text"
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <TextField
                 value={group.link}
-                readOnly
-                className="flex-1 rounded-md border border-gray-300 px-2 py-2 text-sm"
+                InputProps={{ readOnly: true }}
+                size="small"
+                fullWidth
               />
-              <button
+              <IconButton
                 onClick={() => handleCopy(group.link)}
                 title="Копировать"
-                className="ml-1.5 rounded-md border border-gray-300 bg-gray-100 px-2 py-1.5 text-lg transition hover:bg-gray-200"
+                color="primary"
+                sx={{ ml: 1 }}
               >
-                📋
-              </button>
-            </div>
-          </div>
+                <ContentCopyIcon fontSize="small" />
+              </IconButton>
+            </Stack>
+          </Paper>
         ))}
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 }

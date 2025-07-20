@@ -1,12 +1,17 @@
-import Button from "@components/ui/button";
-// import { Card } from "@components/ui/card";
-import { Pencil } from "lucide-react";
+import { Edit as EditIcon } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Button,
+  Chip,
+  Stack,
+  Paper,
+  IconButton,
+} from "@mui/material";
 
-// Тип статуса
 type SprintStatus = "active" | "upcoming" | "past";
 
-// Тип спринта
 type Sprint = {
   id: number;
   title: string;
@@ -14,10 +19,10 @@ type Sprint = {
   status: SprintStatus;
 };
 
-const statusStyles: Record<SprintStatus, string> = {
-  active: "bg-green-100 text-green-700 border-green-200",
-  upcoming: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  past: "bg-gray-100 text-gray-700 border-gray-200",
+const statusColors: Record<SprintStatus, "success" | "warning" | "default"> = {
+  active: "success",
+  upcoming: "warning",
+  past: "default",
 };
 
 const statusLabels: Record<SprintStatus, string> = {
@@ -49,43 +54,79 @@ const defaultSprints: Sprint[] = [
 
 export default function SprintList({ sprints = defaultSprints }: { sprints?: Sprint[] }) {
   return (
-    <div className="p-6">
-      <div className="flex items-center">
-        <h2 className="text-2xl font-bold mb-4">Список спринтов</h2>
-        <div className="flex-1"/>
-        <Link to={'info'} className="underline me-3 cursor-pointer">подробнее</Link>
-        <div className="bg-blue-500 text-white p-1 rounded">Настройка спринтов</div>
-      </div>
-      <div className="space-y-4">
+    <Box p={3}>
+      <Stack direction="row" alignItems="center" mb={2}>
+        <Typography variant="h4" fontWeight={700} mb={0}>
+          Список спринтов
+        </Typography>
+        <Box flex={1} />
+        <Link to={'info'} style={{ textDecoration: 'underline', marginRight: 12, cursor: 'pointer' }}>
+          подробнее
+        </Link>
+        <Box sx={{ bgcolor: 'primary.main', color: 'white', px: 1, py: 0.5, borderRadius: 1 }}>
+          Настройка спринтов
+        </Box>
+      </Stack>
+
+      <Stack spacing={2}>
         {sprints.map((sprint) => (
-          <Link to={`${sprint.id}`} key={sprint.id} className="flex justify-between items-center p-4 border-1 rounded-2xl">
-            <div>
-              <div className="text-lg font-medium">{sprint.title}</div>
-              <div className="text-sm text-muted-foreground">
+          <Paper
+            key={sprint.id}
+            component={Link}
+            to={`${sprint.id}`}
+            elevation={1}
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              textDecoration: 'none',
+              color: 'inherit',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          >
+            <Box>
+              <Typography variant="h6" fontWeight={500}>
+                {sprint.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
                 {sprint.dateRange || "Без ограничений по датам"}
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span
-                className={`border text-sm rounded px-3 py-1 ${
-                  statusStyles[sprint.status]
-                }`}
-              >
-                {statusLabels[sprint.status]}
-              </span>
-              <Button variant="ghost" size="icon">
-                <Pencil className="w-4 h-4" />
-              </Button>
-            </div>
-          </Link>
+              </Typography>
+            </Box>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Chip
+                label={statusLabels[sprint.status]}
+                color={statusColors[sprint.status]}
+                size="small"
+                sx={{ borderRadius: 1 }}
+              />
+              <IconButton size="small">
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Stack>
+          </Paper>
         ))}
 
-        <div className="flex justify-end">
-          <Button variant="default" className="bg-green-50 border border-green-200 text-green-700">
+        <Box display="flex" justifyContent="flex-end">
+          <Button
+            variant="outlined"
+            sx={{
+              bgcolor: 'success.50',
+              borderColor: 'success.200',
+              color: 'success.700',
+              '&:hover': {
+                bgcolor: 'success.100',
+                borderColor: 'success.300',
+              },
+            }}
+          >
             Добавить спринт
           </Button>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Stack>
+    </Box>
   );
 }

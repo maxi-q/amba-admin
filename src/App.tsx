@@ -1,8 +1,11 @@
 import { MessageProvider } from './messages/messageProvider'
 import { Navigation } from './pages'
 import { BrowserRouter } from 'react-router-dom'
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import createRoomButtonTheme from './themes/createRoomButtonTheme';
+import listItemTextTheme from './themes/listItemTextTheme';
 
-export type IUser = object
+const mergedTheme = createTheme(createRoomButtonTheme, listItemTextTheme);
 
 function App() {
 	// const [loggedIn, setLoggedIn] = useState<boolean>(false)
@@ -12,9 +15,11 @@ function App() {
 
 	return (
     <MessageProvider>
-      <BrowserRouter>
-        <Navigation />
-      </BrowserRouter>
+      <ThemeProvider theme={mergedTheme}>
+        <BrowserRouter>
+          <Navigation />
+        </BrowserRouter>
+      </ThemeProvider>
     </MessageProvider>
 	)
 }

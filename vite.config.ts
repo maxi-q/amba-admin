@@ -13,6 +13,7 @@ export default defineConfig({
       '@components' : '/src/components',
       '@messages' : '/src/messages',
       '@services' : '/src/services',
+      '@helpers' : '/src/helpers',
       '@store' : '/src/store',
       '@' : '/src',
     },

@@ -1,27 +1,47 @@
+import { CircularProgress, Box } from '@mui/material';
+
+interface LoaderProps {
+  classNameDiv?: string;
+  size?: 'small' | 'medium' | 'large';
+  animation?: boolean;
+  color?: string;
+  [key: string]: any;
+}
 
 export const Loader = ({
-	className = '',
-	classNameDiv = '',
-	size = '',
-	animation = true,
-	color = '#fff',
-	...props
-}) => {
-	return (
-		<div className={`m-auto text-center ${classNameDiv} ` + (animation ? ' loader' : '')}>
-			{size === 'small' ? (
-				<span
-					className={'spinner-border spinner-border-sm ' + className}
-					style={{ color: color }}
-					role='status'
-					aria-hidden='true'
-					{...props}
-				></span>
-			) : (
-				<div className='spinner-border' style={{ color: color }} role='status'>
-					<span className='visually-hidden '>Loading...</span>
-				</div>
-			)}
-		</div>
-	)
-}
+  classNameDiv = '',
+  size = 'medium',
+  animation = true,
+  color = '#fff',
+  ...props
+}: LoaderProps) => {
+  const getSize = () => {
+    switch (size) {
+      case 'small': return 20;
+      case 'large': return 40;
+      default: return 30;
+    }
+  };
+
+  return (
+    <Box
+      className={classNameDiv}
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        height: '100%'
+      }}
+    >
+      <CircularProgress
+        size={getSize()}
+        sx={{
+          color: color,
+          animation: animation ? undefined : 'none'
+        }}
+        {...props}
+      />
+    </Box>
+  );
+};

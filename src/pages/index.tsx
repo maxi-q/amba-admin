@@ -1,4 +1,5 @@
-import { Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom'
+import { ProtectedRoute } from '../components/ProtectedRoute';
 
 import SettingPage from './settings'
 import RoomsPage from './rooms'
@@ -6,6 +7,13 @@ import RoomBox from './modules';
 import SprintList from './sprints';
 import SprintSetting from './sprints/slug';
 import SprintInfo from './sprints/info';
+import EventsPage from './events';
+import EventsInfo from './events/info';
+import EventsSetting from './events/slug';
+import AuthPage from './auth';
+import { useAuthStore } from '@store/index';
+import { useEffect } from 'react';
+import { Loader } from '../components/Loader';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -76,11 +84,27 @@ export default function RoomRedirect() {
 
 export const Navigation = () => (
   <Routes>
-    <Route path="/" element={<RoomsPage />} />
+    {/* Публичный роут для авторизации */}
+    <Route path="/auth" element={<AuthPage />} />
 
-    <Route path="rooms" element={<RoomsPage />}/>
+    {/* Защищенные роуты */}
+    <Route path="/" element={
+      <ProtectedRoute>
+        <RoomsPage />
+      </ProtectedRoute>
+    } />
 
-    <Route path="rooms/:slug" element={<RoomLayout />}>
+    <Route path="rooms" element={
+      <ProtectedRoute>
+        <RoomsPage />
+      </ProtectedRoute>
+    }/>
+
+    <Route path="rooms/:slug" element={
+      <ProtectedRoute>
+        <RoomLayout />
+      </ProtectedRoute>
+    }>
       <Route index element={<RoomRedirect />} />
       <Route path="setting" element={<SettingPage />} />
 
@@ -88,7 +112,9 @@ export const Navigation = () => (
       <Route path="sprints/:sprintId" element={<SprintSetting />} />
       <Route path="sprints/info" element={<SprintInfo />} />
 
-      <Route path="events" element={<>events</>} />
+      <Route path="events" element={<EventsPage />} />
+      <Route path="events/info" element={<EventsInfo />} />
+      <Route path="events/:eventId" element={<EventsSetting />} />
       <Route path="*" element={<RoomRedirect />} />
     </Route>
 
@@ -96,15 +122,17 @@ export const Navigation = () => (
   </Routes>
 );
 
-// const Logout = ({ setLoggedIn }: NavigationType) => {
-// 	const navigate = useNavigate()
-// 	useEffect(() => {
-// 		localStorage.setItem('access', '')
-// 		setTimeout(() => {
-// 			setLoggedIn(false)
-// 			navigate('Auth')
-// 		}, 300)
-// 	})
+export const Logout = () => {
+	const navigate = useNavigate()
+  const { logout, setToken } = useAuthStore();
 
-// 	return <Loader classNameDiv='my-5'/>
-// }
+	useEffect(() => {
+    setToken('')
+    logout()
+		setTimeout(() => {
+			navigate('/auth')
+		}, 300)
+	})
+
+	return <Loader classNameDiv='my-5'/>
+}

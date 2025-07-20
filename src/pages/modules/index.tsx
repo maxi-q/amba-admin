@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Breadcrumbs,
+  Link as MuiLink,
+} from "@mui/material";
 
 interface RoomBoxProps {
   roomName: string;
@@ -8,56 +16,71 @@ interface RoomBoxProps {
 
 const RoomBox = ({ roomName, children }: RoomBoxProps) => {
   return (
-    <div className="mx-auto max-w-[900px] p-6 font-sans antialiased">
-      {/* Хлебные крошки и ID */}
-      <div className="mb-6 flex items-center justify-between text-sm">
-        <span>
-          <a href="/" className="underline">
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
+          <MuiLink component={Link} to="/" underline="hover" color="inherit">
             Список комнат
-          </a>{" "}
-          &gt; {roomName}
-        </span>
-        <span className="font-mono">ID: 56</span>
-      </div>
+          </MuiLink>
+          <Typography variant="body2" color="text.primary">
+            {roomName}
+          </Typography>
+        </Breadcrumbs>
+        <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+          ID: 56
+        </Typography>
+      </Box>
 
-      {/* Навигационная панель */}
-      <div className="mb-8 grid grid-cols-4 gap-1">
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0.5, mb: 4 }}>
         <NavLink
           to="setting"
-          className={({ isActive }) =>
-            `rounded-md border border-gray-300 py-2 text-sm font-semibold text-center ${
-              isActive ? "bg-gray-100 opacity-50 cursor-not-allowed pointer-events-none" :"bg-white"
-            }`
-          }
+          style={{ textDecoration: "none" }}
         >
-          Настройки
+          {({ isActive }) => (
+            <Button
+              fullWidth
+              variant="outlined"
+              disabled={isActive}
+            >
+              Настройки
+            </Button>
+          )}
         </NavLink>
         <NavLink
           to="sprints"
-          className={({ isActive }) =>
-            `rounded-md border border-gray-300 py-2 text-sm font-semibold text-center ${
-              isActive ? "bg-gray-100 opacity-50 cursor-not-allowed pointer-events-none" : "bg-white"
-            }`
-          }
+          style={{ textDecoration: "none" }}
         >
-          Спринты
+          {({ isActive }) => (
+            <Button
+              fullWidth
+              variant="outlined"
+              disabled={isActive}
+            >
+              Спринты
+            </Button>
+          )}
         </NavLink>
         <NavLink
           to="events"
-          className={({ isActive }) =>
-            `rounded-md border border-gray-300 py-2 text-sm font-semibold text-center ${
-              isActive ? "bg-gray-100 opacity-50 cursor-not-allowed pointer-events-none" : "bg-white"
-            }`
-          }
+          style={{ textDecoration: "none" }}
         >
-          События
+          {({ isActive }) => (
+            <Button
+              fullWidth
+              variant="outlined"
+              disabled={isActive}
+            >
+              События
+            </Button>
+          )}
         </NavLink>
-        {/* Пустой блок для выравнивания */}
-        <div></div>
-      </div>
+        <Box>
+          {/* Пустой элемент для выравнивания */}
+        </Box>
+      </Box>
 
       {children}
-    </div>
+    </Container>
   );
 };
 

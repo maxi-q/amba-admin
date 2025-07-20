@@ -1,75 +1,66 @@
 import { useState } from "react";
-import { Pencil } from "lucide-react";
-import Button from "@components/ui/button";
+import { Edit as EditIcon } from "@mui/icons-material";
+import {
+  Button,
+  Container,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  IconButton,
+  Paper,
+  Stack,
+} from "@mui/material";
+import { Link } from "react-router-dom";
 
-// Тип комнаты
 interface Room {
   id: number;
   name: string;
 }
 
-// Страница со списком комнат
 export default function RoomsPage() {
-  // Начальные данные (для примера)
   const [rooms, setRooms] = useState<Room[]>([
     { id: 1, name: "Конференция суровый маркетинг 2025" },
   ]);
 
-  // Обработчик создания новой комнаты
   const handleCreateRoom = () => {
     const name = prompt("Введите название новой комнаты:");
     if (name) {
       setRooms((prev) => [
         ...prev,
-        { id: Date.now(), name }, // в реальном приложении id придёт с бэка
+        { id: Date.now(), name },
       ]);
     }
   };
 
   return (
-    <main className="flex min-h-screen items-start justify-center bg-muted p-6">
-      {/* Карточка‑контейнер */}
-      <section className="w-full max-w-4xl rounded-3xl border bg-background p-8 shadow-sm">
-        {/* Заголовок */}
-        <h1 className="text-center text-lg font-semibold tracking-tight sm:text-xl md:text-2xl">
+    <Container maxWidth="md" sx={{ minHeight: "100vh", display: "flex", alignItems: "flex-start", justifyContent: "center", py: 6 }}>
+      <Paper elevation={2} sx={{ width: "100%", borderRadius: 6, p: 4 }}>
+        <Typography variant="h4" align="center" fontWeight={600} gutterBottom>
           Список комнат
-        </h1>
-
-        {/* Список комнат */}
-        <ul className="mt-8 space-y-4">
+        </Typography>
+        <List sx={{ mt: 4 }}>
           {rooms.map((room) => (
-            <li key={room.id}>
-              <a
-                href={`/rooms/${room.id}`}
-                className="flex items-center justify-between rounded-xl border p-4 shadow-sm transition hover:bg-muted/50"
-              >
-                <span className="truncate text-sm font-medium sm:text-base md:text-lg">
-                  {room.name}
-                </span>
-
-                {/* Ссылка‑кнопка перехода к комнате */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-primary/10"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-              </a>
-            </li>
+            <ListItem key={room.id} disablePadding sx={{ mb: 2, borderRadius: 3, boxShadow: 1, border: 1, overflow: "hidden" }}>
+              <ListItemButton component={Link} to={`/rooms/${room.id}`} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <ListItemText primary={room.name} />
+                <IconButton edge="end" size="small" sx={{ ml: 1 }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </ListItemButton>
+            </ListItem>
           ))}
-        </ul>
-
-        {/* Кнопка создания */}
-        <div className="mt-16 flex justify-end">
+        </List>
+        <Stack direction="row" justifyContent="flex-end" mt={8}>
           <Button
             onClick={handleCreateRoom}
-            className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-emerald-50 to-emerald-100/70 px-6 py-3 text-sm font-semibold shadow-inner hover:from-emerald-100 hover:to-emerald-50 sm:text-base"
+            variant="createroom"
           >
             Создать комнату
           </Button>
-        </div>
-      </section>
-    </main>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
