@@ -5,6 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import createRoomButtonTheme from './themes/createRoomButtonTheme';
 import listItemTextTheme from './themes/listItemTextTheme';
 
+
 const mergedTheme = createTheme(createRoomButtonTheme, listItemTextTheme);
 
 function App() {
@@ -12,6 +13,20 @@ function App() {
 	// const [user, setUser] = useState<IUser | undefined>()
 
   // console.log(loggedIn, user)
+
+  // {
+  //   "id": 1753118427097,
+  //   "request": {
+  //     "type": "SenlerAppResizeWindow",
+  //     "params": {
+  //       "width": "1000",
+  //       "height": "792"
+  //     }
+  //   }
+  // }
+
+
+
 
 	return (
     <MessageProvider>

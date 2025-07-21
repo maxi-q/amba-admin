@@ -11,9 +11,11 @@ import EventsPage from './events';
 import EventsInfo from './events/info';
 import EventsSetting from './events/slug';
 import AuthPage from './auth';
+import RedirectAuthPage from './redirect_auth';
 import { useAuthStore } from '@store/index';
 import { useEffect } from 'react';
 import { Loader } from '../components/Loader';
+import { useMessage } from '@/messages/messageProvider';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -32,6 +34,47 @@ export interface IRoomData {
     }[],
 }
 function RoomLayout() {
+
+  const { sendMessage } = useMessage()
+
+  useEffect(() => {
+    // const data = {
+    //   id: message.id,
+    //   request: message.request,
+    //   response: {
+    //     payload: {
+    //       private: { ...privateData },
+    //       public: {
+    //         ...publicData,
+    //         token: '',
+    //         vkGroupId,
+    //         type: stepType,
+    //         syncableVariables,
+    //       },
+    //       description: 'Интеграция подключена',
+    //       command: BotStepRuName[stepType],
+    //       title: BotStepRuName[stepType],
+    //     },
+    //     success: true,
+    //   },
+    //   time: new Date().getTime(),
+    // };
+
+
+    const data = {
+      id: new Date().getTime(),
+      request: {
+        type: 'SenlerAppResizeWindow',
+        params: {
+          width: '1000',
+          height: '792'
+        }
+      }
+    }
+
+    sendMessage(data, window.parent);
+  }, []);
+
   const roomData: IRoomData = {
     roomName: 'Конференция суровый маркетинг 2025',
     groups: [
@@ -86,6 +129,7 @@ export const Navigation = () => (
   <Routes>
     {/* Публичный роут для авторизации */}
     <Route path="/auth" element={<AuthPage />} />
+    <Route path="/redirect_auth" element={<RedirectAuthPage />} />
 
     {/* Защищенные роуты */}
     <Route path="/" element={

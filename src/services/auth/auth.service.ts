@@ -7,10 +7,11 @@ import type {
   IRegisterProjectResponse,
   IAuthByTokenResponse
 } from './user.types';
+import { API_URL } from '@/constants';
 
 
 class AuthService {
-  private _BASE_URL = '/auth';
+  private _BASE_URL = 'auth';
 
   async auth(data: ILoginRequest) {
     return instance.post<ILoginResponse>(`${this._BASE_URL}/login`, data);
@@ -24,7 +25,9 @@ class AuthService {
     return instance.get<IAuthByTokenResponse>(`${this._BASE_URL}/auth`, {params: data});
   }
 
-
+  start() {
+    return `${API_URL}${this._BASE_URL}/start`;
+  }
 }
 
 const authService = new AuthService();

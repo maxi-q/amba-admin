@@ -10,12 +10,10 @@ import {
 import { getUrlParams } from "@helpers/index";
 import authService from "@services/auth/auth.service";
 import { useAuthStore } from "@store/index";
-import SenlerAuthLink from "../../components/SenlerAuthLink";
-import type { IOnAuthSuccess } from "../../components/SenlerAuthLink";
 
 const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
-  const { login } = useAuthStore();
+  const { login, auth } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +30,7 @@ const AuthPage = () => {
             context,
             sign,
           });
-          
+
           if (response?.status === 201) {
             login(response.data.token);
             const from = location.state?.from?.pathname || "/";
@@ -49,37 +47,66 @@ const AuthPage = () => {
     })();
   }, [sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId, login, navigate, location]);
 
-  const handleSenlerAuthSuccess = async ({ code }: IOnAuthSuccess) => {
+  const openAuthPopup =  () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const response = await authService.registerProject({
-        name: "Senler Project",
-        groupId: Number(senlerGroupId) || 0,
-        authorizationCode: code
-      });
-      
-      if (response?.status === 201) {
-        // После успешной регистрации проекта, нужно выполнить авторизацию
-        // Предполагаем, что нужно вызвать auth метод или другой способ получения токена
-        const authResponse = await authService.auth({
-          userId: senlerUserId || '',
-          groupId: Number(senlerGroupId) || 0,
-          context: context || '',
-          sign: sign || ''
-        });
-        
-        if (authResponse?.status === 201) {
-          login(authResponse.data.token);
-          const from = location.state?.from?.pathname || "/";
-          navigate(from, { replace: true });
-        } else {
-          setError("Ошибка авторизации после регистрации");
-        }
-      } else {
-        setError("Ошибка регистрации проекта");
+      const url = authService.start()
+
+      const popup = window.open(url, '_blank', 'width=600,height=700');
+      if (popup) {
+        const timer = setInterval(async () => {
+          if (popup.closed) {
+            clearInterval(timer);
+            try {
+              const response = await authService.auth({
+                userId: senlerUserId,
+                groupId: Number(senlerGroupId),
+                context,
+                sign,
+              });
+    
+              if (response?.status === 201) {
+                login(response.data.token);
+                const from = location.state?.from?.pathname || "/";
+                navigate(from, { replace: true });
+              } else {
+                setError("Ошибка авторизации");
+              }
+            } catch {
+              setError("Ошибка авторизации");
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }, 500);
       }
+      // const response = await authService.registerProject({
+      //   groupId: Number(senlerGroupId) || 0,
+      //   code: code
+      // });
+
+      // if (response?.status === 201) {
+      //   // После успешной регистрации проекта, нужно выполнить авторизацию
+      //   // Предполагаем, что нужно вызвать auth метод или другой способ получения токена
+      //   const authResponse = await authService.auth({
+      //     userId: senlerUserId || '',
+      //     groupId: Number(senlerGroupId) || 0,
+      //     context: context || '',
+      //     sign: sign || ''
+      //   });
+
+      //   if (authResponse?.status === 201) {
+      //     login(authResponse.data.token);
+      //     const from = location.state?.from?.pathname || "/";
+      //     navigate(from, { replace: true });
+      //   } else {
+      //     setError("Ошибка авторизации после регистрации");
+      //   }
+      // } else {
+      //   setError("Ошибка регистрации проекта");
+      // }
     } catch {
       setError("Ошибка регистрации проекта");
     } finally {
@@ -87,9 +114,9 @@ const AuthPage = () => {
     }
   };
 
-  const handleSenlerAuthError = (error: string) => {
-    setError(error);
-  };
+  // const handleSenlerAuthError = (error: string) => {
+  //   setError(error);
+  // };
 
   return (
     <Box
@@ -112,23 +139,23 @@ const AuthPage = () => {
             {error}
           </Alert>
         )}
-        
+
         <Stack spacing={3}>
           <Typography variant="body1" align="center" color="text.secondary">
-            {isLoading 
-              ? "Выполняется авторизация..." 
+            {isLoading
+              ? "Выполняется авторизация..."
               : "Для доступа к системе необходимо авторизоваться через Senler"
             }
           </Typography>
-          
-          {!isLoading && !sign && (
-            <SenlerAuthLink
-              clientId="your_client_id_here"
-              redirectUri={window.location.origin + '/auth'}
-              group_id={senlerGroupId || ''}
-              onAuthSuccess={handleSenlerAuthSuccess}
-              onAuthError={handleSenlerAuthError}
-            />
+
+          {!isLoading && !auth && (
+            <div className="accounts_dropdown flex justify-start p-3 flex-row" onClick={openAuthPopup}>
+            <div className="flex items-center ">
+              <div className="ms-2">
+                <span data-role="header_account_text">Зарегистрировать проект</span>
+              </div>
+            </div>
+          </div>
           )}
         </Stack>
       </Paper>
@@ -136,4 +163,4 @@ const AuthPage = () => {
   );
 };
 
-export default AuthPage; 
+export default AuthPage;

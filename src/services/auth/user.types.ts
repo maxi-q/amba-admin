@@ -10,9 +10,8 @@ export interface ILoginResponse {
 }
 
 export interface IRegisterProjectRequest {
-  name: string
   groupId: number
-  authorizationCode: string
+  code: string
 }
 
 export interface IRegisterProjectResponse {
