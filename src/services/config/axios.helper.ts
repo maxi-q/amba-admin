@@ -1,6 +1,11 @@
-export const getContentType = () => ({
-	'Content-Type': 'application/json',
-})
+export const getContentType = () => {
+  const token = localStorage.getItem('token');
+  console.log(token);
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+};
 
 export const errorCatchStatus = (error: any): number => {
 	const status = error?.response?.status

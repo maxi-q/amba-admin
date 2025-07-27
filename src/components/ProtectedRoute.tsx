@@ -10,7 +10,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
 
   if (!auth) {
-    // Сохраняем текущий путь и все query параметры для редиректа после авторизации
     return <Navigate to={`/auth${location.search}`} state={{ from: location }} replace />;
   }
 

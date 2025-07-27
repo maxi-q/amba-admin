@@ -11,7 +11,16 @@ interface StoreState {
 export const useAuthStore = create<StoreState>((set) => ({
   auth: false,
   token: '',
-  login: (token: string) => set({ auth: true, token }),
-  logout: () => set({ auth: false, token: '' }),
-  setToken: (token: string) => set({ token }),
+  login: (token: string) => {
+    set({ auth: true, token });
+    localStorage.setItem('token', token);
+  },
+  logout: () => {
+    set({ auth: false, token: '' });
+    localStorage.removeItem('token');
+  },
+  setToken: (token: string) => {
+    set({ token });
+    localStorage.setItem('token', token);
+  },
 }))

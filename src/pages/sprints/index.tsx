@@ -63,9 +63,20 @@ export default function SprintList({ sprints = defaultSprints }: { sprints?: Spr
         <Link to={'info'} style={{ textDecoration: 'underline', marginRight: 12, cursor: 'pointer' }}>
           подробнее
         </Link>
-        <Box sx={{ bgcolor: 'primary.main', color: 'white', px: 1, py: 0.5, borderRadius: 1 }}>
+        <Link
+          to="settings"
+          style={{
+            backgroundColor: 'var(--mui-palette-primary-main, #1976d2)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: 4,
+            textDecoration: 'none',
+            fontWeight: 500,
+            display: 'inline-block'
+          }}
+        >
           Настройка спринтов
-        </Box>
+        </Link>
       </Stack>
 
       <Stack spacing={2}>

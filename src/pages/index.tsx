@@ -16,6 +16,8 @@ import { useAuthStore } from '@store/index';
 import { useEffect } from 'react';
 import { Loader } from '../components/Loader';
 import { useMessage } from '@/messages/messageProvider';
+import SprintSettingsPage from './sprints/settings';
+import SettingsInfo from './settings/info';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -38,36 +40,12 @@ function RoomLayout() {
   const { sendMessage } = useMessage()
 
   useEffect(() => {
-    // const data = {
-    //   id: message.id,
-    //   request: message.request,
-    //   response: {
-    //     payload: {
-    //       private: { ...privateData },
-    //       public: {
-    //         ...publicData,
-    //         token: '',
-    //         vkGroupId,
-    //         type: stepType,
-    //         syncableVariables,
-    //       },
-    //       description: 'Интеграция подключена',
-    //       command: BotStepRuName[stepType],
-    //       title: BotStepRuName[stepType],
-    //     },
-    //     success: true,
-    //   },
-    //   time: new Date().getTime(),
-    // };
-
-
     const data = {
-      id: new Date().getTime(),
       request: {
         type: 'SenlerAppResizeWindow',
         params: {
-          width: '1000',
-          height: '792'
+          width: 1000,
+          height: 792
         }
       }
     }
@@ -151,9 +129,11 @@ export const Navigation = () => (
     }>
       <Route index element={<RoomRedirect />} />
       <Route path="setting" element={<SettingPage />} />
+      <Route path="setting/info" element={<SettingsInfo />} />
 
       <Route index path="sprints" element={<SprintList />} />
       <Route path="sprints/:sprintId" element={<SprintSetting />} />
+      <Route path="sprints/settings" element={<SprintSettingsPage />} />
       <Route path="sprints/info" element={<SprintInfo />} />
 
       <Route path="events" element={<EventsPage />} />

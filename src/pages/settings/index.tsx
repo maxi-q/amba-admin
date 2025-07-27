@@ -4,31 +4,34 @@ import {
   Box,
   Typography,
   TextField,
-  Paper,
-  Stack,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Button,
   IconButton,
-  Link as MuiLink,
-  List,
-  ListItem,
+  Link,
 } from "@mui/material";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Link as RouterLink } from "react-router-dom";
+import { ExpandMore, Refresh } from "@mui/icons-material";
+import { useState } from "react";
 
 export default function SettingPage() {
   const roomData = useOutletContext<IRoomData>();
-
   const { slug } = useParams();
-  console.log(slug);
+  const [webhookUrl, setWebhookUrl] = useState("https://");
+  const [secretKey, setSecretKey] = useState("************");
 
   const changeRoomName = (value: string) => {
     console.log(value);
   };
 
-  const groups = roomData.groups;
+  const generateSecretKey = () => {
+    const newKey = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    setSecretKey(newKey);
+  };
 
-  const handleCopy = (link: string) => {
-    navigator.clipboard.writeText(link).then(() => {
-      alert("Ссылка скопирована в буфер обмена!");
-    });
+  const saveWebhook = () => {
+    console.log("Saving webhook:", webhookUrl);
   };
 
   return (
@@ -46,53 +49,89 @@ export default function SettingPage() {
         />
       </Box>
 
-      <Stack spacing={3}>
-        {groups.map((group) => (
-          <Paper key={group.id} elevation={1} sx={{ borderRadius: 3, p: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={2}>{group.title}</Typography>
-
-            <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-              <Box sx={{ width: 44, height: 44, borderRadius: "50%", bgcolor: "grey.200", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20 }}>
-                VK
-              </Box>
-              <Box>
-                <Typography variant="body1" fontWeight={500}>{group.name}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  ID: {group.senlerId}{" "}
-                  <MuiLink href="#" underline="hover">
-                    перейти к редактированию
-                  </MuiLink>
-                </Typography>
-              </Box>
-            </Stack>
-
-            <List sx={{ mb: 2, ml: 2, listStyleType: 'decimal', pl: 2 }}>
-              {group.instructions.map((txt, idx) => (
-                <ListItem key={idx} sx={{ display: 'list-item', py: 0, px: 0, fontSize: 14, lineHeight: 1.5 }}>
-                  {txt}
-                </ListItem>
-              ))}
-            </List>
-
-            <Stack direction="row" alignItems="center" spacing={1}>
+      {/* Вебхук секция */}
+      <Accordion defaultExpanded sx={{ mb: 2 }}>
+        <AccordionSummary
+          expandIcon={<ExpandMore />}
+          aria-controls="webhook-content"
+          id="webhook-header"
+        >
+          <Typography variant="h6">Вебхук</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box>
+            <Typography variant="subtitle2" mb={1.5}>
+              Адрес:
+            </Typography>
+            <Box display="flex" gap={2} mb={2}>
               <TextField
-                value={group.link}
-                InputProps={{ readOnly: true }}
-                size="small"
                 fullWidth
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                size="medium"
+                variant="outlined"
               />
-              <IconButton
-                onClick={() => handleCopy(group.link)}
-                title="Копировать"
+              <Button
+                variant="contained"
                 color="primary"
-                sx={{ ml: 1 }}
+                onClick={saveWebhook}
+                sx={{ minWidth: 120 }}
               >
-                <ContentCopyIcon fontSize="small" />
+                Сохранить
+              </Button>
+            </Box>
+
+            <Typography variant="body2" color="text.secondary" mb={3}>
+              На этот адрес будут отправляться запросы после того как привлеченный пользователь активировал промокод
+            </Typography>
+
+            <Typography variant="subtitle2" mb={1.5}>
+              Секретный ключ
+            </Typography>
+            <Box display="flex" gap={2} mb={2}>
+              <TextField
+                fullWidth
+                value={secretKey}
+                onChange={(e) => setSecretKey(e.target.value)}
+                size="medium"
+                variant="outlined"
+                type="password"
+              />
+              <IconButton onClick={generateSecretKey} color="primary">
+                <Refresh />
               </IconButton>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
+            </Box>
+
+            <Link
+              component={RouterLink}
+              to={`/rooms/${slug}/setting/info`}
+              underline="hover"
+              color="primary"
+              sx={{ cursor: 'pointer' }}
+            >
+              описание формата вебхука
+            </Link>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Форма для сайта секция */}
+      <Accordion sx={{ mb: 2 }}>
+        <AccordionSummary
+          expandIcon={<ExpandMore />}
+          aria-controls="form-content"
+          id="form-header"
+        >
+          <Typography variant="h6">Форма для сайта</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box>
+            <Typography variant="body2" color="text.secondary">
+              Здесь будет содержимое формы для сайта
+            </Typography>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
     </Box>
   );
 }

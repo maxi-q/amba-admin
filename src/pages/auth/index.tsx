@@ -82,31 +82,6 @@ const AuthPage = () => {
           }
         }, 500);
       }
-      // const response = await authService.registerProject({
-      //   groupId: Number(senlerGroupId) || 0,
-      //   code: code
-      // });
-
-      // if (response?.status === 201) {
-      //   // После успешной регистрации проекта, нужно выполнить авторизацию
-      //   // Предполагаем, что нужно вызвать auth метод или другой способ получения токена
-      //   const authResponse = await authService.auth({
-      //     userId: senlerUserId || '',
-      //     groupId: Number(senlerGroupId) || 0,
-      //     context: context || '',
-      //     sign: sign || ''
-      //   });
-
-      //   if (authResponse?.status === 201) {
-      //     login(authResponse.data.token);
-      //     const from = location.state?.from?.pathname || "/";
-      //     navigate(from, { replace: true });
-      //   } else {
-      //     setError("Ошибка авторизации после регистрации");
-      //   }
-      // } else {
-      //   setError("Ошибка регистрации проекта");
-      // }
     } catch {
       setError("Ошибка регистрации проекта");
     } finally {
