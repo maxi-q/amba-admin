@@ -9,7 +9,6 @@ export const getContentType = () => {
 
 export const errorCatchStatus = (error: any): number => {
 	const status = error?.response?.status
-
 	return status
 }
 

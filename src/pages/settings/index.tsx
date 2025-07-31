@@ -1,5 +1,4 @@
-import { useOutletContext, useParams } from "react-router-dom";
-import type { IRoomData } from "..";
+import { useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -13,16 +12,55 @@ import {
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { ExpandMore, Refresh } from "@mui/icons-material";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRoomDataStore } from "@store/index";
+import { useDebouncedCallback } from 'use-debounce'; //  npm i use-debounce
+import roomsService from "@services/rooms/rooms.service";
 
 export default function SettingPage() {
-  const roomData = useOutletContext<IRoomData>();
+  const { roomData } = useRoomDataStore();
   const { slug } = useParams();
-  const [webhookUrl, setWebhookUrl] = useState("https://");
-  const [secretKey, setSecretKey] = useState("************");
+
+  const [roomName, setRoomName] = useState(roomData?.name || '')
+  const [webhookUrl, setWebhookUrl] = useState(roomData?.webhookUrl || '');
+  const [secretKey, setSecretKey] = useState(roomData?.secretKey || '');
+
+  const debouncedUpdate = useDebouncedCallback(
+    (payload: {
+      name: string;
+      webhookUrl: string;
+      secretKey: string;
+      isHidden: false
+    }, currentSlug: string) => {
+      roomsService.updateRooms(payload, currentSlug);
+    },
+    500
+  );
+
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;   // со второго рендера начнёт работать
+      return;
+    }
+
+    if (!slug) return;                 // защитимся, если slug ещё не пришёл
+
+    debouncedUpdate(
+      { name: roomName, webhookUrl, secretKey, isHidden: false },
+      slug
+    );
+
+    return debouncedUpdate.cancel;     // очищаем таймер при размонтаже/смене
+  }, [roomName, webhookUrl, secretKey, slug]);
+
+  if (!roomData) {
+    return null;
+  }
 
   const changeRoomName = (value: string) => {
-    console.log(value);
+    setRoomName(value);
   };
 
   const generateSecretKey = () => {
@@ -42,7 +80,7 @@ export default function SettingPage() {
         </Typography>
         <TextField
           fullWidth
-          value={roomData.roomName}
+          value={roomName}
           onChange={(e) => changeRoomName(e.target.value)}
           size="medium"
           variant="outlined"

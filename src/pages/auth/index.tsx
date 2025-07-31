@@ -13,7 +13,7 @@ import { useAuthStore } from "@store/index";
 
 const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
-  const { login, auth } = useAuthStore();
+  const { login, auth, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +37,11 @@ const AuthPage = () => {
             navigate(from, { replace: true });
           } else {
             setError("Ошибка авторизации");
+            logout()
           }
         } catch {
           setError("Ошибка авторизации");
+          logout()
         } finally {
           setIsLoading(false);
         }
@@ -72,10 +74,10 @@ const AuthPage = () => {
                 const from = location.state?.from?.pathname || "/";
                 navigate(from, { replace: true });
               } else {
-                setError("Ошибка авторизации");
+                setError("");
               }
             } catch {
-              setError("Ошибка авторизации");
+              setError("");
             } finally {
               setIsLoading(false);
             }

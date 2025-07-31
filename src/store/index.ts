@@ -1,3 +1,4 @@
+import type { IRoomData } from '@services/rooms/rooms.types'
 import { create } from 'zustand'
 
 interface StoreState {
@@ -23,4 +24,23 @@ export const useAuthStore = create<StoreState>((set) => ({
     set({ token });
     localStorage.setItem('token', token);
   },
+}))
+interface RoomDataState {
+  roomData: IRoomData | null
+  setRoomData: (roomData: IRoomData | null) => void
+  clearRoomData: () => void
+  isLoading: boolean
+  setIsLoading: (ok: boolean) => void
+}
+
+export const useRoomDataStore = create<RoomDataState>((set) => ({
+  roomData: null,
+  setRoomData: (roomData: IRoomData | null) => {
+    set({ roomData });
+  },
+  clearRoomData: () => {
+    set({ roomData: null });
+  },
+  isLoading: false,
+  setIsLoading: (ok: boolean) => set({isLoading: ok})
 }))

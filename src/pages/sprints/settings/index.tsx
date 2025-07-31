@@ -1,4 +1,4 @@
-import { Link, useOutletContext, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -12,13 +12,17 @@ import {
   Breadcrumbs,
 } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import type { IRoomData } from "@/pages";
+import { useRoomDataStore } from "@store/index";
 
 export default function SprintSettingsPage() {
-  const roomData = useOutletContext<IRoomData>();
+  const { roomData } = useRoomDataStore();
 
   const { slug } = useParams();
   console.log(slug);
+
+  if (!roomData) {
+    return null;
+  }
 
   const groups = roomData.groups;
 

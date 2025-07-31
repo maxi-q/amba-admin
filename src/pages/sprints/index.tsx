@@ -9,15 +9,9 @@ import {
   Paper,
   IconButton,
 } from "@mui/material";
+import { useRoomDataStore } from "@store/index";
 
 type SprintStatus = "active" | "upcoming" | "past";
-
-type Sprint = {
-  id: number;
-  title: string;
-  dateRange?: string;
-  status: SprintStatus;
-};
 
 const statusColors: Record<SprintStatus, "success" | "warning" | "default"> = {
   active: "success",
@@ -31,28 +25,11 @@ const statusLabels: Record<SprintStatus, string> = {
   past: "прошедший",
 };
 
-const defaultSprints: Sprint[] = [
-  {
-    id: 1,
-    title: "Подготовка к конференции",
-    dateRange: "Без ограничений по датам",
-    status: "active",
-  },
-  {
-    id: 2,
-    title: "Ретроспектива",
-    dateRange: "10–15 августа 2025",
-    status: "past",
-  },
-  {
-    id: 3,
-    title: "Промежуточный анализ",
-    dateRange: "20–25 августа 2025",
-    status: "upcoming",
-  },
-];
+export default function SprintList() {
+  const { roomData } = useRoomDataStore()
 
-export default function SprintList({ sprints = defaultSprints }: { sprints?: Sprint[] }) {
+  console.log(roomData?.sprints)
+
   return (
     <Box p={3}>
       <Stack direction="row" alignItems="center" mb={2}>
@@ -80,7 +57,7 @@ export default function SprintList({ sprints = defaultSprints }: { sprints?: Spr
       </Stack>
 
       <Stack spacing={2}>
-        {sprints.map((sprint) => (
+        {roomData?.sprints.map((sprint) => (
           <Paper
             key={sprint.id}
             component={Link}
@@ -101,16 +78,16 @@ export default function SprintList({ sprints = defaultSprints }: { sprints?: Spr
           >
             <Box>
               <Typography variant="h6" fontWeight={500}>
-                {sprint.title}
+                {sprint.name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {sprint.dateRange || "Без ограничений по датам"}
+                {sprint.startDate + ' — ' + sprint.endDate || "Без ограничений по датам"}
               </Typography>
             </Box>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Chip
-                label={statusLabels[sprint.status]}
-                color={statusColors[sprint.status]}
+                label={statusLabels.active}
+                color={statusColors.active}
                 size="small"
                 sx={{ borderRadius: 1 }}
               />
