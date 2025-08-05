@@ -41,18 +41,18 @@ export default function SettingPage() {
 
   useEffect(() => {
     if (isFirstRender.current) {
-      isFirstRender.current = false;   // со второго рендера начнёт работать
+      isFirstRender.current = false;
       return;
     }
 
-    if (!slug) return;                 // защитимся, если slug ещё не пришёл
+    if (!slug) return;
 
     debouncedUpdate(
       { name: roomName, webhookUrl, secretKey, isHidden: false },
       slug
     );
 
-    return debouncedUpdate.cancel;     // очищаем таймер при размонтаже/смене
+    return debouncedUpdate.cancel;
   }, [roomName, webhookUrl, secretKey, slug]);
 
   if (!roomData) {

@@ -1,3 +1,4 @@
+
 export interface ICreateRoomRequest {
   name: string;
   webhookUrl: string;
@@ -15,7 +16,6 @@ export interface IRoomData {
   webhookUrl: string,
   secretKey: string,
   isHidden: boolean,
-  sprints: Sprint[]
 }
 
 export type ICreateRoomResponse = IRoomData
@@ -32,22 +32,6 @@ export interface IUpdateRoomsRequest {
 export type IUpdateRoomsResponse = IRoomData
 
 
-export interface Sprint {
-  id: string,
-  createdAt: string,
-  updatedAt: string,
-  name: string,
-  startDate: string,
-  endDate: string,
-  rewardType: string,
-  rewardUnits: string,
-  rewardValue: number,
-  promoCodeUsagesCount: number,
-  promoCodeUsageLimit: number,
-  isHidden: boolean,
-  roomId: string
-}
-
 export interface IGetRoomByIdResponse {
   id: string,
   createdAt: string,
@@ -59,5 +43,4 @@ export interface IGetRoomByIdResponse {
   webhookUrl: string,
   secretKey: string,
   isHidden: boolean,
-  sprints: Sprint[]
 }

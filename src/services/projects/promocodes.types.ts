@@ -1,3 +1,3 @@
 export interface IGetProjectsResponse {
-  projects: IProject[];
+  projects: any[];
 }

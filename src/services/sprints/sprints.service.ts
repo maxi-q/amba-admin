@@ -1,13 +1,17 @@
 import { instance } from '@services/config/axios';
-import type { ICreateSprintRequest, ICreateSprintResponse, IPatchSprintsRequest, IPatchSprintsResponse } from './sprints.types';
+import type { ICreateSprintRequest, ICreateSprintResponse, IGetSprintsRequest, IGetSprintsResponse, IPatchSprintsRequest, IPatchSprintsResponse } from './sprints.types';
 import { getContentType } from '@services/config/axios.helper';
 
 
 class SprintsService {
   private _BASE_URL = 'sprints';
 
-  async patchSprints(data: IPatchSprintsRequest, roomId: string) {
-    return instance.patch<IPatchSprintsResponse>(`${this._BASE_URL}`, data, { params: { roomId }, headers: getContentType() });
+  async getSprints(data: IGetSprintsRequest, roomId: string) {
+    return instance.get<IGetSprintsResponse>(`${this._BASE_URL}/${roomId}`, { params: data, headers: getContentType() })
+  }
+
+  async patchSprints(data: IPatchSprintsRequest, sprintId: string) {
+    return instance.patch<IPatchSprintsResponse>(`${this._BASE_URL}/${sprintId}`, data, { headers: getContentType() });
   }
 
   async createSprint(data: ICreateSprintRequest) {

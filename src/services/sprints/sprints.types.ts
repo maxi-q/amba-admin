@@ -10,6 +10,25 @@ export interface ICreateSprintRequest {
 }
 
 export interface ICreateSprintResponse {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  rewardType: string;
+  rewardUnits: string;
+  rewardValue: number;
+  promoCodeUsagesCount: number;
+  promoCodeUsageLimit: number;
+  isHidden: boolean;
+  roomId: string;
+}
+
+export interface ISprint {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -17,11 +36,18 @@ export interface ICreateSprintResponse {
   rewardUnits: string;
   rewardValue: number;
   promoCodeUsageLimit: number;
-  roomId: string;
 }
 
 export interface IGetSprintsResponse {
-  sprints: ICreateSprintResponse[];
+  items: ISprint[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;}
+
+export interface IGetSprintsRequest {
+  page: number
+  size: number
 }
 
 export interface IPatchSprintsRequest {
@@ -31,8 +57,7 @@ export interface IPatchSprintsRequest {
   rewardType: string,
   rewardUnits: string,
   rewardValue: number,
-  promoCodeUsageLimit: number,
-  roomId: string
+  promoCodeUsageLimit: number
 }
 
 export interface IPatchSprintsResponse {

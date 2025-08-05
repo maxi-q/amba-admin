@@ -19,6 +19,7 @@ import { useMessage } from '@/messages/messageProvider';
 import SprintSettingsPage from './sprints/settings';
 import SettingsInfo from './settings/info';
 import roomsService from '@services/rooms/rooms.service';
+import sprintsService from '@services/sprints/sprints.service';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -28,7 +29,7 @@ import roomsService from '@services/rooms/rooms.service';
 function RoomLayout() {
   const { slug } = useParams();
   const { sendMessage } = useMessage()
-  const { setRoomData, roomData, setIsLoading, isLoading } = useRoomDataStore()
+  const { setRoomData, roomData, setIsLoading, isLoading, loadSprints } = useRoomDataStore()
 
   useEffect(() => {
     const data = {
@@ -49,6 +50,8 @@ function RoomLayout() {
       setIsLoading(true)
       const roomData = await roomsService.getRoomById(slug!)
       setRoomData(roomData.data || null);
+      const sprintsData = await sprintsService.getSprints({page: 1, size: 100}, slug!)
+      loadSprints(sprintsData.data.items)
       setIsLoading(false)
     }
 

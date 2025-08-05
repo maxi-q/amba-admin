@@ -1,4 +1,5 @@
 import type { IRoomData } from '@services/rooms/rooms.types'
+import type { ISprint } from '@services/sprints/sprints.types'
 import { create } from 'zustand'
 
 interface StoreState {
@@ -27,20 +28,44 @@ export const useAuthStore = create<StoreState>((set) => ({
 }))
 interface RoomDataState {
   roomData: IRoomData | null
+  sprintData: ISprint[]
   setRoomData: (roomData: IRoomData | null) => void
   clearRoomData: () => void
   isLoading: boolean
   setIsLoading: (ok: boolean) => void
+  addSprint: (sprintData: ISprint) => void
+  loadSprints: (sprintData: ISprint[]) => void
+  updateSprint: (sprintId: string, updatedSprintData: Partial<ISprint>) => void
 }
 
 export const useRoomDataStore = create<RoomDataState>((set) => ({
   roomData: null,
-  setRoomData: (roomData: IRoomData | null) => {
-    set({ roomData });
-  },
-  clearRoomData: () => {
-    set({ roomData: null });
-  },
+  sprintData: [],
+  eventData: [],
+
+  setRoomData: (roomData: IRoomData | null) => set({ roomData }),
+
+  loadSprints: (sprintData: ISprint[]) =>
+    set(() => ({
+      sprintData: sprintData
+    })),
+
+  addSprint: (sprintData: ISprint) =>
+    set((state) => ({
+      sprintData: [...state.sprintData, sprintData]
+    })),
+
+  updateSprint: (sprintId: string, updatedSprintData: Partial<ISprint>) =>
+    set((state) => ({
+      sprintData: state.sprintData?.map((sprint) =>
+              sprint.id === sprintId
+                ? { ...sprint, ...updatedSprintData }
+                : sprint
+            ) ?? [],
+    })),
+
+  clearRoomData: () => set({ roomData: null }),
+
   isLoading: false,
-  setIsLoading: (ok: boolean) => set({isLoading: ok})
-}))
+  setIsLoading: (ok: boolean) => set({ isLoading: ok }),
+}));
