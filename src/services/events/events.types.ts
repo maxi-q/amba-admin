@@ -1,17 +1,17 @@
-export interface ICreateSprintRequest {
+export interface ICreateEventRequest {
   name: string,
   startDate: string,
   endDate: string,
   ignoreEndDate: boolean,
-  rewardType: string,
-  rewardUnits: string,
-  rewardValue: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
+  rewardType: string,
+  rewardValue: number,
+  rewardUnits: string,
   roomId: string
 }
 
-export interface ICreateSprintResponse {
+export interface ICreateEventResponse {
   id: string,
   createdAt: string,
   updatedAt: string,
@@ -22,17 +22,16 @@ export interface ICreateSprintResponse {
   pendingSubscriptionId: number,
   approvedSubscriptionId: number,
   rejectedSubscriptionId: number,
-  rewardType: string,
-  rewardUnits: string,
-  rewardValue: number,
   promoCodeUsagesCount: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
-  isHidden: boolean,
+  rewardType: string,
+  rewardValue: number,
+  rewardUnits: string,
   roomId: string
 }
 
-export interface ISprint {
+export interface IEvent {
   id: string,
   createdAt: string,
   updatedAt: string,
@@ -43,33 +42,6 @@ export interface ISprint {
   pendingSubscriptionId: number,
   approvedSubscriptionId: number,
   rejectedSubscriptionId: number,
-  rewardType: string,
-  rewardUnits: string,
-  rewardValue: number,
-  promoCodeUsagesCount: number,
-  promoCodeUsageLimit: number,
-  ignorePromoCodeUsageLimit: boolean,
-  isHidden: boolean,
-  roomId: string
-}
-
-export interface IGetSprintsResponse {
-  items: ISprint[];
-  page: number;
-  size: number;
-  total: number;
-  totalPages: number;}
-
-export interface IGetSprintsRequest {
-  page: number
-  size: number
-}
-
-export interface IPatchSprintsRequest {
-  name: string,
-  startDate: string,
-  endDate: string,
-  ignoreEndDate: boolean,
   rewardType: string,
   rewardUnits: string,
   rewardValue: number,
@@ -77,7 +49,32 @@ export interface IPatchSprintsRequest {
   ignorePromoCodeUsageLimit: boolean
 }
 
-export interface IPatchSprintsResponse {
+export interface IGetEventsResponse {
+  items: IEvent[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface IGetEventsRequest {
+  page: number
+  size: number
+}
+
+export interface IPatchEventsRequest {
+  name: string,
+  startDate: string,
+  endDate: string,
+  ignoreEndDate: boolean,
+  promoCodeUsageLimit: number,
+  ignorePromoCodeUsageLimit: boolean,
+  rewardType: string,
+  rewardValue: number,
+  rewardUnits: string
+}
+
+export interface IPatchEventsResponse {
   id: string,
   createdAt: string,
   updatedAt: string,
@@ -88,12 +85,11 @@ export interface IPatchSprintsResponse {
   pendingSubscriptionId: number,
   approvedSubscriptionId: number,
   rejectedSubscriptionId: number,
-  rewardType: string,
-  rewardUnits: string,
-  rewardValue: number,
   promoCodeUsagesCount: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
-  isHidden: boolean,
+  rewardType: string,
+  rewardValue: number,
+  rewardUnits: string,
   roomId: string
 }

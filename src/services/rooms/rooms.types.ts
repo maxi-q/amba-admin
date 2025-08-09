@@ -16,6 +16,7 @@ export interface IRoomData {
   webhookUrl: string,
   secretKey: string,
   isHidden: boolean,
+  projectId: string
 }
 
 export type ICreateRoomResponse = IRoomData
@@ -43,4 +44,5 @@ export interface IGetRoomByIdResponse {
   webhookUrl: string,
   secretKey: string,
   isHidden: boolean,
+  projectId: string
 }

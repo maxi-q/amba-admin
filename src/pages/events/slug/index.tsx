@@ -1,20 +1,31 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
   TextField,
-  FormControlLabel,
-  Switch,
-  Paper,
-  Stack,
+  Checkbox,
   Breadcrumbs,
   Link as MuiLink,
+  Stack,
+  FormControl,
   Select,
   MenuItem,
-  FormControl,
+  Paper,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { useRoomDataStore } from "@store/index";
+import { useDebouncedCallback } from 'use-debounce';
+import eventsService from "@services/events/events.service";
+import type { IPatchEventsRequest } from "@services/events/events.types";
+import { dateToInput } from "./helpers";
+
+const rewardUnits = [
+  { value: "points", label: "Баллы" },
+  { value: "rub", label: "Рубли" },
+  { value: "usd", label: "Доллары" },
+  { value: "eur", label: "Евро" },
+  { value: "items", label: "Штуки" },
+];
 
 interface SubscriberGroup {
   id: number;
@@ -25,15 +36,104 @@ interface SubscriberGroup {
 }
 
 const EventsSetting = () => {
-  const { eventId } = useParams();
-  const [eventName, setEventName] = useState("Конференция 2025");
-  const [startDate, setStartDate] = useState("2025-02-01");
-  const [endDate, setEndDate] = useState("2025-07-01");
-  const [allowAfterCompletion, setAllowAfterCompletion] = useState(false);
-  const [autoAddAmbassadors, setAutoAddAmbassadors] = useState(true);
-  const [userReward, setUserReward] = useState(0);
-  const [limitUsage, setLimitUsage] = useState(0);
-  const [limitUsageEnabled, setLimitUsageEnabled] = useState(true);
+  const { eventId, slug } = useParams();
+  const { updateEvent, eventData } = useRoomDataStore();
+  const [event, setEvent] = useState<any>(null);
+  const [formData, setFormData] = useState<IPatchEventsRequest>({
+    name: '',
+    startDate: '',
+    endDate: '',
+    ignoreEndDate: false,
+    rewardType: 'fix',
+    rewardUnits: '',
+    rewardValue: 0,
+    promoCodeUsageLimit: 0,
+    ignorePromoCodeUsageLimit: false,
+  });
+
+  useEffect(() => {
+    const foundEvent = eventData.find(event => event.id === eventId);
+    if (foundEvent) {
+      setEvent(foundEvent);
+      setFormData({
+        name: foundEvent.name,
+        startDate: dateToInput(foundEvent.startDate),
+        endDate: dateToInput(foundEvent.endDate),
+        ignoreEndDate: foundEvent.ignoreEndDate,
+        rewardType: foundEvent.rewardType,
+        rewardUnits: foundEvent.rewardUnits,
+        rewardValue: foundEvent.rewardValue,
+        promoCodeUsageLimit: foundEvent.promoCodeUsageLimit,
+        ignorePromoCodeUsageLimit: foundEvent.ignorePromoCodeUsageLimit,
+      });
+    }
+  }, [eventId, eventData]);
+
+  useEffect(()=>{
+    console.log(formData)
+  }, [formData])
+
+  const debouncedUpdate = useDebouncedCallback(
+    async (data: IPatchEventsRequest) => {
+      if (eventId) {
+        try {
+          const storeData = {
+            name: data.name,
+            startDate: new Date(data.startDate).toISOString(),
+            endDate: new Date(data.endDate).toISOString(),
+            ignoreEndDate: data.ignoreEndDate,
+            rewardType: data.rewardType,
+            rewardUnits: data.rewardUnits,
+            rewardValue: data.rewardValue,
+            promoCodeUsageLimit: data.promoCodeUsageLimit,
+            ignorePromoCodeUsageLimit: data.ignorePromoCodeUsageLimit,
+          }
+
+          const response = await eventsService.patchEvents(storeData, eventId);
+          if (response.status === 200) {
+            updateEvent(eventId, storeData);
+          }
+        } catch (error) {
+          console.error('Ошибка при обновлении события:', error);
+        }
+      }
+    },
+    1000
+  );
+
+  const handleInputChange = (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    const updatedData = {
+      ...formData,
+      [field]: field === 'rewardValue' || field === 'promoCodeUsageLimit' ? Number(newValue) : newValue
+    };
+    setFormData(updatedData);
+    debouncedUpdate(updatedData);
+  };
+
+  const handleSelectChange = (field: keyof IPatchEventsRequest) => (event: any) => {
+    const newValue = event.target.value;
+    const updatedData = {
+      ...formData,
+      [field]: newValue
+    };
+    setFormData(updatedData);
+    debouncedUpdate(updatedData);
+  };
+
+  const handleCheckboxChange = (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.checked;
+    const updatedData = {
+      ...formData,
+      [field]: newValue
+    };
+    setFormData(updatedData);
+    debouncedUpdate(updatedData);
+  };
+
+  if (!event) {
+    return <Box p={3}>Загрузка...</Box>;
+  }
 
   const subscriberGroups: SubscriberGroup[] = [
     {
@@ -58,20 +158,16 @@ const EventsSetting = () => {
   ];
 
   return (
-    <Box p={3}>
-      {/* Breadcrumbs */}
-      <Box mb={3} display="flex" alignItems="center" justifyContent="space-between">
+    <Box>
+      <Box mb={3}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
-          <MuiLink component={Link} to={`/rooms/${eventId}/events`} underline="hover" color="inherit">
+          <MuiLink component={Link} to={`/rooms/${slug}/events`} underline="hover" color="inherit">
             Список событий
           </MuiLink>
           <Typography variant="body2" color="text.primary">
-            {eventName}
+            {event.name}
           </Typography>
         </Breadcrumbs>
-        <Typography variant="body2" sx={{ fontFamily: "monospace", ml: 2 }}>
-          ID: 4
-        </Typography>
       </Box>
 
       <Stack spacing={4}>
@@ -84,58 +180,75 @@ const EventsSetting = () => {
           <Stack spacing={3}>
             <Box>
               <Typography variant="subtitle2" mb={1}>
-                Название *
+                Название
               </Typography>
               <TextField
                 fullWidth
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
+                placeholder="Будет показываться вам и определенным амбассадорам"
                 variant="outlined"
+                value={formData.name}
+                onChange={handleInputChange('name')}
               />
             </Box>
 
             <Box>
               <Typography variant="subtitle2" mb={1}>
-                Дата *
+                Ограничить событие датами
               </Typography>
               <Stack direction="row" spacing={2} alignItems="center">
                 <TextField
                   type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  value={formData.startDate}
+                  onChange={handleInputChange('startDate')}
                   variant="outlined"
                   sx={{ flex: 1 }}
                 />
-                <Typography>-</Typography>
                 <TextField
                   type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  value={formData.endDate}
+                  onChange={handleInputChange('endDate')}
                   variant="outlined"
                   sx={{ flex: 1 }}
+                />
+                <Checkbox 
+                  checked={formData.ignoreEndDate}
+                  onChange={handleCheckboxChange('ignoreEndDate')}
                 />
               </Stack>
             </Box>
 
-            <FormControlLabel
+            {/* <FormControlLabel
               control={
-                <Switch
-                  checked={allowAfterCompletion}
-                  onChange={(e) => setAllowAfterCompletion(e.target.checked)}
-                />
-              }
-              label="Разрешить использование промокода после завершения"
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={autoAddAmbassadors}
-                  onChange={(e) => setAutoAddAmbassadors(e.target.checked)}
-                />
+                <Switch defaultChecked />
               }
               label="Автоматически добавить в список амбассадоров"
-            />
+            /> */}
+
+            <Box>
+              <Typography variant="h5" fontWeight={700} mb={2}>Промокоды</Typography>
+              <Typography variant="body2" color="text.secondary" maxWidth="md">
+                Для какого участка будет спеймерован уникальный промокод, который отправится при добавлении в группу амбассадоров, а также будет отправлен указанные ниже награды
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" mb={1}>
+                Единицы награды
+              </Typography>
+              <FormControl fullWidth>
+                <Select
+                  value={formData.rewardUnits}
+                  onChange={handleSelectChange('rewardUnits')}
+                  variant="outlined"
+                >
+                  {rewardUnits.map((unit) => (
+                    <MenuItem key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
 
             <Box>
               <Typography variant="subtitle2" mb={1}>
@@ -144,43 +257,42 @@ const EventsSetting = () => {
               <Stack direction="row" spacing={2} alignItems="center">
                 <TextField
                   type="number"
-                  value={userReward}
-                  onChange={(e) => setUserReward(Number(e.target.value))}
+                  value={formData.rewardValue}
+                  onChange={handleInputChange('rewardValue')}
                   variant="outlined"
                   sx={{ flex: 1 }}
                 />
-                <FormControl sx={{ minWidth: 80 }}>
-                  <Select value="руб" size="small">
-                    <MenuItem value="руб">руб</MenuItem>
-                  </Select>
-                </FormControl>
+                <Typography variant="body2" color="text.secondary">
+                  {formData.rewardUnits === 'rub' ? 'руб' :
+                   formData.rewardUnits === 'usd' ? 'долл' :
+                   formData.rewardUnits === 'eur' ? 'евро' :
+                   formData.rewardUnits === 'points' ? 'баллов' :
+                   formData.rewardUnits === 'items' ? 'штук' : 'ед'}
+                </Typography>
               </Stack>
             </Box>
 
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Box sx={{ flex: 1 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+              <Box>
                 <Typography variant="subtitle2" mb={1}>
-                  Ограничить число использований каждого промокода
+                  Ограничить число использования каждого промокода
                 </Typography>
                 <Stack direction="row" spacing={2} alignItems="center">
                   <TextField
                     type="number"
-                    value={limitUsage}
-                    onChange={(e) => setLimitUsage(Number(e.target.value))}
+                    value={formData.promoCodeUsageLimit}
+                    onChange={handleInputChange('promoCodeUsageLimit')}
                     variant="outlined"
                     sx={{ flex: 1 }}
                   />
-                  <Typography variant="body2">раз</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    раз
+                  </Typography>
                 </Stack>
               </Box>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={limitUsageEnabled}
-                    onChange={(e) => setLimitUsageEnabled(e.target.checked)}
-                  />
-                }
-                label=""
+              <Checkbox 
+                checked={formData.ignorePromoCodeUsageLimit}
+                onChange={handleCheckboxChange('ignorePromoCodeUsageLimit')}
               />
             </Stack>
           </Stack>
@@ -228,4 +340,4 @@ const EventsSetting = () => {
   );
 };
 
-export default EventsSetting
+export default EventsSetting;

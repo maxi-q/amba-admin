@@ -1,5 +1,6 @@
 import type { IRoomData } from '@services/rooms/rooms.types'
 import type { ISprint } from '@services/sprints/sprints.types'
+import type { IEvent } from '@services/events/events.types'
 import { create } from 'zustand'
 
 interface StoreState {
@@ -29,6 +30,7 @@ export const useAuthStore = create<StoreState>((set) => ({
 interface RoomDataState {
   roomData: IRoomData | null
   sprintData: ISprint[]
+  eventData: IEvent[]
   setRoomData: (roomData: IRoomData | null) => void
   clearRoomData: () => void
   isLoading: boolean
@@ -36,6 +38,9 @@ interface RoomDataState {
   addSprint: (sprintData: ISprint) => void
   loadSprints: (sprintData: ISprint[]) => void
   updateSprint: (sprintId: string, updatedSprintData: Partial<ISprint>) => void
+  loadEvents: (eventData: IEvent[]) => void
+  addEvent: (eventData: IEvent) => void
+  updateEvent: (eventId: string, updatedEventData: Partial<IEvent>) => void
 }
 
 export const useRoomDataStore = create<RoomDataState>((set) => ({
@@ -61,6 +66,25 @@ export const useRoomDataStore = create<RoomDataState>((set) => ({
               sprint.id === sprintId
                 ? { ...sprint, ...updatedSprintData }
                 : sprint
+            ) ?? [],
+    })),
+
+  loadEvents: (eventData: IEvent[]) =>
+    set(() => ({
+      eventData: eventData
+    })),
+
+  addEvent: (eventData: IEvent) =>
+    set((state) => ({
+      eventData: [...state.eventData, eventData]
+    })),
+
+  updateEvent: (eventId: string, updatedEventData: Partial<IEvent>) =>
+    set((state) => ({
+      eventData: state.eventData?.map((event) =>
+              event.id === eventId
+                ? { ...event, ...updatedEventData }
+                : event
             ) ?? [],
     })),
 

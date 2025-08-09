@@ -37,11 +37,9 @@ const statusLabels: Record<SprintStatus, string> = {
   past: "прошедший",
 };
 
-const rewardTypes = [
-  { value: "points", label: "Баллы" },
-  { value: "currency", label: "Валюта" },
-  { value: "items", label: "Предметы" },
-];
+// const rewardTypes = [
+  // { value: "fix", label: "fix" },
+// ];
 
 const rewardUnits = [
   { value: "points", label: "Баллы" },
@@ -61,10 +59,12 @@ export default function SprintList() {
     name: '',
     startDate: '',
     endDate: '',
-    rewardType: '',
+    ignoreEndDate: false,
+    rewardType: 'fix',
     rewardUnits: '',
     rewardValue: 0,
     promoCodeUsageLimit: 0,
+    ignorePromoCodeUsageLimit: false,
     roomId: roomData?.id || '',
   });
 
@@ -78,10 +78,12 @@ export default function SprintList() {
       name: '',
       startDate: '',
       endDate: '',
-      rewardType: '',
+      ignoreEndDate: false,
+      rewardType: 'fix',
       rewardUnits: '',
       rewardValue: 0,
       promoCodeUsageLimit: 0,
+      ignorePromoCodeUsageLimit: false,
       roomId: roomData?.id || '',
     });
   };
@@ -251,7 +253,7 @@ export default function SprintList() {
               sx={{ mb: 2 }}
             />
             
-            <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
+            {/* <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
               <InputLabel>Тип награды</InputLabel>
               <Select
                 value={formData.rewardType}
@@ -264,8 +266,8 @@ export default function SprintList() {
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
-            
+            </FormControl> */}
+
             <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
               <InputLabel>Единицы награды</InputLabel>
               <Select

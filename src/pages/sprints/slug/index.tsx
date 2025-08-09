@@ -16,12 +16,11 @@ import { useRoomDataStore } from "@store/index";
 import { useDebouncedCallback } from 'use-debounce';
 import sprintsService from "@services/sprints/sprints.service";
 import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
+import { dateToInput } from "./helpers";
 
-const rewardTypes = [
-  { value: "points", label: "Баллы" },
-  { value: "currency", label: "Валюта" },
-  { value: "items", label: "Предметы" },
-];
+// const rewardTypes = [
+  // { value: "fix", label: "fix" },
+// ];
 
 const rewardUnits = [
   { value: "points", label: "Баллы" },
@@ -39,10 +38,12 @@ const SprintSetting = () => {
     name: '',
     startDate: '',
     endDate: '',
-    rewardType: '',
+    ignoreEndDate: false,
+    rewardType: 'fix',
     rewardUnits: '',
     rewardValue: 0,
     promoCodeUsageLimit: 0,
+    ignorePromoCodeUsageLimit: false,
   });
 
   useEffect(() => {
@@ -51,32 +52,41 @@ const SprintSetting = () => {
       setSprint(foundSprint);
       setFormData({
         name: foundSprint.name,
-        startDate: foundSprint.startDate,
-        endDate: foundSprint.endDate,
+        startDate: dateToInput(foundSprint.startDate),
+        endDate: dateToInput(foundSprint.endDate),
+        ignoreEndDate: foundSprint.ignoreEndDate,
         rewardType: foundSprint.rewardType,
         rewardUnits: foundSprint.rewardUnits,
         rewardValue: foundSprint.rewardValue,
         promoCodeUsageLimit: foundSprint.promoCodeUsageLimit,
+        ignorePromoCodeUsageLimit: foundSprint.ignorePromoCodeUsageLimit,
       });
     }
   }, [sprintId, roomData]);
+
+  useEffect(()=>{
+    console.log(formData)
+  }, [formData])
 
   const debouncedUpdate = useDebouncedCallback(
     async (data: IPatchSprintsRequest) => {
       if (sprintId) {
         try {
-          const response = await sprintsService.patchSprints(data, sprintId);
+          const storeData = {
+            name: data.name,
+            startDate: new Date(data.startDate).toISOString(),
+            endDate: new Date(data.endDate).toISOString(),
+            ignoreEndDate: data.ignoreEndDate,
+            rewardType: data.rewardType,
+            rewardUnits: data.rewardUnits,
+            rewardValue: data.rewardValue,
+            promoCodeUsageLimit: data.promoCodeUsageLimit,
+            ignorePromoCodeUsageLimit: data.ignorePromoCodeUsageLimit,
+          }
+
+          const response = await sprintsService.patchSprints(storeData, sprintId);
           if (response.status === 200) {
-            // Обновляем данные в store
-            updateSprint(sprintId, {
-              name: data.name,
-              startDate: data.startDate,
-              endDate: data.endDate,
-              rewardType: data.rewardType,
-              rewardUnits: data.rewardUnits,
-              rewardValue: data.rewardValue,
-              promoCodeUsageLimit: data.promoCodeUsageLimit,
-            });
+            updateSprint(sprintId, storeData);
           }
         } catch (error) {
           console.error('Ошибка при обновлении спринта:', error);
@@ -98,6 +108,16 @@ const SprintSetting = () => {
 
   const handleSelectChange = (field: keyof IPatchSprintsRequest) => (event: any) => {
     const newValue = event.target.value;
+    const updatedData = {
+      ...formData,
+      [field]: newValue
+    };
+    setFormData(updatedData);
+    debouncedUpdate(updatedData);
+  };
+
+  const handleCheckboxChange = (field: keyof IPatchSprintsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.checked;
     const updatedData = {
       ...formData,
       [field]: newValue
@@ -151,9 +171,6 @@ const SprintSetting = () => {
                 onChange={handleInputChange('startDate')}
                 variant="outlined"
                 sx={{ flex: 1 }}
-                InputLabelProps={{
-                  shrink: true,
-                }}
               />
               <TextField
                 type="date"
@@ -161,11 +178,11 @@ const SprintSetting = () => {
                 onChange={handleInputChange('endDate')}
                 variant="outlined"
                 sx={{ flex: 1 }}
-                InputLabelProps={{
-                  shrink: true,
-                }}
               />
-              <Checkbox />
+              <Checkbox 
+                checked={formData.ignoreEndDate}
+                onChange={handleCheckboxChange('ignoreEndDate')}
+              />
             </Stack>
           </Box>
 
@@ -176,14 +193,7 @@ const SprintSetting = () => {
             </Typography>
           </Box>
 
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="subtitle2">
-              Использование промокода доступно только в период проведения спринта
-            </Typography>
-            <Checkbox />
-          </Stack>
-
-          <Box>
+          {/* <Box>
             <Typography variant="subtitle2" mb={1}>
               Тип награды
             </Typography>
@@ -200,7 +210,7 @@ const SprintSetting = () => {
                 ))}
               </Select>
             </FormControl>
-          </Box>
+          </Box> */}
 
           <Box>
             <Typography variant="subtitle2" mb={1}>
@@ -261,7 +271,10 @@ const SprintSetting = () => {
                 </Typography>
               </Stack>
             </Box>
-            <Checkbox />
+            <Checkbox 
+              checked={formData.ignorePromoCodeUsageLimit}
+              onChange={handleCheckboxChange('ignorePromoCodeUsageLimit')}
+            />
           </Stack>
         </Stack>
       </Box>
