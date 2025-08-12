@@ -290,7 +290,7 @@ const EventsSetting = () => {
                   </Typography>
                 </Stack>
               </Box>
-              <Checkbox 
+              <Checkbox
                 checked={formData.ignorePromoCodeUsageLimit}
                 onChange={handleCheckboxChange('ignorePromoCodeUsageLimit')}
               />

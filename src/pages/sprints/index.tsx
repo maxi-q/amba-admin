@@ -49,6 +49,40 @@ const rewardUnits = [
   { value: "items", label: "Штуки" },
 ];
 
+const formatDateRange = (startDate: string, endDate: string) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  return `${formatDate(start)} - ${formatDate(end)}`;
+};
+
+const isEventActive = (startDate: string, endDate: string) => {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  return now >= start && now <= end;
+};
+
+const checkStatusEvent = (startDate: string, endDate: string)  => {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  return now >= start && now <= end ? {labelEvent: statusLabels.active, colorEvent: statusColors.active}
+      :  now <= start               ? {labelEvent: statusLabels.upcoming, colorEvent: statusColors.upcoming}
+      :  now >= end                 ? {labelEvent: statusLabels.past, colorEvent: statusColors.past}
+      : {labelEvent: statusLabels.past, colorEvent: statusColors.past};
+};
+
 export default function SprintList() {
   const { roomData, addSprint, sprintData } = useRoomDataStore()
 
@@ -149,7 +183,12 @@ export default function SprintList() {
       </Stack>
 
       <Stack spacing={2}>
-        {sprintData?.map((sprint) => (
+        {sprintData?.map((sprint) => {
+          const dateRange = formatDateRange(sprint.startDate, sprint.endDate);
+          const isActive = isEventActive(sprint.startDate, sprint.endDate);
+          const {labelEvent, colorEvent} = checkStatusEvent(sprint.startDate, sprint.endDate);
+
+          return (
           <Paper
             key={sprint.id}
             component={Link}
@@ -169,17 +208,22 @@ export default function SprintList() {
             }}
           >
             <Box>
-              <Typography variant="h6" fontWeight={500}>
+              <Typography variant="h6" fontWeight={500} mb={1}>
                 {sprint.name}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {sprint.startDate + ' — ' + sprint.endDate || "Без ограничений по датам"}
+              <Typography
+                variant="body2"
+                color={isActive ? "success.main" : "text.secondary"}
+                fontWeight={isActive ? 500 : 400}
+              >
+                {dateRange}
               </Typography>
             </Box>
+
             <Stack direction="row" alignItems="center" spacing={2}>
               <Chip
-                label={statusLabels.active}
-                color={statusColors.active}
+                label={labelEvent}
+                color={colorEvent}
                 size="small"
                 sx={{ borderRadius: 1 }}
               />
@@ -188,7 +232,7 @@ export default function SprintList() {
               </IconButton>
             </Stack>
           </Paper>
-        ))}
+        )})}
 
         <Box display="flex" justifyContent="flex-end">
           <Button

@@ -32,7 +32,7 @@ const rewardUnits = [
 const formatDateRange = (startDate: string, endDate: string) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('ru-RU', {
       day: '2-digit',
@@ -40,7 +40,7 @@ const formatDateRange = (startDate: string, endDate: string) => {
       year: 'numeric'
     });
   };
-  
+
   return `${formatDate(start)} - ${formatDate(end)}`;
 };
 
@@ -48,7 +48,7 @@ const isEventActive = (startDate: string, endDate: string) => {
   const now = new Date();
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   return now >= start && now <= end;
 };
 
@@ -166,7 +166,7 @@ export default function EventsPage() {
                     ID: {event.id}
                   </Typography>
                 </Box>
-                
+
                 <Box>
                   <Typography variant="h6" fontWeight={500} mb={1}>
                     {event.name}
