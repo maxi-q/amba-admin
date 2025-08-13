@@ -126,6 +126,10 @@ const SprintSetting = () => {
     debouncedUpdate(updatedData);
   };
 
+  const handleDelete = () => {
+    console.log('delete');
+  }
+
   if (!sprint) {
     return <Box p={3}>Загрузка...</Box>;
   }
@@ -179,7 +183,7 @@ const SprintSetting = () => {
                 variant="outlined"
                 sx={{ flex: 1 }}
               />
-              <Checkbox 
+              <Checkbox
                 checked={formData.ignoreEndDate}
                 onChange={handleCheckboxChange('ignoreEndDate')}
               />
@@ -271,12 +275,27 @@ const SprintSetting = () => {
                 </Typography>
               </Stack>
             </Box>
-            <Checkbox 
+            <Checkbox
               checked={formData.ignorePromoCodeUsageLimit}
               onChange={handleCheckboxChange('ignorePromoCodeUsageLimit')}
             />
           </Stack>
         </Stack>
+        <Box mt={3}>
+          <button
+            style={{
+              background: '#f44336',
+              color: '#fff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+            onClick={handleDelete}
+          >
+            Удалить спринт
+          </button>
+        </Box>
       </Box>
     </Box>
   )

@@ -157,6 +157,10 @@ const EventsSetting = () => {
     },
   ];
 
+  const handleDelete = () => {
+    console.log('delete');
+  }
+
   return (
     <Box>
       <Box mb={3}>
@@ -295,6 +299,21 @@ const EventsSetting = () => {
                 onChange={handleCheckboxChange('ignorePromoCodeUsageLimit')}
               />
             </Stack>
+            <Box mt={3}>
+              <button
+                style={{
+                  background: '#f44336',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+                onClick={handleDelete}
+              >
+                Удалить спринт
+              </button>
+            </Box>
           </Stack>
         </Paper>
 
