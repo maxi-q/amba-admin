@@ -44,6 +44,7 @@ const SprintSetting = () => {
     rewardValue: 0,
     promoCodeUsageLimit: 0,
     ignorePromoCodeUsageLimit: false,
+    isDeleted: false,
   });
 
   useEffect(() => {
@@ -60,6 +61,7 @@ const SprintSetting = () => {
         rewardValue: foundSprint.rewardValue,
         promoCodeUsageLimit: foundSprint.promoCodeUsageLimit,
         ignorePromoCodeUsageLimit: foundSprint.ignorePromoCodeUsageLimit,
+        isDeleted: foundSprint.isDeleted,
       });
     }
   }, [sprintId, roomData]);
@@ -82,6 +84,7 @@ const SprintSetting = () => {
             rewardValue: data.rewardValue,
             promoCodeUsageLimit: data.promoCodeUsageLimit,
             ignorePromoCodeUsageLimit: data.ignorePromoCodeUsageLimit,
+            isDeleted: data.isDeleted,
           }
 
           const response = await sprintsService.patchSprints(storeData, sprintId);
@@ -126,9 +129,9 @@ const SprintSetting = () => {
     debouncedUpdate(updatedData);
   };
 
-  const handleDelete = () => {
-    console.log('delete');
-  }
+  // const handleDelete = () => {
+  //   console.log('delete');
+  // }
 
   if (!sprint) {
     return <Box p={3}>Загрузка...</Box>;
@@ -281,20 +284,22 @@ const SprintSetting = () => {
             />
           </Stack>
         </Stack>
-        <Box mt={3}>
-          <button
-            style={{
-              background: '#f44336',
-              color: '#fff',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer'
+        <Box mt={3} display="flex" alignItems="center">
+          <Checkbox
+            checked={formData.isDeleted}
+            onChange={(e) => {
+              const updatedData = {
+                ...formData,
+                isDeleted: e.target.checked
+              };
+              setFormData(updatedData);
+              debouncedUpdate(updatedData);
             }}
-            onClick={handleDelete}
-          >
+            color="error"
+          />
+          <Typography variant="body1" color={formData.isDeleted ? "error" : "text.primary"}>
             Удалить спринт
-          </button>
+          </Typography>
         </Box>
       </Box>
     </Box>

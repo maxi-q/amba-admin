@@ -21,6 +21,7 @@ import SettingsInfo from './settings/info';
 import roomsService from '@services/rooms/rooms.service';
 import sprintsService from '@services/sprints/sprints.service';
 import eventsService from '@services/events/events.service';
+import projectsService from '@services/projects/projects.service';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -30,7 +31,7 @@ import eventsService from '@services/events/events.service';
 function RoomLayout() {
   const { slug } = useParams();
   const { sendMessage } = useMessage()
-  const { setRoomData, roomData, setIsLoading, isLoading, loadSprints, loadEvents } = useRoomDataStore()
+  const { setRoomData, roomData, setIsLoading, isLoading, loadSprints, loadEvents, setProject, project } = useRoomDataStore()
 
   useEffect(() => {
     const data = {
@@ -60,6 +61,17 @@ function RoomLayout() {
 
     getRoomData();
   }, [slug]);
+
+  useEffect(() => {
+    const getProjectData = async () => {
+      if (!project) {
+        const projectData = await projectsService.getProject()
+        setProject(projectData.data)
+      }
+    }
+
+    getProjectData();
+  }, [project]);
 
   if (!roomData || isLoading) {
     return <Loader />;

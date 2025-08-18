@@ -15,7 +15,10 @@ import {
   TextField,
   MenuItem,
   Select,
+  Chip,
+  IconButton,
 } from "@mui/material";
+import { Edit as EditIcon } from "@mui/icons-material";
 import { useRoomDataStore } from "@store/index";
 import { useState } from "react";
 import eventsService from "@services/events/events.service";
@@ -137,50 +140,82 @@ export default function EventsPage() {
       </Stack>
       
       <Stack spacing={2}>
-        {eventData.map((event: IEvent) => {
+        {eventData?.sort((a, b) => {
+          // Сначала показываем неудаленные события (isDeleted: false), затем удаленные (isDeleted: true)
+          if (a.isDeleted === b.isDeleted) return 0;
+          return a.isDeleted ? 1 : -1;
+        }).map((event: IEvent) => {
           const dateRange = formatDateRange(event.startDate, event.endDate);
           const isActive = isEventActive(event.startDate, event.endDate);
           
           return (
-            <Box
+            <Paper
               key={event.id}
               component={Link}
               to={`/rooms/${slug}/events/${event.id}`}
-              sx={{ textDecoration: 'none' }}
+              elevation={1}
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                opacity: event.isDeleted ? 0.6 : 1,
+                bgcolor: event.isDeleted ? 'grey.50' : 'background.paper',
+                border: isActive ? '2px solid #4caf50' : '1px solid #e0e0e0',
+                '&:hover': {
+                  bgcolor: event.isDeleted ? 'grey.100' : 'action.hover',
+                },
+                cursor: 'pointer',
+              }}
             >
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  border: isActive ? '2px solid #4caf50' : '1px solid #e0e0e0',
-                  position: 'relative',
-                  '&:hover': {
-                    bgcolor: 'action.hover',
-                  },
-                  cursor: 'pointer',
-                }}
-              >
-                <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    ID: {event.id}
-                  </Typography>
-                </Box>
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  fontWeight={500} 
+                  mb={1}
+                  sx={{
+                    textDecoration: event.isDeleted ? 'line-through' : 'none',
+                    color: event.isDeleted ? 'text.disabled' : 'inherit',
+                  }}
+                >
+                  {event.name}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color={event.isDeleted ? "text.disabled" : (isActive ? "success.main" : "text.secondary")}
+                  fontWeight={isActive ? 500 : 400}
+                  sx={{
+                    textDecoration: event.isDeleted ? 'line-through' : 'none',
+                  }}
+                >
+                  {dateRange}
+                </Typography>
+              </Box>
 
-                <Box>
-                  <Typography variant="h6" fontWeight={500} mb={1}>
-                    {event.name}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color={isActive ? "success.main" : "text.secondary"}
-                    fontWeight={isActive ? 500 : 400}
-                  >
-                    {dateRange}
-                  </Typography>
-                </Box>
-              </Paper>
-            </Box>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                {event.isDeleted ? (
+                  <Chip
+                    label="Удален"
+                    color="error"
+                    size="small"
+                    sx={{ borderRadius: 1 }}
+                  />
+                ) : (
+                  <Chip
+                    label={isActive ? "активный" : "неактивный"}
+                    color={isActive ? "success" : "default"}
+                    size="small"
+                    sx={{ borderRadius: 1 }}
+                  />
+                )}
+                <IconButton size="small">
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+            </Paper>
           );
         })}
 

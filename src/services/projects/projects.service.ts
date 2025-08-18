@@ -1,13 +1,13 @@
 import { instance } from '@services/config/axios';
-import type { IGetProjectsResponse } from './promocodes.types';
+import type { IGetProjectResponse } from './projects.types';
 import { getContentType } from '@services/config/axios.helper';
 
 
 class ProjectsService {
-  private _BASE_URL = 'project';
+  private _BASE_URL = 'projects';
 
-  async getProjects() {
-    return instance.get<IGetProjectsResponse>(`${this._BASE_URL}/my`, { headers: getContentType() });
+  async getProject() {
+    return instance.get<IGetProjectResponse>(`${this._BASE_URL}/my`, { headers: getContentType() });
   }
 }
 

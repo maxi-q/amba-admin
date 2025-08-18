@@ -28,7 +28,8 @@ export interface ICreateEventResponse {
   rewardType: string,
   rewardValue: number,
   rewardUnits: string,
-  roomId: string
+  roomId: string,
+  isDeleted: boolean
 }
 
 export interface IEvent {
@@ -46,7 +47,8 @@ export interface IEvent {
   rewardUnits: string,
   rewardValue: number,
   promoCodeUsageLimit: number,
-  ignorePromoCodeUsageLimit: boolean
+  ignorePromoCodeUsageLimit: boolean,
+  isDeleted: boolean
 }
 
 export interface IGetEventsResponse {
@@ -69,9 +71,10 @@ export interface IPatchEventsRequest {
   ignoreEndDate: boolean,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
+  isDeleted: boolean,
   rewardType: string,
   rewardValue: number,
-  rewardUnits: string
+  rewardUnits: string,
 }
 
 export interface IPatchEventsResponse {

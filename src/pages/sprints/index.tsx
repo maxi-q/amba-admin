@@ -129,7 +129,10 @@ export default function SprintList() {
         roomId: roomData.id,
       });
       if (response.status === 201) {
-        addSprint(response.data);
+        addSprint({
+          isDeleted: false,
+          ...response.data
+        });
       }
       handleCloseDialog();
     }
@@ -183,7 +186,11 @@ export default function SprintList() {
       </Stack>
 
       <Stack spacing={2}>
-        {sprintData?.map((sprint) => {
+        {sprintData?.sort((a, b) => {
+          // Сначала показываем неудаленные спринты (isDeleted: false), затем удаленные (isDeleted: true)
+          if (a.isDeleted === b.isDeleted) return 0;
+          return a.isDeleted ? 1 : -1;
+        }).map((sprint) => {
           const dateRange = formatDateRange(sprint.startDate, sprint.endDate);
           const isActive = isEventActive(sprint.startDate, sprint.endDate);
           const {labelEvent, colorEvent} = checkStatusEvent(sprint.startDate, sprint.endDate);
@@ -202,31 +209,53 @@ export default function SprintList() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              opacity: sprint.isDeleted ? 0.6 : 1,
+              bgcolor: sprint.isDeleted ? 'grey.50' : 'background.paper',
               '&:hover': {
-                bgcolor: 'action.hover',
+                bgcolor: sprint.isDeleted ? 'grey.100' : 'action.hover',
               },
             }}
           >
             <Box>
-              <Typography variant="h6" fontWeight={500} mb={1}>
+              <Typography 
+                variant="h6" 
+                fontWeight={500} 
+                mb={1}
+                sx={{
+                  textDecoration: sprint.isDeleted ? 'line-through' : 'none',
+                  color: sprint.isDeleted ? 'text.disabled' : 'inherit',
+                }}
+              >
                 {sprint.name}
               </Typography>
               <Typography
                 variant="body2"
-                color={isActive ? "success.main" : "text.secondary"}
+                color={sprint.isDeleted ? "text.disabled" : (isActive ? "success.main" : "text.secondary")}
                 fontWeight={isActive ? 500 : 400}
+                sx={{
+                  textDecoration: sprint.isDeleted ? 'line-through' : 'none',
+                }}
               >
                 {dateRange}
               </Typography>
             </Box>
 
             <Stack direction="row" alignItems="center" spacing={2}>
-              <Chip
-                label={labelEvent}
-                color={colorEvent}
-                size="small"
-                sx={{ borderRadius: 1 }}
-              />
+              {sprint.isDeleted ? (
+                <Chip
+                  label="Удален"
+                  color="error"
+                  size="small"
+                  sx={{ borderRadius: 1 }}
+                />
+              ) : (
+                <Chip
+                  label={labelEvent}
+                  color={colorEvent}
+                  size="small"
+                  sx={{ borderRadius: 1 }}
+                />
+              )}
               <IconButton size="small">
                 <EditIcon fontSize="small" />
               </IconButton>

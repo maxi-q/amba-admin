@@ -1,6 +1,7 @@
 import type { IRoomData } from '@services/rooms/rooms.types'
 import type { ISprint } from '@services/sprints/sprints.types'
 import type { IEvent } from '@services/events/events.types'
+import type { IGetProjectResponse } from '@services/projects/projects.types'
 import { create } from 'zustand'
 
 interface StoreState {
@@ -31,8 +32,11 @@ interface RoomDataState {
   roomData: IRoomData | null
   sprintData: ISprint[]
   eventData: IEvent[]
+  project: IGetProjectResponse | null
   setRoomData: (roomData: IRoomData | null) => void
   clearRoomData: () => void
+  setProject: (project: IGetProjectResponse | null) => void
+  clearProject: () => void
   isLoading: boolean
   setIsLoading: (ok: boolean) => void
   addSprint: (sprintData: ISprint) => void
@@ -47,8 +51,11 @@ export const useRoomDataStore = create<RoomDataState>((set) => ({
   roomData: null,
   sprintData: [],
   eventData: [],
+  project: null,
 
   setRoomData: (roomData: IRoomData | null) => set({ roomData }),
+
+  setProject: (project: IGetProjectResponse | null) => set({ project }),
 
   loadSprints: (sprintData: ISprint[]) =>
     set(() => ({
@@ -89,6 +96,8 @@ export const useRoomDataStore = create<RoomDataState>((set) => ({
     })),
 
   clearRoomData: () => set({ roomData: null }),
+
+  clearProject: () => set({ project: null }),
 
   isLoading: false,
   setIsLoading: (ok: boolean) => set({ isLoading: ok }),

@@ -12,11 +12,13 @@ import {
   Select,
   MenuItem,
   Paper,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import { useRoomDataStore } from "@store/index";
 import { useDebouncedCallback } from 'use-debounce';
 import eventsService from "@services/events/events.service";
-import type { IPatchEventsRequest } from "@services/events/events.types";
+import type { IEvent, IPatchEventsRequest } from "@services/events/events.types";
 import { dateToInput } from "./helpers";
 
 const rewardUnits = [
@@ -27,18 +29,13 @@ const rewardUnits = [
   { value: "items", label: "Штуки" },
 ];
 
-interface SubscriberGroup {
-  id: number;
-  title: string;
-  name: string;
-  senlerId: number;
-  isExcluded?: boolean;
-}
+
 
 const EventsSetting = () => {
   const { eventId, slug } = useParams();
   const { updateEvent, eventData } = useRoomDataStore();
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<IEvent>();
+  const { project } = useRoomDataStore();
   const [formData, setFormData] = useState<IPatchEventsRequest>({
     name: '',
     startDate: '',
@@ -49,6 +46,7 @@ const EventsSetting = () => {
     rewardValue: 0,
     promoCodeUsageLimit: 0,
     ignorePromoCodeUsageLimit: false,
+    isDeleted: false,
   });
 
   useEffect(() => {
@@ -65,6 +63,7 @@ const EventsSetting = () => {
         rewardValue: foundEvent.rewardValue,
         promoCodeUsageLimit: foundEvent.promoCodeUsageLimit,
         ignorePromoCodeUsageLimit: foundEvent.ignorePromoCodeUsageLimit,
+        isDeleted: foundEvent.isDeleted,
       });
     }
   }, [eventId, eventData]);
@@ -87,6 +86,7 @@ const EventsSetting = () => {
             rewardValue: data.rewardValue,
             promoCodeUsageLimit: data.promoCodeUsageLimit,
             ignorePromoCodeUsageLimit: data.ignorePromoCodeUsageLimit,
+            isDeleted: data.isDeleted,
           }
 
           const response = await eventsService.patchEvents(storeData, eventId);
@@ -135,31 +135,7 @@ const EventsSetting = () => {
     return <Box p={3}>Загрузка...</Box>;
   }
 
-  const subscriberGroups: SubscriberGroup[] = [
-    {
-      id: 1,
-      title: "Группа подписчиков в Senler для подачи заявки участие в событии",
-      name: "Заявки на событие ID: 4 | Конференция 2025",
-      senlerId: 2353,
-    },
-    {
-      id: 2,
-      title: "Группа подписчиков в Senler для одобренных участников",
-      name: "Участники события ID: 4 | Конференция 2025",
-      senlerId: 2354,
-    },
-    {
-      id: 3,
-      title: "Группа подписчиков в Senler для исключенных участников",
-      name: "Исключенные из события ID: 4 | Конференция 2025",
-      senlerId: 2355,
-      isExcluded: true,
-    },
-  ];
 
-  const handleDelete = () => {
-    console.log('delete');
-  }
 
   return (
     <Box>
@@ -300,60 +276,79 @@ const EventsSetting = () => {
               />
             </Stack>
             <Box mt={3}>
-              <button
-                style={{
-                  background: '#f44336',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-                onClick={handleDelete}
-              >
-                Удалить спринт
-              </button>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isDeleted}
+                    onChange={handleCheckboxChange('isDeleted')}
+                    color="error"
+                  />
+                }
+                label="Удалить событие"
+              />
             </Box>
           </Stack>
         </Paper>
 
-        {/* Subscriber Groups */}
-        {subscriberGroups.map((group) => (
-          <Paper key={group.id} elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+          <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
             <Typography 
-              variant="h6" 
-              fontWeight={600} 
+              variant="h6"
+              fontWeight={600}
               mb={2}
-              color={group.isExcluded ? "error.main" : "text.primary"}
             >
-              {group.title}
+              Группы подписчиков
             </Typography>
 
             <Stack direction="row" alignItems="center" spacing={2} mb={2}>
               <Box sx={{ width: 40, height: 40, borderRadius: "50%", border: "2px dashed #ccc" }} />
               <Box>
                 <Typography variant="body1" fontWeight={500}>
-                  {group.name}
+                  Группа подписчиков в Senler для подачи заявки участие в событии
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  ID: {group.senlerId}
+                  ID: 2353
                 </Typography>
               </Box>
             </Stack>
 
-            <Stack direction="row" spacing={2}>
-              <MuiLink href="#" underline="hover" sx={{ cursor: "pointer" }}>
-                редактированию группу
-              </MuiLink>
-              <MuiLink href="#" underline="hover" sx={{ cursor: "pointer" }}>
-                список пользователей
-              </MuiLink>
-              <MuiLink href="#" underline="hover" sx={{ cursor: "pointer" }}>
-                как использовать?
-              </MuiLink>
+            <Stack spacing={1} mt={2}>
+              <Typography variant="subtitle2" pb={0.5}>
+                Ссылка для вступления в группу для подачи заявки:
+              </Typography>
+              <TextField
+                value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.pendingSubscriptionId}&force=1`}
+                InputProps={{
+                  readOnly: true,
+                }}
+                fullWidth
+                size="small"
+                sx={{ pb: 3 }}
+              />
+              <Typography variant="subtitle2" pb={0.5}>
+                Ссылка для вступления в группу для одобренных участников:
+              </Typography>
+              <TextField
+                value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.approvedSubscriptionId}&force=1`}
+                InputProps={{
+                  readOnly: true,
+                }}
+                fullWidth
+                size="small"
+                sx={{ pb: 3 }}
+              />
+              <Typography variant="subtitle2" pt={0.5}>
+                Ссылка для вступления в группу для исключенных участников:
+              </Typography>
+              <TextField
+                value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.rejectedSubscriptionId}&force=1`}
+                InputProps={{
+                  readOnly: true,
+                }}
+                fullWidth
+                size="small"
+              />
             </Stack>
           </Paper>
-        ))}
       </Stack>
     </Box>
   );

@@ -49,7 +49,7 @@ export interface ISprint {
   promoCodeUsagesCount: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
-  isHidden: boolean,
+  isDeleted: boolean,
   roomId: string
 }
 
@@ -74,7 +74,8 @@ export interface IPatchSprintsRequest {
   rewardUnits: string,
   rewardValue: number,
   promoCodeUsageLimit: number,
-  ignorePromoCodeUsageLimit: boolean
+  ignorePromoCodeUsageLimit: boolean,
+  isDeleted: boolean,
 }
 
 export interface IPatchSprintsResponse {
@@ -94,6 +95,6 @@ export interface IPatchSprintsResponse {
   promoCodeUsagesCount: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
-  isHidden: boolean,
+  isDeleted: boolean,
   roomId: string
 }

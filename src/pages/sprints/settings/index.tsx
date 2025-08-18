@@ -13,16 +13,29 @@ import {
 } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useRoomDataStore } from "@store/index";
+import projectsService from "@services/projects/projects.service";
+import { useEffect } from "react";
 
 export default function SprintSettingsPage() {
-  const { roomData } = useRoomDataStore();
+  const { roomData, project, setProject } = useRoomDataStore();
 
   const { slug } = useParams();
-  console.log(slug);
+
+  useEffect(() => {
+    const getProjectData = async () => {
+      if (!project) {
+        const projectData = await projectsService.getProject()
+        setProject(projectData.data)
+      }
+    }
+
+    getProjectData();
+  }, [project]);
 
   if (!roomData) {
     return null;
   }
+
 
   const groups = [
     {
@@ -30,7 +43,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для подачи заявки в амбассадорку",
       name: "Заявки амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: "https://vk.com/app5898182_-103213116#s=2580611",
+      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${roomData.pendingSubscriptionId}&force=1`,
       instructions: [
         "Отправить прямую ссылку на группу подписчиков:",
         "Сделать рассылку через бота с предложением об участии и кнопкой \"Принять\" (при нажатии на которую вызвать действие добавления в группу)",
@@ -43,7 +56,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для одобренных амбассадоров",
       name: "Одобренные амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: "https://vk.com/app5898182_-103213116#s=2580611",
+      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${roomData.approvedSubscriptionId}&force=1`,
       instructions: [
         "Добавляйте в данную группу одобренных амбассадоров, чтобы они смогли принять участие.",
         "Если вы хотите принимать без амбассадоров без процесса одобрения, организуйте подписку на данную группу минуя группу с заявками.",
@@ -55,7 +68,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для исключенных амбассадоров",
       name: "Исключенные амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: "https://vk.com/app5898182_-103213116#s=2580611",
+      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${roomData.rejectedSubscriptionId}&force=1`,
       instructions: [
         "В данной группе можно сохранять исключенных амбассадоров, чтобы автоматически отключать их участие в комнате.",
         "Вступление будет отключаться из группы с заявками и одобренными амбассадорами.",

@@ -1,6 +1,5 @@
 export const getContentType = () => {
   const token = localStorage.getItem('token');
-  console.log(token);
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
