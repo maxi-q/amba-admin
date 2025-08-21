@@ -4,13 +4,16 @@ import {
   Box,
   Typography,
   TextField,
-  Checkbox,
   Breadcrumbs,
   Link as MuiLink,
   Stack,
   FormControl,
   Select,
   MenuItem,
+  Switch,
+  FormControlLabel,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useRoomDataStore } from "@store/index";
 import { useDebouncedCallback } from 'use-debounce';
@@ -34,6 +37,7 @@ const SprintSetting = () => {
   const { sprintId, slug } = useParams();
   const { roomData, updateSprint, sprintData } = useRoomDataStore();
   const [sprint, setSprint] = useState<any>(null);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [formData, setFormData] = useState<IPatchSprintsRequest>({
     name: '',
     startDate: '',
@@ -119,19 +123,18 @@ const SprintSetting = () => {
     debouncedUpdate(updatedData);
   };
 
-  const handleCheckboxChange = (field: keyof IPatchSprintsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.checked;
-    const updatedData = {
-      ...formData,
-      [field]: newValue
-    };
-    setFormData(updatedData);
-    debouncedUpdate(updatedData);
+  const handleCopySprintId = async () => {
+    try {
+      await navigator.clipboard.writeText(`ID спринта:${sprintId || 'Ошибка получения ID спринта'}`);
+      setShowCopyNotification(true);
+    } catch (error) {
+      console.error('Ошибка при копировании:', error);
+    }
   };
 
-  // const handleDelete = () => {
-  //   console.log('delete');
-  // }
+  const handleCloseNotification = () => {
+    setShowCopyNotification(false);
+  };
 
   if (!sprint) {
     return <Box p={3}>Загрузка...</Box>;
@@ -139,7 +142,7 @@ const SprintSetting = () => {
 
   return (
     <Box>
-      <Box mb={3}>
+      <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to={`/rooms/${slug}/sprints`} underline="hover" color="inherit">
             Список спринтов
@@ -148,6 +151,9 @@ const SprintSetting = () => {
             {sprint.name}
           </Typography>
         </Breadcrumbs>
+        <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopySprintId}>
+          Скопировать ID спринта
+        </MuiLink>
       </Box>
 
       <Box p={3}>
@@ -168,29 +174,41 @@ const SprintSetting = () => {
           </Box>
 
           <Box>
-            <Typography variant="subtitle2" mb={1}>
-              Ограничить спринт датами
-            </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <TextField
-                type="date"
-                value={formData.startDate}
-                onChange={handleInputChange('startDate')}
-                variant="outlined"
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                type="date"
-                value={formData.endDate}
-                onChange={handleInputChange('endDate')}
-                variant="outlined"
-                sx={{ flex: 1 }}
-              />
-              <Checkbox
-                checked={formData.ignoreEndDate}
-                onChange={handleCheckboxChange('ignoreEndDate')}
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+              <Typography variant="subtitle2">
+                Ограничить спринт датами
+              </Typography>
+              <Switch
+                checked={!formData.ignoreEndDate}
+                onChange={(e) => {
+                  const newValue = !e.target.checked;
+                  const updatedData = {
+                    ...formData,
+                    ignoreEndDate: newValue
+                  };
+                  setFormData(updatedData);
+                  debouncedUpdate(updatedData);
+                }}
               />
             </Stack>
+            {!formData.ignoreEndDate && (
+              <Stack direction="row" spacing={2} alignItems="center">
+                <TextField
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleInputChange('startDate')}
+                  variant="outlined"
+                  sx={{ flex: 1 }}
+                />
+                <TextField
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleInputChange('endDate')}
+                  variant="outlined"
+                  sx={{ flex: 1 }}
+                />
+              </Stack>
+            )}
           </Box>
 
           <Box>
@@ -260,11 +278,25 @@ const SprintSetting = () => {
             </Stack>
           </Box>
 
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-            <Box>
-              <Typography variant="subtitle2" mb={1}>
+          <Box>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+              <Typography variant="subtitle2">
                 Ограничить число использования каждого промокода
               </Typography>
+              <Switch
+                checked={!formData.ignorePromoCodeUsageLimit}
+                onChange={(e) => {
+                  const newValue = !e.target.checked;
+                  const updatedData = {
+                    ...formData,
+                    ignorePromoCodeUsageLimit: newValue
+                  };
+                  setFormData(updatedData);
+                  debouncedUpdate(updatedData);
+                }}
+              />
+            </Stack>
+            {!formData.ignorePromoCodeUsageLimit && (
               <Stack direction="row" spacing={2} alignItems="center">
                 <TextField
                   type="number"
@@ -277,31 +309,41 @@ const SprintSetting = () => {
                   раз
                 </Typography>
               </Stack>
-            </Box>
-            <Checkbox
-              checked={formData.ignorePromoCodeUsageLimit}
-              onChange={handleCheckboxChange('ignorePromoCodeUsageLimit')}
-            />
-          </Stack>
+            )}
+          </Box>
         </Stack>
-        <Box mt={3} display="flex" alignItems="center">
-          <Checkbox
-            checked={formData.isDeleted}
-            onChange={(e) => {
-              const updatedData = {
-                ...formData,
-                isDeleted: e.target.checked
-              };
-              setFormData(updatedData);
-              debouncedUpdate(updatedData);
-            }}
-            color="error"
-          />
-          <Typography variant="body1" color={formData.isDeleted ? "error" : "text.primary"}>
-            Удалить спринт
-          </Typography>
-        </Box>
+        <Box mt={3}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isDeleted}
+                    onChange={(e) => {
+                      const newValue = e.target.checked;
+                      const updatedData = {
+                        ...formData,
+                        isDeleted: newValue
+                      };
+                      setFormData(updatedData);
+                      debouncedUpdate(updatedData);
+                    }}
+                    color="error"
+                  />
+                }
+                label="Удалить событие"
+              />
+            </Box>
       </Box>
+
+      <Snackbar
+        open={showCopyNotification}
+        autoHideDuration={3000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%' }}>
+          ID спринта скопирован в буфер обмена
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
   TextField,
-  Checkbox,
   Breadcrumbs,
   Link as MuiLink,
   Stack,
@@ -13,10 +12,16 @@ import {
   MenuItem,
   Paper,
   Switch,
-  FormControlLabel,
+  Snackbar,
+  Alert,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import { useRoomDataStore } from "@store/index";
-import { useDebouncedCallback } from 'use-debounce';
 import eventsService from "@services/events/events.service";
 import type { IEvent, IPatchEventsRequest } from "@services/events/events.types";
 import { dateToInput } from "./helpers";
@@ -36,6 +41,8 @@ const EventsSetting = () => {
   const { updateEvent, eventData } = useRoomDataStore();
   const [event, setEvent] = useState<IEvent>();
   const { project } = useRoomDataStore();
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [formData, setFormData] = useState<IPatchEventsRequest>({
     name: '',
     startDate: '',
@@ -49,6 +56,8 @@ const EventsSetting = () => {
     isDeleted: false,
   });
 
+  const navigate = useNavigate();
+  
   useEffect(() => {
     const foundEvent = eventData.find(event => event.id === eventId);
     if (foundEvent) {
@@ -72,34 +81,45 @@ const EventsSetting = () => {
     console.log(formData)
   }, [formData])
 
-  const debouncedUpdate = useDebouncedCallback(
-    async (data: IPatchEventsRequest) => {
-      if (eventId) {
-        try {
-          const storeData = {
-            name: data.name,
-            startDate: new Date(data.startDate).toISOString(),
-            endDate: new Date(data.endDate).toISOString(),
-            ignoreEndDate: data.ignoreEndDate,
-            rewardType: data.rewardType,
-            rewardUnits: data.rewardUnits,
-            rewardValue: data.rewardValue,
-            promoCodeUsageLimit: data.promoCodeUsageLimit,
-            ignorePromoCodeUsageLimit: data.ignorePromoCodeUsageLimit,
-            isDeleted: data.isDeleted,
-          }
-
-          const response = await eventsService.patchEvents(storeData, eventId);
-          if (response.status === 200) {
-            updateEvent(eventId, storeData);
-          }
-        } catch (error) {
-          console.error('Ошибка при обновлении события:', error);
+  const handleSave = async (isDeleted: boolean = false) => {
+    if (eventId) {
+      try {
+        const storeData = {
+          name: formData.name,
+          startDate: new Date(formData.startDate).toISOString(),
+          endDate: new Date(formData.endDate).toISOString(),
+          ignoreEndDate: formData.ignoreEndDate,
+          rewardType: formData.rewardType,
+          rewardUnits: formData.rewardUnits,
+          rewardValue: formData.rewardValue,
+          promoCodeUsageLimit: formData.promoCodeUsageLimit,
+          ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
+          isDeleted: isDeleted,
         }
+
+        const response = await eventsService.patchEvents(storeData, eventId);
+        if (response.status === 200) {
+          updateEvent(eventId, storeData);
+        }
+      } catch (error) {
+        console.error('Ошибка при обновлении события:', error);
       }
-    },
-    1000
-  );
+    }
+  };
+
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteDialog(false);
+    await handleSave(true);
+    navigate(`/rooms/${slug}/events`);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+  };
 
   const handleInputChange = (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -108,7 +128,6 @@ const EventsSetting = () => {
       [field]: field === 'rewardValue' || field === 'promoCodeUsageLimit' ? Number(newValue) : newValue
     };
     setFormData(updatedData);
-    debouncedUpdate(updatedData);
   };
 
   const handleSelectChange = (field: keyof IPatchEventsRequest) => (event: any) => {
@@ -118,28 +137,28 @@ const EventsSetting = () => {
       [field]: newValue
     };
     setFormData(updatedData);
-    debouncedUpdate(updatedData);
   };
 
-  const handleCheckboxChange = (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.checked;
-    const updatedData = {
-      ...formData,
-      [field]: newValue
-    };
-    setFormData(updatedData);
-    debouncedUpdate(updatedData);
+  const handleCopyEventId = async () => {
+    try {
+      await navigator.clipboard.writeText(`ID события:${eventId || 'Ошибка получения ID события'}`);
+      setShowCopyNotification(true);
+    } catch (error) {
+      console.error('Ошибка при копировании:', error);
+    }
+  };
+
+  const handleCloseNotification = () => {
+    setShowCopyNotification(false);
   };
 
   if (!event) {
     return <Box p={3}>Загрузка...</Box>;
   }
 
-
-
   return (
     <Box>
-      <Box mb={3}>
+      <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to={`/rooms/${slug}/events`} underline="hover" color="inherit">
             Список событий
@@ -148,6 +167,9 @@ const EventsSetting = () => {
             {event.name}
           </Typography>
         </Breadcrumbs>
+        <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopyEventId}>
+          Скопировать ID события
+        </MuiLink>
       </Box>
 
       <Stack spacing={4}>
@@ -172,29 +194,40 @@ const EventsSetting = () => {
             </Box>
 
             <Box>
-              <Typography variant="subtitle2" mb={1}>
-                Ограничить событие датами
-              </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <TextField
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleInputChange('startDate')}
-                  variant="outlined"
-                  sx={{ flex: 1 }}
-                />
-                <TextField
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleInputChange('endDate')}
-                  variant="outlined"
-                  sx={{ flex: 1 }}
-                />
-                <Checkbox 
-                  checked={formData.ignoreEndDate}
-                  onChange={handleCheckboxChange('ignoreEndDate')}
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="subtitle2">
+                  Ограничить событие датами
+                </Typography>
+                <Switch
+                  checked={!formData.ignoreEndDate}
+                  onChange={(e) => {
+                    const newValue = !e.target.checked;
+                    const updatedData = {
+                      ...formData,
+                      ignoreEndDate: newValue
+                    };
+                    setFormData(updatedData);
+                  }}
                 />
               </Stack>
+              {!formData.ignoreEndDate && (
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <TextField
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleInputChange('startDate')}
+                    variant="outlined"
+                    sx={{ flex: 1 }}
+                  />
+                  <TextField
+                    type="date"
+                    value={formData.endDate}
+                    onChange={handleInputChange('endDate')}
+                    variant="outlined"
+                    sx={{ flex: 1 }}
+                  />
+                </Stack>
+              )}
             </Box>
 
             {/* <FormControlLabel
@@ -252,11 +285,24 @@ const EventsSetting = () => {
               </Stack>
             </Box>
 
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="subtitle2" mb={1}>
+            <Box>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="subtitle2">
                   Ограничить число использования каждого промокода
                 </Typography>
+                <Switch
+                  checked={!formData.ignorePromoCodeUsageLimit}
+                  onChange={(e) => {
+                    const newValue = !e.target.checked;
+                    const updatedData = {
+                      ...formData,
+                      ignorePromoCodeUsageLimit: newValue
+                    };
+                    setFormData(updatedData);
+                  }}
+                />
+              </Stack>
+              {!formData.ignorePromoCodeUsageLimit && (
                 <Stack direction="row" spacing={2} alignItems="center">
                   <TextField
                     type="number"
@@ -269,87 +315,139 @@ const EventsSetting = () => {
                     раз
                   </Typography>
                 </Stack>
-              </Box>
-              <Checkbox
-                checked={formData.ignorePromoCodeUsageLimit}
-                onChange={handleCheckboxChange('ignorePromoCodeUsageLimit')}
-              />
-            </Stack>
-            <Box mt={3}>
+              )}
+            </Box>
+            {/* <Box mt={3}>
               <FormControlLabel
                 control={
                   <Switch
                     checked={formData.isDeleted}
-                    onChange={handleCheckboxChange('isDeleted')}
+                    onChange={handleSwitchChange('isDeleted')}
                     color="error"
                   />
                 }
                 label="Удалить событие"
               />
-            </Box>
+            </Box> */}
           </Stack>
         </Paper>
 
-          <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
-            <Typography 
-              variant="h6"
-              fontWeight={600}
-              mb={2}
-            >
-              Группы подписчиков
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleDelete}
+            sx={{ minWidth: 120 }}
+          >
+            Удалить
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => handleSave()}
+            sx={{ minWidth: 120 }}
+          >
+            Сохранить
+          </Button>
+        </Box>
+
+        <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+          <Typography 
+            variant="h6"
+            fontWeight={600}
+            mb={2}
+          >
+            Группы подписчиков
+          </Typography>
+
+          <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+            <Box sx={{ width: 40, height: 40, borderRadius: "50%", border: "2px dashed #ccc" }} />
+            <Box>
+              <Typography variant="body1" fontWeight={500}>
+                Группа подписчиков в Senler для подачи заявки участие в событии
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                ID: 2353
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Stack spacing={1} mt={2}>
+            <Typography variant="subtitle2" pb={0.5}>
+              Ссылка для вступления в группу для подачи заявки:
             </Typography>
-
-            <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-              <Box sx={{ width: 40, height: 40, borderRadius: "50%", border: "2px dashed #ccc" }} />
-              <Box>
-                <Typography variant="body1" fontWeight={500}>
-                  Группа подписчиков в Senler для подачи заявки участие в событии
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  ID: 2353
-                </Typography>
-              </Box>
-            </Stack>
-
-            <Stack spacing={1} mt={2}>
-              <Typography variant="subtitle2" pb={0.5}>
-                Ссылка для вступления в группу для подачи заявки:
-              </Typography>
-              <TextField
-                value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.pendingSubscriptionId}&force=1`}
-                InputProps={{
-                  readOnly: true,
-                }}
-                fullWidth
-                size="small"
-                sx={{ pb: 3 }}
-              />
-              <Typography variant="subtitle2" pb={0.5}>
-                Ссылка для вступления в группу для одобренных участников:
-              </Typography>
-              <TextField
-                value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.approvedSubscriptionId}&force=1`}
-                InputProps={{
-                  readOnly: true,
-                }}
-                fullWidth
-                size="small"
-                sx={{ pb: 3 }}
-              />
-              <Typography variant="subtitle2" pt={0.5}>
-                Ссылка для вступления в группу для исключенных участников:
-              </Typography>
-              <TextField
-                value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.rejectedSubscriptionId}&force=1`}
-                InputProps={{
-                  readOnly: true,
-                }}
-                fullWidth
-                size="small"
-              />
-            </Stack>
-          </Paper>
+            <TextField
+              value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.pendingSubscriptionId}&force=1`}
+              InputProps={{
+                readOnly: true,
+              }}
+              fullWidth
+              size="small"
+              sx={{ pb: 3 }}
+            />
+            <Typography variant="subtitle2" pb={0.5}>
+              Ссылка для вступления в группу для одобренных участников:
+            </Typography>
+            <TextField
+              value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.approvedSubscriptionId}&force=1`}
+              InputProps={{
+                readOnly: true,
+              }}
+              fullWidth
+              size="small"
+              sx={{ pb: 3 }}
+            />
+            <Typography variant="subtitle2" pt={0.5}>
+              Ссылка для вступления в группу для исключенных участников:
+            </Typography>
+            <TextField
+              value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.rejectedSubscriptionId}&force=1`}
+              InputProps={{
+                readOnly: true,
+              }}
+              fullWidth
+              size="small"
+            />
+          </Stack>
+        </Paper>
       </Stack>
+
+      <Snackbar
+        open={showCopyNotification}
+        autoHideDuration={3000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%' }}>
+          ID события скопирован в буфер обмена
+        </Alert>
+      </Snackbar>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Вы уверены, что хотите удалить событие "{event?.name}"? Это действие нельзя будет отменить.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Отмена
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

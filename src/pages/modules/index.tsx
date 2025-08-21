@@ -7,14 +7,33 @@ import {
   Button,
   Breadcrumbs,
   Link as MuiLink,
+  Snackbar,
+  Alert,
 } from "@mui/material";
+import { useRoomDataStore } from "@store/index";
+import { useState } from "react";
 
 interface RoomBoxProps {
-  roomName: string;
   children: ReactNode | ReactNode[];
 }
 
-const RoomBox = ({ roomName, children }: RoomBoxProps) => {
+const RoomBox = ({ children }: RoomBoxProps) => {
+  const { roomData } = useRoomDataStore();
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
+
+  const handleCopyRoomId = async () => {
+    try {
+      await navigator.clipboard.writeText(`ID комнаты:${roomData?.id || 'Ошибка получения ID комнаты'}`);
+      setShowCopyNotification(true);
+    } catch (error) {
+      console.error('Ошибка при копировании:', error);
+    }
+  };
+
+  const handleCloseNotification = () => {
+    setShowCopyNotification(false);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -23,12 +42,12 @@ const RoomBox = ({ roomName, children }: RoomBoxProps) => {
             Список комнат
           </MuiLink>
           <Typography variant="body2" color="text.primary">
-            {roomName}
+            {roomData?.name}
           </Typography>
         </Breadcrumbs>
-        <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-          ID: 56
-        </Typography>
+        <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopyRoomId}>
+          Скопировать ID комнаты
+        </MuiLink>
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0.5, mb: 4 }}>
@@ -80,6 +99,17 @@ const RoomBox = ({ roomName, children }: RoomBoxProps) => {
       </Box>
 
       {children}
+
+      <Snackbar
+        open={showCopyNotification}
+        autoHideDuration={3000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%' }}>
+          ID комнаты скопирован в буфер обмена
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

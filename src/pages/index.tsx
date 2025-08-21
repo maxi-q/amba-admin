@@ -77,7 +77,7 @@ function RoomLayout() {
     return <Loader />;
   }
 
-  return <RoomBox roomName={roomData.name}><Outlet /></RoomBox>;
+  return <RoomBox><Outlet /></RoomBox>;
 }
 
 export default function RoomRedirect() {

@@ -58,7 +58,7 @@ const isEventActive = (startDate: string, endDate: string) => {
 export default function EventsPage() {
   const { slug } = useParams();
   const { roomData, eventData, addEvent } = useRoomDataStore();
-  
+
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState<ICreateEventRequest>({
     name: '',
@@ -140,11 +140,7 @@ export default function EventsPage() {
       </Stack>
       
       <Stack spacing={2}>
-        {eventData?.sort((a, b) => {
-          // Сначала показываем неудаленные события (isDeleted: false), затем удаленные (isDeleted: true)
-          if (a.isDeleted === b.isDeleted) return 0;
-          return a.isDeleted ? 1 : -1;
-        }).map((event: IEvent) => {
+        {eventData?.filter(event => !event.isDeleted).map((event: IEvent) => {
           const dateRange = formatDateRange(event.startDate, event.endDate);
           const isActive = isEventActive(event.startDate, event.endDate);
           
@@ -196,14 +192,7 @@ export default function EventsPage() {
               </Box>
 
               <Stack direction="row" alignItems="center" spacing={2}>
-                {event.isDeleted ? (
-                  <Chip
-                    label="Удален"
-                    color="error"
-                    size="small"
-                    sx={{ borderRadius: 1 }}
-                  />
-                ) : (
+                {!event.isDeleted && (
                   <Chip
                     label={isActive ? "активный" : "неактивный"}
                     color={isActive ? "success" : "default"}
@@ -253,7 +242,7 @@ export default function EventsPage() {
               onChange={handleInputChange('name')}
               sx={{ mb: 2 }}
             />
-            
+
             <TextField
               margin="dense"
               label="Дата начала"
@@ -267,7 +256,7 @@ export default function EventsPage() {
               }}
               sx={{ mb: 2 }}
             />
-            
+
             <TextField
               margin="dense"
               label="Дата окончания"
@@ -281,7 +270,7 @@ export default function EventsPage() {
               }}
               sx={{ mb: 2 }}
             />
-            
+
             <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
               <InputLabel>Тип награды</InputLabel>
               <Select

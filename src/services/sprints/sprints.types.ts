@@ -50,7 +50,7 @@ export interface ISprint {
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
   isDeleted: boolean,
-  roomId: string
+  roomId: string,
 }
 
 export interface IGetSprintsResponse {

@@ -186,11 +186,7 @@ export default function SprintList() {
       </Stack>
 
       <Stack spacing={2}>
-        {sprintData?.sort((a, b) => {
-          // Сначала показываем неудаленные спринты (isDeleted: false), затем удаленные (isDeleted: true)
-          if (a.isDeleted === b.isDeleted) return 0;
-          return a.isDeleted ? 1 : -1;
-        }).map((sprint) => {
+        {sprintData?.filter((sprint) => !sprint.isDeleted).map((sprint) => {
           const dateRange = formatDateRange(sprint.startDate, sprint.endDate);
           const isActive = isEventActive(sprint.startDate, sprint.endDate);
           const {labelEvent, colorEvent} = checkStatusEvent(sprint.startDate, sprint.endDate);
@@ -241,14 +237,7 @@ export default function SprintList() {
             </Box>
 
             <Stack direction="row" alignItems="center" spacing={2}>
-              {sprint.isDeleted ? (
-                <Chip
-                  label="Удален"
-                  color="error"
-                  size="small"
-                  sx={{ borderRadius: 1 }}
-                />
-              ) : (
+              {!sprint.isDeleted && (
                 <Chip
                   label={labelEvent}
                   color={colorEvent}
