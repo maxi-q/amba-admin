@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -9,51 +9,87 @@ import {
   Button,
   IconButton,
   Link,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { ExpandMore, Refresh } from "@mui/icons-material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRoomDataStore } from "@store/index";
-import { useDebouncedCallback } from 'use-debounce'; //  npm i use-debounce
 import roomsService from "@services/rooms/rooms.service";
 
 export default function SettingPage() {
   const { roomData } = useRoomDataStore();
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [roomName, setRoomName] = useState(roomData?.name || '')
   const [webhookUrl, setWebhookUrl] = useState(roomData?.webhookUrl || '');
   const [secretKey, setSecretKey] = useState(roomData?.secretKey || '');
-
-  const debouncedUpdate = useDebouncedCallback(
-    (payload: {
-      name: string;
-      webhookUrl: string;
-      secretKey: string;
-      isHidden: false
-    }, currentSlug: string) => {
-      roomsService.updateRooms(payload, currentSlug);
-    },
-    500
-  );
-
-  const isFirstRender = useRef(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    if (roomData) {
+      setRoomName(roomData.name || '');
+      setWebhookUrl(roomData.webhookUrl || '');
+      setSecretKey(roomData.secretKey || '');
     }
+  }, [roomData]);
 
+  const handleSave = async () => {
     if (!slug) return;
 
-    debouncedUpdate(
-      { name: roomName, webhookUrl, secretKey, isHidden: false },
-      slug
-    );
+    try {
+      const payload = {
+        name: roomName,
+        webhookUrl,
+        secretKey,
+        isDeleted: false
+      };
 
-    return debouncedUpdate.cancel;
-  }, [roomName, webhookUrl, secretKey, slug]);
+      await roomsService.updateRooms(payload, slug);
+      setShowSaveNotification(true);
+    } catch (error) {
+      console.error('Ошибка при обновлении комнаты:', error);
+    }
+  };
+
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteDialog(false);
+    if (!slug) return;
+
+    try {
+      const payload = {
+        name: roomName,
+        webhookUrl,
+        secretKey,
+        isDeleted: true
+      };
+      
+      await roomsService.updateRooms(payload, slug);
+      navigate(`/rooms/${slug}`);
+    } catch (error) {
+      console.error('Ошибка при удалении комнаты:', error);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+  };
+
+  const handleCloseSaveNotification = () => {
+    setShowSaveNotification(false);
+  };
 
   if (!roomData) {
     return null;
@@ -170,6 +206,63 @@ export default function SettingPage() {
           </Box>
         </AccordionDetails>
       </Accordion>
+
+      {/* Action Buttons */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleDelete}
+          sx={{ minWidth: 120 }}
+        >
+          Удалить
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          onClick={handleSave}
+          sx={{ minWidth: 120 }}
+        >
+          Сохранить
+        </Button>
+      </Box>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Вы уверены, что хотите удалить комнату "{roomData?.name}"? Это действие нельзя будет отменить.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Отмена
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Save Success Notification */}
+      <Snackbar
+        open={showSaveNotification}
+        autoHideDuration={3000}
+        onClose={handleCloseSaveNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSaveNotification} severity="success" sx={{ width: '100%' }}>
+          Настройки успешно сохранены
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

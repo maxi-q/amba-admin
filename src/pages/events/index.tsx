@@ -71,6 +71,7 @@ export default function EventsPage() {
     promoCodeUsageLimit: 0,
     ignorePromoCodeUsageLimit: false,
     roomId: roomData?.id || '',
+    isDeleted: false,
   });
 
   const handleCreateEvent = () => {
@@ -90,6 +91,7 @@ export default function EventsPage() {
       promoCodeUsageLimit: 0,
       ignorePromoCodeUsageLimit: false,
       roomId: roomData?.id || '',
+      isDeleted: false,
     });
   };
 

@@ -8,7 +8,8 @@ export interface ICreateEventRequest {
   rewardType: string,
   rewardValue: number,
   rewardUnits: string,
-  roomId: string
+  roomId: string,
+  isDeleted: boolean,
 }
 
 export interface ICreateEventResponse {

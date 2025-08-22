@@ -8,7 +8,8 @@ export interface ICreateSprintRequest {
   rewardValue: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
-  roomId: string
+  roomId: string,
+  isDeleted: boolean,
 }
 
 export interface ICreateSprintResponse {
@@ -29,7 +30,8 @@ export interface ICreateSprintResponse {
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
   isHidden: boolean,
-  roomId: string
+  roomId: string,
+  isDeleted: boolean,
 }
 
 export interface ISprint {

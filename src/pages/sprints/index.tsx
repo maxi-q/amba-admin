@@ -100,6 +100,7 @@ export default function SprintList() {
     promoCodeUsageLimit: 0,
     ignorePromoCodeUsageLimit: false,
     roomId: roomData?.id || '',
+    isDeleted: false,
   });
 
   const handleCreateSprint = () => {
@@ -119,6 +120,7 @@ export default function SprintList() {
       promoCodeUsageLimit: 0,
       ignorePromoCodeUsageLimit: false,
       roomId: roomData?.id || '',
+      isDeleted: false,
     });
   };
 
@@ -130,7 +132,6 @@ export default function SprintList() {
       });
       if (response.status === 201) {
         addSprint({
-          isDeleted: false,
           ...response.data
         });
       }

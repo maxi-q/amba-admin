@@ -15,7 +15,7 @@ export interface IRoomData {
   rejectedSubscriptionId: number,
   webhookUrl: string,
   secretKey: string,
-  isHidden: boolean,
+  isDeleted: boolean,
   projectId: string
 }
 
@@ -27,7 +27,7 @@ export interface IUpdateRoomsRequest {
   name: string,
   webhookUrl: string,
   secretKey: string,
-  isHidden: boolean
+  isDeleted: boolean
 }
 
 export type IUpdateRoomsResponse = IRoomData
@@ -43,6 +43,6 @@ export interface IGetRoomByIdResponse {
   rejectedSubscriptionId: number,
   webhookUrl: string,
   secretKey: string,
-  isHidden: boolean,
+  isDeleted: boolean,
   projectId: string
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -11,12 +11,16 @@ import {
   Select,
   MenuItem,
   Switch,
-  FormControlLabel,
   Snackbar,
   Alert,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import { useRoomDataStore } from "@store/index";
-import { useDebouncedCallback } from 'use-debounce';
 import sprintsService from "@services/sprints/sprints.service";
 import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
 import { dateToInput } from "./helpers";
@@ -38,6 +42,7 @@ const SprintSetting = () => {
   const { roomData, updateSprint, sprintData } = useRoomDataStore();
   const [sprint, setSprint] = useState<any>(null);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [formData, setFormData] = useState<IPatchSprintsRequest>({
     name: '',
     startDate: '',
@@ -50,6 +55,8 @@ const SprintSetting = () => {
     ignorePromoCodeUsageLimit: false,
     isDeleted: false,
   });
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const foundSprint = sprintData.find(sprint => sprint.id === sprintId);
@@ -74,34 +81,45 @@ const SprintSetting = () => {
     console.log(formData)
   }, [formData])
 
-  const debouncedUpdate = useDebouncedCallback(
-    async (data: IPatchSprintsRequest) => {
-      if (sprintId) {
-        try {
-          const storeData = {
-            name: data.name,
-            startDate: new Date(data.startDate).toISOString(),
-            endDate: new Date(data.endDate).toISOString(),
-            ignoreEndDate: data.ignoreEndDate,
-            rewardType: data.rewardType,
-            rewardUnits: data.rewardUnits,
-            rewardValue: data.rewardValue,
-            promoCodeUsageLimit: data.promoCodeUsageLimit,
-            ignorePromoCodeUsageLimit: data.ignorePromoCodeUsageLimit,
-            isDeleted: data.isDeleted,
-          }
-
-          const response = await sprintsService.patchSprints(storeData, sprintId);
-          if (response.status === 200) {
-            updateSprint(sprintId, storeData);
-          }
-        } catch (error) {
-          console.error('Ошибка при обновлении спринта:', error);
+  const handleSave = async (isDeleted: boolean = false) => {
+    if (sprintId) {
+      try {
+        const storeData = {
+          name: formData.name,
+          startDate: new Date(formData.startDate).toISOString(),
+          endDate: new Date(formData.endDate).toISOString(),
+          ignoreEndDate: formData.ignoreEndDate,
+          rewardType: formData.rewardType,
+          rewardUnits: formData.rewardUnits,
+          rewardValue: formData.rewardValue,
+          promoCodeUsageLimit: formData.promoCodeUsageLimit,
+          ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
+          isDeleted: isDeleted,
         }
+
+        const response = await sprintsService.patchSprints(storeData, sprintId);
+        if (response.status === 200) {
+          updateSprint(sprintId, storeData);
+        }
+      } catch (error) {
+        console.error('Ошибка при обновлении спринта:', error);
       }
-    },
-    1000
-  );
+    }
+  };
+
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteDialog(false);
+    await handleSave(true);
+    navigate(`/rooms/${slug}/sprints`);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+  };
 
   const handleInputChange = (field: keyof IPatchSprintsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -110,7 +128,6 @@ const SprintSetting = () => {
       [field]: field === 'rewardValue' || field === 'promoCodeUsageLimit' ? Number(newValue) : newValue
     };
     setFormData(updatedData);
-    debouncedUpdate(updatedData);
   };
 
   const handleSelectChange = (field: keyof IPatchSprintsRequest) => (event: any) => {
@@ -120,7 +137,6 @@ const SprintSetting = () => {
       [field]: newValue
     };
     setFormData(updatedData);
-    debouncedUpdate(updatedData);
   };
 
   const handleCopySprintId = async () => {
@@ -187,7 +203,6 @@ const SprintSetting = () => {
                     ignoreEndDate: newValue
                   };
                   setFormData(updatedData);
-                  debouncedUpdate(updatedData);
                 }}
               />
             </Stack>
@@ -292,7 +307,6 @@ const SprintSetting = () => {
                     ignorePromoCodeUsageLimit: newValue
                   };
                   setFormData(updatedData);
-                  debouncedUpdate(updatedData);
                 }}
               />
             </Stack>
@@ -312,26 +326,26 @@ const SprintSetting = () => {
             )}
           </Box>
         </Stack>
-        <Box mt={3}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.isDeleted}
-                    onChange={(e) => {
-                      const newValue = e.target.checked;
-                      const updatedData = {
-                        ...formData,
-                        isDeleted: newValue
-                      };
-                      setFormData(updatedData);
-                      debouncedUpdate(updatedData);
-                    }}
-                    color="error"
-                  />
-                }
-                label="Удалить событие"
-              />
-            </Box>
+
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleDelete}
+            sx={{ minWidth: 120 }}
+          >
+            Удалить
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => handleSave()}
+            sx={{ minWidth: 120 }}
+          >
+            Сохранить
+          </Button>
+        </Box>
       </Box>
 
       <Snackbar
@@ -344,6 +358,31 @@ const SprintSetting = () => {
           ID спринта скопирован в буфер обмена
         </Alert>
       </Snackbar>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteDialog}
+        onClose={handleCancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Вы уверены, что хотите удалить спринт "{sprint?.name}"? Это действие нельзя будет отменить.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete} color="primary">
+            Отмена
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
