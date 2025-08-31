@@ -6,6 +6,7 @@ import {
   Paper,
   Stack,
   Alert,
+  Button,
 } from "@mui/material";
 import { getUrlParams } from "@helpers/index";
 import authService from "@services/auth/auth.service";
@@ -54,7 +55,7 @@ const AuthPage = () => {
     setError(null);
 
     try {
-      const url = authService.start()
+      const url = authService.start(Number(senlerGroupId))
 
       const popup = window.open(url, '_blank', 'width=600,height=700');
       if (popup) {
@@ -68,7 +69,7 @@ const AuthPage = () => {
                 context,
                 sign,
               });
-    
+
               if (response?.status === 201) {
                 login(response.data.token);
                 const from = location.state?.from?.pathname || "/";
@@ -126,13 +127,15 @@ const AuthPage = () => {
           </Typography>
 
           {!isLoading && !auth && (
-            <div className="accounts_dropdown flex justify-start p-3 flex-row" onClick={openAuthPopup}>
-            <div className="flex items-center ">
-              <div className="ms-2">
-                <span data-role="header_account_text">Зарегистрировать проект</span>
-              </div>
-            </div>
-          </div>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={openAuthPopup}
+              size="large"
+            >
+              Войти
+            </Button>
           )}
         </Stack>
       </Paper>

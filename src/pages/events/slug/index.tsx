@@ -38,7 +38,7 @@ const rewardUnits = [
 
 const EventsSetting = () => {
   const { eventId, slug } = useParams();
-  const { updateEvent, eventData } = useRoomDataStore();
+  const { updateEvent, eventData, addEvent } = useRoomDataStore();
   const [event, setEvent] = useState<IEvent>();
   const { project } = useRoomDataStore();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
@@ -57,7 +57,7 @@ const EventsSetting = () => {
   });
 
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const foundEvent = eventData.find(event => event.id === eventId);
     if (foundEvent) {
@@ -82,27 +82,32 @@ const EventsSetting = () => {
   }, [formData])
 
   const handleSave = async (isDeleted: boolean = false) => {
-    if (eventId) {
+    const storeData = {
+      name: formData.name,
+      startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
+      endDate: formData.endDate ? new Date(formData.endDate).toISOString() : '',
+      ignoreEndDate: formData.ignoreEndDate,
+      rewardType: formData.rewardType,
+      rewardUnits: formData.rewardUnits,
+      rewardValue: formData.rewardValue,
+      promoCodeUsageLimit: formData.promoCodeUsageLimit,
+      ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
+      isDeleted: isDeleted,
+    }
+    if (eventId !== 'new') {
       try {
-        const storeData = {
-          name: formData.name,
-          startDate: new Date(formData.startDate).toISOString(),
-          endDate: new Date(formData.endDate).toISOString(),
-          ignoreEndDate: formData.ignoreEndDate,
-          rewardType: formData.rewardType,
-          rewardUnits: formData.rewardUnits,
-          rewardValue: formData.rewardValue,
-          promoCodeUsageLimit: formData.promoCodeUsageLimit,
-          ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
-          isDeleted: isDeleted,
-        }
-
-        const response = await eventsService.patchEvents(storeData, eventId);
+        const response = await eventsService.patchEvents(storeData, eventId || '');
         if (response.status === 200) {
-          updateEvent(eventId, storeData);
+          updateEvent(eventId || '', storeData);
         }
       } catch (error) {
         console.error('Ошибка при обновлении события:', error);
+      }
+    } else if (slug) {
+      const response = await eventsService.createEvent({...storeData, roomId: slug});
+      if (response.status === 201) {
+        addEvent(response.data);
+        navigate(`/rooms/${slug}/events/${response.data.id}`);
       }
     }
   };
@@ -152,7 +157,7 @@ const EventsSetting = () => {
     setShowCopyNotification(false);
   };
 
-  if (!event) {
+  if (!event && eventId !== 'new') {
     return <Box p={3}>Загрузка...</Box>;
   }
 
@@ -164,12 +169,14 @@ const EventsSetting = () => {
             Список событий
           </MuiLink>
           <Typography variant="body2" color="text.primary">
-            {event.name}
+            {eventId !== 'new' ? event?.name : 'Новое событие'}
           </Typography>
         </Breadcrumbs>
-        <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopyEventId}>
-          Скопировать ID события
-        </MuiLink>
+        {eventId !== 'new' && (
+          <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopyEventId}>
+            Скопировать ID события
+          </MuiLink>
+        )}
       </Box>
 
       <Stack spacing={4}>
@@ -334,26 +341,28 @@ const EventsSetting = () => {
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={handleDelete}
-            sx={{ minWidth: 120 }}
-          >
-            Удалить
-          </Button>
+          {eventId !== 'new' && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleDelete}
+              sx={{ minWidth: 120 }}
+            >
+              Удалить
+            </Button>
+          )}
           <Button
             variant="contained"
             color="success"
             onClick={() => handleSave()}
             sx={{ minWidth: 120 }}
           >
-            Сохранить
+            {eventId !== 'new' ? 'Сохранить' : 'Добавить'}
           </Button>
         </Box>
-
+        {eventId !== 'new' && event && (
         <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
-          <Typography 
+          <Typography
             variant="h6"
             fontWeight={600}
             mb={2}
@@ -411,6 +420,7 @@ const EventsSetting = () => {
             />
           </Stack>
         </Paper>
+        )}
       </Stack>
 
       <Snackbar
@@ -440,9 +450,9 @@ const EventsSetting = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
-            Отмена
-          </Button>
+            <Button onClick={handleCancelDelete} color="primary">
+              Отмена
+            </Button>
           <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
             Удалить
           </Button>

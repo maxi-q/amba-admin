@@ -75,4 +75,4 @@ const SenlerAuthLink = ({
 	)
 }
 
-export default SenlerAuthLink 
+export default SenlerAuthLink

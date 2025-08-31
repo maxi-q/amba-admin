@@ -18,7 +18,7 @@ import {
   Alert,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { ExpandMore, Refresh } from "@mui/icons-material";
+import { ExpandMore, Refresh, ContentCopy } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useRoomDataStore } from "@store/index";
 import roomsService from "@services/rooms/rooms.service";
@@ -33,6 +33,7 @@ export default function SettingPage() {
   const [secretKey, setSecretKey] = useState(roomData?.secretKey || '');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   useEffect(() => {
     if (roomData) {
@@ -89,6 +90,19 @@ export default function SettingPage() {
 
   const handleCloseSaveNotification = () => {
     setShowSaveNotification(false);
+  };
+
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setShowCopyNotification(true);
+    } catch (error) {
+      console.error('Ошибка при копировании:', error);
+    }
+  };
+
+  const handleCloseCopyNotification = () => {
+    setShowCopyNotification(false);
   };
 
   if (!roomData) {
@@ -199,10 +213,98 @@ export default function SettingPage() {
           <Typography variant="h6">Форма для сайта</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Здесь будет содержимое формы для сайта
-            </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Код для установки на сайт */}
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Код для установки на сайт
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Разместите код как можно ближе к началу страницы, Например, в пределах тегов &lt;head&gt;&lt;/head&gt; или &lt;body&gt;&lt;/body&gt;
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Это универсальный код, который подходит для всех комнат, его нужно вставить на сайт только один раз
+              </Typography>
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  multiline
+                  rows={8}
+                  fullWidth
+                  value={`<script type="text/javascript">
+  ...
+</script>`}
+                  variant="outlined"
+                  InputProps={{
+                    readOnly: true,
+                    sx: { fontFamily: 'monospace', fontSize: '14px' }
+                  }}
+                />
+                <IconButton
+                  onClick={() => handleCopyToClipboard(`<script type="text/javascript">
+  ...
+</script>`)}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                  }}
+                  color="primary"
+                >
+                  <ContentCopy />
+                </IconButton>
+              </Box>
+            </Box>
+
+            {/* Код для вызова формы */}
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Код для вызова формы с вводом промокода
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
+                  openPromoAmbSEN(&lt;unique_id&gt;, &lt;security_code&gt;, &lt;room_id&gt;)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <strong>unique_id</strong> - идентификатор, по которому нужно ограничивать повторное использование промокодов
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <strong>security_code</strong> - секретный ключ для защиты запросов. Вы можете указать этот параметр, чтобы защитить использование промокодов от недобросовестных пользователей. Его нужно сгенерировать на сервере, чтобы защитить алгоритм его формирования. Например, можно использовать функцию md5, в которой зашифровать unique_id и придуманную вами строку, чтобы потом проверить в вебхуке данный параметр md5(unique_id+'45rtwtwb')
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <strong>room_id</strong> - идентификатор комнаты. Текущий ID = {roomData?.id || 'N/A'}
+                </Typography>
+              </Box>
+              
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                Пример:
+              </Typography>
+              <Box sx={{ position: 'relative' }}>
+                <TextField
+                  multiline
+                  rows={2}
+                  fullWidth
+                  value={`<a href="#" onclick="openPromoAmbSEN(123, 'sdfsdfg4', ${roomData?.id || 56})">Ввести промокод</a>`}
+                  variant="outlined"
+                  InputProps={{
+                    readOnly: true,
+                    sx: { fontFamily: 'monospace', fontSize: '14px' }
+                  }}
+                />
+                <IconButton
+                  onClick={() => handleCopyToClipboard(`<a href="#" onclick="openPromoAmbSEN(123, 'sdfsdfg4', ${roomData?.id || 56})">Ввести промокод</a>`)}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                  }}
+                  color="primary"
+                >
+                  <ContentCopy />
+                </IconButton>
+              </Box>
+            </Box>
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -261,6 +363,18 @@ export default function SettingPage() {
       >
         <Alert onClose={handleCloseSaveNotification} severity="success" sx={{ width: '100%' }}>
           Настройки успешно сохранены
+        </Alert>
+      </Snackbar>
+
+      {/* Copy Success Notification */}
+      <Snackbar
+        open={showCopyNotification}
+        autoHideDuration={2000}
+        onClose={handleCloseCopyNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseCopyNotification} severity="info" sx={{ width: '100%' }}>
+          Код скопирован в буфер обмена
         </Alert>
       </Snackbar>
     </Box>

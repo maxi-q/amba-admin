@@ -26,8 +26,8 @@ class AuthService {
     return instance.get<IAuthByTokenResponse>(`${this._BASE_URL}/auth`, {params: data, headers: getContentType()});
   }
 
-  start() {
-    return `${API_URL}${this._BASE_URL}/start`;
+  start(groupId: number) {
+    return `${API_URL}${this._BASE_URL}/start?groupId=${groupId}`;
   }
 }
 

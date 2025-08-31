@@ -1,24 +1,70 @@
-import { Box, Typography, Paper } from '@mui/material';
-import { Loader } from '../../components/Loader';
+import { Box, Typography, Paper, CircularProgress } from '@mui/material';
+import { useEffect } from 'react';
 
-const RedirectAuthPage = () => (
-  <Box
-    sx={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      bgcolor: 'background.default',
-      p: 2,
-    }}
-  >
-    <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxWidth: 400, width: '100%', textAlign: 'center' }}>
-      <Loader size="large" />
-      <Typography variant="h6" mt={3}>
-        Загрузка...
-      </Typography>
-    </Paper>
-  </Box>
-);
+const RedirectAuthPage = () => {
+
+  useEffect(() => {
+    window.close();
+  }, [])
+
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'background.default',
+        p: 2,
+        background: '#428bca',
+      }}
+    >
+      <Paper 
+        elevation={8} 
+        sx={{ 
+          p: 6, 
+          borderRadius: 3, 
+          maxWidth: 450, 
+          width: '100%', 
+          textAlign: 'center',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        <CircularProgress 
+          size={60} 
+          thickness={4}
+          sx={{ 
+            color: 'primary.main',
+            mb: 3,
+          }} 
+        />
+        <Typography 
+          variant="h5" 
+          component="h1"
+          sx={{ 
+            fontWeight: 600,
+            color: 'text.primary',
+            mb: 2,
+          }}
+        >
+          Ожидание перенаправления
+        </Typography>
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            color: 'text.secondary',
+            maxWidth: 300,
+            mx: 'auto',
+            lineHeight: 1.6,
+          }}
+        >
+          Пожалуйста, подождите, пока происходит перенаправление...
+        </Typography>
+      </Paper>
+    </Box>
+  )
+};
 
 export default RedirectAuthPage;

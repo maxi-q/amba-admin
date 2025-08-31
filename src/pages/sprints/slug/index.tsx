@@ -39,7 +39,7 @@ const rewardUnits = [
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
-  const { roomData, updateSprint, sprintData } = useRoomDataStore();
+  const { roomData, updateSprint, sprintData, addSprint } = useRoomDataStore();
   const [sprint, setSprint] = useState<any>(null);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -82,27 +82,33 @@ const SprintSetting = () => {
   }, [formData])
 
   const handleSave = async (isDeleted: boolean = false) => {
-    if (sprintId) {
-      try {
-        const storeData = {
-          name: formData.name,
-          startDate: new Date(formData.startDate).toISOString(),
-          endDate: new Date(formData.endDate).toISOString(),
-          ignoreEndDate: formData.ignoreEndDate,
-          rewardType: formData.rewardType,
-          rewardUnits: formData.rewardUnits,
-          rewardValue: formData.rewardValue,
-          promoCodeUsageLimit: formData.promoCodeUsageLimit,
-          ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
-          isDeleted: isDeleted,
-        }
 
-        const response = await sprintsService.patchSprints(storeData, sprintId);
+    const storeData = {
+      name: formData.name,
+      startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
+      endDate: formData.endDate ? new Date(formData.endDate).toISOString() : '',
+      ignoreEndDate: formData.ignoreEndDate,
+      rewardType: formData.rewardType,
+      rewardUnits: formData.rewardUnits,
+      rewardValue: formData.rewardValue,
+      promoCodeUsageLimit: formData.promoCodeUsageLimit,
+      ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
+      isDeleted: isDeleted,
+    }
+    if (sprintId !== 'new') {
+      try {
+        const response = await sprintsService.patchSprints(storeData, sprintId || '');
         if (response.status === 200) {
-          updateSprint(sprintId, storeData);
+          updateSprint(sprintId || '', storeData);
         }
       } catch (error) {
         console.error('Ошибка при обновлении спринта:', error);
+      }
+    } else if (slug) {
+      const response = await sprintsService.createSprint({...storeData, roomId: slug});
+      if (response.status === 201) {
+        addSprint(response.data);
+        navigate(`/rooms/${slug}/sprints/${response.data.id}`);
       }
     }
   };
@@ -152,7 +158,7 @@ const SprintSetting = () => {
     setShowCopyNotification(false);
   };
 
-  if (!sprint) {
+  if (!sprint && sprintId !== 'new') {
     return <Box p={3}>Загрузка...</Box>;
   }
 
@@ -164,17 +170,18 @@ const SprintSetting = () => {
             Список спринтов
           </MuiLink>
           <Typography variant="body2" color="text.primary">
-            {sprint.name}
+            {sprintId !== 'new' ? sprint?.name : 'Новый спринт'}
           </Typography>
         </Breadcrumbs>
-        <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopySprintId}>
-          Скопировать ID спринта
-        </MuiLink>
+        {sprintId !== 'new' && (
+          <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopySprintId}>
+            Скопировать ID спринта
+          </MuiLink>
+        )}
       </Box>
 
       <Box p={3}>
         <Typography variant="h4" fontWeight={700} mb={2}>Настройки</Typography>
-        
         <Stack spacing={3}>
           <Box>
             <Typography variant="subtitle2" mb={1}>
@@ -329,21 +336,23 @@ const SprintSetting = () => {
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={handleDelete}
-            sx={{ minWidth: 120 }}
-          >
-            Удалить
-          </Button>
+          {sprintId !== 'new' && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleDelete}
+              sx={{ minWidth: 120 }}
+            >
+              Удалить
+            </Button>
+          )}
           <Button
             variant="contained"
             color="success"
             onClick={() => handleSave()}
             sx={{ minWidth: 120 }}
           >
-            Сохранить
+            {sprintId !== 'new' ? 'Сохранить' : 'Добавить'}
           </Button>
         </Box>
       </Box>
