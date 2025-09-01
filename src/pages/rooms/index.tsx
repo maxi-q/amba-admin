@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Edit as EditIcon, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Edit as EditIcon } from "@mui/icons-material";
 import {
   Button,
   Container,
@@ -17,10 +17,6 @@ import {
   DialogActions,
   TextField,
   Box,
-  InputAdornment,
-  InputLabel,
-  OutlinedInput,
-  FormControl,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import roomsService from "@services/rooms/rooms.service";
@@ -35,7 +31,6 @@ export default function RoomsPage() {
   const [formData, setFormData] = useState({
     name: '',
     webhookUrl: '',
-    secretKey: '',
   });
 
   useEffect(() => {
@@ -57,7 +52,7 @@ export default function RoomsPage() {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setFormData({ name: '', webhookUrl: '', secretKey: '' });
+    setFormData({ name: '', webhookUrl: '' });
   };
 
   const handleSubmit = async () => {
@@ -65,7 +60,6 @@ export default function RoomsPage() {
       const response = await roomsService.createRooms({
         name: formData.name,
         webhookUrl: formData.webhookUrl,
-        secretKey: formData.secretKey,
       });
       if (response.status === 201) {
         setRooms(prev => [...prev, response.data]);
@@ -81,18 +75,6 @@ export default function RoomsPage() {
     }));
   };
 
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-  };
-
-  const handleMouseUpPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-  };
-
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -104,7 +86,7 @@ export default function RoomsPage() {
   return (
     <Container maxWidth="md" sx={{ minHeight: "100vh", display: "flex", alignItems: "flex-start", justifyContent: "center", py: 6 }}>
       <Paper elevation={2} sx={{ width: "100%", borderRadius: 6, p: 4 }}>
-        <Typography variant="h4" align="center" fontWeight={600} gutterBottom>
+        <Typography variant="h6" align="center" fontWeight={600} gutterBottom>
           Список комнат
         </Typography>
         <List sx={{ mt: 4 }}>
@@ -154,43 +136,6 @@ export default function RoomsPage() {
               placeholder="https://"
               sx={{ mb: 2 }}
             />
-            {/* <TextField
-              margin="dense"
-              fullWidth
-              variant="outlined"
-              type="password"
-              value={formData.secretKey}
-              onChange={handleInputChange('secretKey')}
-              sx={{ mb: 2 }}
-            /> */}
-            <FormControl variant="outlined" fullWidth>
-              <InputLabel htmlFor="outlined-adornment-password">Секретный ключ</InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-password"
-                type={showPassword ? 'text' : 'password'}
-                label="Секретный ключ"
-                fullWidth
-                value={formData.secretKey}
-                onChange={handleInputChange('secretKey')}
-                sx={{ mb: 2 }}
-
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label={
-                        showPassword ? 'hide the password' : 'display the password'
-                      }
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
-                      onMouseUp={handleMouseUpPassword}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>

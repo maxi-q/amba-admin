@@ -50,7 +50,7 @@ export default function EventsPage() {
   return (
     <Box p={3}>
       <Stack direction="row" alignItems="center" mb={3}>
-        <Typography variant="h4" fontWeight={700} mb={0}>
+        <Typography variant="h6" fontWeight={700} mb={0}>
           Список событий
         </Typography>
         <Box flex={1} />

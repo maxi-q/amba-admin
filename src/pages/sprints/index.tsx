@@ -72,7 +72,7 @@ export default function SprintList() {
   return (
     <Box p={3}>
       <Stack direction="row" alignItems="center" mb={2}>
-        <Typography variant="h4" fontWeight={700} mb={0}>
+        <Typography variant="h6" fontWeight={700} mb={0}>
           Список спринтов
         </Typography>
         <Box flex={1} />

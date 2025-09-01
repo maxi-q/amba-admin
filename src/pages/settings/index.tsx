@@ -137,6 +137,26 @@ export default function SettingPage() {
         />
       </Box>
 
+      {/* Action Buttons */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, my: 4 }}>
+        <Button
+          variant="outlined"
+          color="error"
+          onClick={handleDelete}
+          sx={{ minWidth: 120 }}
+        >
+          Удалить
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSave}
+          sx={{ minWidth: 120 }}
+        >
+          Сохранить
+        </Button>
+      </Box>
+
       {/* Вебхук секция */}
       <Accordion defaultExpanded sx={{ mb: 2 }}>
         <AccordionSummary
@@ -184,6 +204,18 @@ export default function SettingPage() {
                 size="medium"
                 variant="outlined"
                 type="password"
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      onClick={() => handleCopyToClipboard(secretKey)}
+                      color="primary"
+                      size="small"
+                      sx={{ mr: 0.5 }}
+                    >
+                      <ContentCopy />
+                    </IconButton>
+                  )
+                }}
               />
               <IconButton onClick={generateSecretKey} color="primary">
                 <Refresh />
@@ -309,26 +341,6 @@ export default function SettingPage() {
         </AccordionDetails>
       </Accordion>
 
-      {/* Action Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={handleDelete}
-          sx={{ minWidth: 120 }}
-        >
-          Удалить
-        </Button>
-        <Button
-          variant="contained"
-          color="success"
-          onClick={handleSave}
-          sx={{ minWidth: 120 }}
-        >
-          Сохранить
-        </Button>
-      </Box>
-
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={showDeleteDialog}
@@ -374,7 +386,7 @@ export default function SettingPage() {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert onClose={handleCloseCopyNotification} severity="info" sx={{ width: '100%' }}>
-          Код скопирован в буфер обмена
+          Секретный ключ скопирован в буфер обмена
         </Alert>
       </Snackbar>
     </Box>

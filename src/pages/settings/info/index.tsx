@@ -32,8 +32,8 @@ const SettingsInfo = () => {
             <ArrowBackIcon />
           </IconButton>
         </Box>
-        
-        <Typography variant="h3" fontWeight={700} mb={3}>
+
+        <Typography variant="h4" fontWeight={700} mb={3}>
           Формат вебхука
         </Typography>
         

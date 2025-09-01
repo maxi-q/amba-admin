@@ -32,7 +32,7 @@ const EventsInfo = () => {
           </IconButton>
         </Box>
         
-        <Typography variant="h3" fontWeight={700} mb={3}>
+        <Typography variant="h4" fontWeight={700} mb={3}>
           Что такое события?
         </Typography>
         

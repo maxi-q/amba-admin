@@ -39,7 +39,7 @@ function RoomLayout() {
         type: 'SenlerAppResizeWindow',
         params: {
           width: 1000,
-          height: 792
+          height: 651
         }
       }
     }

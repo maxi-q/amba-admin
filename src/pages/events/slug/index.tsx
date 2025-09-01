@@ -353,7 +353,7 @@ const EventsSetting = () => {
           )}
           <Button
             variant="contained"
-            color="success"
+            color="primary"
             onClick={() => handleSave()}
             sx={{ minWidth: 120 }}
           >

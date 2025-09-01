@@ -181,7 +181,7 @@ const SprintSetting = () => {
       </Box>
 
       <Box p={3}>
-        <Typography variant="h4" fontWeight={700} mb={2}>Настройки</Typography>
+        <Typography variant="h6" fontWeight={700} mb={2}>Настройки</Typography>
         <Stack spacing={3}>
           <Box>
             <Typography variant="subtitle2" mb={1}>
@@ -348,7 +348,7 @@ const SprintSetting = () => {
           )}
           <Button
             variant="contained"
-            color="success"
+            color="primary"
             onClick={() => handleSave()}
             sx={{ minWidth: 120 }}
           >

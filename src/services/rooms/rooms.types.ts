@@ -2,7 +2,6 @@
 export interface ICreateRoomRequest {
   name: string;
   webhookUrl: string;
-  secretKey: string;
 }
 
 export interface IRoomData {
