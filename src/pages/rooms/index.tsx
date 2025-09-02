@@ -86,16 +86,17 @@ export default function RoomsPage() {
       <Typography variant="h6" align="center" fontWeight={600} gutterBottom>
         Список комнат
       </Typography>
-      <Stack direction="row" justifyContent="flex-start" mb={3}>
+      <Stack direction="row" justifyContent="flex-start" mb={1}>
         <Button
           onClick={handleCreateRoom}
           variant="contained"
           color="primary"
+          sx={{ mt: 2 }}
         >
           Создать комнату
         </Button>
       </Stack>
-      <List sx={{ mt: 4 }}>
+      <List >
         {rooms.length ? rooms.map((room) => (
           <ListItem key={room.id} disablePadding sx={{ mb: 2, borderRadius: 3, boxShadow: 1, border: 1, overflow: "hidden" }}>
             <ListItemButton component={Link} to={`/rooms/${room.id}`} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
