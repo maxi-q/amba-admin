@@ -86,6 +86,15 @@ export default function RoomsPage() {
       <Typography variant="h6" align="center" fontWeight={600} gutterBottom>
         Список комнат
       </Typography>
+      <Stack direction="row" justifyContent="flex-start" mb={3}>
+        <Button
+          onClick={handleCreateRoom}
+          variant="contained"
+          color="primary"
+        >
+          Создать комнату
+        </Button>
+      </Stack>
       <List sx={{ mt: 4 }}>
         {rooms.length ? rooms.map((room) => (
           <ListItem key={room.id} disablePadding sx={{ mb: 2, borderRadius: 3, boxShadow: 1, border: 1, overflow: "hidden" }}>
@@ -98,14 +107,6 @@ export default function RoomsPage() {
           </ListItem>
         )): <>Нет созданных комнат</>}
       </List>
-      <Stack direction="row" justifyContent="flex-end" mt={8}>
-        <Button
-          onClick={handleCreateRoom}
-          variant="createroom"
-        >
-          Создать комнату
-        </Button>
-      </Stack>
 
       {/* Модальное окно создания комнаты */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
