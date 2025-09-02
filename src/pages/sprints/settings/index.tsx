@@ -83,7 +83,7 @@ export default function SprintSettingsPage() {
   };
 
   return (
-    <Box maxWidth={900} mx="auto" p={3}>
+    <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Box sx={{ mb: 3, display: "flex", alignItems: "center" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to={`/rooms/${slug}/sprints`} underline="hover" color="inherit">
@@ -96,7 +96,7 @@ export default function SprintSettingsPage() {
       </Box>
       <Stack spacing={3}>
         {groups.map((group) => (
-          <Paper key={group.id} elevation={1} sx={{ borderRadius: 3, p: 3 }}>
+          <Paper key={group.id} sx={{ borderRadius: 3 }}>
             <Typography variant="h6" fontWeight={600} mb={2}>{group.title}</Typography>
 
             <Stack direction="row" alignItems="center" spacing={2} mb={2}>

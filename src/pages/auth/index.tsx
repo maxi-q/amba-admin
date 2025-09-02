@@ -37,11 +37,11 @@ const AuthPage = () => {
             const from = location.state?.from?.pathname || "/";
             navigate(from, { replace: true });
           } else {
-            setError("Ошибка авторизации");
+            // setError("Ошибка авторизации");
             logout()
           }
         } catch {
-          setError("Ошибка авторизации");
+          // setError("Ошибка авторизации");
           logout()
         } finally {
           setIsLoading(false);
@@ -107,7 +107,7 @@ const AuthPage = () => {
         p: 2,
       }}
     >
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxWidth: 500, width: "100%" }}>
+      <Paper elevation={0} sx={{ p: 4, borderRadius: 2, maxWidth: 500, width: "100%" }}>
         <Typography variant="h4" align="center" fontWeight={600} mb={3}>
           Авторизация
         </Typography>

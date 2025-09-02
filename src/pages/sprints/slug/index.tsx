@@ -159,11 +159,11 @@ const SprintSetting = () => {
   };
 
   if (!sprint && sprintId !== 'new') {
-    return <Box p={3}>Загрузка...</Box>;
+    return <Box sx={{ px: 2, py: 3 }}>Загрузка...</Box>;
   }
 
   return (
-    <Box>
+    <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to={`/rooms/${slug}/sprints`} underline="hover" color="inherit">
@@ -180,7 +180,7 @@ const SprintSetting = () => {
         )}
       </Box>
 
-      <Box p={3}>
+      <Box>
         <Typography variant="h6" fontWeight={700} mb={2}>Настройки</Typography>
         <Stack spacing={3}>
           <Box>

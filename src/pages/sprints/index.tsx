@@ -70,7 +70,7 @@ export default function SprintList() {
   };
 
   return (
-    <Box p={3}>
+    <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Stack direction="row" alignItems="center" mb={2}>
         <Typography variant="h6" fontWeight={700} mb={0}>
           Список спринтов
@@ -106,7 +106,6 @@ export default function SprintList() {
             key={sprint.id}
             component={Link}
             to={`${sprint.id}`}
-            elevation={1}
             sx={{
               p: 2,
               borderRadius: 3,

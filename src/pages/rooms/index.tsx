@@ -2,14 +2,12 @@ import { useEffect, useState } from "react";
 import { Edit as EditIcon } from "@mui/icons-material";
 import {
   Button,
-  Container,
   Typography,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   IconButton,
-  Paper,
   Stack,
   Dialog,
   DialogTitle,
@@ -77,39 +75,37 @@ export default function RoomsPage() {
 
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Loader />
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ minHeight: "100vh", display: "flex", alignItems: "flex-start", justifyContent: "center", py: 6 }}>
-      <Paper elevation={2} sx={{ width: "100%", borderRadius: 6, p: 4 }}>
-        <Typography variant="h6" align="center" fontWeight={600} gutterBottom>
-          Список комнат
-        </Typography>
-        <List sx={{ mt: 4 }}>
-          {rooms.length ? rooms.map((room) => (
-            <ListItem key={room.id} disablePadding sx={{ mb: 2, borderRadius: 3, boxShadow: 1, border: 1, overflow: "hidden" }}>
-              <ListItemButton component={Link} to={`/rooms/${room.id}`} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <ListItemText primary={room.name} />
-                <IconButton edge="end" size="small" sx={{ ml: 1 }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </ListItemButton>
-            </ListItem>
-          )): <>Нет созданных комнат</>}
-        </List>
-        <Stack direction="row" justifyContent="flex-end" mt={8}>
-          <Button
-            onClick={handleCreateRoom}
-            variant="createroom"
-          >
-            Создать комнату
-          </Button>
-        </Stack>
-      </Paper>
+    <Box sx={{ minHeight: "100vh", width: "100%", px: 2, py: 3 }}>
+      <Typography variant="h6" align="center" fontWeight={600} gutterBottom>
+        Список комнат
+      </Typography>
+      <List sx={{ mt: 4 }}>
+        {rooms.length ? rooms.map((room) => (
+          <ListItem key={room.id} disablePadding sx={{ mb: 2, borderRadius: 3, boxShadow: 1, border: 1, overflow: "hidden" }}>
+            <ListItemButton component={Link} to={`/rooms/${room.id}`} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <ListItemText primary={room.name} />
+              <IconButton edge="end" size="small" sx={{ ml: 1 }}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </ListItemButton>
+          </ListItem>
+        )): <>Нет созданных комнат</>}
+      </List>
+      <Stack direction="row" justifyContent="flex-end" mt={8}>
+        <Button
+          onClick={handleCreateRoom}
+          variant="createroom"
+        >
+          Создать комнату
+        </Button>
+      </Stack>
 
       {/* Модальное окно создания комнаты */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
@@ -149,6 +145,6 @@ export default function RoomsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Box>
   );
 }

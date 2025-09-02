@@ -123,7 +123,7 @@ export default function SettingPage() {
   };
 
   return (
-    <Box maxWidth={900} mx="auto" p={3}>
+    <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Box mb={4}>
         <Typography variant="subtitle2" mb={1.5}>
           Название:

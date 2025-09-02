@@ -48,7 +48,7 @@ export default function EventsPage() {
   };
 
   return (
-    <Box p={3}>
+    <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Stack direction="row" alignItems="center" mb={3}>
         <Typography variant="h6" fontWeight={700} mb={0}>
           Список событий
@@ -69,7 +69,6 @@ export default function EventsPage() {
               key={event.id}
               component={Link}
               to={`/rooms/${slug}/events/${event.id}`}
-              elevation={1}
               sx={{
                 p: 2,
                 borderRadius: 3,

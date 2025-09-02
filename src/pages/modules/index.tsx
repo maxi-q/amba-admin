@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
   Box,
-  Container,
   Typography,
   Button,
   Breadcrumbs,
@@ -35,7 +34,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to="/" underline="hover" color="inherit">
@@ -110,7 +109,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
           ID комнаты скопирован в буфер обмена
         </Alert>
       </Snackbar>
-    </Container>
+    </Box>
   );
 };
 

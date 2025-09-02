@@ -158,11 +158,11 @@ const EventsSetting = () => {
   };
 
   if (!event && eventId !== 'new') {
-    return <Box p={3}>Загрузка...</Box>;
+    return <Box sx={{ px: 2, py: 3 }}>Загрузка...</Box>;
   }
 
   return (
-    <Box>
+    <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to={`/rooms/${slug}/events`} underline="hover" color="inherit">
@@ -181,7 +181,7 @@ const EventsSetting = () => {
 
       <Stack spacing={4}>
         {/* Settings Section */}
-        <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+        <Paper elevation={0} sx={{ borderRadius: 2 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
             Настройки
           </Typography>
@@ -361,7 +361,7 @@ const EventsSetting = () => {
           </Button>
         </Box>
         {eventId !== 'new' && event && (
-        <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+        <Paper sx={{ borderRadius: 2 }}>
           <Typography
             variant="h6"
             fontWeight={600}

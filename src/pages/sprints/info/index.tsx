@@ -25,7 +25,7 @@ const SprintInfo = () => {
       justifyContent: 'center',
       overflow: 'auto'
     }}>
-      <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 900, width: '100%' }}>
+      <Box sx={{ p: { xs: 2, md: 4 }, width: '100%' }}>
         <Box mb={2}>
           <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }}>
             <ArrowBackIcon />
