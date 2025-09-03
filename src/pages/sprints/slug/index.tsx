@@ -174,7 +174,7 @@ const SprintSetting = () => {
           </Typography>
         </Breadcrumbs>
         {sprintId !== 'new' && (
-          <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopySprintId}>
+          <MuiLink variant="body2" underline="always" color="inherit" onClick={handleCopySprintId}>
             Скопировать ID спринта
           </MuiLink>
         )}
@@ -280,7 +280,7 @@ const SprintSetting = () => {
 
           <Box>
             <Typography variant="subtitle2" mb={1}>
-              Награда для приодленных пользователей
+              Награда для привлеченных пользователей
             </Typography>
             <Stack direction="row" spacing={2} alignItems="center">
               <TextField
@@ -291,7 +291,7 @@ const SprintSetting = () => {
                 sx={{ flex: 1 }}
               />
               <Typography variant="body2" color="text.secondary">
-                {formData.rewardUnits === 'rub' ? 'руб' : 
+                {formData.rewardUnits === 'rub' ? 'руб' :
                  formData.rewardUnits === 'usd' ? 'долл' :
                  formData.rewardUnits === 'eur' ? 'евро' :
                  formData.rewardUnits === 'points' ? 'баллов' :
@@ -363,8 +363,9 @@ const SprintSetting = () => {
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%' }}>
-          ID спринта скопирован в буфер обмена
+        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
+          {/* ID спринта скопирован в буфер обмена */}
+          Скопировано
         </Alert>
       </Snackbar>
 

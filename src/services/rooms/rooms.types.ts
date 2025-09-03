@@ -23,10 +23,9 @@ export type ICreateRoomResponse = IRoomData
 export type IGetRoomResponse = IRoomData
 
 export interface IUpdateRoomsRequest {
-  name: string,
-  webhookUrl: string,
-  secretKey: string,
-  isDeleted: boolean
+  name?: string,
+  webhookUrl?: string,
+  isDeleted?: boolean
 }
 
 export type IUpdateRoomsResponse = IRoomData
@@ -45,3 +44,5 @@ export interface IGetRoomByIdResponse {
   isDeleted: boolean,
   projectId: string
 }
+
+export type IRotateSecretKeyResponse = string

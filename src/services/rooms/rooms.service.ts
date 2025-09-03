@@ -1,5 +1,5 @@
 import { instance } from '@services/config/axios';
-import type { ICreateRoomRequest, ICreateRoomResponse, IGetRoomByIdResponse, IGetRoomResponse, IUpdateRoomsRequest, IUpdateRoomsResponse } from './rooms.types';
+import type { ICreateRoomRequest, ICreateRoomResponse, IGetRoomByIdResponse, IGetRoomResponse, IRotateSecretKeyResponse, IUpdateRoomsRequest, IUpdateRoomsResponse } from './rooms.types';
 import { getContentType } from '@services/config/axios.helper';
 
 
@@ -20,6 +20,10 @@ class RoomsService {
 
   async getRoomById(id: string) {
     return instance.get<IGetRoomByIdResponse>(`${this._BASE_URL}/${id}`, { headers: getContentType() });
+  }
+
+  async rotateSecretKey(id: string) {
+    return instance.put<IRotateSecretKeyResponse>(`${this._BASE_URL}/${id}/rotateSecretKey`, undefined, { headers: getContentType() });
   }
 }
 

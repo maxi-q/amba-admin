@@ -173,7 +173,7 @@ const EventsSetting = () => {
           </Typography>
         </Breadcrumbs>
         {eventId !== 'new' && (
-          <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopyEventId}>
+          <MuiLink variant="body2" underline="always" color="inherit" onClick={handleCopyEventId}>
             Скопировать ID события
           </MuiLink>
         )}
@@ -429,8 +429,9 @@ const EventsSetting = () => {
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%' }}>
-          ID события скопирован в буфер обмена
+        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
+          {/* ID события скопирован в буфер обмена */}
+          Скопировано
         </Alert>
       </Snackbar>
 

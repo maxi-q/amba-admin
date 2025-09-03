@@ -34,6 +34,7 @@ export default function SettingPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
 
   useEffect(() => {
     if (roomData) {
@@ -43,23 +44,35 @@ export default function SettingPage() {
     }
   }, [roomData]);
 
-  const handleSave = async () => {
+  const handleSaveName = async () => {
     if (!slug) return;
 
     try {
       const payload = {
-        name: roomName,
-        webhookUrl,
-        secretKey,
-        isDeleted: false
+        name: roomName
       };
 
       await roomsService.updateRooms(payload, slug);
       setShowSaveNotification(true);
     } catch (error) {
-      console.error('Ошибка при обновлении комнаты:', error);
+      console.error('Ошибка при обновлении названия комнаты:', error);
     }
   };
+
+  const handleSaveWebhook = async () => {
+    if (!slug) return;
+
+    try {
+      const payload = {
+        webhookUrl
+      };
+
+      await roomsService.updateRooms(payload, slug);
+      setShowSaveNotification(true);
+    } catch (error) {
+      console.error('Ошибка при обновлении вебхука:', error);
+    }
+    };
 
   const handleDelete = () => {
     setShowDeleteDialog(true);
@@ -71,14 +84,11 @@ export default function SettingPage() {
 
     try {
       const payload = {
-        name: roomName,
-        webhookUrl,
-        secretKey,
         isDeleted: true
       };
-      
+
       await roomsService.updateRooms(payload, slug);
-      navigate(`/rooms/${slug}`);
+      navigate(`/rooms/`);
     } catch (error) {
       console.error('Ошибка при удалении комнаты:', error);
     }
@@ -113,14 +123,28 @@ export default function SettingPage() {
     setRoomName(value);
   };
 
-  const generateSecretKey = () => {
-    const newKey = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    setSecretKey(newKey);
+  const generateSecretKey = async () => {
+    if (!slug) return;
+
+    setIsGeneratingKey(true);
+    try {
+      const response = await roomsService.rotateSecretKey(slug);
+
+      if (response.data) {
+        setSecretKey(response.data);
+        // Обновляем данные в store
+        if (roomData) {
+          roomData.secretKey = response.data;
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при генерации секретного ключа:', error);
+    } finally {
+      setIsGeneratingKey(false);
+    }
   };
 
-  const saveWebhook = () => {
-    console.log("Saving webhook:", webhookUrl);
-  };
+
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
@@ -150,7 +174,7 @@ export default function SettingPage() {
         <Button
           variant="contained"
           color="primary"
-          onClick={handleSave}
+          onClick={handleSaveName}
           sx={{ minWidth: 120 }}
         >
           Сохранить
@@ -182,7 +206,7 @@ export default function SettingPage() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={saveWebhook}
+                onClick={handleSaveWebhook}
                 sx={{ minWidth: 120 }}
               >
                 Сохранить
@@ -199,15 +223,15 @@ export default function SettingPage() {
             <Box display="flex" gap={2} mb={2}>
               <TextField
                 fullWidth
-                value={secretKey}
-                onChange={(e) => setSecretKey(e.target.value)}
+                value={secretKey || ''}
                 size="medium"
                 variant="outlined"
                 type="password"
                 InputProps={{
+                  readOnly: true,
                   endAdornment: (
                     <IconButton
-                      onClick={() => handleCopyToClipboard(secretKey)}
+                      onClick={() => handleCopyToClipboard(secretKey || '')}
                       color="primary"
                       size="small"
                       sx={{ mr: 0.5 }}
@@ -217,8 +241,18 @@ export default function SettingPage() {
                   )
                 }}
               />
-              <IconButton onClick={generateSecretKey} color="primary">
-                <Refresh />
+              <IconButton 
+                onClick={generateSecretKey} 
+                color="primary"
+                disabled={isGeneratingKey}
+              >
+                <Refresh sx={{ 
+                  animation: isGeneratingKey ? 'spin 1s linear infinite' : 'none',
+                  '@keyframes spin': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' }
+                  }
+                }} />
               </IconButton>
             </Box>
 
@@ -385,8 +419,9 @@ export default function SettingPage() {
         onClose={handleCloseCopyNotification}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseCopyNotification} severity="info" sx={{ width: '100%' }}>
-          Секретный ключ скопирован в буфер обмена
+        <Alert onClose={handleCloseCopyNotification} severity="info" sx={{ width: '100%', cursor: 'pointer' }}>
+          {/* Секретный ключ скопирован в буфер обмена */}
+          Скопировано
         </Alert>
       </Snackbar>
     </Box>

@@ -44,7 +44,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             {roomData?.name}
           </Typography>
         </Breadcrumbs>
-        <MuiLink variant="body2" underline="hover" color="inherit" onClick={handleCopyRoomId}>
+        <MuiLink variant="body2" underline="always" color="inherit" onClick={handleCopyRoomId}>
           Скопировать ID комнаты
         </MuiLink>
       </Box>
@@ -105,8 +105,9 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         onClose={handleCloseNotification}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%' }}>
-          ID комнаты скопирован в буфер обмена
+        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
+          {/* ID комнаты скопирован в буфер обмена */}
+          Скопировано
         </Alert>
       </Snackbar>
     </Box>
