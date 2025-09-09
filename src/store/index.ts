@@ -28,6 +28,7 @@ export const useAuthStore = create<StoreState>((set) => ({
     localStorage.setItem('token', token);
   },
 }))
+
 interface RoomDataState {
   roomData: IRoomData | null
   sprintData: ISprint[]

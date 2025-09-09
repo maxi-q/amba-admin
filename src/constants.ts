@@ -1,1 +1,1 @@
-export const API_URL = 'https://api.ambassador.dev.collabox.dev/api/'
+export const API_URL = 'https://admin.ambassador.dev.collabox.dev/api/'
