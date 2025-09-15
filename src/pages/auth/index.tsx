@@ -40,9 +40,36 @@ const AuthPage = () => {
             // setError("Ошибка авторизации");
             logout()
           }
-        } catch {
-          // setError("Ошибка авторизации");
-          logout()
+        } catch (error: any) {
+          // Если получили 404, пробуем зарегистрировать проект
+          if (error?.response?.status === 404) {
+            try {
+              await authService.registerProject({
+                groupId: Number(senlerGroupId),
+                code: context, // Предполагаем, что code = context
+              });
+              // После регистрации пробуем снова авторизоваться
+              const retryResponse = await authService.auth({
+                userId: senlerUserId,
+                groupId: Number(senlerGroupId),
+                context,
+                sign,
+              });
+              if (retryResponse?.status === 201) {
+                login(retryResponse.data.token);
+                const from = location.state?.from?.pathname || "/";
+                navigate(from, { replace: true });
+              } else {
+                logout();
+              }
+            } catch (registerError) {
+              console.error('Ошибка регистрации проекта:', registerError);
+              logout();
+            }
+          } else {
+            // setError("Ошибка авторизации");
+            logout()
+          }
         } finally {
           setIsLoading(false);
         }
@@ -77,8 +104,35 @@ const AuthPage = () => {
               } else {
                 setError("");
               }
-            } catch {
-              setError("");
+            } catch (error: any) {
+              // Если получили 404, пробуем зарегистрировать проект
+              if (error?.response?.status === 404) {
+                try {
+                  await authService.registerProject({
+                    groupId: Number(senlerGroupId),
+                    code: context, // Предполагаем, что code = context
+                  });
+                  // После регистрации пробуем снова авторизоваться
+                  const retryResponse = await authService.auth({
+                    userId: senlerUserId,
+                    groupId: Number(senlerGroupId),
+                    context,
+                    sign,
+                  });
+                  if (retryResponse?.status === 201) {
+                    login(retryResponse.data.token);
+                    const from = location.state?.from?.pathname || "/";
+                    navigate(from, { replace: true });
+                  } else {
+                    setError("Ошибка авторизации после регистрации");
+                  }
+                } catch (registerError) {
+                  console.error('Ошибка регистрации проекта:', registerError);
+                  setError("Ошибка регистрации проекта");
+                }
+              } else {
+                setError("");
+              }
             } finally {
               setIsLoading(false);
             }
