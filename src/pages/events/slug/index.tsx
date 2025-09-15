@@ -101,7 +101,7 @@ const EventsSetting = () => {
     const storeData = {
       name: formData.name,
       startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
-      endDate: formData.ignoreEndDate 
+      endDate: formData.ignoreEndDate
         ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Временное решение: если ignoreEndDate = true, устанавливаем сегодня + 1 день
         : (formData.endDate ? new Date(formData.endDate).toISOString() : ''),
       ignoreEndDate: formData.ignoreEndDate,
