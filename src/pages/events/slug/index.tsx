@@ -44,6 +44,8 @@ const EventsSetting = () => {
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPrefixError, setShowPrefixError] = useState(false);
+  const [prefixValidationError, setPrefixValidationError] = useState<string>('');
+  const [prefixOccupiedError, setPrefixOccupiedError] = useState<string>('');
   const [formData, setFormData] = useState<IPatchEventsRequest>({
     name: '',
     startDate: '',
@@ -111,8 +113,14 @@ const EventsSetting = () => {
 
     // Проверяем префикс только при создании нового события
     if (eventId === 'new' && !isDeleted) {
+      // Сначала проверяем валидацию
+      if (prefixValidationError) {
+        return;
+      }
+      
       const isPrefixAvailable = await checkPrefixAvailability(prefix);
-      if (!isPrefixAvailable) {
+      if (isPrefixAvailable === false) {
+        setPrefixOccupiedError('Префикс уже занят');
         setShowPrefixError(true);
         return;
       }
@@ -169,7 +177,19 @@ const EventsSetting = () => {
   };
 
   const handlePrefixChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPrefix(event.target.value);
+    const value = event.target.value;
+    
+    // Очищаем ошибку занятости при изменении префикса
+    setPrefixOccupiedError('');
+    
+    // Проверяем на наличие символа подчеркивания
+    if (value.includes('_')) {
+      setPrefixValidationError('Префикс не может содержать символ подчеркивания (_)');
+    } else {
+      setPrefixValidationError('');
+    }
+    
+    setPrefix(value);
   };
 
   const handleCopyEventId = async () => {
@@ -243,7 +263,12 @@ const EventsSetting = () => {
                 value={prefix}
                 onChange={handlePrefixChange}
                 disabled={eventId !== 'new'}
-                helperText={eventId !== 'new' ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов'}
+                error={!!prefixValidationError || !!prefixOccupiedError}
+                helperText={
+                  prefixValidationError || 
+                  prefixOccupiedError ||
+                  (eventId !== 'new' ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов')
+                }
               />
             </Box>
 
