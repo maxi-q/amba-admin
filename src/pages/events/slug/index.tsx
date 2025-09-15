@@ -56,6 +56,7 @@ const EventsSetting = () => {
     ignorePromoCodeUsageLimit: false,
     isDeleted: false,
   });
+  const [prefix, setPrefix] = useState<string>('');
 
   const navigate = useNavigate();
 
@@ -85,6 +86,8 @@ const EventsSetting = () => {
         ignorePromoCodeUsageLimit: foundEvent.ignorePromoCodeUsageLimit,
         isDeleted: foundEvent.isDeleted,
       });
+      // Устанавливаем префикс из существующего события (если есть поле prefix в IEvent)
+      setPrefix(foundEvent.name); // Пока используем name как префикс
     }
   }, [eventId, eventData]);
 
@@ -106,11 +109,9 @@ const EventsSetting = () => {
       isDeleted: isDeleted,
     }
 
-    // Проверяем префикс только если имя изменилось (для обновления) или это новое событие
-    const shouldCheckPrefix = eventId === 'new' || (event && event.name !== formData.name);
-    
-    if (shouldCheckPrefix && !isDeleted) {
-      const isPrefixAvailable = await checkPrefixAvailability(storeData.name);
+    // Проверяем префикс только при создании нового события
+    if (eventId === 'new' && !isDeleted) {
+      const isPrefixAvailable = await checkPrefixAvailability(prefix);
       if (!isPrefixAvailable) {
         setShowPrefixError(true);
         return;
@@ -127,7 +128,7 @@ const EventsSetting = () => {
         console.error('Ошибка при обновлении события:', error);
       }
     } else if (slug) {
-      const response = await eventsService.createEvent({...storeData, roomId: slug});
+      const response = await eventsService.createEvent({...storeData, roomId: slug, promoCodesPrefix: prefix});
       if (response.status === 201) {
         addEvent(response.data);
         navigate(`/rooms/${slug}/events/${response.data.id}`);
@@ -165,6 +166,10 @@ const EventsSetting = () => {
       [field]: newValue
     };
     setFormData(updatedData);
+  };
+
+  const handlePrefixChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setPrefix(event.target.value);
   };
 
   const handleCopyEventId = async () => {
@@ -224,6 +229,21 @@ const EventsSetting = () => {
                 variant="outlined"
                 value={formData.name}
                 onChange={handleInputChange('name')}
+              />
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" mb={1}>
+                Префикс промокода
+              </Typography>
+              <TextField
+                fullWidth
+                placeholder="Уникальный префикс для промокодов этого события"
+                variant="outlined"
+                value={prefix}
+                onChange={handlePrefixChange}
+                disabled={eventId !== 'new'}
+                helperText={eventId !== 'new' ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов'}
               />
             </Box>
 
@@ -469,7 +489,7 @@ const EventsSetting = () => {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert onClose={handleClosePrefixError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
-          Префикс "{formData.name}" уже занят. Пожалуйста, выберите другое название.
+          Префикс "{prefix}" уже занят. Пожалуйста, выберите другой префикс.
         </Alert>
       </Snackbar>
 

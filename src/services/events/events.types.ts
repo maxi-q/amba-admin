@@ -1,15 +1,16 @@
 export interface ICreateEventRequest {
   name: string,
+  promoCodesPrefix: string,
   startDate: string,
   endDate: string,
   ignoreEndDate: boolean,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
+  isDeleted: boolean,
   rewardType: string,
   rewardValue: number,
   rewardUnits: string,
-  roomId: string,
-  isDeleted: boolean,
+  roomId: string
 }
 
 export interface ICreateEventResponse {
@@ -17,6 +18,7 @@ export interface ICreateEventResponse {
   createdAt: string,
   updatedAt: string,
   name: string,
+  promoCodesPrefix: string,
   startDate: string,
   endDate: string,
   ignoreEndDate: boolean,
@@ -26,11 +28,11 @@ export interface ICreateEventResponse {
   promoCodeUsagesCount: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
+  isDeleted: boolean,
   rewardType: string,
   rewardValue: number,
   rewardUnits: string,
-  roomId: string,
-  isDeleted: boolean
+  roomId: string
 }
 
 export interface IEvent {
@@ -83,6 +85,7 @@ export interface IPatchEventsResponse {
   createdAt: string,
   updatedAt: string,
   name: string,
+  promoCodesPrefix: string,
   startDate: string,
   endDate: string,
   ignoreEndDate: boolean,
@@ -92,6 +95,7 @@ export interface IPatchEventsResponse {
   promoCodeUsagesCount: number,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,
+  isDeleted: boolean,
   rewardType: string,
   rewardValue: number,
   rewardUnits: string,

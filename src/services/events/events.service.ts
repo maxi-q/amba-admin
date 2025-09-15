@@ -5,7 +5,7 @@ import { getContentType } from '@services/config/axios.helper';
 
 class EventsService {
   private _BASE_URL = 'events';
-  
+
   async getEvents(data: IGetEventsRequest, roomId: string) {
     return instance.get<IGetEventsResponse>(`${this._BASE_URL}/${roomId}`, { params: data, headers: getContentType() })
   }
@@ -17,9 +17,9 @@ class EventsService {
   async createEvent(data: ICreateEventRequest) {
     return instance.post<ICreateEventResponse>(`${this._BASE_URL}`, data, { headers: getContentType() });
   }
-
-  async checkPromoCodesPrefixAvailable(prefix: string) {
-    return instance.get<boolean>(`${this._BASE_URL}/checkPromoCodesPrefixAvailable`, { params: { prefix }, headers: getContentType() });
+  
+  async checkPromoCodesPrefixAvailable(promoCodesPrefix: string) {
+    return instance.get<boolean>(`${this._BASE_URL}/checkPromoCodesPrefixAvailable`, { params: { promoCodesPrefix }, headers: getContentType() });
   }
 
 }
