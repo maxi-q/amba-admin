@@ -43,6 +43,7 @@ const EventsSetting = () => {
   const { project } = useRoomDataStore();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPrefixError, setShowPrefixError] = useState(false);
   const [formData, setFormData] = useState<IPatchEventsRequest>({
     name: '',
     startDate: '',
@@ -57,6 +58,16 @@ const EventsSetting = () => {
   });
 
   const navigate = useNavigate();
+
+  const checkPrefixAvailability = async (prefix: string): Promise<boolean> => {
+    try {
+      const response = await eventsService.checkPromoCodesPrefixAvailable(prefix);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при проверке префикса:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const foundEvent = eventData.find(event => event.id === eventId);
@@ -94,6 +105,18 @@ const EventsSetting = () => {
       ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
       isDeleted: isDeleted,
     }
+
+    // Проверяем префикс только если имя изменилось (для обновления) или это новое событие
+    const shouldCheckPrefix = eventId === 'new' || (event && event.name !== formData.name);
+    
+    if (shouldCheckPrefix && !isDeleted) {
+      const isPrefixAvailable = await checkPrefixAvailability(storeData.name);
+      if (!isPrefixAvailable) {
+        setShowPrefixError(true);
+        return;
+      }
+    }
+
     if (eventId !== 'new') {
       try {
         const response = await eventsService.patchEvents(storeData, eventId || '');
@@ -155,6 +178,10 @@ const EventsSetting = () => {
 
   const handleCloseNotification = () => {
     setShowCopyNotification(false);
+  };
+
+  const handleClosePrefixError = () => {
+    setShowPrefixError(false);
   };
 
   if (!event && eventId !== 'new') {
@@ -432,6 +459,17 @@ const EventsSetting = () => {
         <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
           {/* ID события скопирован в буфер обмена */}
           Скопировано
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={showPrefixError}
+        autoHideDuration={5000}
+        onClose={handleClosePrefixError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleClosePrefixError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
+          Префикс "{formData.name}" уже занят. Пожалуйста, выберите другое название.
         </Alert>
       </Snackbar>
 

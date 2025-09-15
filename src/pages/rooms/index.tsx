@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Edit as EditIcon } from "@mui/icons-material";
+import { Edit as EditIcon, Close as CloseIcon } from "@mui/icons-material";
 import {
   Button,
   Typography,
@@ -10,11 +10,11 @@ import {
   IconButton,
   Stack,
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Box,
+  AppBar,
+  Toolbar,
+  Container,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import roomsService from "@services/rooms/rooms.service";
@@ -109,11 +109,40 @@ export default function RoomsPage() {
         )): <>Нет созданных комнат</>}
       </List>
 
-      {/* Модальное окно создания комнаты */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Создать новую комнату</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 1 }}>
+      {/* Полноэкранное окно создания комнаты */}
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        fullScreen
+        sx={{
+          '& .MuiDialog-paper': {
+            margin: 0,
+            maxHeight: '100vh',
+            maxWidth: '100vw',
+            height: '100vh',
+            width: '100vw',
+            zIndex: 1300,
+          }
+        }}
+      >
+        <AppBar sx={{ position: 'relative' }}>
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={handleCloseDialog}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
+              Создать новую комнату
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        
+        <Container maxWidth="sm" sx={{ py: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <TextField
               autoFocus
               margin="dense"
@@ -122,7 +151,7 @@ export default function RoomsPage() {
               variant="outlined"
               value={formData.name}
               onChange={handleInputChange('name')}
-              sx={{ mb: 2 }}
+              sx={{ mb: 3 }}
             />
             <TextField
               margin="dense"
@@ -132,20 +161,28 @@ export default function RoomsPage() {
               value={formData.webhookUrl}
               onChange={handleInputChange('webhookUrl')}
               placeholder="https://"
-              sx={{ mb: 2 }}
+              sx={{ mb: 4 }}
             />
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={!formData.name.trim()}
-          >
-            Создать
-          </Button>
-        </DialogActions>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, pt: 2 }}>
+            <Button 
+              onClick={handleCloseDialog}
+              variant="outlined"
+              size="large"
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={!formData.name.trim()}
+              size="large"
+            >
+              Создать
+            </Button>
+          </Box>
+        </Container>
       </Dialog>
     </Box>
   );
