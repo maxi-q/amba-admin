@@ -101,7 +101,9 @@ const EventsSetting = () => {
     const storeData = {
       name: formData.name,
       startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
-      endDate: formData.endDate ? new Date(formData.endDate).toISOString() : '',
+      endDate: formData.ignoreEndDate 
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Временное решение: если ignoreEndDate = true, устанавливаем сегодня + 1 день
+        : (formData.endDate ? new Date(formData.endDate).toISOString() : ''),
       ignoreEndDate: formData.ignoreEndDate,
       rewardType: formData.rewardType,
       rewardUnits: formData.rewardUnits,
@@ -265,7 +267,7 @@ const EventsSetting = () => {
                 disabled={eventId !== 'new'}
                 error={!!prefixValidationError || !!prefixOccupiedError}
                 helperText={
-                  prefixValidationError || 
+                  prefixValidationError ||
                   prefixOccupiedError ||
                   (eventId !== 'new' ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов')
                 }
