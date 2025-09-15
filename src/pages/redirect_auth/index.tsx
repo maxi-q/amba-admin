@@ -1,11 +1,10 @@
 import { Box, Typography, Paper, CircularProgress } from '@mui/material';
-import { useEffect } from 'react';
 
 const RedirectAuthPage = () => {
 
-  useEffect(() => {
-    window.close();
-  }, [])
+  // useEffect(() => {
+  //   window.close();
+  // }, [])
 
   return (
     <Box
