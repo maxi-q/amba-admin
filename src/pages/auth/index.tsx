@@ -37,39 +37,10 @@ const AuthPage = () => {
             const from = location.state?.from?.pathname || "/";
             navigate(from, { replace: true });
           } else {
-            // setError("Ошибка авторизации");
             logout()
           }
-        } catch (error: any) {
-          // Если получили 404, пробуем зарегистрировать проект
-          if (error?.response?.status === 404) {
-            try {
-              await authService.registerProject({
-                groupId: Number(senlerGroupId),
-                code: context, // Предполагаем, что code = context
-              });
-              // После регистрации пробуем снова авторизоваться
-              const retryResponse = await authService.auth({
-                userId: senlerUserId,
-                groupId: Number(senlerGroupId),
-                context,
-                sign,
-              });
-              if (retryResponse?.status === 201) {
-                login(retryResponse.data.token);
-                const from = location.state?.from?.pathname || "/";
-                navigate(from, { replace: true });
-              } else {
-                logout();
-              }
-            } catch (registerError) {
-              console.error('Ошибка регистрации проекта:', registerError);
-              logout();
-            }
-          } else {
-            // setError("Ошибка авторизации");
-            logout()
-          }
+        } catch {
+          logout();
         } finally {
           setIsLoading(false);
         }
@@ -87,30 +58,25 @@ const AuthPage = () => {
       const popup = window.open(url, '_blank', 'width=600,height=700');
       if (popup) {
         let savedCode: string | null = null;
-        
+
         const timer = setInterval(async () => {
           try {
-            // Проверяем, есть ли код в URL popup окна
             if (popup.location && popup.location.href) {
               const popupUrl = new URL(popup.location.href);
               const codeParam = popupUrl.searchParams.get('code');
-              
+
               if (codeParam && !savedCode) {
                 savedCode = codeParam;
-                console.log('Код получен из popup:', savedCode);
-                
-                // Закрываем popup после получения кода
+
                 popup.close();
                 clearInterval(timer);
-                
-                // Используем сохраненный код для регистрации
+
                 try {
                   await authService.registerProject({
                     groupId: Number(senlerGroupId),
                     code: savedCode,
                   });
-                  
-                  // После регистрации пробуем авторизоваться
+
                   const response = await authService.auth({
                     userId: senlerUserId,
                     groupId: Number(senlerGroupId),
@@ -128,7 +94,6 @@ const AuthPage = () => {
                 } catch (registerError: any) {
                   console.error('Ошибка регистрации проекта:', registerError);
                   if (registerError?.response?.status === 409) {
-                    // Проект уже зарегистрирован, пробуем авторизоваться
                     try {
                       const authResponse = await authService.auth({
                         userId: senlerUserId,
@@ -136,7 +101,7 @@ const AuthPage = () => {
                         context,
                         sign,
                       });
-                      
+
                       if (authResponse?.status === 201) {
                         login(authResponse.data.token);
                         const from = location.state?.from?.pathname || "/";
@@ -157,10 +122,8 @@ const AuthPage = () => {
                 return;
               }
             }
-          } catch {
-            // Игнорируем ошибки доступа к popup.location (CORS)
-          }
-          
+          } catch { /**/ }
+
           if (popup.closed) {
             clearInterval(timer);
             setIsLoading(false);
@@ -172,10 +135,6 @@ const AuthPage = () => {
       setIsLoading(false);
     }
   };
-
-  // const handleSenlerAuthError = (error: string) => {
-  //   setError(error);
-  // };
 
   return (
     <Box
@@ -192,12 +151,12 @@ const AuthPage = () => {
         <Typography variant="h4" align="center" fontWeight={600} mb={3}>
           Авторизация
         </Typography>
-        
+
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
-        )}
+        )}.
 
         <Stack spacing={3}>
           <Typography variant="body1" align="center" color="text.secondary">
