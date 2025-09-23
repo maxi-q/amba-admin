@@ -1,27 +1,28 @@
 import { Navigate, Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
-import SettingPage from './settings'
-import RoomsPage from './rooms'
-import RoomBox from './modules';
-import SprintList from './sprints';
-import SprintSetting from './sprints/slug';
-import SprintInfo from './sprints/info';
-import EventsPage from './events';
-import EventsInfo from './events/info';
-import EventsSetting from './events/slug';
+import SettingPage from './(bot_step)/settings'
+import RoomsPage from './(bot_step)/rooms'
+import RoomBox from './(bot_step)/modules';
+import SprintList from './(bot_step)/sprints';
+import SprintSetting from './(bot_step)/sprints/slug';
+import SprintInfo from './(bot_step)/sprints/info';
+import EventsPage from './(bot_step)/events';
+import EventsInfo from './(bot_step)/events/info';
+import EventsSetting from './(bot_step)/events/slug';
 import AuthPage from './auth';
 import RedirectAuthPage from './redirect_auth';
 import { useAuthStore, useRoomDataStore } from '@store/index';
 import { useEffect } from 'react';
 import { Loader } from '../components/Loader';
 import { useMessage } from '@/messages/messageProvider';
-import SprintSettingsPage from './sprints/settings';
-import SettingsInfo from './settings/info';
+import SprintSettingsPage from './(bot_step)/sprints/settings';
+import SettingsInfo from './(bot_step)/settings/info';
 import roomsService from '@services/rooms/rooms.service';
 import sprintsService from '@services/sprints/sprints.service';
 import eventsService from '@services/events/events.service';
 import projectsService from '@services/projects/projects.service';
+import { getUrlParams } from '@helpers/index';
 
 // type NavigationType = {
 // 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
@@ -85,48 +86,58 @@ export default function RoomRedirect() {
   return <Navigate to={`/rooms/${slug}/setting`} replace />;
 }
 
-export const Navigation = () => (
-  <Routes>
-    {/* Публичный роут для авторизации */}
-    <Route path="/auth" element={<AuthPage />} />
-    <Route path="/redirect_auth" element={<RedirectAuthPage />} />
+export const Navigation = () => {
+  const { context } = getUrlParams()
 
-    {/* Защищенные роуты */}
-    <Route path="/" element={
-      <ProtectedRoute>
-        <RoomsPage />
-      </ProtectedRoute>
-    } />
+  if (context === 'Bot_step') {
+    return (
+      <Routes>
+        <Route path="/" element={<RoomsPage />} />
+      </Routes>
+    )
+  }
 
-    <Route path="rooms" element={
-      <ProtectedRoute>
-        <RoomsPage />
-      </ProtectedRoute>
-    }/>
+  return (
+    <Routes>
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/redirect_auth" element={<RedirectAuthPage />} />
 
-    <Route path="rooms/:slug" element={
-      <ProtectedRoute>
-        <RoomLayout />
-      </ProtectedRoute>
-    }>
-      <Route index element={<RoomRedirect />} />
-      <Route path="setting" element={<SettingPage />} />
-      <Route path="setting/info" element={<SettingsInfo />} />
+      <Route path="/" element={
+        <ProtectedRoute>
+          <RoomsPage />
+        </ProtectedRoute>
+      } />
 
-      <Route index path="sprints" element={<SprintList />} />
-      <Route path="sprints/:sprintId" element={<SprintSetting />} />
-      <Route path="sprints/settings" element={<SprintSettingsPage />} />
-      <Route path="sprints/info" element={<SprintInfo />} />
+      <Route path="rooms" element={
+        <ProtectedRoute>
+          <RoomsPage />
+        </ProtectedRoute>
+      }/>
 
-      <Route path="events" element={<EventsPage />} />
-      <Route path="events/info" element={<EventsInfo />} />
-      <Route path="events/:eventId" element={<EventsSetting />} />
-      <Route path="*" element={<RoomRedirect />} />
-    </Route>
+      <Route path="rooms/:slug" element={
+        <ProtectedRoute>
+          <RoomLayout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<RoomRedirect />} />
+        <Route path="setting" element={<SettingPage />} />
+        <Route path="setting/info" element={<SettingsInfo />} />
 
-    <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>
-);
+        <Route index path="sprints" element={<SprintList />} />
+        <Route path="sprints/:sprintId" element={<SprintSetting />} />
+        <Route path="sprints/settings" element={<SprintSettingsPage />} />
+        <Route path="sprints/info" element={<SprintInfo />} />
+
+        <Route path="events" element={<EventsPage />} />
+        <Route path="events/info" element={<EventsInfo />} />
+        <Route path="events/:eventId" element={<EventsSetting />} />
+        <Route path="*" element={<RoomRedirect />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+};
 
 export const Logout = () => {
 	const navigate = useNavigate()

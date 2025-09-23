@@ -20,7 +20,7 @@ import { Link } from "react-router-dom";
 import roomsService from "@services/rooms/rooms.service";
 import type { ICreateRoomResponse } from "@services/rooms/rooms.types";
 
-import { Loader } from "../../components/Loader";
+import { Loader } from "../../../components/Loader";
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<ICreateRoomResponse[]>([]);
