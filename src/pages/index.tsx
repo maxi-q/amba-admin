@@ -1,29 +1,36 @@
 import { Navigate, Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom'
-import { ProtectedRoute } from '../components/ProtectedRoute';
+import { useEffect } from 'react';
 
-import SettingPage from './(list_integration)/settings'
-import RoomsPage from './(list_integration)/rooms'
-import RoomBox from './(list_integration)/modules';
-import SprintList from './(list_integration)/sprints';
-import SprintSetting from './(list_integration)/sprints/slug';
-import SprintInfo from './(list_integration)/sprints/info';
-import EventsPage from './(list_integration)/events';
-import EventsInfo from './(list_integration)/events/info';
-import EventsSetting from './(list_integration)/events/slug';
+import {
+  SettingPage,
+  RoomsPage,
+  RoomBox,
+  SprintList,
+  SprintSetting,
+  SprintInfo,
+  EventsPage,
+  EventsInfo,
+  EventsSetting,
+  SprintSettingsPage,
+  SettingsInfo,
+} from './(list_integration)';
+
+import SelectActionPage from './(Bot_step)/main';
+
 import AuthPage from './auth';
 import RedirectAuthPage from './redirect_auth';
+
+
 import { useAuthStore, useRoomDataStore } from '@store/index';
-import { useEffect } from 'react';
-import { Loader } from '../components/Loader';
 import { useMessage } from '@/messages/messageProvider';
-import SprintSettingsPage from './(list_integration)/sprints/settings';
-import SettingsInfo from './(list_integration)/settings/info';
 import roomsService from '@services/rooms/rooms.service';
 import sprintsService from '@services/sprints/sprints.service';
 import eventsService from '@services/events/events.service';
 import projectsService from '@services/projects/projects.service';
 import { getUrlParams } from '@helpers/index';
-import SelectStatusPage from './(Bot_step)/main';
+
+import { ProtectedRoute } from '../components/ProtectedRoute';
+import { Loader } from '../components/Loader';
 
 
 function RoomLayout() {
@@ -92,7 +99,7 @@ export const Navigation = () => {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/redirect_auth" element={<RedirectAuthPage />} />
 
-        <Route path="/" element={<ProtectedRoute><SelectStatusPage /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><SelectActionPage /></ProtectedRoute>} />
       </Routes>
     )
   }
