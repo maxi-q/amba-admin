@@ -1,33 +1,30 @@
 import { Navigate, Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
-import SettingPage from './(bot_step)/settings'
-import RoomsPage from './(bot_step)/rooms'
-import RoomBox from './(bot_step)/modules';
-import SprintList from './(bot_step)/sprints';
-import SprintSetting from './(bot_step)/sprints/slug';
-import SprintInfo from './(bot_step)/sprints/info';
-import EventsPage from './(bot_step)/events';
-import EventsInfo from './(bot_step)/events/info';
-import EventsSetting from './(bot_step)/events/slug';
+import SettingPage from './(list_integration)/settings'
+import RoomsPage from './(list_integration)/rooms'
+import RoomBox from './(list_integration)/modules';
+import SprintList from './(list_integration)/sprints';
+import SprintSetting from './(list_integration)/sprints/slug';
+import SprintInfo from './(list_integration)/sprints/info';
+import EventsPage from './(list_integration)/events';
+import EventsInfo from './(list_integration)/events/info';
+import EventsSetting from './(list_integration)/events/slug';
 import AuthPage from './auth';
 import RedirectAuthPage from './redirect_auth';
 import { useAuthStore, useRoomDataStore } from '@store/index';
 import { useEffect } from 'react';
 import { Loader } from '../components/Loader';
 import { useMessage } from '@/messages/messageProvider';
-import SprintSettingsPage from './(bot_step)/sprints/settings';
-import SettingsInfo from './(bot_step)/settings/info';
+import SprintSettingsPage from './(list_integration)/sprints/settings';
+import SettingsInfo from './(list_integration)/settings/info';
 import roomsService from '@services/rooms/rooms.service';
 import sprintsService from '@services/sprints/sprints.service';
 import eventsService from '@services/events/events.service';
 import projectsService from '@services/projects/projects.service';
 import { getUrlParams } from '@helpers/index';
+import SelectStatusPage from './(Bot_step)/main';
 
-// type NavigationType = {
-// 	setUser: React.Dispatch<React.SetStateAction<object | undefined>>
-// 	setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>
-// }
 
 function RoomLayout() {
   const { slug } = useParams();
@@ -92,7 +89,10 @@ export const Navigation = () => {
   if (context === 'Bot_step') {
     return (
       <Routes>
-        <Route path="/" element={<RoomsPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/redirect_auth" element={<RedirectAuthPage />} />
+
+        <Route path="/" element={<ProtectedRoute><SelectStatusPage /></ProtectedRoute>} />
       </Routes>
     )
   }
