@@ -296,9 +296,8 @@ export default function SettingPage() {
                   multiline
                   rows={8}
                   fullWidth
-                  value={`<script type="text/javascript">
-  ...
-</script>`}
+                  value={`<script async="" src="https://ambassador.sen.collabox.dev/index.js"></script>
+<link href="https://ambassador.sen.collabox.dev/index.css" rel="stylesheet">`}
                   variant="outlined"
                   InputProps={{
                     readOnly: true,
