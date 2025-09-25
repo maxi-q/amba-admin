@@ -109,10 +109,9 @@ export default function RoomsPage() {
         )): <>Нет созданных комнат</>}
       </List>
 
-      {/* Полноэкранное окно создания комнаты */}
-      <Dialog 
-        open={openDialog} 
-        onClose={handleCloseDialog} 
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
         fullScreen
         sx={{
           '& .MuiDialog-paper': {
@@ -140,7 +139,7 @@ export default function RoomsPage() {
             </Typography>
           </Toolbar>
         </AppBar>
-        
+
         <Container maxWidth="sm" sx={{ py: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <TextField
@@ -164,9 +163,9 @@ export default function RoomsPage() {
               sx={{ mb: 4 }}
             />
           </Box>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, pt: 2 }}>
-            <Button 
+            <Button
               onClick={handleCloseDialog}
               variant="outlined"
               size="large"
