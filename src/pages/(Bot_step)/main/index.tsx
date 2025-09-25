@@ -2,15 +2,20 @@ import { useMessage } from "@/messages/messageProvider"
 import { FormControl, Select, MenuItem } from "@mui/material"
 import { useEffect, useState } from "react"
 
+const COMMANDS = {
+  amba_status: 'Получение статуса амбассадора',
+  amba_register: 'Регистрация амбассадора',
+
+}
 const SelectActionPage = () => {
 	const { message, sendMessage } = useMessage()
-  const [action, setAction] = useState('')
+  const [action, setAction] = useState<keyof typeof COMMANDS>('amba_status')
 
   const handleSetData = (mockMessage?: { private: any, public: any }) => {
     const { public: publicPayload } = mockMessage ? mockMessage : message.request.payload;
 
     const { action } = JSON.parse(publicPayload || '{}');
-    setAction(action)
+    if (action) setAction(action)
   };
 
   const handleGetData = () => {
@@ -22,8 +27,8 @@ const SelectActionPage = () => {
           public: {
             action
           },
-          description: 'Интеграция подключена',
-          command: 'Генерация картинки',
+          description: '',
+          command: COMMANDS[action],
           title: 'title',
         },
         success: true,
@@ -50,8 +55,8 @@ const SelectActionPage = () => {
         <MenuItem value="">
           <em>Выберите действие</em>
         </MenuItem>
-        <MenuItem value="amba_status">Получение статуса амбассадора</MenuItem>
-        <MenuItem value="amba_register">Регистрация амбассадора</MenuItem>
+        <MenuItem value="amba_status">{COMMANDS.amba_status}</MenuItem>
+        <MenuItem value="amba_register">{COMMANDS.amba_register}</MenuItem>
       </Select>
     </FormControl>
     </>
