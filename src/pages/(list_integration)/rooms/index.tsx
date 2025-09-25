@@ -15,10 +15,12 @@ import {
   AppBar,
   Toolbar,
   Container,
+  Alert,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import roomsService from "@services/rooms/rooms.service";
 import type { ICreateRoomResponse } from "@services/rooms/rooms.types";
+import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 
 import { Loader } from "../../../components/Loader";
 
@@ -30,12 +32,19 @@ export default function RoomsPage() {
     name: '',
     webhookUrl: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [generalError, setGeneralError] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await roomsService.getRooms();
-        setRooms(data);
+        const response = await roomsService.getRooms();
+        if (response.data) {
+          setRooms(response.data);
+        } else if (response.error) {
+          setGeneralError(typeof response.error.message === 'string' ? response.error.message : 'Произошла ошибка получения комнат');
+        }
       } finally {
         setLoading(false);
       }
@@ -51,19 +60,38 @@ export default function RoomsPage() {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setFormData({ name: '', webhookUrl: '' });
+    setFieldErrors({});
+    setGeneralError('');
   };
 
   const handleSubmit = async () => {
-    if (formData.name.trim()) {
-      const response = await roomsService.createRooms({
-        name: formData.name,
-        webhookUrl: formData.webhookUrl,
-      });
-      if (response.status === 201) {
-        setRooms(prev => [...prev, response.data]);
-      }
+    if (!formData.name.trim()) return;
+
+    setSubmitting(true);
+    setFieldErrors({});
+    setGeneralError('');
+
+    const response = await roomsService.createRooms({
+      name: formData.name,
+      webhookUrl: formData.webhookUrl,
+    });
+
+    if (response.data) {
+      // Success
+      setRooms(prev => [...prev, response.data!]);
       handleCloseDialog();
+    } else if (response.error) {
+      // Handle errors
+      if (response.fieldErrors) {
+        // Validation errors (422)
+        setFieldErrors(response.fieldErrors);
+      } else {
+        // General error
+        setGeneralError(typeof response.error.message === 'string' ? response.error.message : 'Произошла ошибка');
+      }
     }
+
+    setSubmitting(false);
   };
 
   const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,9 +138,9 @@ export default function RoomsPage() {
       </List>
 
       {/* Полноэкранное окно создания комнаты */}
-      <Dialog 
-        open={openDialog} 
-        onClose={handleCloseDialog} 
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
         fullScreen
         sx={{
           '& .MuiDialog-paper': {
@@ -140,9 +168,15 @@ export default function RoomsPage() {
             </Typography>
           </Toolbar>
         </AppBar>
-        
+
         <Container maxWidth="sm" sx={{ py: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            {generalError && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {generalError}
+              </Alert>
+            )}
+            
             <TextField
               autoFocus
               margin="dense"
@@ -151,6 +185,8 @@ export default function RoomsPage() {
               variant="outlined"
               value={formData.name}
               onChange={handleInputChange('name')}
+              error={hasFieldError(fieldErrors, 'name')}
+              helperText={getFirstFieldError(fieldErrors, 'name')}
               sx={{ mb: 3 }}
             />
             <TextField
@@ -161,12 +197,14 @@ export default function RoomsPage() {
               value={formData.webhookUrl}
               onChange={handleInputChange('webhookUrl')}
               placeholder="https://"
+              error={hasFieldError(fieldErrors, 'webhookUrl')}
+              helperText={getFirstFieldError(fieldErrors, 'webhookUrl')}
               sx={{ mb: 4 }}
             />
           </Box>
-          
+
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, pt: 2 }}>
-            <Button 
+            <Button
               onClick={handleCloseDialog}
               variant="outlined"
               size="large"
@@ -176,10 +214,10 @@ export default function RoomsPage() {
             <Button
               onClick={handleSubmit}
               variant="contained"
-              disabled={!formData.name.trim()}
+              disabled={!formData.name.trim() || submitting}
               size="large"
             >
-              Создать
+              {submitting ? 'Создание...' : 'Создать'}
             </Button>
           </Box>
         </Container>

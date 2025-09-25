@@ -46,3 +46,27 @@ export interface IGetRoomByIdResponse {
 }
 
 export type IRotateSecretKeyResponse = string
+
+// Error types
+export interface IValidationError {
+  statusCode: 422;
+  timestamp: string;
+  path: string;
+  message: Record<string, string[]>;
+}
+
+export interface IApiError {
+  statusCode: number;
+  timestamp: string;
+  path: string;
+  message: string;
+}
+
+export type IApiErrorResponse = IValidationError | IApiError;
+
+// Service response wrapper
+export interface IServiceResponse<T> {
+  data?: T;
+  error?: IApiErrorResponse;
+  fieldErrors?: Record<string, string[]>;
+}
