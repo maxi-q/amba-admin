@@ -48,8 +48,8 @@ const EventsSetting = () => {
   const [prefixOccupiedError, setPrefixOccupiedError] = useState<string>('');
   const [formData, setFormData] = useState<IPatchEventsRequest>({
     name: '',
-    startDate: '',
-    endDate: '',
+    startDate: null,
+    endDate: null,
     ignoreEndDate: false,
     rewardType: 'fix',
     rewardUnits: '',
