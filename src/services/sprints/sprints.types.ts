@@ -100,3 +100,26 @@ export interface IPatchSprintsResponse {
   isDeleted: boolean,
   roomId: string
 }
+
+export interface IApiErrorResponse {
+  statusCode: number;
+  timestamp: string;
+  path: string;
+  message: string;
+}
+
+export class ApiError extends Error {
+  public readonly statusCode: number;
+  public readonly timestamp: string;
+  public readonly path: string;
+  public readonly fieldErrors?: Record<string, string[]>;
+
+  constructor(errorResponse: IApiErrorResponse, fieldErrors?: Record<string, string[]>) {
+    super(errorResponse.message);
+    this.name = 'ApiError';
+    this.statusCode = errorResponse.statusCode;
+    this.timestamp = errorResponse.timestamp;
+    this.path = errorResponse.path;
+    this.fieldErrors = fieldErrors;
+  }
+}
