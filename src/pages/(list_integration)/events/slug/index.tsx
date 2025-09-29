@@ -34,8 +34,6 @@ const rewardUnits = [
   { value: "items", label: "Штуки" },
 ];
 
-
-
 const EventsSetting = () => {
   const { eventId, slug } = useParams();
   const { updateEvent, eventData, addEvent } = useRoomDataStore();

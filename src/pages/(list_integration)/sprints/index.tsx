@@ -26,9 +26,9 @@ const statusLabels: Record<SprintStatus, string> = {
 };
 
 
-const formatDateRange = (startDate: string, endDate: string) => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+const formatDateRange = (startDate: string | null, endDate: string | null) => {
+  const start = new Date(startDate || '');
+  const end = new Date(endDate || '');
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('ru-RU', {
@@ -41,18 +41,18 @@ const formatDateRange = (startDate: string, endDate: string) => {
   return `${formatDate(start)} - ${formatDate(end)}`;
 };
 
-const isEventActive = (startDate: string, endDate: string) => {
+const isEventActive = (startDate: string | null, endDate: string | null) => {
   const now = new Date();
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = new Date(startDate || '');
+  const end = new Date(endDate || '');
 
   return now >= start && now <= end;
 };
 
-const checkStatusEvent = (startDate: string, endDate: string)  => {
+const checkStatusEvent = (startDate: string | null, endDate: string | null)  => {
   const now = new Date();
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = new Date(startDate || '');
+  const end = new Date(endDate || '');
 
   return now >= start && now <= end ? {labelEvent: statusLabels.active, colorEvent: statusColors.active}
       :  now <= start               ? {labelEvent: statusLabels.upcoming, colorEvent: statusColors.upcoming}
