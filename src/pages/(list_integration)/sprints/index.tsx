@@ -27,8 +27,9 @@ const statusLabels: Record<SprintStatus, string> = {
 
 
 const formatDateRange = (startDate: string | null, endDate: string | null) => {
-  const start = new Date(startDate || '');
-  const end = new Date(endDate || '');
+  if( !startDate || !endDate ) return 'Без ограничений по дате'
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('ru-RU', {
