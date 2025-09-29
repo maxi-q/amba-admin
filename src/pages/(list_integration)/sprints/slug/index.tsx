@@ -45,8 +45,8 @@ const SprintSetting = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [formData, setFormData] = useState<IPatchSprintsRequest>({
     name: '',
-    startDate: '',
-    endDate: '',
+    startDate: null,
+    endDate: null,
     ignoreEndDate: false,
     rewardType: 'fix',
     rewardUnits: '',

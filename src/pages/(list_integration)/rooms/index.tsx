@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit as EditIcon, Close as CloseIcon } from "@mui/icons-material";
 import {
   Button,
@@ -18,15 +18,28 @@ import {
   Alert,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import roomsService from "@services/rooms/rooms.service";
-import type { ICreateRoomResponse } from "@services/rooms/rooms.types";
 import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 
 import { Loader } from "../../../components/Loader";
+import { useRooms } from "@/hooks/rooms/useRooms";
+import { useCreateRoom } from "@/hooks/rooms/useCreateRoom";
 
 export default function RoomsPage() {
-  const [rooms, setRooms] = useState<ICreateRoomResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { rooms, isLoading } = useRooms();
+  const { 
+    createRoom, 
+    isPending, 
+    isValidationError, 
+    validationErrors,
+    generalError: hookGeneralError
+  } = useCreateRoom();
+
+  useEffect(() => {
+    console.log(isValidationError);
+    console.log(validationErrors);
+    console.log(hookGeneralError);
+  }, [isValidationError, validationErrors, hookGeneralError]);
+
   const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -34,24 +47,20 @@ export default function RoomsPage() {
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string>('');
-  const [submitting, setSubmitting] = useState(false);
 
+  // Синхронизируем ошибки из хука с локальным состоянием
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await roomsService.getRooms();
-        if (response.data) {
-          setRooms(response.data);
-        } else if (response.error) {
-          setGeneralError(typeof response.error.message === 'string' ? response.error.message : 'Произошла ошибка получения комнат');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+    if (isValidationError && Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      setGeneralError('');
+    } else if (hookGeneralError) {
+      setGeneralError(hookGeneralError);
+      setFieldErrors({});
+    } else {
+      setFieldErrors({});
+      setGeneralError('');
+    }
+  }, [isValidationError, validationErrors, hookGeneralError]);
 
   const handleCreateRoom = () => {
     setOpenDialog(true);
@@ -67,31 +76,13 @@ export default function RoomsPage() {
   const handleSubmit = async () => {
     if (!formData.name.trim()) return;
 
-    setSubmitting(true);
     setFieldErrors({});
     setGeneralError('');
 
-    const response = await roomsService.createRooms({
+    createRoom({
       name: formData.name,
       webhookUrl: formData.webhookUrl,
     });
-
-    if (response.data) {
-      // Success
-      setRooms(prev => [...prev, response.data!]);
-      handleCloseDialog();
-    } else if (response.error) {
-      // Handle errors
-      if (response.fieldErrors) {
-        // Validation errors (422)
-        setFieldErrors(response.fieldErrors);
-      } else {
-        // General error
-        setGeneralError(typeof response.error.message === 'string' ? response.error.message : 'Произошла ошибка');
-      }
-    }
-
-    setSubmitting(false);
   };
 
   const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +92,7 @@ export default function RoomsPage() {
     }));
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Loader />
@@ -176,7 +167,7 @@ export default function RoomsPage() {
                 {generalError}
               </Alert>
             )}
-            
+
             <TextField
               autoFocus
               margin="dense"
@@ -214,10 +205,10 @@ export default function RoomsPage() {
             <Button
               onClick={handleSubmit}
               variant="contained"
-              disabled={!formData.name.trim() || submitting}
+              disabled={!formData.name.trim() || isPending}
               size="large"
             >
-              {submitting ? 'Создание...' : 'Создать'}
+              {isPending ? 'Создание...' : 'Создать'}
             </Button>
           </Box>
         </Container>

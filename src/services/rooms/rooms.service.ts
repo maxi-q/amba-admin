@@ -7,9 +7,9 @@ import type {
   IRotateSecretKeyResponse, 
   IUpdateRoomsRequest, 
   IUpdateRoomsResponse,
-  IServiceResponse,
   IApiErrorResponse
 } from './rooms.types';
+import { ApiError } from './rooms.types';
 import { 
   getContentType, 
   isValidationError, 
@@ -22,10 +22,10 @@ class RoomsService {
 
   private async handleApiCall<T>(
     apiCall: () => Promise<{ data: T }>
-  ): Promise<IServiceResponse<T>> {
+  ): Promise<T> {
     try {
       const response = await apiCall();
-      return { data: response.data };
+      return response.data;
     } catch (error: any) {
       const errorResponse: IApiErrorResponse = {
         statusCode: error?.response?.status || 500,
@@ -34,42 +34,42 @@ class RoomsService {
         message: error?.response?.data?.message || error?.message || 'Unknown error'
       };
 
-      const result: IServiceResponse<T> = { error: errorResponse };
-
       // Extract field errors for validation errors (422)
+      let fieldErrors: Record<string, string[]> | undefined;
       if (isValidationError(error)) {
-        result.fieldErrors = extractFieldErrors(error);
+        fieldErrors = extractFieldErrors(error);
       }
 
-      return result;
+      // Throw custom ApiError instead of returning error object
+      throw new ApiError(errorResponse, fieldErrors);
     }
   }
 
-  async getRooms(): Promise<IServiceResponse<IGetRoomResponse[]>> {
+  async getRooms(): Promise<IGetRoomResponse[]> {
     return this.handleApiCall(() => 
       instance.get<IGetRoomResponse[]>(`${this._BASE_URL}/my`, { headers: getContentType() })
     );
   }
 
-  async createRooms(data: ICreateRoomRequest): Promise<IServiceResponse<ICreateRoomResponse>> {
+  async createRooms(data: ICreateRoomRequest): Promise<ICreateRoomResponse> {
     return this.handleApiCall(() => 
       instance.post<ICreateRoomResponse>(`${this._BASE_URL}`, data, { headers: getContentType() })
     );
   }
 
-  async updateRooms(data: IUpdateRoomsRequest, id: string): Promise<IServiceResponse<IUpdateRoomsResponse>> {
+  async updateRooms(data: IUpdateRoomsRequest, id: string): Promise<IUpdateRoomsResponse> {
     return this.handleApiCall(() => 
       instance.patch<IUpdateRoomsResponse>(`${this._BASE_URL}/${id}`, data, { headers: getContentType() })
     );
   }
 
-  async getRoomById(id: string): Promise<IServiceResponse<IGetRoomByIdResponse>> {
+  async getRoomById(id: string): Promise<IGetRoomByIdResponse> {
     return this.handleApiCall(() => 
       instance.get<IGetRoomByIdResponse>(`${this._BASE_URL}/${id}`, { headers: getContentType() })
     );
   }
 
-  async rotateSecretKey(id: string): Promise<IServiceResponse<IRotateSecretKeyResponse>> {
+  async rotateSecretKey(id: string): Promise<IRotateSecretKeyResponse> {
     return this.handleApiCall(() => 
       instance.put<IRotateSecretKeyResponse>(`${this._BASE_URL}/${id}/rotateSecretKey`, undefined, { headers: getContentType() })
     );

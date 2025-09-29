@@ -69,8 +69,8 @@ export interface IGetSprintsRequest {
 
 export interface IPatchSprintsRequest {
   name: string,
-  startDate: string,
-  endDate: string,
+  startDate: string | null,
+  endDate: string | null,
   ignoreEndDate: boolean,
   rewardType: string,
   rewardUnits: string,

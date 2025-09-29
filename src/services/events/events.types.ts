@@ -69,8 +69,8 @@ export interface IGetEventsRequest {
 
 export interface IPatchEventsRequest {
   name: string,
-  startDate: string,
-  endDate: string,
+  startDate: string | null,
+  endDate: string | null,
   ignoreEndDate: boolean,
   promoCodeUsageLimit: number,
   ignorePromoCodeUsageLimit: boolean,

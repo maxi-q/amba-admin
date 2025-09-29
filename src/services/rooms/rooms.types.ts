@@ -64,7 +64,28 @@ export interface IApiError {
 
 export type IApiErrorResponse = IValidationError | IApiError;
 
-// Service response wrapper
+// Custom API Error class
+export class ApiError extends Error {
+  public statusCode: number;
+  public timestamp: string;
+  public path: string;
+  public fieldErrors?: Record<string, string[]>;
+
+  constructor(errorResponse: IApiErrorResponse, fieldErrors?: Record<string, string[]>) {
+    const message = typeof errorResponse.message === 'string' 
+      ? errorResponse.message 
+      : 'Validation error';
+    
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = errorResponse.statusCode;
+    this.timestamp = errorResponse.timestamp;
+    this.path = errorResponse.path;
+    this.fieldErrors = fieldErrors;
+  }
+}
+
+// Service response wrapper (deprecated - will be removed)
 export interface IServiceResponse<T> {
   data?: T;
   error?: IApiErrorResponse;
