@@ -152,7 +152,7 @@ export default function RoomsPage() {
               onChange={handleInputChange('name')}
               sx={{ mb: 3 }}
             />
-            <TextField
+            {/* <TextField
               margin="dense"
               label="Webhook URL"
               fullWidth
@@ -161,7 +161,7 @@ export default function RoomsPage() {
               onChange={handleInputChange('webhookUrl')}
               placeholder="https://"
               sx={{ mb: 4 }}
-            />
+            /> */}
           </Box>
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, pt: 2 }}>

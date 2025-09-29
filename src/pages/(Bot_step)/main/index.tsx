@@ -7,7 +7,7 @@ import type { IGetRoomResponse } from "@/services/rooms/rooms.types"
 const COMMANDS = {
   amba_status: 'Получение статуса амбассадора',
   amba_register: 'Регистрация амбассадора',
-  get_sprint_promo: 'Получить промокод для спринтов',
+  get_sprint_promo: 'Установить базовый промокод',
 
 }
 const SelectActionPage = () => {
@@ -43,7 +43,7 @@ const SelectActionPage = () => {
             action,
             roomId: selectedRoom
           },
-          description: '',
+          description: rooms.find(el => el.id === selectedRoom)?.name,
           command: COMMANDS[action],
           title: 'title',
         },
