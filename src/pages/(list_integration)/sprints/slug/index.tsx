@@ -85,7 +85,7 @@ const SprintSetting = () => {
 
     const storeData = {
       name: formData.name,
-      startDate: dateToInput(formData.startDate), //(formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
+      startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
       endDate: dateToInput(formData.endDate),
       ignoreEndDate: formData.ignoreEndDate,
       rewardType: formData.rewardType,

@@ -98,7 +98,7 @@ const EventsSetting = () => {
   const handleSave = async (isDeleted: boolean = false) => {
     const storeData = {
       name: formData.name,
-      startDate: dateToInput(formData.startDate),
+      startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
       endDate: dateToInput(formData.endDate),
       ignoreEndDate: formData.ignoreEndDate,
       rewardType: formData.rewardType,
