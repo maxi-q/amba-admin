@@ -128,7 +128,6 @@ export default function RoomsPage() {
         )): <>Нет созданных комнат</>}
       </List>
 
-      {/* Полноэкранное окно создания комнаты */}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
