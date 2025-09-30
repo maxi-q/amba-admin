@@ -174,7 +174,16 @@ const SprintSetting = () => {
           </Typography>
         </Breadcrumbs>
         {sprintId !== 'new' && (
-          <MuiLink variant="body2" underline="always" color="inherit" onClick={handleCopySprintId}>
+          <MuiLink
+            variant="body2"
+            underline="always"
+            color="inherit"
+            sx={{
+              userSelect: "none",
+              cursor: "pointer"
+            }}
+            onClick={handleCopySprintId}
+          >
             Скопировать ID спринта
           </MuiLink>
         )}

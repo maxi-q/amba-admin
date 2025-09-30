@@ -44,7 +44,16 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             {roomData?.name}
           </Typography>
         </Breadcrumbs>
-        <MuiLink variant="body2" underline="always" color="inherit" onClick={handleCopyRoomId}>
+        <MuiLink
+          variant="body2"
+          underline="always"
+          color="inherit"
+          onClick={handleCopyRoomId}
+          sx={{
+            userSelect: "none",
+            cursor: "pointer"
+          }}
+        >
           Скопировать ID комнаты
         </MuiLink>
       </Box>

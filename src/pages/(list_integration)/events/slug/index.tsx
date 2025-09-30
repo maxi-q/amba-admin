@@ -223,7 +223,16 @@ const EventsSetting = () => {
           </Typography>
         </Breadcrumbs>
         {eventId !== 'new' && (
-          <MuiLink variant="body2" underline="always" color="inherit" onClick={handleCopyEventId}>
+          <MuiLink
+            variant="body2"
+            underline="always"
+            color="inherit"
+            sx={{
+              userSelect: "none",
+              cursor: "pointer"
+            }}
+            onClick={handleCopyEventId}
+          >
             Скопировать ID события
           </MuiLink>
         )}
