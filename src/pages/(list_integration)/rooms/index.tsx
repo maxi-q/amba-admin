@@ -26,10 +26,10 @@ import { useCreateRoom } from "@/hooks/rooms/useCreateRoom";
 
 export default function RoomsPage() {
   const { rooms, isLoading } = useRooms();
-  const { 
-    createRoom, 
-    isPending, 
-    isValidationError, 
+  const {
+    createRoom,
+    isPending,
+    isValidationError,
     validationErrors,
     generalError: hookGeneralError
   } = useCreateRoom();

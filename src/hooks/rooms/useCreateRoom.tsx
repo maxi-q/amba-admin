@@ -13,12 +13,10 @@ export function useCreateRoom() {
 
   const { mutate: createRoom, isPending, error, isSuccess } = useMutation({
     mutationKey: [MutationKeys.CREATE_ROOM],
-    mutationFn: async (data_create: ICreateRoomRequest) => {
-      return await roomsService.createRooms({
-        name: data_create.name,
-        webhookUrl: data_create.webhookUrl,
-      });
-    },
+    mutationFn: (data_create: ICreateRoomRequest) => roomsService.createRooms({
+      name: data_create.name,
+      webhookUrl: data_create.webhookUrl,
+    }),
     onSuccess: (createdRoom) => {
       if (createdRoom) {
         queryClient.setQueryData([QueryKeys.ROOMS], (old: any) => {
@@ -28,18 +26,18 @@ export function useCreateRoom() {
     }
   });
 
-  const isValidationError = useMemo(() => 
-    error instanceof ApiError && error.statusCode === 422, 
+  const isValidationError = useMemo(() =>
+    error instanceof ApiError && error.statusCode === 422,
     [error]
   );
-  
-  const validationErrors = useMemo(() => 
-    error instanceof ApiError && error.fieldErrors ? error.fieldErrors : {}, 
+
+  const validationErrors = useMemo(() =>
+    error instanceof ApiError && error.fieldErrors ? error.fieldErrors : {},
     [error]
   );
-  
-  const generalError = useMemo(() => 
-    error instanceof ApiError && error.statusCode !== 422 ? error.message : '', 
+
+  const generalError = useMemo(() =>
+    error instanceof ApiError && error.statusCode !== 422 ? error.message : '',
     [error]
   );
 
