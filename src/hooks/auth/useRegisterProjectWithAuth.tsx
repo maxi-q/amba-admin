@@ -33,7 +33,6 @@ export function useRegisterProjectWithAuth() {
       }
     },
     onError: (error: any) => {
-      console.error('Ошибка регистрации проекта:', error);
       
       // Если проект уже зарегистрирован (409), пытаемся авторизоваться
       if (error?.response?.status === 409) {

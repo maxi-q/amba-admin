@@ -20,8 +20,7 @@ export function useAuth() {
         logout();
       }
     },
-    onError: (error) => {
-      console.error('Ошибка авторизации:', error);
+    onError: () => {
       logout();
     }
   });

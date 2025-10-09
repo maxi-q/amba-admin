@@ -78,6 +78,7 @@ const AuthPage = () => {
               const popupUrl = new URL(popup.location.href);
               const codeParam = popupUrl.searchParams.get('code');
 
+
               if (codeParam && !savedCode) {
                 savedCode = codeParam;
 
@@ -114,7 +115,7 @@ const AuthPage = () => {
                 return;
               }
             }
-          } catch { /**/ }
+          } catch (e: any) { console.log(e) }
 
           if (popup.closed) {
             clearInterval(timer);
