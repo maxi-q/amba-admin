@@ -7,6 +7,9 @@ export enum MutationKeys {
   CREATE_SPRINT = 'createSprint',
   PATCH_SPRINT = 'patchSprint',
 
+  CREATE_EVENT = 'createEvent',
+  PATCH_EVENT = 'patchEvent',
+
   EVENTS = 'events',
   SPRINTS = 'sprints',
 }

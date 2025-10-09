@@ -16,12 +16,12 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useRoomDataStore } from "@store/index";
 import { useSprints } from "@/hooks/sprints/useSprints";
+import { useGetProject } from "@/hooks/projects/useGetProject";
 import { Loader } from "@/components/Loader";
-import projectsService from "@services/projects/projects.service";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function SprintSettingsPage() {
-  const { roomData, project, setProject } = useRoomDataStore();
+  const { roomData } = useRoomDataStore();
   const { slug } = useParams();
 
   // Получаем список спринтов для отображения статистики
@@ -35,25 +35,18 @@ export default function SprintSettingsPage() {
     slug || ''
   );
 
+  // Получаем данные проекта
+  const {
+    project,
+    isLoading: isLoadingProject,
+    isError: isProjectError,
+    error: projectError
+  } = useGetProject();
+
   const [showCopyNotification, setShowCopyNotification] = useState(false);
 
-  useEffect(() => {
-    const getProjectData = async () => {
-      if (!project) {
-        try {
-          const projectData = await projectsService.getProject();
-          setProject(projectData.data);
-        } catch (error) {
-          console.error('Ошибка при загрузке проекта:', error);
-        }
-      }
-    }
-
-    getProjectData();
-  }, [project, setProject]);
-
   // Показываем загрузку
-  if (isLoadingSprints) {
+  if (isLoadingSprints || isLoadingProject) {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Loader />
@@ -61,13 +54,20 @@ export default function SprintSettingsPage() {
     );
   }
 
-  // Показываем ошибку
-  if (isSprintsError) {
+  // Показываем ошибки
+  if (isSprintsError || isProjectError) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке спринтов: {sprintsError?.message || 'Неизвестная ошибка'}
-        </Alert>
+        {isSprintsError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Ошибка при загрузке спринтов: {sprintsError?.message || 'Неизвестная ошибка'}
+          </Alert>
+        )}
+        {isProjectError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Ошибка при загрузке проекта: {projectError?.message || 'Неизвестная ошибка'}
+          </Alert>
+        )}
       </Box>
     );
   }
@@ -77,6 +77,16 @@ export default function SprintSettingsPage() {
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
         <Alert severity="warning">
           Данные комнаты не найдены
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!project) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="warning">
+          Данные проекта не найдены
         </Alert>
       </Box>
     );

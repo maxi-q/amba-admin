@@ -192,7 +192,7 @@ export default function SettingPage() {
           {generalError}
         </Alert>
       )}
-      
+
       <Box mb={4}>
         <Typography variant="subtitle2" mb={1.5}>
           Название:

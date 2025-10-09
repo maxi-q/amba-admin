@@ -21,8 +21,12 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
-import { useRoomDataStore } from "@store/index";
-import eventsService from "@services/events/events.service";
+import { useEvents } from "@/hooks/events/useEvents";
+import { useCreateEvent } from "@/hooks/events/useCreateEvent";
+import { usePatchEvent } from "@/hooks/events/usePatchEvent";
+import { useCheckPromoCodesPrefixAvailable } from "@/hooks/events/useCheckPromoCodesPrefixAvailable";
+import { useGetProject } from "@/hooks/projects/useGetProject";
+import { Loader } from "@/components/Loader";
 import type { IEvent, IPatchEventsRequest } from "@services/events/events.types";
 import { dateToInput } from "./helpers";
 
@@ -38,9 +42,33 @@ const rewardUnits = [
 
 const EventsSetting = () => {
   const { eventId, slug } = useParams();
-  const { updateEvent, eventData, addEvent } = useRoomDataStore();
+  const navigate = useNavigate();
+  
+  // Получаем события для комнаты
+  const {
+    events: eventData,
+    isLoading: isLoadingEvents,
+    isError: isEventsError,
+    error: eventsError
+  } = useEvents(
+    { page: 1, size: 100 }, // Получаем все события
+    slug || ''
+  );
+
+  // Получаем данные проекта
+  const {
+    project,
+    isLoading: isLoadingProject,
+    isError: isProjectError,
+    error: projectError
+  } = useGetProject();
+
+  // Хуки для мутаций
+  const createEvent = useCreateEvent();
+  const patchEvent = usePatchEvent();
+  const checkPrefixAvailable = useCheckPromoCodesPrefixAvailable();
+
   const [event, setEvent] = useState<IEvent>();
-  const { project } = useRoomDataStore();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPrefixError, setShowPrefixError] = useState(false);
@@ -60,36 +88,31 @@ const EventsSetting = () => {
   });
   const [prefix, setPrefix] = useState<string>('');
 
-  const navigate = useNavigate();
+  // Состояния для ошибок из хуков
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState<string>('');
 
-  const checkPrefixAvailability = async (prefix: string): Promise<boolean> => {
-    try {
-      const response = await eventsService.checkPromoCodesPrefixAvailable(prefix);
-      return response.data;
-    } catch (error) {
-      console.error('Ошибка при проверке префикса:', error);
-      return false;
-    }
-  };
 
   useEffect(() => {
-    const foundEvent = eventData.find(event => event.id === eventId);
-    if (foundEvent) {
-      setEvent(foundEvent);
-      setFormData({
-        name: foundEvent.name,
-        startDate: dateToInput(foundEvent.startDate),
-        endDate: dateToInput(foundEvent.endDate),
-        ignoreEndDate: foundEvent.ignoreEndDate,
-        rewardType: foundEvent.rewardType,
-        rewardUnits: foundEvent.rewardUnits,
-        rewardValue: foundEvent.rewardValue,
-        promoCodeUsageLimit: foundEvent.promoCodeUsageLimit,
-        ignorePromoCodeUsageLimit: foundEvent.ignorePromoCodeUsageLimit,
-        isDeleted: foundEvent.isDeleted,
-      });
-      // Устанавливаем префикс из существующего события (если есть поле prefix в IEvent)
-      setPrefix(foundEvent.name); // Пока используем name как префикс
+    if (eventData && eventId !== 'new') {
+      const foundEvent = eventData.find(event => event.id === eventId);
+      if (foundEvent) {
+        setEvent(foundEvent);
+        setFormData({
+          name: foundEvent.name,
+          startDate: dateToInput(foundEvent.startDate),
+          endDate: dateToInput(foundEvent.endDate),
+          ignoreEndDate: foundEvent.ignoreEndDate,
+          rewardType: foundEvent.rewardType,
+          rewardUnits: foundEvent.rewardUnits,
+          rewardValue: foundEvent.rewardValue,
+          promoCodeUsageLimit: foundEvent.promoCodeUsageLimit,
+          ignorePromoCodeUsageLimit: foundEvent.ignorePromoCodeUsageLimit,
+          isDeleted: foundEvent.isDeleted,
+        });
+        // Устанавливаем префикс из существующего события (если есть поле prefix в IEvent)
+        setPrefix(foundEvent.name); // Пока используем name как префикс
+      }
     }
   }, [eventId, eventData]);
 
@@ -97,7 +120,47 @@ const EventsSetting = () => {
     console.log(formData)
   }, [formData])
 
+  // Синхронизируем ошибки из хуков с локальным состоянием
+  useEffect(() => {
+    if (createEvent.isError && createEvent.error) {
+      const error = createEvent.error as any;
+      if (error?.response?.data?.errors) {
+        setFieldErrors(error.response.data.errors);
+      } else {
+        setGeneralError(error?.message || 'Ошибка при создании события');
+      }
+    } else if (createEvent.isSuccess) {
+      setFieldErrors({});
+      setGeneralError('');
+    }
+  }, [createEvent.isError, createEvent.error, createEvent.isSuccess]);
+
+  useEffect(() => {
+    if (patchEvent.isError && patchEvent.error) {
+      const error = patchEvent.error as any;
+      if (error?.response?.data?.errors) {
+        setFieldErrors(error.response.data.errors);
+      } else {
+        setGeneralError(error?.message || 'Ошибка при обновлении события');
+      }
+    } else if (patchEvent.isSuccess) {
+      setFieldErrors({});
+      setGeneralError('');
+    }
+  }, [patchEvent.isError, patchEvent.error, patchEvent.isSuccess]);
+
+  // Навигация после успешного удаления
+  useEffect(() => {
+    if (patchEvent.isSuccess && formData.isDeleted) {
+      navigate(`/rooms/${slug}/events`);
+    }
+  }, [patchEvent.isSuccess, formData.isDeleted, navigate, slug]);
+
   const handleSave = async (isDeleted: boolean = false) => {
+    // Очищаем предыдущие ошибки
+    setFieldErrors({});
+    setGeneralError('');
+
     const storeData = {
       name: formData.name,
       startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
@@ -120,29 +183,35 @@ const EventsSetting = () => {
         return;
       }
       
-      const isPrefixAvailable = await checkPrefixAvailability(prefix);
-      if (isPrefixAvailable === false) {
-        setPrefixOccupiedError('Префикс уже занят');
-        setShowPrefixError(true);
-        return;
-      }
-    }
+      // Проверяем доступность префикса через хук
+      checkPrefixAvailable.mutate(prefix, {
+        onSuccess: (isAvailable) => {
+          if (isAvailable === false) {
+            setPrefixOccupiedError('Префикс уже занят');
+            setShowPrefixError(true);
+            return;
+          }
 
-    if (eventId !== 'new') {
-      try {
-        const response = await eventsService.patchEvents(storeData, eventId || '');
-        if (response.status === 200) {
-          updateEvent(eventId || '', storeData);
+          // Создаем новое событие
+          if (slug) {
+            createEvent.mutate({
+              ...storeData,
+              roomId: slug,
+              promoCodesPrefix: prefix
+            });
+          }
+        },
+        onError: (error) => {
+          console.error('Ошибка при проверке префикса:', error);
+          setGeneralError('Ошибка при проверке префикса промокода');
         }
-      } catch (error) {
-        console.error('Ошибка при обновлении события:', error);
-      }
-    } else if (slug) {
-      const response = await eventsService.createEvent({...storeData, roomId: slug, promoCodesPrefix: prefix});
-      if (response.status === 201) {
-        addEvent(response.data);
-        navigate(`/rooms/${slug}/events/${response.data.id}`);
-      }
+      });
+    } else if (eventId !== 'new') {
+      // Обновляем существующее событие
+      patchEvent.mutate({
+        data: storeData,
+        eventId: eventId || ''
+      });
     }
   };
 
@@ -153,7 +222,7 @@ const EventsSetting = () => {
   const handleConfirmDelete = async () => {
     setShowDeleteDialog(false);
     await handleSave(true);
-    navigate(`/rooms/${slug}/events`);
+    // Навигация будет выполнена после успешного удаления через useEffect
   };
 
   const handleCancelDelete = () => {
@@ -211,8 +280,48 @@ const EventsSetting = () => {
     setShowPrefixError(false);
   };
 
+  // Показываем загрузку
+  if (isLoadingEvents || isLoadingProject) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Loader />
+      </Box>
+    );
+  }
+
+  // Показываем ошибку
+  if (isEventsError || isProjectError) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        {isEventsError && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            Ошибка при загрузке событий: {eventsError?.message || 'Неизвестная ошибка'}
+          </Alert>
+        )}
+        {isProjectError && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            Ошибка при загрузке проекта: {projectError?.message || 'Неизвестная ошибка'}
+          </Alert>
+        )}
+        <Button
+          variant="outlined"
+          onClick={() => window.location.reload()}
+        >
+          Попробовать снова
+        </Button>
+      </Box>
+    );
+  }
+
+  // Показываем предупреждение, если событие не найдено
   if (!event && eventId !== 'new') {
-    return <Box sx={{ px: 2, py: 3 }}>Загрузка...</Box>;
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Событие не найдено
+        </Alert>
+      </Box>
+    );
   }
 
   return (
@@ -234,6 +343,13 @@ const EventsSetting = () => {
       </Box>
 
       <Stack spacing={4}>
+        {/* Общие ошибки */}
+        {generalError && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {generalError}
+          </Alert>
+        )}
+
         {/* Settings Section */}
         <Paper elevation={0} sx={{ borderRadius: 2 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
@@ -251,6 +367,8 @@ const EventsSetting = () => {
                 variant="outlined"
                 value={formData.name}
                 onChange={handleInputChange('name')}
+                error={!!fieldErrors.name}
+                helperText={fieldErrors.name}
               />
             </Box>
 
@@ -299,6 +417,8 @@ const EventsSetting = () => {
                     onChange={handleInputChange('startDate')}
                     variant="outlined"
                     sx={{ flex: 1 }}
+                    error={!!fieldErrors.startDate}
+                    helperText={fieldErrors.startDate}
                   />
                   <TextField
                     type="date"
@@ -306,6 +426,8 @@ const EventsSetting = () => {
                     onChange={handleInputChange('endDate')}
                     variant="outlined"
                     sx={{ flex: 1 }}
+                    error={!!fieldErrors.endDate}
+                    helperText={fieldErrors.endDate}
                   />
                 </Stack>
               )}
@@ -355,6 +477,8 @@ const EventsSetting = () => {
                   onChange={handleInputChange('rewardValue')}
                   variant="outlined"
                   sx={{ flex: 1 }}
+                  error={!!fieldErrors.rewardValue}
+                  helperText={fieldErrors.rewardValue}
                 />
                 <Typography variant="body2" color="text.secondary">
                   {formData.rewardUnits === 'rub' ? 'руб' :
@@ -391,6 +515,8 @@ const EventsSetting = () => {
                     onChange={handleInputChange('promoCodeUsageLimit')}
                     variant="outlined"
                     sx={{ flex: 1 }}
+                    error={!!fieldErrors.promoCodeUsageLimit}
+                    helperText={fieldErrors.promoCodeUsageLimit}
                   />
                   <Typography variant="body2" color="text.secondary">
                     раз
@@ -421,6 +547,7 @@ const EventsSetting = () => {
               color="error"
               onClick={handleDelete}
               sx={{ minWidth: 120 }}
+              disabled={patchEvent.isPending}
             >
               Удалить
             </Button>
@@ -430,8 +557,12 @@ const EventsSetting = () => {
             color="primary"
             onClick={() => handleSave()}
             sx={{ minWidth: 120 }}
+            disabled={createEvent.isPending || patchEvent.isPending || checkPrefixAvailable.isPending}
           >
-            {eventId !== 'new' ? 'Сохранить' : 'Добавить'}
+            {createEvent.isPending || patchEvent.isPending || checkPrefixAvailable.isPending
+              ? 'Сохранение...' 
+              : (eventId !== 'new' ? 'Сохранить' : 'Добавить')
+            }
           </Button>
         </Box>
         {eventId !== 'new' && event && (

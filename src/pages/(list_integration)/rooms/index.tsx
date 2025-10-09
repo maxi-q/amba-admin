@@ -48,7 +48,6 @@ export default function RoomsPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string>('');
 
-  // Синхронизируем ошибки из хука с локальным состоянием
   useEffect(() => {
     if (isValidationError && Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors);
