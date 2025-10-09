@@ -9,44 +9,57 @@ import {
   Button,
 } from "@mui/material";
 import { getUrlParams } from "@helpers/index";
-import authService from "@services/auth/auth.service";
+import { useAuth } from "@/hooks/auth/useAuth";
+import { useRegisterProjectWithAuth } from "@/hooks/auth/useRegisterProjectWithAuth";
 import { useAuthStore } from "@store/index";
+import authService from "@services/auth/auth.service";
 
 const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
-  const { login, auth, logout } = useAuthStore();
+  const { auth } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      if (sign && senlerGroupId && senlerUserId && context && senlerChannelTypeId) {
-        setIsLoading(true);
-        try {
-          const response = await authService.auth({
-            userId: senlerUserId,
-            groupId: Number(senlerGroupId),
-            context,
-            sign,
-          });
+  // Хуки для авторизации и регистрации
+  const authMutation = useAuth();
+  const registerProjectWithAuthMutation = useRegisterProjectWithAuth();
 
-          if (response?.status === 201) {
-            login(response.data.token);
-            const from = location.state?.from?.pathname || "/";
-            navigate(from, { replace: true });
-          } else {
-            logout()
-          }
-        } catch {
-          logout();
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    })();
-  }, [sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId, login, navigate, location]);
+  useEffect(() => {
+    if (sign && senlerGroupId && senlerUserId && context && senlerChannelTypeId && !auth) {
+      setIsLoading(true);
+      setError(null);
+      
+      authMutation.mutate({
+        userId: senlerUserId,
+        groupId: Number(senlerGroupId),
+        context,
+        sign,
+      });
+    }
+  }, [sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId, auth]);
+
+  // Синхронизируем состояние загрузки с мутациями
+  useEffect(() => {
+    if (authMutation.isSuccess || authMutation.isError) {
+      setIsLoading(false);
+    }
+  }, [authMutation.isSuccess, authMutation.isError]);
+
+  useEffect(() => {
+    if (registerProjectWithAuthMutation.isSuccess || registerProjectWithAuthMutation.isError) {
+      setIsLoading(false);
+    }
+  }, [registerProjectWithAuthMutation.isSuccess, registerProjectWithAuthMutation.isError]);
+
+  // Если пользователь уже авторизован, перенаправляем его
+  useEffect(() => {
+    if (auth) {
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
+    }
+  }, [auth, location]);
 
   const openAuthPopup = () => {
     setIsLoading(true);
@@ -54,7 +67,7 @@ const AuthPage = () => {
 
     try {
       const url = authService.start(Number(senlerGroupId))
-
+      console.log(url)
       const popup = window.open(url, '_blank', 'width=600,height=700');
       if (popup) {
         let savedCode: string | null = null;
@@ -71,54 +84,33 @@ const AuthPage = () => {
                 popup.close();
                 clearInterval(timer);
 
-                try {
-                  await authService.registerProject({
+                // Регистрируем проект с авторизацией
+                registerProjectWithAuthMutation.mutate({
+                  registerData: {
                     groupId: Number(senlerGroupId),
                     code: savedCode,
-                  });
-
-                  const response = await authService.auth({
+                  },
+                  authData: {
                     userId: senlerUserId,
                     groupId: Number(senlerGroupId),
                     context,
                     sign,
-                  });
-
-                  if (response?.status === 201) {
-                    login(response.data.token);
-                    const from = location.state?.from?.pathname || "/";
-                    navigate(from, { replace: true });
-                  } else {
-                    setError("Ошибка авторизации после регистрации");
                   }
-                } catch (registerError: any) {
-                  console.error('Ошибка регистрации проекта:', registerError);
-                  if (registerError?.response?.status === 409) {
-                    try {
-                      const authResponse = await authService.auth({
+                }, {
+                  onError: (error: any) => {
+                    if (error?.message === 'PROJECT_ALREADY_EXISTS') {
+                      // Проект уже зарегистрирован, пытаемся авторизоваться
+                      authMutation.mutate({
                         userId: senlerUserId,
                         groupId: Number(senlerGroupId),
                         context,
                         sign,
                       });
-
-                      if (authResponse?.status === 201) {
-                        login(authResponse.data.token);
-                        const from = location.state?.from?.pathname || "/";
-                        navigate(from, { replace: true });
-                      } else {
-                        setError("Ошибка авторизации");
-                      }
-                    } catch (authError) {
-                      console.error('Ошибка авторизации:', authError);
-                      setError("Ошибка авторизации");
+                    } else {
+                      setError("Ошибка регистрации проекта");
                     }
-                  } else {
-                    setError("Ошибка регистрации проекта");
                   }
-                } finally {
-                  setIsLoading(false);
-                }
+                });
                 return;
               }
             }
@@ -166,13 +158,14 @@ const AuthPage = () => {
             }
           </Typography>
 
-          {!isLoading && !auth && (
+          {!isLoading && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
             <Button
               variant="contained"
               color="primary"
               fullWidth
               onClick={openAuthPopup}
               size="large"
+              disabled={authMutation.isPending || registerProjectWithAuthMutation.isPending}
             >
               Войти
             </Button>

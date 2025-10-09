@@ -1,8 +1,8 @@
 import { useMessage } from "@/messages/messageProvider"
-import { FormControl, Select, MenuItem, Typography, Box } from "@mui/material"
+import { FormControl, Select, MenuItem, Typography, Box, Alert, Button } from "@mui/material"
 import { useEffect, useState } from "react"
-import roomsService from "@/services/rooms/rooms.service"
-import type { IGetRoomResponse } from "@/services/rooms/rooms.types"
+import { useRooms } from "@/hooks/rooms/useRooms"
+import { Loader } from "@/components/Loader"
 
 const COMMANDS = {
   amba_status: 'Получение статуса амбассадора',
@@ -13,17 +13,15 @@ const COMMANDS = {
 const SelectActionPage = () => {
 	const { message, sendMessage } = useMessage()
   const [action, setAction] = useState<keyof typeof COMMANDS>('amba_status')
-  const [rooms, setRooms] = useState<IGetRoomResponse[]>([])
   const [selectedRoom, setSelectedRoom] = useState<string>('')
 
-  const loadRooms = async () => {
-    try {
-      const response = await roomsService.getRooms()
-      setRooms(response.data)
-    } catch (error) {
-      console.error('Ошибка при загрузке комнат:', error)
-    }
-  }
+  // Получаем комнаты через хук
+  const {
+    rooms,
+    isLoading,
+    isError,
+    error
+  } = useRooms() // Получаем все комнаты
 
   const handleSetData = (mockMessage?: { private: any, public: any }) => {
     const { public: publicPayload } = mockMessage ? mockMessage : message.request.payload;
@@ -55,15 +53,38 @@ const SelectActionPage = () => {
     sendMessage(data, window.parent);
   };
 
-  useEffect(() => {
-    loadRooms()
-  }, [])
 
   useEffect(() => {
     if (!message) return;
     if (message.request?.type === 'getData') handleGetData();
     if (message.request?.type === 'setData') handleSetData();
   }, [message]);
+
+  // Показываем загрузку
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+        <Loader />
+      </Box>
+    );
+  }
+
+  // Показываем ошибку
+  if (isError) {
+    return (
+      <Box>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Ошибка при загрузке комнат: {error?.message || 'Неизвестная ошибка'}
+        </Alert>
+        <Button
+          variant="outlined"
+          onClick={() => window.location.reload()}
+        >
+          Попробовать снова
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -83,11 +104,17 @@ const SelectActionPage = () => {
                </MenuItem>
              )}
 
-            {rooms.map((room) => (
-              <MenuItem key={room.id} value={room.id}>
-                {room.name}
+            {rooms && rooms.length > 0 ? (
+              rooms.map((room) => (
+                <MenuItem key={room.id} value={room.id}>
+                  {room.name}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>
+                <em>Комнаты не найдены</em>
               </MenuItem>
-            ))}
+            )}
           </Select>
         </FormControl>
       </Box>
