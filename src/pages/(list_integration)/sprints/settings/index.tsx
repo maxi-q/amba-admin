@@ -14,15 +14,22 @@ import {
   Snackbar,
 } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { useRoomDataStore } from "@store/index";
+import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetProject } from "@/hooks/projects/useGetProject";
 import { Loader } from "@/components/Loader";
 import { useState } from "react";
 
 export default function SprintSettingsPage() {
-  const { roomData } = useRoomDataStore();
   const { slug } = useParams();
+  
+  // Получаем данные комнаты через хук
+  const {
+    room,
+    isLoading: isLoadingRoom,
+    isError: isRoomError,
+    error: roomError
+  } = useGetRoomById(slug || '');
 
   // Получаем список спринтов для отображения статистики
   const { 
@@ -46,7 +53,7 @@ export default function SprintSettingsPage() {
   const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   // Показываем загрузку
-  if (isLoadingSprints || isLoadingProject) {
+  if (isLoadingRoom || isLoadingSprints || isLoadingProject) {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Loader />
@@ -55,9 +62,14 @@ export default function SprintSettingsPage() {
   }
 
   // Показываем ошибки
-  if (isSprintsError || isProjectError) {
+  if (isRoomError || isSprintsError || isProjectError) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        {isRoomError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Ошибка при загрузке комнаты: {roomError?.message || 'Неизвестная ошибка'}
+          </Alert>
+        )}
         {isSprintsError && (
           <Alert severity="error" sx={{ mb: 2 }}>
             Ошибка при загрузке спринтов: {sprintsError?.message || 'Неизвестная ошибка'}
@@ -72,7 +84,7 @@ export default function SprintSettingsPage() {
     );
   }
 
-  if (!roomData) {
+  if (!room) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
         <Alert severity="warning">
@@ -99,7 +111,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для подачи заявки в амбассадорку",
       name: "Заявки амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${roomData.pendingSubscriptionId}&force=1`,
+      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${room.pendingSubscriptionId}&force=1`,
       instructions: [
         "Отправить прямую ссылку на группу подписчиков:",
         "Сделать рассылку через бота с предложением об участии и кнопкой \"Принять\" (при нажатии на которую вызвать действие добавления в группу)",
@@ -112,7 +124,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для одобренных амбассадоров",
       name: "Одобренные амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${roomData.approvedSubscriptionId}&force=1`,
+      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${room.approvedSubscriptionId}&force=1`,
       instructions: [
         "Добавляйте в данную группу одобренных амбассадоров, чтобы они смогли принять участие.",
         "Если вы хотите принимать без амбассадоров без процесса одобрения, организуйте подписку на данную группу минуя группу с заявками.",
@@ -124,7 +136,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для исключенных амбассадоров",
       name: "Исключенные амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${roomData.rejectedSubscriptionId}&force=1`,
+      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${room.rejectedSubscriptionId}&force=1`,
       instructions: [
         "В данной группе можно сохранять исключенных амбассадоров, чтобы автоматически отключать их участие в комнате.",
         "Вступление будет отключаться из группы с заявками и одобренными амбассадорами.",

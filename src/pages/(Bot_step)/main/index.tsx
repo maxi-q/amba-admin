@@ -2,6 +2,7 @@ import { useMessage } from "@/messages/messageProvider"
 import { FormControl, Select, MenuItem, Typography, Box, Alert, Button } from "@mui/material"
 import { useEffect, useState } from "react"
 import { useRooms } from "@/hooks/rooms/useRooms"
+import { useEvents } from "@/hooks/events/useEvents"
 import { Loader } from "@/components/Loader"
 
 const COMMANDS = {
@@ -22,16 +23,20 @@ const SelectActionPage = () => {
 	const { message, sendMessage } = useMessage()
   const [action, setAction] = useState<keyof typeof COMMANDS>('amba_status')
   const [selectedRoom, setSelectedRoom] = useState<string>('')
-  const [events, setEvents] = useState<IEvent[]>([])
   const [selectedEvent, setSelectedEvent] = useState<string>('')
 
   // Получаем комнаты через хук
   const {
     rooms,
-    isLoading,
-    isError,
-    error
+    isLoading: isLoadingRooms,
+    isError: isRoomsError,
+    error: roomsError
   } = useRooms() // Получаем все комнаты
+
+  // Получаем события для выбранной комнаты
+  const {
+    events
+  } = useEvents({ page: 1, size: 100 }, selectedRoom)
 
   const handleSetData = (mockMessage?: { private: any, public: any }) => {
     const { public: publicPayload } = mockMessage ? mockMessage : message.request.payload;
@@ -79,7 +84,7 @@ const SelectActionPage = () => {
   }, [message]);
 
   // Показываем загрузку
-  if (isLoading) {
+  if (isLoadingRooms) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
         <Loader />
@@ -88,11 +93,11 @@ const SelectActionPage = () => {
   }
 
   // Показываем ошибку
-  if (isError) {
+  if (isRoomsError) {
     return (
       <Box>
         <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке комнат: {error?.message || 'Неизвестная ошибка'}
+          Ошибка при загрузке комнат: {roomsError?.message || 'Неизвестная ошибка'}
         </Alert>
         <Button
           variant="outlined"

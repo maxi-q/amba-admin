@@ -20,14 +20,21 @@ import {
 import { Link as RouterLink } from "react-router-dom";
 import { ExpandMore, Refresh, ContentCopy } from "@mui/icons-material";
 import { useEffect, useState } from "react";
-import { useRoomDataStore } from "@store/index";
+import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
 import { useRotateSecretKey } from "@/hooks/rooms/useRotateSecretKey";
 import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 
 export default function SettingPage() {
-  const { roomData } = useRoomDataStore();
   const { slug } = useParams();
+  
+  // Получаем данные комнаты через хук
+  const {
+    room,
+    isLoading: isLoadingRoom,
+    isError: isRoomError,
+    error: roomError
+  } = useGetRoomById(slug || '');
 
   // Хуки для обновления комнаты и ротации ключа
   const {
@@ -48,9 +55,9 @@ export default function SettingPage() {
     generalError: rotateGeneralError
   } = useRotateSecretKey();
 
-  const [roomName, setRoomName] = useState(roomData?.name || '')
-  const [webhookUrl, setWebhookUrl] = useState(roomData?.webhookUrl || '');
-  const [secretKey, setSecretKey] = useState(roomData?.secretKey || '');
+  const [roomName, setRoomName] = useState('')
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [secretKey, setSecretKey] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
@@ -59,13 +66,14 @@ export default function SettingPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string>('');
 
+  // Инициализируем состояние при загрузке данных комнаты
   useEffect(() => {
-    if (roomData) {
-      setRoomName(roomData.name || '');
-      setWebhookUrl(roomData.webhookUrl || '');
-      setSecretKey(roomData.secretKey || '');
+    if (room) {
+      setRoomName(room.name || '');
+      setWebhookUrl(room.webhookUrl || '');
+      setSecretKey(room.secretKey || '');
     }
-  }, [roomData]);
+  }, [room]);
 
   // Синхронизируем ошибки из хуков с локальным состоянием
   useEffect(() => {
@@ -97,12 +105,10 @@ export default function SettingPage() {
   // Обновляем secretKey при успешной ротации
   useEffect(() => {
     if (isRotateSuccess) {
-      // Обновляем данные в store
-      if (roomData) {
-        roomData.secretKey = secretKey;
-      }
+      // Данные обновятся автоматически через хук useGetRoomById
+      console.log('Secret key rotated successfully');
     }
-  }, [isRotateSuccess, roomData, secretKey]);
+  }, [isRotateSuccess]);
 
   const handleSaveName = () => {
     if (!slug) return;
@@ -166,8 +172,34 @@ export default function SettingPage() {
     setShowCopyNotification(false);
   };
 
-  if (!roomData) {
-    return null;
+  // Показываем загрузку
+  if (isLoadingRoom) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+        <Typography>Загрузка...</Typography>
+      </Box>
+    );
+  }
+
+  // Показываем ошибку
+  if (isRoomError) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="error">
+          Ошибка при загрузке комнаты: {roomError?.message || 'Неизвестная ошибка'}
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!room) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="warning">
+          Комната не найдена
+        </Alert>
+      </Box>
+    );
   }
 
   const changeRoomName = (value: string) => {
@@ -389,7 +421,7 @@ export default function SettingPage() {
                   <strong>security_code</strong> - секретный ключ для защиты запросов. Вы можете указать этот параметр, чтобы защитить использование промокодов от недобросовестных пользователей. Его нужно сгенерировать на сервере, чтобы защитить алгоритм его формирования. Например, можно использовать функцию md5, в которой зашифровать unique_id и придуманную вами строку, чтобы потом проверить в вебхуке данный параметр md5(unique_id+'45rtwtwb')
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  <strong>room_id</strong> - идентификатор комнаты. Текущий ID = {roomData?.id || 'N/A'}
+                  <strong>room_id</strong> - идентификатор комнаты. Текущий ID = {room?.id || 'N/A'}
                 </Typography>
               </Box>
               
@@ -401,7 +433,7 @@ export default function SettingPage() {
                   multiline
                   rows={2}
                   fullWidth
-                  value={`<a href="#" onclick="openPromoAmbSEN(123, 'sdfsdfg4', ${roomData?.id || 56})">Ввести промокод</a>`}
+                  value={`<a href="#" onclick="openPromoAmbSEN(123, 'sdfsdfg4', ${room?.id || 56})">Ввести промокод</a>`}
                   variant="outlined"
                   InputProps={{
                     readOnly: true,
@@ -409,7 +441,7 @@ export default function SettingPage() {
                   }}
                 />
                 <IconButton
-                  onClick={() => handleCopyToClipboard(`<a href="#" onclick="openPromoAmbSEN(123, 'sdfsdfg4', ${roomData?.id || 56})">Ввести промокод</a>`)}
+                  onClick={() => handleCopyToClipboard(`<a href="#" onclick="openPromoAmbSEN(123, 'sdfsdfg4', ${room?.id || 56})">Ввести промокод</a>`)}
                   sx={{
                     position: 'absolute',
                     top: 8,
@@ -438,7 +470,7 @@ export default function SettingPage() {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Вы уверены, что хотите удалить комнату "{roomData?.name}"? Это действие нельзя будет отменить.
+            Вы уверены, что хотите удалить комнату "{room?.name}"? Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

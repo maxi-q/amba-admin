@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import { useEffect } from 'react';
+import { Box } from '@mui/material';
 
 import {
   SettingPage,
@@ -21,12 +22,12 @@ import AuthPage from './auth';
 import RedirectAuthPage from './redirect_auth';
 
 
-import { useAuthStore, useRoomDataStore } from '@store/index';
+import { useAuthStore } from '@store/index';
 import { useMessage } from '@/messages/messageProvider';
-import roomsService from '@services/rooms/rooms.service';
-import sprintsService from '@services/sprints/sprints.service';
-import eventsService from '@services/events/events.service';
-import projectsService from '@services/projects/projects.service';
+import { useGetRoomById } from '@/hooks/rooms/useGetRoomById';
+import { useSprints } from '@/hooks/sprints/useSprints';
+import { useEvents } from '@/hooks/events/useEvents';
+import { useGetProject } from '@/hooks/projects/useGetProject';
 import { getUrlParams } from '@helpers/index';
 
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -36,7 +37,32 @@ import { Loader } from '../components/Loader';
 function RoomLayout() {
   const { slug } = useParams();
   const { sendMessage } = useMessage()
-  const { setRoomData, roomData, setIsLoading, isLoading, loadSprints, loadEvents, setProject, project } = useRoomDataStore()
+
+  // Получаем данные через хуки tanstack
+  const {
+    room,
+    isLoading: isLoadingRoom,
+    isError: isRoomError,
+    error: roomError
+  } = useGetRoomById(slug || '');
+
+  const {
+    isLoading: isLoadingSprints,
+    isError: isSprintsError,
+    error: sprintsError
+  } = useSprints({ page: 1, size: 100 }, slug || '');
+
+  const {
+    isLoading: isLoadingEvents,
+    isError: isEventsError,
+    error: eventsError
+  } = useEvents({ page: 1, size: 100 }, slug || '');
+
+  const {
+    isLoading: isLoadingProject,
+    isError: isProjectError,
+    error: projectError
+  } = useGetProject();
 
   useEffect(() => {
     const data = {
@@ -52,33 +78,24 @@ function RoomLayout() {
     sendMessage(data, window.parent);
   }, []);
 
-  useEffect(() => {
-    const getRoomData = async () => {
-      setIsLoading(true)
-      const roomData = await roomsService.getRoomById(slug!)
-      setRoomData(roomData.data || null);
-      const sprintsData = await sprintsService.getSprints({page: 1, size: 100}, slug!)
-      loadSprints(sprintsData.data.items)
-      const eventsData = await eventsService.getEvents({page: 1, size: 100}, slug!)
-      loadEvents(eventsData.data.items)
-      setIsLoading(false)
-    }
+  const isLoading = isLoadingRoom || isLoadingSprints || isLoadingEvents || isLoadingProject;
 
-    getRoomData();
-  }, [slug]);
+  if (isLoading) {
+    return <Loader />;
+  }
 
-  useEffect(() => {
-    const getProjectData = async () => {
-      if (!project) {
-        const projectData = await projectsService.getProject()
-        setProject(projectData.data)
-      }
-    }
+  if (isRoomError || isSprintsError || isEventsError || isProjectError) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        {isRoomError && <div>Ошибка загрузки комнаты: {roomError?.message}</div>}
+        {isSprintsError && <div>Ошибка загрузки спринтов: {sprintsError?.message}</div>}
+        {isEventsError && <div>Ошибка загрузки событий: {eventsError?.message}</div>}
+        {isProjectError && <div>Ошибка загрузки проекта: {projectError?.message}</div>}
+      </Box>
+    );
+  }
 
-    getProjectData();
-  }, [project]);
-
-  if (!roomData || isLoading) {
+  if (!room) {
     return <Loader />;
   }
 
