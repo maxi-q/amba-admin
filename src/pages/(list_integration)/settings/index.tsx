@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -21,12 +21,32 @@ import { Link as RouterLink } from "react-router-dom";
 import { ExpandMore, Refresh, ContentCopy } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useRoomDataStore } from "@store/index";
-import roomsService from "@services/rooms/rooms.service";
+import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
+import { useRotateSecretKey } from "@/hooks/rooms/useRotateSecretKey";
+import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 
 export default function SettingPage() {
   const { roomData } = useRoomDataStore();
   const { slug } = useParams();
-  const navigate = useNavigate();
+
+  // Хуки для обновления комнаты и ротации ключа
+  const {
+    updateRoom,
+    isPending: isUpdating,
+    isSuccess: isUpdateSuccess,
+    isValidationError: isUpdateValidationError,
+    validationErrors: updateValidationErrors,
+    generalError: updateGeneralError
+  } = useUpdateRoom();
+
+  const {
+    rotateSecretKey,
+    isPending: isRotating,
+    isSuccess: isRotateSuccess,
+    isValidationError: isRotateValidationError,
+    validationErrors: rotateValidationErrors,
+    generalError: rotateGeneralError
+  } = useRotateSecretKey();
 
   const [roomName, setRoomName] = useState(roomData?.name || '')
   const [webhookUrl, setWebhookUrl] = useState(roomData?.webhookUrl || '');
@@ -34,7 +54,10 @@ export default function SettingPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
-  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
+  
+  // Состояние для ошибок
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [generalError, setGeneralError] = useState<string>('');
 
   useEffect(() => {
     if (roomData) {
@@ -44,54 +67,82 @@ export default function SettingPage() {
     }
   }, [roomData]);
 
-  const handleSaveName = async () => {
+  // Синхронизируем ошибки из хуков с локальным состоянием
+  useEffect(() => {
+    if (isUpdateValidationError && Object.keys(updateValidationErrors).length > 0) {
+      setFieldErrors(updateValidationErrors);
+      setGeneralError('');
+    } else if (isRotateValidationError && Object.keys(rotateValidationErrors).length > 0) {
+      setFieldErrors(rotateValidationErrors);
+      setGeneralError('');
+    } else if (updateGeneralError) {
+      setGeneralError(updateGeneralError);
+      setFieldErrors({});
+    } else if (rotateGeneralError) {
+      setGeneralError(rotateGeneralError);
+      setFieldErrors({});
+    } else {
+      setFieldErrors({});
+      setGeneralError('');
+    }
+  }, [isUpdateValidationError, updateValidationErrors, updateGeneralError, isRotateValidationError, rotateValidationErrors, rotateGeneralError]);
+
+  // Обработка успешных операций обновления
+  useEffect(() => {
+    if (isUpdateSuccess) {
+      setShowSaveNotification(true);
+    }
+  }, [isUpdateSuccess]);
+
+  // Обновляем secretKey при успешной ротации
+  useEffect(() => {
+    if (isRotateSuccess) {
+      // Обновляем данные в store
+      if (roomData) {
+        roomData.secretKey = secretKey;
+      }
+    }
+  }, [isRotateSuccess, roomData, secretKey]);
+
+  const handleSaveName = () => {
     if (!slug) return;
 
-    try {
-      const payload = {
-        name: roomName
-      };
+    setFieldErrors({});
+    setGeneralError('');
 
-      await roomsService.updateRooms(payload, slug);
-      setShowSaveNotification(true);
-    } catch (error) {
-      console.error('Ошибка при обновлении названия комнаты:', error);
-    }
+    updateRoom({
+      data: { name: roomName },
+      id: slug
+    });
   };
 
-  const handleSaveWebhook = async () => {
+  const handleSaveWebhook = () => {
     if (!slug) return;
 
-    try {
-      const payload = {
-        webhookUrl
-      };
+    setFieldErrors({});
+    setGeneralError('');
 
-      await roomsService.updateRooms(payload, slug);
-      setShowSaveNotification(true);
-    } catch (error) {
-      console.error('Ошибка при обновлении вебхука:', error);
-    }
-    };
+    updateRoom({
+      data: { webhookUrl },
+      id: slug
+    });
+  };
 
   const handleDelete = () => {
     setShowDeleteDialog(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     setShowDeleteDialog(false);
     if (!slug) return;
 
-    try {
-      const payload = {
-        isDeleted: true
-      };
+    setFieldErrors({});
+    setGeneralError('');
 
-      await roomsService.updateRooms(payload, slug);
-      navigate(`/rooms/`);
-    } catch (error) {
-      console.error('Ошибка при удалении комнаты:', error);
-    }
+    updateRoom({
+      data: { isDeleted: true },
+      id: slug
+    });
   };
 
   const handleCancelDelete = () => {
@@ -123,31 +174,25 @@ export default function SettingPage() {
     setRoomName(value);
   };
 
-  const generateSecretKey = async () => {
+  const generateSecretKey = () => {
     if (!slug) return;
 
-    setIsGeneratingKey(true);
-    try {
-      const response = await roomsService.rotateSecretKey(slug);
+    setFieldErrors({});
+    setGeneralError('');
 
-      if (response.data) {
-        setSecretKey(response.data);
-        // Обновляем данные в store
-        if (roomData) {
-          roomData.secretKey = response.data;
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка при генерации секретного ключа:', error);
-    } finally {
-      setIsGeneratingKey(false);
-    }
+    rotateSecretKey(slug);
   };
 
 
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
+      {generalError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {generalError}
+        </Alert>
+      )}
+
       <Box mb={4}>
         <Typography variant="subtitle2" mb={1.5}>
           Название:
@@ -158,6 +203,8 @@ export default function SettingPage() {
           onChange={(e) => changeRoomName(e.target.value)}
           size="medium"
           variant="outlined"
+          error={hasFieldError(fieldErrors, 'name')}
+          helperText={getFirstFieldError(fieldErrors, 'name')}
         />
       </Box>
 
@@ -167,6 +214,7 @@ export default function SettingPage() {
           variant="outlined"
           color="error"
           onClick={handleDelete}
+          disabled={isUpdating}
           sx={{ minWidth: 120 }}
         >
           Удалить
@@ -175,9 +223,10 @@ export default function SettingPage() {
           variant="contained"
           color="primary"
           onClick={handleSaveName}
+          disabled={isUpdating}
           sx={{ minWidth: 120 }}
         >
-          Сохранить
+          {isUpdating ? 'Сохранение...' : 'Сохранить'}
         </Button>
       </Box>
 
@@ -202,14 +251,17 @@ export default function SettingPage() {
                 onChange={(e) => setWebhookUrl(e.target.value)}
                 size="medium"
                 variant="outlined"
+                error={hasFieldError(fieldErrors, 'webhookUrl')}
+                helperText={getFirstFieldError(fieldErrors, 'webhookUrl')}
               />
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleSaveWebhook}
+                disabled={isUpdating}
                 sx={{ minWidth: 120 }}
               >
-                Сохранить
+                {isUpdating ? 'Сохранение...' : 'Сохранить'}
               </Button>
             </Box>
 
@@ -244,10 +296,10 @@ export default function SettingPage() {
               <IconButton 
                 onClick={generateSecretKey} 
                 color="primary"
-                disabled={isGeneratingKey}
+                disabled={isRotating}
               >
                 <Refresh sx={{ 
-                  animation: isGeneratingKey ? 'spin 1s linear infinite' : 'none',
+                  animation: isRotating ? 'spin 1s linear infinite' : 'none',
                   '@keyframes spin': {
                     '0%': { transform: 'rotate(0deg)' },
                     '100%': { transform: 'rotate(360deg)' }
@@ -390,11 +442,11 @@ export default function SettingPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
+          <Button onClick={handleCancelDelete} color="primary" disabled={isUpdating}>
             Отмена
           </Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
-            Удалить
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus disabled={isUpdating}>
+            {isUpdating ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>

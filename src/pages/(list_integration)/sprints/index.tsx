@@ -8,8 +8,10 @@ import {
   Stack,
   Paper,
   IconButton,
+  Alert,
 } from "@mui/material";
-import { useRoomDataStore } from "@store/index";
+import { useSprints } from "@/hooks/sprints/useSprints";
+import { Loader } from "@/components/Loader";
 
 type SprintStatus = "active" | "upcoming" | "past";
 
@@ -62,13 +64,49 @@ const checkStatusEvent = (startDate: string | null, endDate: string | null)  => 
 };
 
 export default function SprintList() {
-  const { sprintData } = useRoomDataStore()
   const { slug } = useParams();
   const navigate = useNavigate();
+
+  // Используем хук для получения спринтов
+  const {
+    sprints,
+    isLoading,
+    isError,
+    error
+  } = useSprints(
+    { page: 1, size: 100 }, // Показываем все спринты
+    slug || ''
+  );
 
   const handleCreateSprint = () => {
     navigate(`/rooms/${slug}/sprints/new`);
   };
+
+  // Показываем загрузку
+  if (isLoading) {
+    return (
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader />
+      </Box>
+    );
+  }
+
+  // Показываем ошибку
+  if (isError) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Ошибка при загрузке спринтов: {error?.message || 'Неизвестная ошибка'}
+        </Alert>
+        <Button
+          variant="outlined"
+          onClick={() => window.location.reload()}
+        >
+          Попробовать снова
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
@@ -97,7 +135,7 @@ export default function SprintList() {
       </Stack>
 
       <Stack spacing={2}>
-        {sprintData?.filter((sprint) => !sprint.isDeleted).map((sprint) => {
+        {sprints.filter((sprint) => !sprint.isDeleted).map((sprint) => {
           const dateRange = formatDateRange(sprint.startDate, sprint.endDate);
           const isActive = isEventActive(sprint.startDate, sprint.endDate);
           const {labelEvent, colorEvent} = checkStatusEvent(sprint.startDate, sprint.endDate);
@@ -161,6 +199,17 @@ export default function SprintList() {
             </Stack>
           </Paper>
         )})}
+
+        {sprints.length === 0 && (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" color="text.secondary" mb={2}>
+              Спринтов пока нет
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Создайте первый спринт, чтобы начать работу
+            </Typography>
+          </Box>
+        )}
 
         <Box display="flex" justifyContent="flex-end">
           <Button

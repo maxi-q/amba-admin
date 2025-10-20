@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -9,7 +9,8 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { useRoomDataStore } from "@store/index";
+import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
+import { Loader } from "@/components/Loader";
 import { useState } from "react";
 
 interface RoomBoxProps {
@@ -17,8 +18,16 @@ interface RoomBoxProps {
 }
 
 const RoomBox = ({ children }: RoomBoxProps) => {
-  const { roomData } = useRoomDataStore();
+  const { slug } = useParams();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+
+  // Получаем данные комнаты по ID
+  const {
+    room: roomData,
+    isLoading,
+    isError,
+    error
+  } = useGetRoomById(slug || '');
 
   const handleCopyRoomId = async () => {
     try {
@@ -32,6 +41,43 @@ const RoomBox = ({ children }: RoomBoxProps) => {
   const handleCloseNotification = () => {
     setShowCopyNotification(false);
   };
+
+  // Показываем загрузку
+  if (isLoading) {
+    return (
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader />
+      </Box>
+    );
+  }
+
+  // Показываем ошибку
+  if (isError) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Ошибка при загрузке комнаты: {error?.message || 'Неизвестная ошибка'}
+        </Alert>
+        <Button
+          variant="outlined"
+          onClick={() => window.location.reload()}
+        >
+          Попробовать снова
+        </Button>
+      </Box>
+    );
+  }
+
+  // Показываем предупреждение, если комната не найдена
+  if (!roomData) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Комната не найдена
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>

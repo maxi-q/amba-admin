@@ -20,3 +20,25 @@ export const errorCatch = (error: any): string => {
 			: message
 		: error.message
 }
+
+export const isValidationError = (error: any): boolean => {
+	return error?.response?.status === 422 && 
+		   error?.response?.data?.message && 
+		   typeof error.response.data.message === 'object';
+}
+
+export const extractFieldErrors = (error: any): Record<string, string[]> => {
+	if (!isValidationError(error)) {
+		return {};
+	}
+
+	return error.response.data.message;
+}
+
+export const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string): string => {
+	return fieldErrors[fieldName]?.[0] || '';
+}
+
+export const hasFieldError = (fieldErrors: Record<string, string[]>, fieldName: string): boolean => {
+	return Boolean(fieldErrors[fieldName]?.length);
+}

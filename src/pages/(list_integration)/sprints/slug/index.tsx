@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -20,10 +20,13 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
-import { useRoomDataStore } from "@store/index";
-import sprintsService from "@services/sprints/sprints.service";
-import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
+import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
+import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
+import { useSprints } from "@/hooks/sprints/useSprints";
+import type { IPatchSprintsRequest, ICreateSprintRequest } from "@services/sprints/sprints.types";
 import { dateToInput } from "./helpers";
+import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
+import { Loader } from "@/components/Loader";
 
 // const rewardTypes = [
   // { value: "fix", label: "fix" },
@@ -39,10 +42,36 @@ const rewardUnits = [
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
-  const { roomData, updateSprint, sprintData, addSprint } = useRoomDataStore();
+
+  // Хуки для работы со спринтами
+  const {
+    createSprint,
+    isPending: isCreating,
+    isSuccess: isCreateSuccess,
+    isValidationError: isCreateValidationError,
+    validationErrors: createValidationErrors,
+    generalError: createGeneralError
+  } = useCreateSprint();
+
+  const {
+    patchSprint,
+    isPending: isUpdating,
+    isSuccess: isUpdateSuccess,
+    isValidationError: isUpdateValidationError,
+    validationErrors: updateValidationErrors,
+    generalError: updateGeneralError
+  } = usePatchSprint();
+
+  // Получаем список спринтов для поиска текущего
+  const { sprints, isLoading: isLoadingSprints } = useSprints(
+    { page: 1, size: 100 },
+    slug || ''
+  );
+
   const [sprint, setSprint] = useState<any>(null);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [formData, setFormData] = useState<IPatchSprintsRequest>({
     name: '',
     startDate: null,
@@ -56,32 +85,69 @@ const SprintSetting = () => {
     isDeleted: false,
   });
 
-  const navigate = useNavigate();
+  // Состояние для ошибок
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [generalError, setGeneralError] = useState<string>('');
+
+  // Поиск спринта в списке
+  useEffect(() => {
+    if (sprintId !== 'new' && sprints.length > 0) {
+      const foundSprint = sprints.find(sprint => sprint.id === sprintId);
+      if (foundSprint) {
+        setSprint(foundSprint);
+        setFormData({
+          name: foundSprint.name,
+          startDate: dateToInput(foundSprint.startDate),
+          endDate: dateToInput(foundSprint.endDate),
+          ignoreEndDate: foundSprint.ignoreEndDate,
+          rewardType: foundSprint.rewardType,
+          rewardUnits: foundSprint.rewardUnits,
+          rewardValue: foundSprint.rewardValue,
+          promoCodeUsageLimit: foundSprint.promoCodeUsageLimit,
+          ignorePromoCodeUsageLimit: foundSprint.ignorePromoCodeUsageLimit,
+          isDeleted: foundSprint.isDeleted,
+        });
+      }
+    }
+  }, [sprintId, sprints]);
+
+  // Синхронизируем ошибки из хуков с локальным состоянием
+  useEffect(() => {
+    if (isCreateValidationError && Object.keys(createValidationErrors).length > 0) {
+      setFieldErrors(createValidationErrors);
+      setGeneralError('');
+    } else if (isUpdateValidationError && Object.keys(updateValidationErrors).length > 0) {
+      setFieldErrors(updateValidationErrors);
+      setGeneralError('');
+    } else if (createGeneralError) {
+      setGeneralError(createGeneralError);
+      setFieldErrors({});
+    } else if (updateGeneralError) {
+      setGeneralError(updateGeneralError);
+      setFieldErrors({});
+    } else {
+      setFieldErrors({});
+      setGeneralError('');
+    }
+  }, [isCreateValidationError, createValidationErrors, createGeneralError, isUpdateValidationError, updateValidationErrors, updateGeneralError]);
+
+  // Обработка успешных операций
+  useEffect(() => {
+    if (isCreateSuccess) {
+      setShowSaveNotification(true);
+      // Навигация к созданному спринту будет выполнена через хук
+    }
+  }, [isCreateSuccess]);
 
   useEffect(() => {
-    const foundSprint = sprintData.find(sprint => sprint.id === sprintId);
-    if (foundSprint) {
-      setSprint(foundSprint);
-      setFormData({
-        name: foundSprint.name,
-        startDate: dateToInput(foundSprint.startDate),
-        endDate: dateToInput(foundSprint.endDate),
-        ignoreEndDate: foundSprint.ignoreEndDate,
-        rewardType: foundSprint.rewardType,
-        rewardUnits: foundSprint.rewardUnits,
-        rewardValue: foundSprint.rewardValue,
-        promoCodeUsageLimit: foundSprint.promoCodeUsageLimit,
-        ignorePromoCodeUsageLimit: foundSprint.ignorePromoCodeUsageLimit,
-        isDeleted: foundSprint.isDeleted,
-      });
+    if (isUpdateSuccess) {
+      setShowSaveNotification(true);
     }
-  }, [sprintId, roomData]);
+  }, [isUpdateSuccess]);
 
-  useEffect(()=>{
-    console.log(formData)
-  }, [formData])
-
-  const handleSave = async (isDeleted: boolean = false) => {
+  const handleSave = (isDeleted: boolean = false) => {
+    setFieldErrors({});
+    setGeneralError('');
 
     const storeData = {
       name: formData.name,
@@ -94,22 +160,19 @@ const SprintSetting = () => {
       promoCodeUsageLimit: formData.promoCodeUsageLimit,
       ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
       isDeleted: isDeleted,
-    }
+    };
+
     if (sprintId !== 'new') {
-      try {
-        const response = await sprintsService.patchSprints(storeData, sprintId || '');
-        if (response.status === 200) {
-          updateSprint(sprintId || '', storeData);
-        }
-      } catch (error) {
-        console.error('Ошибка при обновлении спринта:', error);
-      }
+      patchSprint({
+        data: storeData,
+        sprintId: sprintId || ''
+      });
     } else if (slug) {
-      const response = await sprintsService.createSprint({...storeData, roomId: slug});
-      if (response.status === 201) {
-        addSprint(response.data);
-        navigate(`/rooms/${slug}/sprints/${response.data.id}`);
-      }
+      const createData: ICreateSprintRequest = {
+        ...storeData,
+        roomId: slug
+      };
+      createSprint(createData);
     }
   };
 
@@ -117,10 +180,10 @@ const SprintSetting = () => {
     setShowDeleteDialog(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     setShowDeleteDialog(false);
-    await handleSave(true);
-    navigate(`/rooms/${slug}/sprints`);
+    handleSave(true);
+    // Навигация будет выполнена после успешного удаления
   };
 
   const handleCancelDelete = () => {
@@ -158,12 +221,37 @@ const SprintSetting = () => {
     setShowCopyNotification(false);
   };
 
+  const handleCloseSaveNotification = () => {
+    setShowSaveNotification(false);
+  };
+
+  // Показываем загрузку
+  if (isLoadingSprints) {
+    return (
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader />
+      </Box>
+    );
+  }
+
   if (!sprint && sprintId !== 'new') {
-    return <Box sx={{ px: 2, py: 3 }}>Загрузка...</Box>;
+    return (
+      <Box sx={{ px: 2, py: 3 }}>
+        <Alert severity="error">
+          Спринт не найден
+        </Alert>
+      </Box>
+    );
   }
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
+      {generalError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {generalError}
+        </Alert>
+      )}
+
       <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to={`/rooms/${slug}/sprints`} underline="hover" color="inherit">
@@ -202,6 +290,8 @@ const SprintSetting = () => {
               variant="outlined"
               value={formData.name}
               onChange={handleInputChange('name')}
+              error={hasFieldError(fieldErrors, 'name')}
+              helperText={getFirstFieldError(fieldErrors, 'name')}
             />
           </Box>
 
@@ -350,6 +440,7 @@ const SprintSetting = () => {
               variant="outlined"
               color="error"
               onClick={handleDelete}
+              disabled={isUpdating || isCreating}
               sx={{ minWidth: 120 }}
             >
               Удалить
@@ -359,9 +450,13 @@ const SprintSetting = () => {
             variant="contained"
             color="primary"
             onClick={() => handleSave()}
+            disabled={isUpdating || isCreating}
             sx={{ minWidth: 120 }}
           >
-            {sprintId !== 'new' ? 'Сохранить' : 'Добавить'}
+            {isUpdating || isCreating 
+              ? (sprintId !== 'new' ? 'Сохранение...' : 'Создание...') 
+              : (sprintId !== 'new' ? 'Сохранить' : 'Добавить')
+            }
           </Button>
         </Box>
       </Box>
@@ -373,8 +468,18 @@ const SprintSetting = () => {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
-          {/* ID спринта скопирован в буфер обмена */}
           Скопировано
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={showSaveNotification}
+        autoHideDuration={3000}
+        onClose={handleCloseSaveNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSaveNotification} severity="success" sx={{ width: '100%' }}>
+          {sprintId !== 'new' ? 'Спринт успешно сохранен' : 'Спринт успешно создан'}
         </Alert>
       </Snackbar>
 
@@ -394,11 +499,11 @@ const SprintSetting = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
+          <Button onClick={handleCancelDelete} color="primary" disabled={isUpdating}>
             Отмена
           </Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
-            Удалить
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus disabled={isUpdating}>
+            {isUpdating ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>

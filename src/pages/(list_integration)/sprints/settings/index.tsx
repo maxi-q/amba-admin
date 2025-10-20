@@ -10,30 +10,86 @@ import {
   List,
   ListItem,
   Breadcrumbs,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useRoomDataStore } from "@store/index";
-import projectsService from "@services/projects/projects.service";
-import { useEffect } from "react";
+import { useSprints } from "@/hooks/sprints/useSprints";
+import { useGetProject } from "@/hooks/projects/useGetProject";
+import { Loader } from "@/components/Loader";
+import { useState } from "react";
 
 export default function SprintSettingsPage() {
-  const { roomData, project, setProject } = useRoomDataStore();
-
+  const { roomData } = useRoomDataStore();
   const { slug } = useParams();
 
-  useEffect(() => {
-    const getProjectData = async () => {
-      if (!project) {
-        const projectData = await projectsService.getProject()
-        setProject(projectData.data)
-      }
-    }
+  // Получаем список спринтов для отображения статистики
+  const { 
+    sprints, 
+    isLoading: isLoadingSprints, 
+    isError: isSprintsError, 
+    error: sprintsError 
+  } = useSprints(
+    { page: 1, size: 100 },
+    slug || ''
+  );
 
-    getProjectData();
-  }, [project]);
+  // Получаем данные проекта
+  const {
+    project,
+    isLoading: isLoadingProject,
+    isError: isProjectError,
+    error: projectError
+  } = useGetProject();
+
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
+
+  // Показываем загрузку
+  if (isLoadingSprints || isLoadingProject) {
+    return (
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Loader />
+      </Box>
+    );
+  }
+
+  // Показываем ошибки
+  if (isSprintsError || isProjectError) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        {isSprintsError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Ошибка при загрузке спринтов: {sprintsError?.message || 'Неизвестная ошибка'}
+          </Alert>
+        )}
+        {isProjectError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Ошибка при загрузке проекта: {projectError?.message || 'Неизвестная ошибка'}
+          </Alert>
+        )}
+      </Box>
+    );
+  }
 
   if (!roomData) {
-    return null;
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="warning">
+          Данные комнаты не найдены
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!project) {
+    return (
+      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+        <Alert severity="warning">
+          Данные проекта не найдены
+        </Alert>
+      </Box>
+    );
   }
 
 
@@ -76,15 +132,26 @@ export default function SprintSettingsPage() {
     },
   ]
 
-  const handleCopy = (link: string) => {
-    // navigator.clipboard.writeText(link).then(() => {
-    // });
-    console.log("Ссылка!", link);
+  const handleCopy = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setShowCopyNotification(true);
+    } catch (error) {
+      console.error('Ошибка при копировании:', error);
+    }
   };
+
+  const handleCloseCopyNotification = () => {
+    setShowCopyNotification(false);
+  };
+
+  // Статистика спринтов
+  const activeSprints = sprints.filter(sprint => !sprint.isDeleted).length;
+  const totalSprints = sprints.length;
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center" }}>
+      <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
           <MuiLink component={Link} to={`/rooms/${slug}/sprints`} underline="hover" color="inherit">
             Список спринтов
@@ -93,6 +160,14 @@ export default function SprintSettingsPage() {
             Настройки спринтов
           </Typography>
         </Breadcrumbs>
+        <Box sx={{ textAlign: 'right' }}>
+          <Typography variant="body2" color="text.secondary">
+            Активных спринтов: {activeSprints}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Всего спринтов: {totalSprints}
+          </Typography>
+        </Box>
       </Box>
       <Stack spacing={3}>
         {groups.map((group) => (
@@ -141,6 +216,17 @@ export default function SprintSettingsPage() {
           </Paper>
         ))}
       </Stack>
+
+      <Snackbar
+        open={showCopyNotification}
+        autoHideDuration={3000}
+        onClose={handleCloseCopyNotification}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseCopyNotification} severity="success" sx={{ width: '100%' }}>
+          Ссылка скопирована в буфер обмена
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
