@@ -15,7 +15,7 @@ export function useCreateRoom() {
     mutationKey: [MutationKeys.CREATE_ROOM],
     mutationFn: (data_create: ICreateRoomRequest) => roomsService.createRooms({
       name: data_create.name,
-      webhookUrl: data_create.webhookUrl,
+      webhookUrl: data_create.webhookUrl || null,
     }),
     onSuccess: (createdRoom) => {
       if (createdRoom) {

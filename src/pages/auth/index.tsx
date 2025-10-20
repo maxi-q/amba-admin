@@ -9,13 +9,16 @@ import {
   Button,
 } from "@mui/material";
 import { getUrlParams } from "@helpers/index";
+import { useMessage } from "@/messages/messageProvider";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useRegisterProjectWithAuth } from "@/hooks/auth/useRegisterProjectWithAuth";
 import { useAuthStore } from "@store/index";
 import authService from "@services/auth/auth.service";
+import { MessageTypes } from "@/messages/types/messages.enum";
 
 const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
+  const { message } = useMessage();
   const { auth } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +29,61 @@ const AuthPage = () => {
   const authMutation = useAuth();
   const registerProjectWithAuthMutation = useRegisterProjectWithAuth();
 
+  // Обработка сообщений от popup окна с кодом авторизации
+  useEffect(() => {
+    if (!message) return;
+
+    if (message.type === MessageTypes.AmoAuthCode) {
+      const { code } = message.payload;
+      handleAuthCode(code);
+    } else if (message.type === MessageTypes.AmoAuthCodeError) {
+      const { error } = message.payload;
+      setError(error);
+      setIsLoading(false);
+    }
+  }, [message]);
+
+  const handleAuthCode = (code: string) => {
+    if (!sign || !senlerGroupId || !senlerUserId || !context || !senlerChannelTypeId) {
+      setError("Данные авторизации не получены");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    // Регистрируем проект с авторизацией
+    registerProjectWithAuthMutation.mutate({
+      registerData: {
+        groupId: Number(senlerGroupId),
+        code: code,
+      },
+      authData: {
+        userId: senlerUserId,
+        groupId: Number(senlerGroupId),
+        context,
+        sign,
+      }
+    }, {
+      onError: (error: any) => {
+        if (error?.message === 'PROJECT_ALREADY_EXISTS') {
+          // Проект уже зарегистрирован, пытаемся авторизоваться
+          authMutation.mutate({
+            userId: senlerUserId,
+            groupId: Number(senlerGroupId),
+            context,
+            sign,
+          });
+        } else {
+          setError("Ошибка регистрации проекта");
+          setIsLoading(false);
+        }
+      }
+    });
+  };
+
+  // Автоматическая авторизация при наличии данных
   useEffect(() => {
     if (sign && senlerGroupId && senlerUserId && context && senlerChannelTypeId && !auth) {
       setIsLoading(true);
@@ -70,58 +128,8 @@ const AuthPage = () => {
       console.log(url)
       const popup = window.open(url, '_blank', 'width=600,height=700');
       if (popup) {
-        let savedCode: string | null = null;
-
-        const timer = setInterval(async () => {
-          try {
-            if (popup.location && popup.location.href) {
-              const popupUrl = new URL(popup.location.href);
-              const codeParam = popupUrl.searchParams.get('code');
-
-
-              if (codeParam && !savedCode) {
-                savedCode = codeParam;
-
-                popup.close();
-                clearInterval(timer);
-
-                // Регистрируем проект с авторизацией
-                registerProjectWithAuthMutation.mutate({
-                  registerData: {
-                    groupId: Number(senlerGroupId),
-                    code: savedCode,
-                  },
-                  authData: {
-                    userId: senlerUserId,
-                    groupId: Number(senlerGroupId),
-                    context,
-                    sign,
-                  }
-                }, {
-                  onError: (error: any) => {
-                    if (error?.message === 'PROJECT_ALREADY_EXISTS') {
-                      // Проект уже зарегистрирован, пытаемся авторизоваться
-                      authMutation.mutate({
-                        userId: senlerUserId,
-                        groupId: Number(senlerGroupId),
-                        context,
-                        sign,
-                      });
-                    } else {
-                      setError("Ошибка регистрации проекта");
-                    }
-                  }
-                });
-                return;
-              }
-            }
-          } catch (e: any) { console.log(e) }
-
-          if (popup.closed) {
-            clearInterval(timer);
-            setIsLoading(false);
-          }
-        }, 500);
+        // Код авторизации будет получен через useMessage от redirect_auth страницы
+        // Никакой дополнительной логики здесь не нужно
       }
     } catch {
       setError("Ошибка открытия popup");

@@ -1,7 +1,7 @@
 
 export interface ICreateRoomRequest {
   name: string;
-  webhookUrl: string;
+  webhookUrl: string | null;
 }
 
 export interface IRoomData {
