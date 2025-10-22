@@ -14,9 +14,11 @@ const COMMANDS = {
 }
 
 interface ISelectActionPageProps {
-  roomId: string
   action: keyof typeof COMMANDS
-  eventId?: string
+  settings: {
+    roomId: string
+    eventId?: string
+  }
 }
 
 const SelectActionPage = () => {
@@ -39,21 +41,23 @@ const SelectActionPage = () => {
   const handleSetData = (mockMessage?: { private: any, public: any }) => {
     const { public: publicPayload } = mockMessage ? mockMessage : message.request.payload;
 
-    const { action, roomId, eventId }: ISelectActionPageProps = JSON.parse(publicPayload || '{}');
+    const { action, settings }: ISelectActionPageProps = JSON.parse(publicPayload || '{}');
     if (action) setAction(action as keyof typeof COMMANDS)
-    if (roomId) setSelectedRoom(roomId)
-    if (eventId) setSelectedEvent(eventId)
+    if (settings.roomId) setSelectedRoom(settings.roomId)
+    if (settings.eventId) setSelectedEvent(settings.eventId)
   };
 
   const handleGetData = () => {
     const publicPayload: ISelectActionPageProps = {
       action,
-      roomId: selectedRoom
+      settings: {
+        roomId: selectedRoom,
+      }
     };
 
     // Добавляем eventId только если выбрана команда get_event_promo и есть выбранное событие
     if (action === 'GET_EVENT_PROMO_CODE' && selectedEvent) {
-      publicPayload.eventId = selectedEvent;
+      publicPayload.settings.eventId = selectedEvent;
     }
 
     const data = {
