@@ -6,34 +6,32 @@ import { useEvents } from "@/hooks/events/useEvents"
 import { Loader } from "@/components/Loader"
 
 const COMMANDS = {
-  amba_status: 'Получение статуса амбассадора',
-  amba_register: 'Регистрация амбассадора',
-  set_sprint_promo: 'Установить базовый промокод',
-  get_sprint_promo: 'Получить базовый промокод',
-  get_event_promo: 'Получить промокод события',
+  REGISTER_AMBASSADOR: 'Регистрация амбассадора',
+  CHECK_AMBASSADOR_STATUS: 'Получение статуса амбассадора',
+  SET_BASE_PROMO_CODE: 'Установить базовый промокод',
+  GET_BASE_PROMO_CODE: 'Получить базовый промокод',
+  GET_EVENT_PROMO_CODE: 'Получить промокод события',
 }
 
 interface ISelectActionPageProps {
   roomId: string
-  action: string
+  action: keyof typeof COMMANDS
   eventId?: string
 }
 
 const SelectActionPage = () => {
 	const { message, sendMessage } = useMessage()
-  const [action, setAction] = useState<keyof typeof COMMANDS>('amba_status')
+  const [action, setAction] = useState<keyof typeof COMMANDS>('CHECK_AMBASSADOR_STATUS')
   const [selectedRoom, setSelectedRoom] = useState<string>('')
   const [selectedEvent, setSelectedEvent] = useState<string>('')
 
-  // Получаем комнаты через хук
   const {
     rooms,
     isLoading: isLoadingRooms,
     isError: isRoomsError,
     error: roomsError
-  } = useRooms() // Получаем все комнаты
+  } = useRooms()
 
-  // Получаем события для выбранной комнаты
   const {
     events
   } = useEvents({ page: 1, size: 100 }, selectedRoom)
@@ -54,7 +52,7 @@ const SelectActionPage = () => {
     };
 
     // Добавляем eventId только если выбрана команда get_event_promo и есть выбранное событие
-    if (action === 'get_event_promo' && selectedEvent) {
+    if (action === 'GET_EVENT_PROMO_CODE' && selectedEvent) {
       publicPayload.eventId = selectedEvent;
     }
 
@@ -166,7 +164,7 @@ const SelectActionPage = () => {
         </Box>
       )}
 
-      {selectedRoom && action === 'get_event_promo' && (
+      {selectedRoom && action === 'GET_EVENT_PROMO_CODE' && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
             Событие:
