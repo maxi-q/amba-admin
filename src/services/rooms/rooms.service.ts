@@ -7,14 +7,13 @@ import type {
   IRotateSecretKeyResponse, 
   IUpdateRoomsRequest, 
   IUpdateRoomsResponse,
-  IApiErrorResponse
 } from './rooms.types';
-import { ApiError } from './rooms.types';
 import { 
   getContentType, 
   isValidationError, 
   extractFieldErrors 
 } from '@services/config/axios.helper';
+import { ApiError, type IApiErrorResponse } from '@/types';
 
 
 class RoomsService {

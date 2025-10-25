@@ -8,7 +8,7 @@ import { Navigation } from './pages'
 import createRoomButtonTheme from './themes/createRoomButtonTheme';
 import listItemTextTheme from './themes/listItemTextTheme';
 
-
+import { Toaster } from 'sonner';
 
 
 const mergedTheme = createTheme(createRoomButtonTheme, listItemTextTheme);
@@ -23,6 +23,7 @@ function App() {
         <ThemeProvider theme={mergedTheme}>
           <BrowserRouter>
             <Navigation />
+            <Toaster position="top-right" richColors />
           </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>

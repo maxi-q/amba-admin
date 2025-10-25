@@ -6,7 +6,7 @@ import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
 import sprintsService from "@services/sprints/sprints.service";
 import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
-import { ApiError } from "@services/sprints/sprints.types";
+import { ApiError } from "@/types";
 
 export function usePatchSprint() {
   const queryClient = useQueryClient();

@@ -68,6 +68,7 @@ const EventsSetting = () => {
 
   const [event, setEvent] = useState<IEvent>();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [showCopyError, setShowCopyError] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPrefixError, setShowPrefixError] = useState(false);
   const [prefixValidationError, setPrefixValidationError] = useState<string>('');
@@ -86,8 +87,7 @@ const EventsSetting = () => {
   });
   const [prefix, setPrefix] = useState<string>('');
 
-  // Состояния для ошибок из хуков
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string>('');
 
 
@@ -121,11 +121,13 @@ const EventsSetting = () => {
   // Синхронизируем ошибки из хуков с локальным состоянием
   useEffect(() => {
     if (createEvent.isError && createEvent.error) {
-      const error = createEvent.error as any;
-      if (error?.response?.data?.errors) {
-        setFieldErrors(error.response.data.errors);
+      const error = createEvent.error;
+
+      const errorDescribe = error.fieldErrors
+      if (errorDescribe) {
+        setFieldErrors(errorDescribe);
       } else {
-        setGeneralError(error?.message || 'Ошибка при создании события');
+        setGeneralError(error.message || 'Ошибка при создании события');
       }
     } else if (createEvent.isSuccess) {
       setFieldErrors({});
@@ -135,11 +137,13 @@ const EventsSetting = () => {
 
   useEffect(() => {
     if (patchEvent.isError && patchEvent.error) {
-      const error = patchEvent.error as any;
-      if (error?.response?.data?.errors) {
-        setFieldErrors(error.response.data.errors);
+      const error = patchEvent.error;
+
+      const errorDescribe = error.fieldErrors
+      if (errorDescribe) {
+        setFieldErrors(errorDescribe);
       } else {
-        setGeneralError(error?.message || 'Ошибка при обновлении события');
+        setGeneralError(error.message || 'Ошибка при обновлении события');
       }
     } else if (patchEvent.isSuccess) {
       setFieldErrors({});
@@ -152,7 +156,7 @@ const EventsSetting = () => {
     if (patchEvent.isSuccess && formData.isDeleted) {
       navigate(`/rooms/${slug}/events`);
     }
-  }, [patchEvent.isSuccess, formData.isDeleted, navigate, slug]);
+  }, [patchEvent.isSuccess, formData.isDeleted, slug]);
 
   const handleSave = async (isDeleted: boolean = false) => {
     // Очищаем предыдущие ошибки
@@ -178,8 +182,7 @@ const EventsSetting = () => {
       if (prefixValidationError) {
         return;
       }
-      
-      // Проверяем доступность префикса через хук
+
       checkPrefixAvailable.mutate(prefix, {
         onSuccess: (isAvailable) => {
           if (isAvailable === false) {
@@ -188,7 +191,6 @@ const EventsSetting = () => {
             return;
           }
 
-          // Создаем новое событие
           if (slug) {
             createEvent.mutate({
               ...storeData,
@@ -198,12 +200,15 @@ const EventsSetting = () => {
           }
         },
         onError: (error) => {
-          console.error('Ошибка при проверке префикса:', error);
-          setGeneralError('Ошибка при проверке префикса промокода');
+          const describeError = error.fieldErrors
+          if (describeError) {
+            setFieldErrors(describeError);
+          } else {
+            setGeneralError(error.message || 'Ошибка при проверке префикса промокода');
+          }
         }
       });
     } else if (eventId !== 'new') {
-      // Обновляем существующее событие
       patchEvent.mutate({
         data: storeData,
         eventId: eventId || ''
@@ -245,17 +250,15 @@ const EventsSetting = () => {
 
   const handlePrefixChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    
-    // Очищаем ошибку занятости при изменении префикса
+
     setPrefixOccupiedError('');
-    
-    // Проверяем на наличие символа подчеркивания
+
     if (value.includes('_')) {
       setPrefixValidationError('Префикс не может содержать символ подчеркивания (_)');
     } else {
       setPrefixValidationError('');
     }
-    
+
     setPrefix(value);
   };
 
@@ -265,11 +268,16 @@ const EventsSetting = () => {
       setShowCopyNotification(true);
     } catch (error) {
       console.error('Ошибка при копировании:', error);
+      setShowCopyError(true);
     }
   };
 
   const handleCloseNotification = () => {
     setShowCopyNotification(false);
+  };
+
+  const handleCloseCopyError = () => {
+    setShowCopyError(false);
   };
 
   const handleClosePrefixError = () => {
@@ -373,7 +381,7 @@ const EventsSetting = () => {
                 value={formData.name}
                 onChange={handleInputChange('name')}
                 error={!!fieldErrors.name}
-                helperText={fieldErrors.name}
+                helperText={fieldErrors.name?.join()}
               />
             </Box>
 
@@ -388,8 +396,9 @@ const EventsSetting = () => {
                 value={prefix}
                 onChange={handlePrefixChange}
                 disabled={eventId !== 'new'}
-                error={!!prefixValidationError || !!prefixOccupiedError}
+                error={!!fieldErrors?.promoCodesPrefix}
                 helperText={
+                  fieldErrors?.promoCodesPrefix?.join() ||
                   prefixValidationError ||
                   prefixOccupiedError ||
                   (eventId !== 'new' ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов')
@@ -423,7 +432,7 @@ const EventsSetting = () => {
                     variant="outlined"
                     sx={{ flex: 1 }}
                     error={!!fieldErrors.startDate}
-                    helperText={fieldErrors.startDate}
+                    helperText={fieldErrors.startDate?.join()}
                   />
                   <TextField
                     type="date"
@@ -432,7 +441,7 @@ const EventsSetting = () => {
                     variant="outlined"
                     sx={{ flex: 1 }}
                     error={!!fieldErrors.endDate}
-                    helperText={fieldErrors.endDate}
+                    helperText={fieldErrors.endDate?.join()}
                   />
                 </Stack>
               )}
@@ -483,7 +492,7 @@ const EventsSetting = () => {
                   variant="outlined"
                   sx={{ flex: 1 }}
                   error={!!fieldErrors.rewardValue}
-                  helperText={fieldErrors.rewardValue}
+                  helperText={fieldErrors.rewardValue?.join()}
                 />
                 <Typography variant="body2" color="text.secondary">
                   {formData.rewardUnits === 'rub' ? 'руб' :
@@ -521,7 +530,7 @@ const EventsSetting = () => {
                     variant="outlined"
                     sx={{ flex: 1 }}
                     error={!!fieldErrors.promoCodeUsageLimit}
-                    helperText={fieldErrors.promoCodeUsageLimit}
+                    helperText={fieldErrors.promoCodeUsageLimit?.join()}
                   />
                   <Typography variant="body2" color="text.secondary">
                     раз
@@ -642,6 +651,17 @@ const EventsSetting = () => {
         <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
           {/* ID события скопирован в буфер обмена */}
           Скопировано
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={showCopyError}
+        autoHideDuration={5000}
+        onClose={handleCloseCopyError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseCopyError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
+          Браузер запретил копирование, но вы можете сделать это вручную: {eventId}
         </Alert>
       </Snackbar>
 

@@ -6,7 +6,7 @@ import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
 import roomsService from "@services/rooms/rooms.service";
 import type { IUpdateRoomsRequest } from "@services/rooms/rooms.types";
-import { ApiError } from "@services/rooms/rooms.types";
+import { ApiError } from "@/types";
 
 export function useUpdateRoom() {
   const queryClient = useQueryClient();

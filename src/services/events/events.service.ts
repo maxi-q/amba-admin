@@ -6,14 +6,13 @@ import type {
   IGetEventsResponse, 
   IPatchEventsRequest, 
   IPatchEventsResponse,
-  IApiErrorResponse
 } from './events.types';
-import { ApiError } from './events.types';
 import { 
   getContentType, 
   isValidationError, 
   extractFieldErrors 
 } from '@services/config/axios.helper';
+import { ApiError, type IApiErrorResponse } from '@/types';
 
 
 class EventsService {
@@ -63,7 +62,7 @@ class EventsService {
   }
   
   async checkPromoCodesPrefixAvailable(promoCodesPrefix: string): Promise<boolean> {
-    return this.handleApiCall(() => 
+    return this.handleApiCall(() =>
       instance.get<boolean>(`${this._BASE_URL}/checkPromoCodesPrefixAvailable`, { params: { promoCodesPrefix }, headers: getContentType() })
     );
   }

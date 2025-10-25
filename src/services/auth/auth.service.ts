@@ -6,15 +6,14 @@ import type {
   IRegisterProjectRequest,
   IRegisterProjectResponse,
   IAuthByTokenResponse,
-  IApiErrorResponse
 } from './user.types';
-import { ApiError } from './user.types';
 import { API_URL } from '@/constants';
 import { 
   getContentType, 
   isValidationError, 
   extractFieldErrors 
 } from '@services/config/axios.helper';
+import { ApiError, type IApiErrorResponse } from '@/types';
 
 
 class AuthService {

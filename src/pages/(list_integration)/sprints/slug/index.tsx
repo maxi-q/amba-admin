@@ -70,6 +70,7 @@ const SprintSetting = () => {
 
   const [sprint, setSprint] = useState<any>(null);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [showCopyError, setShowCopyError] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [formData, setFormData] = useState<IPatchSprintsRequest>({
@@ -214,11 +215,16 @@ const SprintSetting = () => {
       setShowCopyNotification(true);
     } catch (error) {
       console.error('Ошибка при копировании:', error);
+      setShowCopyError(true);
     }
   };
 
   const handleCloseNotification = () => {
     setShowCopyNotification(false);
+  };
+
+  const handleCloseCopyError = () => {
+    setShowCopyError(false);
   };
 
   const handleCloseSaveNotification = () => {
@@ -320,6 +326,8 @@ const SprintSetting = () => {
                   onChange={handleInputChange('startDate')}
                   variant="outlined"
                   sx={{ flex: 1 }}
+                  error={hasFieldError(fieldErrors, 'startDate')}
+                  helperText={getFirstFieldError(fieldErrors, 'startDate')}
                 />
                 <TextField
                   type="date"
@@ -327,6 +335,8 @@ const SprintSetting = () => {
                   onChange={handleInputChange('endDate')}
                   variant="outlined"
                   sx={{ flex: 1 }}
+                  error={hasFieldError(fieldErrors, 'endDate')}
+                  helperText={getFirstFieldError(fieldErrors, 'endDate')}
                 />
               </Stack>
             )}
@@ -388,6 +398,8 @@ const SprintSetting = () => {
                 onChange={handleInputChange('rewardValue')}
                 variant="outlined"
                 sx={{ flex: 1 }}
+                error={hasFieldError(fieldErrors, 'rewardValue')}
+                helperText={getFirstFieldError(fieldErrors, 'rewardValue')}
               />
               <Typography variant="body2" color="text.secondary">
                 {formData.rewardUnits === 'rub' ? 'руб' :
@@ -424,6 +436,8 @@ const SprintSetting = () => {
                   onChange={handleInputChange('promoCodeUsageLimit')}
                   variant="outlined"
                   sx={{ flex: 1 }}
+                  error={hasFieldError(fieldErrors, 'promoCodeUsageLimit')}
+                  helperText={getFirstFieldError(fieldErrors, 'promoCodeUsageLimit')}
                 />
                 <Typography variant="body2" color="text.secondary">
                   раз
@@ -469,6 +483,17 @@ const SprintSetting = () => {
       >
         <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
           Скопировано
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={showCopyError}
+        autoHideDuration={5000}
+        onClose={handleCloseCopyError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseCopyError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
+          Браузер запретил копирование, но вы можете сделать это вручную: {sprintId}
         </Alert>
       </Snackbar>
 

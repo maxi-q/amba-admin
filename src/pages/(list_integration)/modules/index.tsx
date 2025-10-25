@@ -20,6 +20,7 @@ interface RoomBoxProps {
 const RoomBox = ({ children }: RoomBoxProps) => {
   const { slug } = useParams();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [showCopyError, setShowCopyError] = useState(false);
 
   // Получаем данные комнаты по ID
   const {
@@ -35,11 +36,16 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       setShowCopyNotification(true);
     } catch (error) {
       console.error('Ошибка при копировании:', error);
+      setShowCopyError(true);
     }
   };
 
   const handleCloseNotification = () => {
     setShowCopyNotification(false);
+  };
+
+  const handleCloseCopyError = () => {
+    setShowCopyError(false);
   };
 
   // Показываем загрузку
@@ -163,6 +169,17 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
           {/* ID комнаты скопирован в буфер обмена */}
           Скопировано
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={showCopyError}
+        autoHideDuration={5000}
+        onClose={handleCloseCopyError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseCopyError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
+          Браузер запретил копирование, но вы можете сделать это вручную: {roomData?.id}
         </Alert>
       </Snackbar>
     </Box>

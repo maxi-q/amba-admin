@@ -6,14 +6,13 @@ import type {
   IGetSprintsResponse, 
   IPatchSprintsRequest, 
   IPatchSprintsResponse,
-  IApiErrorResponse
 } from './sprints.types';
-import { ApiError } from './sprints.types';
 import { 
   getContentType, 
   isValidationError, 
   extractFieldErrors 
 } from '@services/config/axios.helper';
+import { ApiError, type IApiErrorResponse } from '@/types';
 
 
 class SprintsService {

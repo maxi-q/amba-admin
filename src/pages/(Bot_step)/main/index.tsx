@@ -14,9 +14,9 @@ const COMMANDS = {
 }
 
 interface ISelectActionPageProps {
-  action: keyof typeof COMMANDS
-  settings: {
-    roomId: string
+  action?: keyof typeof COMMANDS
+  settings?: {
+    roomId?: string
     eventId?: string
   }
 }
@@ -43,8 +43,8 @@ const SelectActionPage = () => {
 
     const { action, settings }: ISelectActionPageProps = JSON.parse(publicPayload || '{}');
     if (action) setAction(action as keyof typeof COMMANDS)
-    if (settings.roomId) setSelectedRoom(settings.roomId)
-    if (settings.eventId) setSelectedEvent(settings.eventId)
+    if (settings?.roomId) setSelectedRoom(settings.roomId)
+    if (settings?.eventId) setSelectedEvent(settings.eventId)
   };
 
   const handleGetData = () => {
@@ -56,7 +56,7 @@ const SelectActionPage = () => {
     };
 
     // Добавляем eventId только если выбрана команда get_event_promo и есть выбранное событие
-    if (action === 'GET_EVENT_PROMO_CODE' && selectedEvent) {
+    if (action === 'GET_EVENT_PROMO_CODE' && selectedEvent && publicPayload && publicPayload.settings) {
       publicPayload.settings.eventId = selectedEvent;
     }
 
