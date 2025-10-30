@@ -5,7 +5,7 @@ import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
 import roomsService from "@services/rooms/rooms.service";
-import type { ICreateRoomRequest } from "@services/rooms/rooms.types";
+import type { ICreateRoomRequest, IRoomData } from "@services/rooms/rooms.types";
 import { ApiError } from "@/types";
 
 export function useCreateRoom() {
@@ -19,7 +19,7 @@ export function useCreateRoom() {
     }),
     onSuccess: (createdRoom) => {
       if (createdRoom) {
-        queryClient.setQueryData([QueryKeys.ROOMS], (old: any) => {
+        queryClient.setQueryData([QueryKeys.ROOMS], (old: Array<IRoomData>) => {
           return Array.isArray(old) ? [...old, createdRoom] : [createdRoom];
         });
       }

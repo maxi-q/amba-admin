@@ -41,19 +41,17 @@ const rewardUnits = [
 const EventsSetting = () => {
   const { eventId, slug } = useParams();
   const navigate = useNavigate();
-  
-  // Получаем события для комнаты
+
   const {
     events: eventData,
     isLoading: isLoadingEvents,
     isError: isEventsError,
     error: eventsError
   } = useEvents(
-    { page: 1, size: 100 }, // Получаем все события
+    { page: 1, size: 100 },
     slug || ''
   );
 
-  // Получаем данные проекта
   const {
     project,
     isLoading: isLoadingProject,
@@ -61,7 +59,6 @@ const EventsSetting = () => {
     error: projectError
   } = useGetProject();
 
-  // Хуки для мутаций
   const createEvent = useCreateEvent();
   const patchEvent = usePatchEvent();
   const checkPrefixAvailable = useCheckPromoCodesPrefixAvailable();

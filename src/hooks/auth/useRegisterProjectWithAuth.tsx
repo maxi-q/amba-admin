@@ -33,14 +33,14 @@ export function useRegisterProjectWithAuth() {
       }
     },
     onError: (error: any) => {
-      
+
       // Если проект уже зарегистрирован (409), пытаемся авторизоваться
       if (error?.response?.status === 409) {
         // Здесь можно добавить логику для повторной авторизации
         // или вернуть специальный флаг для компонента
         throw new Error('PROJECT_ALREADY_EXISTS');
       }
-      
+
       logout();
     }
   });

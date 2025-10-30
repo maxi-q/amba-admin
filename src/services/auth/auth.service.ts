@@ -8,10 +8,10 @@ import type {
   IAuthByTokenResponse,
 } from './user.types';
 import { API_URL } from '@/constants';
-import { 
-  getContentType, 
-  isValidationError, 
-  extractFieldErrors 
+import {
+  getContentType,
+  isValidationError,
+  extractFieldErrors
 } from '@services/config/axios.helper';
 import { ApiError, type IApiErrorResponse } from '@/types';
 

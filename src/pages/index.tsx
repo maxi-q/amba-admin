@@ -155,6 +155,9 @@ export const Navigation = () => {
         <Route path="events" element={<EventsPage />} />
         <Route path="events/info" element={<EventsInfo />} />
         <Route path="events/:eventId" element={<EventsSetting />} />
+
+        <Route path="statistics" element={<EventsPage />} />
+
         <Route path="*" element={<RoomRedirect />} />
       </Route>
 

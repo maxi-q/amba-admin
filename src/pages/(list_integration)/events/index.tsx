@@ -59,7 +59,6 @@ export default function EventsPage() {
     navigate(`/rooms/${slug}/events/new`);
   };
 
-  // Показываем загрузку
   if (isLoading) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
@@ -68,7 +67,6 @@ export default function EventsPage() {
     );
   }
 
-  // Показываем ошибку
   if (isError) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
@@ -106,7 +104,7 @@ export default function EventsPage() {
           eventData?.filter(event => !event.isDeleted).map((event: IEvent) => {
           const dateRange = formatDateRange(event.startDate, event.endDate);
           const isActive = isEventActive(event.startDate, event.endDate);
-          
+
           return (
             <Paper
               key={event.id}

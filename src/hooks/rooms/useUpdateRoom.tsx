@@ -19,13 +19,13 @@ export function useUpdateRoom() {
         // Update the specific room in the rooms list
         queryClient.setQueryData([QueryKeys.ROOMS], (old: any) => {
           if (Array.isArray(old)) {
-            return old.map(room => 
+            return old.map(room =>
               room.id === variables.id ? updatedRoom : room
             );
           }
           return old;
         });
-        
+
         // Invalidate the specific room query if it exists
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.ROOMS, variables.id]

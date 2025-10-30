@@ -231,7 +231,6 @@ const SprintSetting = () => {
     setShowSaveNotification(false);
   };
 
-  // Показываем загрузку
   if (isLoadingSprints) {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>

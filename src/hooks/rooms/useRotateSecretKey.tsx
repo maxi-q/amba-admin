@@ -6,6 +6,7 @@ import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
 import roomsService from "@services/rooms/rooms.service";
 import { ApiError } from "@/types";
+import type { IRoomData } from "@services/rooms/rooms.types";
 
 export function useRotateSecretKey() {
   const queryClient = useQueryClient();
@@ -15,10 +16,10 @@ export function useRotateSecretKey() {
     mutationFn: (roomId: string) => roomsService.rotateSecretKey(roomId),
     onSuccess: (newSecretKey, roomId) => {
       if (newSecretKey) {
-        queryClient.setQueryData([QueryKeys.ROOMS, roomId], (old: any) => {
+        queryClient.setQueryData([QueryKeys.ROOMS, roomId], (old: IRoomData) => {
           return old ? { ...old, secretKey: newSecretKey } : old;
         });
-        
+
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.ROOMS]
         });

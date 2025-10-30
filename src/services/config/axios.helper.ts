@@ -22,8 +22,8 @@ export const errorCatch = (error: any): string => {
 }
 
 export const isValidationError = (error: any): boolean => {
-	return error?.response?.status === 422 && 
-		   error?.response?.data?.message && 
+	return error?.response?.status === 422 &&
+		   error?.response?.data?.message &&
 		   typeof error.response.data.message === 'object';
 }
 
