@@ -153,9 +153,20 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             </Button>
           )}
         </NavLink>
-        <Box>
-          {/* Пустой элемент для выравнивания */}
-        </Box>
+        <NavLink
+          to="statistics"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Button
+              fullWidth
+              variant="outlined"
+              disabled={isActive}
+            >
+              Статистика
+            </Button>
+          )}
+        </NavLink>
       </Box>
 
       {children}

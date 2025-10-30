@@ -14,6 +14,7 @@ import {
   EventsSetting,
   SprintSettingsPage,
   SettingsInfo,
+  StatisticsPage,
 } from './(list_integration)';
 
 import SelectActionPage from './(Bot_step)/main';
@@ -156,7 +157,7 @@ export const Navigation = () => {
         <Route path="events/info" element={<EventsInfo />} />
         <Route path="events/:eventId" element={<EventsSetting />} />
 
-        <Route path="statistics" element={<EventsPage />} />
+        <Route path="statistics" element={<StatisticsPage />} />
 
         <Route path="*" element={<RoomRedirect />} />
       </Route>
