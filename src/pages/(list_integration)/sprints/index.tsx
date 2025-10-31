@@ -67,14 +67,13 @@ export default function SprintList() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  // Используем хук для получения спринтов
   const {
     sprints,
     isLoading,
     isError,
     error
   } = useSprints(
-    { page: 1, size: 100 }, // Показываем все спринты
+    { page: 1, size: 100 },
     slug || ''
   );
 

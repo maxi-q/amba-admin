@@ -44,14 +44,13 @@ export default function EventsPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  // Получаем события для комнаты
   const {
     events: eventData,
     isLoading,
     isError,
     error
   } = useEvents(
-    { page: 1, size: 100 }, // Получаем все события
+    { page: 1, size: 100 }, 
     slug || ''
   );
 
