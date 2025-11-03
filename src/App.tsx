@@ -10,7 +10,6 @@ import listItemTextTheme from './themes/listItemTextTheme';
 
 import { Toaster } from 'sonner';
 
-
 const mergedTheme = createTheme(createRoomButtonTheme, listItemTextTheme);
 
 function App() {

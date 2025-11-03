@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint --max-warnings=0 --cache --format friendly",
+    "lint:unix": "eslint --max-warnings=0 --cache --format=unix"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -38,6 +39,9 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
     "eslint": "^9.29.0",
+    "eslint-formatter-compact": "^9.0.1",
+    "eslint-formatter-friendly": "^7.0.0",
+    "eslint-formatter-unix": "^9.0.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
