@@ -6,7 +6,7 @@ import { useEvents } from "@/hooks/events/useEvents"
 import { Loader } from "@/components/Loader"
 
 const COMMANDS = {
-  REGISTER_AMBASSADOR: 'Регистрация амбассадора',
+  REGISTER_AND_ADD_AMBASSADOR_TO_ROOM: 'Регистрация амбассадора',
   CHECK_AMBASSADOR_STATUS: 'Получение статуса амбассадора',
   SET_BASE_PROMO_CODE: 'Установить базовый промокод',
   GET_BASE_PROMO_CODE: 'Получить базовый промокод',
@@ -21,7 +21,7 @@ interface ISelectActionPageProps {
   }
 }
 
-const SelectActionPage = () => {
+export const SelectActionPage = () => {
 	const { message, sendMessage } = useMessage()
   const [action, setAction] = useState<keyof typeof COMMANDS>('CHECK_AMBASSADOR_STATUS')
   const [selectedRoom, setSelectedRoom] = useState<string>('')
@@ -202,5 +202,3 @@ const SelectActionPage = () => {
     </>
   )
 }
-
-export default SelectActionPage

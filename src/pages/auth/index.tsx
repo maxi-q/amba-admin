@@ -16,7 +16,7 @@ import { useAuthStore } from "@store/index";
 import authService from "@services/auth/auth.service";
 import { MessageTypes } from "@/messages/types/messages.enum";
 
-const AuthPage = () => {
+export const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
   const { message } = useMessage();
   const { auth } = useAuthStore();
@@ -25,11 +25,9 @@ const AuthPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Хуки для авторизации и регистрации
   const authMutation = useAuth();
   const registerProjectWithAuthMutation = useRegisterProjectWithAuth();
 
-  // Обработка сообщений от popup окна с кодом авторизации
   useEffect(() => {
     if (!message) return;
 
@@ -53,7 +51,6 @@ const AuthPage = () => {
     setIsLoading(true);
     setError(null);
 
-    // Регистрируем проект с авторизацией
     registerProjectWithAuthMutation.mutate({
       registerData: {
         groupId: Number(senlerGroupId),
@@ -68,7 +65,6 @@ const AuthPage = () => {
     }, {
       onError: (error: any) => {
         if (error?.message === 'PROJECT_ALREADY_EXISTS') {
-          // Проект уже зарегистрирован, пытаемся авторизоваться
           authMutation.mutate({
             userId: senlerUserId,
             groupId: Number(senlerGroupId),
@@ -83,12 +79,11 @@ const AuthPage = () => {
     });
   };
 
-  // Автоматическая авторизация при наличии данных
   useEffect(() => {
     if (sign && senlerGroupId && senlerUserId && context && senlerChannelTypeId && !auth) {
       setIsLoading(true);
       setError(null);
-      
+
       authMutation.mutate({
         userId: senlerUserId,
         groupId: Number(senlerGroupId),
@@ -98,7 +93,6 @@ const AuthPage = () => {
     }
   }, [sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId, auth]);
 
-  // Синхронизируем состояние загрузки с мутациями
   useEffect(() => {
     if (authMutation.isSuccess || authMutation.isError) {
       setIsLoading(false);
@@ -111,7 +105,6 @@ const AuthPage = () => {
     }
   }, [registerProjectWithAuthMutation.isSuccess, registerProjectWithAuthMutation.isError]);
 
-  // Если пользователь уже авторизован, перенаправляем его
   useEffect(() => {
     if (auth) {
       const from = location.state?.from?.pathname || "/";
@@ -125,12 +118,7 @@ const AuthPage = () => {
 
     try {
       const url = authService.start(Number(senlerGroupId))
-      console.log(url)
-      const popup = window.open(url, '_blank', 'width=600,height=700');
-      if (popup) {
-        // Код авторизации будет получен через useMessage от redirect_auth страницы
-        // Никакой дополнительной логики здесь не нужно
-      }
+      window.open(url, '_blank', 'width=600,height=700');
     } catch {
       setError("Ошибка открытия popup");
       setIsLoading(false);
@@ -184,5 +172,3 @@ const AuthPage = () => {
     </Box>
   );
 };
-
-export default AuthPage;

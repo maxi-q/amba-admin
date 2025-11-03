@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { useState } from 'react';
 
 import { MessageProvider } from './messages/messageProvider'
-import { Navigation } from './pages'
+import { Navigation } from './pages/modules/Navigation'
 import createRoomButtonTheme from './themes/createRoomButtonTheme';
 import listItemTextTheme from './themes/listItemTextTheme';
 
@@ -15,7 +15,6 @@ const mergedTheme = createTheme(createRoomButtonTheme, listItemTextTheme);
 
 function App() {
 	const [client] = useState(new QueryClient())
-
 
 	return (
     <MessageProvider>

@@ -3,12 +3,11 @@ import { useMessage } from '@/messages/messageProvider'
 import { MessageTypes } from '@/messages/types/messages.enum'
 import { Box, Typography, Paper, CircularProgress } from '@mui/material';
 
-const RedirectAuthPage = () => {
+export const RedirectAuthPage = () => {
 	const { sendMessage } = useMessage()
 
 	useEffect(() => {
 		try {
-      console.log(window.opener, window.parent)
 			const params = new URLSearchParams(window.location.search)
 			const code = params.get('code') || ''
 			const state = params.get('state') || ''
@@ -52,31 +51,31 @@ const RedirectAuthPage = () => {
         background: '#428bca',
       }}
     >
-      <Paper 
-        elevation={8} 
-        sx={{ 
-          p: 6, 
-          borderRadius: 3, 
-          maxWidth: 450, 
-          width: '100%', 
+      <Paper
+        elevation={8}
+        sx={{
+          p: 6,
+          borderRadius: 3,
+          maxWidth: 450,
+          width: '100%',
           textAlign: 'center',
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
-        <CircularProgress 
-          size={60} 
+        <CircularProgress
+          size={60}
           thickness={4}
-          sx={{ 
+          sx={{
             color: 'primary.main',
             mb: 3,
-          }} 
+          }}
         />
-        <Typography 
-          variant="h5" 
+        <Typography
+          variant="h5"
           component="h1"
-          sx={{ 
+          sx={{
             fontWeight: 600,
             color: 'text.primary',
             mb: 2,
@@ -84,9 +83,9 @@ const RedirectAuthPage = () => {
         >
           Ожидание перенаправления
         </Typography>
-        <Typography 
-          variant="body1" 
-          sx={{ 
+        <Typography
+          variant="body1"
+          sx={{
             color: 'text.secondary',
             maxWidth: 300,
             mx: 'auto',
@@ -98,5 +97,3 @@ const RedirectAuthPage = () => {
       </Paper>
     </Box>
   )}
-
-export default RedirectAuthPage;
