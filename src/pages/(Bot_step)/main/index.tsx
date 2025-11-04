@@ -7,7 +7,7 @@ import { Loader } from "@/components/Loader"
 
 const COMMANDS = {
   REGISTER_AND_ADD_AMBASSADOR_TO_ROOM: 'Регистрация амбассадора',
-  CHECK_AMBASSADOR_STATUS: 'Получение статуса амбассадора',
+  GET_AMBASSADOR_STATUS: 'Получение статуса амбассадора',
   SET_BASE_PROMO_CODE: 'Установить базовый промокод',
   GET_BASE_PROMO_CODE: 'Получить базовый промокод',
   GET_EVENT_PROMO_CODE: 'Получить промокод события',
@@ -23,7 +23,7 @@ interface ISelectActionPageProps {
 
 export const SelectActionPage = () => {
 	const { message, sendMessage } = useMessage()
-  const [action, setAction] = useState<keyof typeof COMMANDS>('CHECK_AMBASSADOR_STATUS')
+  const [action, setAction] = useState<keyof typeof COMMANDS>('GET_AMBASSADOR_STATUS')
   const [selectedRoom, setSelectedRoom] = useState<string>('')
   const [selectedEvent, setSelectedEvent] = useState<string>('')
 

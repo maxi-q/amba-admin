@@ -102,7 +102,7 @@ export default function EventsPage() {
         ) : (
           eventData?.filter(event => !event.isDeleted).map((event: IEvent) => {
           const dateRange = formatDateRange(event.startDate, event.endDate);
-          const isActive = isEventActive(event.startDate, event.endDate);
+          const isActive = event.ignoreEndDate ? true : isEventActive(event.startDate, event.endDate);
 
           return (
             <Paper
