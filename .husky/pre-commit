@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+set -e
+
+echo "🔍 Линтинг изменённых файлов..."
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx)$' || true)
+
+if [ -z "$STAGED_FILES" ]; then
+  echo "✅ Нет файлов для линтинга"
+  exit 0
+fi
+
+if [ ! -t 1 ]; then
+  echo "🧩 Non-interactive (GUI/CI) detected → формат unix"
+  npm run lint:unix -- $STAGED_FILES || exit 1
+else
+  echo "🖥️ Interactive terminal detected → формат friendly"
+  npm run lint -- $STAGED_FILES || exit 1
+fi
