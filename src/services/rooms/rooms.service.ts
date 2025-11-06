@@ -8,41 +8,12 @@ import type {
   IUpdateRoomsRequest, 
   IUpdateRoomsResponse,
 } from './rooms.types';
-import { 
-  getContentType, 
-  isValidationError, 
-  extractFieldErrors 
-} from '@services/config/axios.helper';
-import { ApiError, type IApiErrorResponse } from '@/types';
+import { getContentType } from '@services/config/axios.helper';
+import { BaseService } from '@services/config/base.service';
 
 
-class RoomsService {
-  private _BASE_URL = 'rooms';
-
-  private async handleApiCall<T>(
-    apiCall: () => Promise<{ data: T }>
-  ): Promise<T> {
-    try {
-      const response = await apiCall();
-      return response.data;
-    } catch (error: any) {
-      const errorResponse: IApiErrorResponse = {
-        statusCode: error?.response?.status || 500,
-        timestamp: error?.response?.data?.timestamp || new Date().toISOString(),
-        path: error?.response?.data?.path || error?.config?.url || '',
-        message: error?.response?.data?.message || error?.message || 'Unknown error'
-      };
-
-      // Extract field errors for validation errors (422)
-      let fieldErrors: Record<string, string[]> | undefined;
-      if (isValidationError(error)) {
-        fieldErrors = extractFieldErrors(error);
-      }
-
-      // Throw custom ApiError instead of returning error object
-      throw new ApiError(errorResponse, fieldErrors);
-    }
-  }
+class RoomsService extends BaseService {
+  protected _BASE_URL = 'rooms';
 
   async getRooms(): Promise<IGetRoomResponse[]> {
     return this.handleApiCall(() => 

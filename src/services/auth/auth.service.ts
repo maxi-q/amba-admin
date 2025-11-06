@@ -8,41 +8,12 @@ import type {
   IAuthByTokenResponse,
 } from './user.types';
 import { API_URL } from '@/constants';
-import {
-  getContentType,
-  isValidationError,
-  extractFieldErrors
-} from '@services/config/axios.helper';
-import { ApiError, type IApiErrorResponse } from '@/types';
+import { getContentType } from '@services/config/axios.helper';
+import { BaseService } from '@services/config/base.service';
 
 
-class AuthService {
-  private _BASE_URL = 'auth';
-
-  private async handleApiCall<T>(
-    apiCall: () => Promise<{ data: T }>
-  ): Promise<T> {
-    try {
-      const response = await apiCall();
-      return response.data;
-    } catch (error: any) {
-      const errorResponse: IApiErrorResponse = {
-        statusCode: error?.response?.status || 500,
-        timestamp: error?.response?.data?.timestamp || new Date().toISOString(),
-        path: error?.response?.data?.path || error?.config?.url || '',
-        message: error?.response?.data?.message || error?.message || 'Unknown error'
-      };
-
-      // Extract field errors for validation errors (422)
-      let fieldErrors: Record<string, string[]> | undefined;
-      if (isValidationError(error)) {
-        fieldErrors = extractFieldErrors(error);
-      }
-
-      // Throw custom ApiError instead of returning error object
-      throw new ApiError(errorResponse, fieldErrors);
-    }
-  }
+class AuthService extends BaseService {
+  protected _BASE_URL = 'auth';
 
   async auth(data: ILoginRequest): Promise<ILoginResponse> {
     return this.handleApiCall(() => 
