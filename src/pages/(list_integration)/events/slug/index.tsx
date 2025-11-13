@@ -59,9 +59,27 @@ const EventsSetting = () => {
     error: projectError
   } = useGetProject();
 
-  const createEvent = useCreateEvent();
-  const patchEvent = usePatchEvent();
-  const checkPrefixAvailable = useCheckPromoCodesPrefixAvailable();
+  const {
+    mutate: createEvent,
+    isPending: isCreating,
+    validationErrors: createValidationErrors,
+    generalError: createGeneralError
+  } = useCreateEvent();
+
+  const {
+    mutate: patchEvent,
+    isPending: isUpdating,
+    isSuccess: isUpdateSuccess,
+    validationErrors: updateValidationErrors,
+    generalError: updateGeneralError
+  } = usePatchEvent();
+
+  const {
+    mutate: checkPrefixAvailable,
+    isPending: isCheckingPrefix,
+    validationErrors: checkPrefixValidationErrors,
+    generalError: checkPrefixGeneralError
+  } = useCheckPromoCodesPrefixAvailable();
 
   const [event, setEvent] = useState<IEvent>();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
@@ -83,10 +101,6 @@ const EventsSetting = () => {
     isDeleted: false,
   });
   const [prefix, setPrefix] = useState<string>('');
-
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [generalError, setGeneralError] = useState<string>('');
-
 
   useEffect(() => {
     if (eventData && eventId !== 'new') {
@@ -115,51 +129,14 @@ const EventsSetting = () => {
     console.log(formData)
   }, [formData])
 
-  // Синхронизируем ошибки из хуков с локальным состоянием
-  useEffect(() => {
-    if (createEvent.isError && createEvent.error) {
-      const error = createEvent.error;
-
-      const errorDescribe = error.fieldErrors
-      if (errorDescribe) {
-        setFieldErrors(errorDescribe);
-      } else {
-        setGeneralError(error.message || 'Ошибка при создании события');
-      }
-    } else if (createEvent.isSuccess) {
-      setFieldErrors({});
-      setGeneralError('');
-    }
-  }, [createEvent.isError, createEvent.error, createEvent.isSuccess]);
-
-  useEffect(() => {
-    if (patchEvent.isError && patchEvent.error) {
-      const error = patchEvent.error;
-
-      const errorDescribe = error.fieldErrors
-      if (errorDescribe) {
-        setFieldErrors(errorDescribe);
-      } else {
-        setGeneralError(error.message || 'Ошибка при обновлении события');
-      }
-    } else if (patchEvent.isSuccess) {
-      setFieldErrors({});
-      setGeneralError('');
-    }
-  }, [patchEvent.isError, patchEvent.error, patchEvent.isSuccess]);
-
   // Навигация после успешного удаления
   useEffect(() => {
-    if (patchEvent.isSuccess && formData.isDeleted) {
+    if (isUpdateSuccess && formData.isDeleted) {
       navigate(`/rooms/${slug}/events`);
     }
-  }, [patchEvent.isSuccess, formData.isDeleted, slug]);
+  }, [isUpdateSuccess, formData.isDeleted, slug]);
 
   const handleSave = async (isDeleted: boolean = false) => {
-    // Очищаем предыдущие ошибки
-    setFieldErrors({});
-    setGeneralError('');
-
     const storeData = {
       name: formData.name,
       startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
@@ -180,7 +157,7 @@ const EventsSetting = () => {
         return;
       }
 
-      checkPrefixAvailable.mutate(prefix, {
+      checkPrefixAvailable(prefix, {
         onSuccess: (isAvailable) => {
           if (isAvailable === false) {
             setPrefixOccupiedError('Префикс уже занят');
@@ -189,24 +166,16 @@ const EventsSetting = () => {
           }
 
           if (slug) {
-            createEvent.mutate({
+            createEvent({
               ...storeData,
               roomId: slug,
               promoCodesPrefix: prefix
             });
           }
         },
-        onError: (error) => {
-          const describeError = error.fieldErrors
-          if (describeError) {
-            setFieldErrors(describeError);
-          } else {
-            setGeneralError(error.message || 'Ошибка при проверке префикса промокода');
-          }
-        }
       });
     } else if (eventId !== 'new') {
-      patchEvent.mutate({
+      patchEvent({
         data: storeData,
         eventId: eventId || ''
       });
@@ -354,9 +323,9 @@ const EventsSetting = () => {
 
       <Stack spacing={4}>
         {/* Общие ошибки */}
-        {generalError && (
+        {(createGeneralError || updateGeneralError || checkPrefixGeneralError) && (
           <Alert severity="error" sx={{ mb: 3 }}>
-            {generalError}
+            {createGeneralError || updateGeneralError || checkPrefixGeneralError}
           </Alert>
         )}
 
@@ -377,8 +346,8 @@ const EventsSetting = () => {
                 variant="outlined"
                 value={formData.name}
                 onChange={handleInputChange('name')}
-                error={!!fieldErrors.name}
-                helperText={fieldErrors.name?.join()}
+                error={!!(createValidationErrors.name || updateValidationErrors.name)}
+                helperText={(createValidationErrors.name || updateValidationErrors.name)?.join()}
               />
             </Box>
 
@@ -393,9 +362,9 @@ const EventsSetting = () => {
                 value={prefix}
                 onChange={handlePrefixChange}
                 disabled={eventId !== 'new'}
-                error={!!fieldErrors?.promoCodesPrefix}
+                error={!!(createValidationErrors.promoCodesPrefix || checkPrefixValidationErrors.promoCodesPrefix)}
                 helperText={
-                  fieldErrors?.promoCodesPrefix?.join() ||
+                  (createValidationErrors.promoCodesPrefix || checkPrefixValidationErrors.promoCodesPrefix)?.join() ||
                   prefixValidationError ||
                   prefixOccupiedError ||
                   (eventId !== 'new' ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов')
@@ -428,8 +397,8 @@ const EventsSetting = () => {
                     onChange={handleInputChange('startDate')}
                     variant="outlined"
                     sx={{ flex: 1 }}
-                    error={!!fieldErrors.startDate}
-                    helperText={fieldErrors.startDate?.join()}
+                    error={!!(createValidationErrors.startDate || updateValidationErrors.startDate)}
+                    helperText={(createValidationErrors.startDate || updateValidationErrors.startDate)?.join()}
                   />
                   <TextField
                     type="date"
@@ -437,8 +406,8 @@ const EventsSetting = () => {
                     onChange={handleInputChange('endDate')}
                     variant="outlined"
                     sx={{ flex: 1 }}
-                    error={!!fieldErrors.endDate}
-                    helperText={fieldErrors.endDate?.join()}
+                    error={!!(createValidationErrors.endDate || updateValidationErrors.endDate)}
+                    helperText={(createValidationErrors.endDate || updateValidationErrors.endDate)?.join()}
                   />
                 </Stack>
               )}
@@ -488,8 +457,8 @@ const EventsSetting = () => {
                   onChange={handleInputChange('rewardValue')}
                   variant="outlined"
                   sx={{ flex: 1 }}
-                  error={!!fieldErrors.rewardValue}
-                  helperText={fieldErrors.rewardValue?.join()}
+                  error={!!(createValidationErrors.rewardValue || updateValidationErrors.rewardValue)}
+                  helperText={(createValidationErrors.rewardValue || updateValidationErrors.rewardValue)?.join()}
                 />
                 <Typography variant="body2" color="text.secondary">
                   {formData.rewardUnits === 'rub' ? 'руб' :
@@ -526,8 +495,8 @@ const EventsSetting = () => {
                     onChange={handleInputChange('promoCodeUsageLimit')}
                     variant="outlined"
                     sx={{ flex: 1 }}
-                    error={!!fieldErrors.promoCodeUsageLimit}
-                    helperText={fieldErrors.promoCodeUsageLimit?.join()}
+                    error={!!(createValidationErrors.promoCodeUsageLimit || updateValidationErrors.promoCodeUsageLimit)}
+                    helperText={(createValidationErrors.promoCodeUsageLimit || updateValidationErrors.promoCodeUsageLimit)?.join()}
                   />
                   <Typography variant="body2" color="text.secondary">
                     раз
@@ -558,7 +527,7 @@ const EventsSetting = () => {
               color="error"
               onClick={handleDelete}
               sx={{ minWidth: 120 }}
-              disabled={patchEvent.isPending}
+              disabled={isUpdating}
             >
               Удалить
             </Button>
@@ -568,9 +537,9 @@ const EventsSetting = () => {
             color="primary"
             onClick={() => handleSave()}
             sx={{ minWidth: 120 }}
-            disabled={createEvent.isPending || patchEvent.isPending || checkPrefixAvailable.isPending}
+            disabled={isCreating || isUpdating || isCheckingPrefix}
           >
-            {createEvent.isPending || patchEvent.isPending || checkPrefixAvailable.isPending
+            {isCreating || isUpdating || isCheckingPrefix
               ? 'Сохранение...' 
               : (eventId !== 'new' ? 'Сохранить' : 'Добавить')
             }

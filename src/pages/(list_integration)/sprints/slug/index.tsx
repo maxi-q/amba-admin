@@ -112,7 +112,6 @@ const SprintSetting = () => {
     }
   }, [sprintId, sprints]);
 
-  // Синхронизируем ошибки из хуков с локальным состоянием
   useEffect(() => {
     if (isCreateValidationError && Object.keys(createValidationErrors).length > 0) {
       setFieldErrors(createValidationErrors);
