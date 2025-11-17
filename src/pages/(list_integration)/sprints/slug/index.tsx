@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Paper, Stack, Alert, Typography } from "@mui/material";
+import { Box, Stack, Alert, Typography } from "@mui/material";
 import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { useSprints } from "@/hooks/sprints/useSprints";
