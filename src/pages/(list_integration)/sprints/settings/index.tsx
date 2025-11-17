@@ -1,29 +1,18 @@
-import { Link, useParams } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  TextField,
-  Paper,
-  Stack,
-  IconButton,
-  Link as MuiLink,
-  List,
-  ListItem,
-  Breadcrumbs,
-  Alert,
-  Snackbar,
-} from "@mui/material";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { useParams } from "react-router-dom";
+import { Box, Stack, Alert } from "@mui/material";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetProject } from "@/hooks/projects/useGetProject";
 import { Loader } from "@/components/Loader";
 import { useState } from "react";
+import { SprintSettingsHeader } from "./components/SprintSettingsHeader";
+import { SubscriberGroupCard } from "./components/SubscriberGroupCard";
+import { SprintSettingsErrorState } from "./components/SprintSettingsErrorState";
+import { SprintSettingsNotification } from "./components/SprintSettingsNotification";
 
 export default function SprintSettingsPage() {
   const { slug } = useParams();
-  
-  // Получаем данные комнаты через хук
+
   const {
     room,
     isLoading: isLoadingRoom,
@@ -31,7 +20,6 @@ export default function SprintSettingsPage() {
     error: roomError
   } = useGetRoomById(slug || '');
 
-  // Получаем список спринтов для отображения статистики
   const { 
     sprints, 
     isLoading: isLoadingSprints, 
@@ -42,7 +30,6 @@ export default function SprintSettingsPage() {
     slug || ''
   );
 
-  // Получаем данные проекта
   const {
     project,
     isLoading: isLoadingProject,
@@ -52,7 +39,6 @@ export default function SprintSettingsPage() {
 
   const [showCopyNotification, setShowCopyNotification] = useState(false);
 
-  // Показываем загрузку
   if (isLoadingRoom || isLoadingSprints || isLoadingProject) {
     return (
       <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -61,49 +47,32 @@ export default function SprintSettingsPage() {
     );
   }
 
-  // Показываем ошибки
   if (isRoomError || isSprintsError || isProjectError) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        {isRoomError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            Ошибка при загрузке комнаты: {roomError?.message || 'Неизвестная ошибка'}
-          </Alert>
-        )}
-        {isSprintsError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            Ошибка при загрузке спринтов: {sprintsError?.message || 'Неизвестная ошибка'}
-          </Alert>
-        )}
-        {isProjectError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            Ошибка при загрузке проекта: {projectError?.message || 'Неизвестная ошибка'}
-          </Alert>
-        )}
-      </Box>
+      <SprintSettingsErrorState
+        roomError={roomError?.message}
+        sprintsError={sprintsError?.message}
+        projectError={projectError?.message}
+      />
     );
   }
 
-  if (!room) {
+  if (!room || !project) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="warning">
-          Данные комнаты не найдены
-        </Alert>
+        {!room && (
+          <Alert severity="warning">
+            Данные комнаты не найдены
+          </Alert>
+        )}
+        {!project && (
+          <Alert severity="warning">
+            Данные проекта не найдены
+          </Alert>
+        )}
       </Box>
     );
   }
-
-  if (!project) {
-    return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="warning">
-          Данные проекта не найдены
-        </Alert>
-      </Box>
-    );
-  }
-
 
   const groups = [
     {
@@ -142,7 +111,7 @@ export default function SprintSettingsPage() {
         "Вступление будет отключаться из группы с заявками и одобренными амбассадорами.",
       ],
     },
-  ]
+  ];
 
   const handleCopy = async (link: string) => {
     try {
@@ -153,92 +122,33 @@ export default function SprintSettingsPage() {
     }
   };
 
-  const handleCloseCopyNotification = () => {
-    setShowCopyNotification(false);
-  };
-
-  // Статистика спринтов
   const activeSprints = sprints.filter(sprint => !sprint.isDeleted).length;
   const totalSprints = sprints.length;
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
-          <MuiLink component={Link} to={`/rooms/${slug}/sprints`} underline="hover" color="inherit">
-            Список спринтов
-          </MuiLink>
-          <Typography variant="body2" color="text.primary">
-            Настройки спринтов
-          </Typography>
-        </Breadcrumbs>
-        <Box sx={{ textAlign: 'right' }}>
-          <Typography variant="body2" color="text.secondary">
-            Активных спринтов: {activeSprints}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Всего спринтов: {totalSprints}
-          </Typography>
-        </Box>
-      </Box>
+      <SprintSettingsHeader
+        activeSprints={activeSprints}
+        totalSprints={totalSprints}
+      />
       <Stack spacing={3}>
         {groups.map((group) => (
-          <Paper key={group.id} sx={{ borderRadius: 3 }}>
-            <Typography variant="h6" fontWeight={600} mb={2}>{group.title}</Typography>
-
-            <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-              <Box sx={{ width: 44, height: 44, borderRadius: "50%", bgcolor: "grey.200", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20 }}>
-                VK
-              </Box>
-              <Box>
-                <Typography variant="body1" fontWeight={500}>{group.name}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  ID: {group.senlerId}{" "}
-                  <MuiLink href="#" underline="hover">
-                    перейти к редактированию
-                  </MuiLink>
-                </Typography>
-              </Box>
-            </Stack>
-
-            <List sx={{ mb: 2, ml: 2, listStyleType: 'decimal', pl: 2 }}>
-              {group.instructions.map((txt, idx) => (
-                <ListItem key={idx} sx={{ display: 'list-item', py: 0, px: 0, fontSize: 14, lineHeight: 1.5 }}>
-                  {txt}
-                </ListItem>
-              ))}
-            </List>
-
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <TextField
-                value={group.link}
-                InputProps={{ readOnly: true }}
-                size="small"
-                fullWidth
-              />
-              <IconButton
-                onClick={() => handleCopy(group.link)}
-                title="Копировать"
-                color="primary"
-                sx={{ ml: 1 }}
-              >
-                <ContentCopyIcon fontSize="small" />
-              </IconButton>
-            </Stack>
-          </Paper>
+          <SubscriberGroupCard
+            key={group.id}
+            title={group.title}
+            name={group.name}
+            senlerId={group.senlerId}
+            link={group.link}
+            instructions={group.instructions}
+            onCopy={handleCopy}
+          />
         ))}
       </Stack>
 
-      <Snackbar
+      <SprintSettingsNotification
         open={showCopyNotification}
-        autoHideDuration={3000}
-        onClose={handleCloseCopyNotification}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseCopyNotification} severity="success" sx={{ width: '100%' }}>
-          Ссылка скопирована в буфер обмена
-        </Alert>
-      </Snackbar>
+        onClose={() => setShowCopyNotification(false)}
+      />
     </Box>
   );
 }

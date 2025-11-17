@@ -1,49 +1,24 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  TextField,
-  Breadcrumbs,
-  Link as MuiLink,
-  Stack,
-  FormControl,
-  Select,
-  MenuItem,
-  Switch,
-  Snackbar,
-  Alert,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-} from "@mui/material";
+import { useParams } from "react-router-dom";
+import { Box, Paper, Stack, Alert, Typography } from "@mui/material";
 import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import type { IPatchSprintsRequest, ICreateSprintRequest } from "@services/sprints/sprints.types";
 import { dateToInput } from "./helpers";
-import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 import { Loader } from "@/components/Loader";
-
-// const rewardTypes = [
-  // { value: "fix", label: "fix" },
-// ];
-
-const rewardUnits = [
-  { value: "points", label: "Баллы" },
-  { value: "rub", label: "Рубли" },
-  { value: "usd", label: "Доллары" },
-  { value: "eur", label: "Евро" },
-  { value: "items", label: "Штуки" },
-];
+import { SprintPageHeader } from "./components/SprintPageHeader";
+import { SprintSettingsSection } from "./components/SprintSettingsSection";
+import { SprintPromoCodesSection } from "./components/SprintPromoCodesSection";
+import { SprintActionButtons } from "./components/SprintActionButtons";
+import { DeleteSprintDialog } from "./components/DeleteSprintDialog";
+import { SprintNotifications } from "./components/SprintNotifications";
+import { SprintNotFoundState } from "./components/SprintNotFoundState";
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
+  const isNewSprint = sprintId === 'new';
 
-  // Хуки для работы со спринтами
   const {
     createSprint,
     isPending: isCreating,
@@ -62,7 +37,6 @@ const SprintSetting = () => {
     generalError: updateGeneralError
   } = usePatchSprint();
 
-  // Получаем список спринтов для поиска текущего
   const { sprints, isLoading: isLoadingSprints } = useSprints(
     { page: 1, size: 100 },
     slug || ''
@@ -86,11 +60,9 @@ const SprintSetting = () => {
     isDeleted: false,
   });
 
-  // Состояние для ошибок
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string>('');
 
-  // Поиск спринта в списке
   useEffect(() => {
     if (sprintId !== 'new' && sprints.length > 0) {
       const foundSprint = sprints.find(sprint => sprint.id === sprintId);
@@ -131,11 +103,9 @@ const SprintSetting = () => {
     }
   }, [isCreateValidationError, createValidationErrors, createGeneralError, isUpdateValidationError, updateValidationErrors, updateGeneralError]);
 
-  // Обработка успешных операций
   useEffect(() => {
     if (isCreateSuccess) {
       setShowSaveNotification(true);
-      // Навигация к созданному спринту будет выполнена через хук
     }
   }, [isCreateSuccess]);
 
@@ -162,7 +132,7 @@ const SprintSetting = () => {
       isDeleted: isDeleted,
     };
 
-    if (sprintId !== 'new') {
+    if (!isNewSprint) {
       patchSprint({
         data: storeData,
         sprintId: sprintId || ''
@@ -183,7 +153,6 @@ const SprintSetting = () => {
   const handleConfirmDelete = () => {
     setShowDeleteDialog(false);
     handleSave(true);
-    // Навигация будет выполнена после успешного удаления
   };
 
   const handleCancelDelete = () => {
@@ -218,16 +187,18 @@ const SprintSetting = () => {
     }
   };
 
-  const handleCloseNotification = () => {
-    setShowCopyNotification(false);
+  const handleIgnoreEndDateChange = (value: boolean) => {
+    setFormData({
+      ...formData,
+      ignoreEndDate: value
+    });
   };
 
-  const handleCloseCopyError = () => {
-    setShowCopyError(false);
-  };
-
-  const handleCloseSaveNotification = () => {
-    setShowSaveNotification(false);
+  const handleIgnorePromoCodeUsageLimitChange = (value: boolean) => {
+    setFormData({
+      ...formData,
+      ignorePromoCodeUsageLimit: value
+    });
   };
 
   if (isLoadingSprints) {
@@ -238,14 +209,8 @@ const SprintSetting = () => {
     );
   }
 
-  if (!sprint && sprintId !== 'new') {
-    return (
-      <Box sx={{ px: 2, py: 3 }}>
-        <Alert severity="error">
-          Спринт не найден
-        </Alert>
-      </Box>
-    );
+  if (!sprint && !isNewSprint) {
+    return <SprintNotFoundState />;
   }
 
   return (
@@ -256,282 +221,59 @@ const SprintSetting = () => {
         </Alert>
       )}
 
-      <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
-          <MuiLink component={Link} to={`/rooms/${slug}/sprints`} underline="hover" color="inherit">
-            Список спринтов
-          </MuiLink>
-          <Typography variant="body2" color="text.primary">
-            {sprintId !== 'new' ? sprint?.name : 'Новый спринт'}
-          </Typography>
-        </Breadcrumbs>
-        {sprintId !== 'new' && (
-          <MuiLink
-            variant="body2"
-            underline="always"
-            color="inherit"
-            sx={{
-              userSelect: "none",
-              cursor: "pointer"
-            }}
-            onClick={handleCopySprintId}
-          >
-            Скопировать ID спринта
-          </MuiLink>
-        )}
-      </Box>
+      <SprintPageHeader
+        sprintName={sprint?.name}
+        onCopySprintId={handleCopySprintId}
+      />
 
       <Box>
         <Typography variant="h6" fontWeight={700} mb={2}>Настройки</Typography>
         <Stack spacing={3}>
-          <Box>
-            <Typography variant="subtitle2" mb={1}>
-              Название
-            </Typography>
-            <TextField
-              fullWidth
-              placeholder="Будет показываться вам и определенным амбассадорам"
-              variant="outlined"
-              value={formData.name}
-              onChange={handleInputChange('name')}
-              error={hasFieldError(fieldErrors, 'name')}
-              helperText={getFirstFieldError(fieldErrors, 'name')}
-            />
-          </Box>
+          <SprintSettingsSection
+            formData={formData}
+            onInputChange={handleInputChange}
+            fieldErrors={fieldErrors}
+            onIgnoreEndDateChange={handleIgnoreEndDateChange}
+          />
 
-          <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="subtitle2">
-                Ограничить спринт датами
-              </Typography>
-              <Switch
-                checked={!formData.ignoreEndDate}
-                onChange={(e) => {
-                  const newValue = !e.target.checked;
-                  const updatedData = {
-                    ...formData,
-                    ignoreEndDate: newValue
-                  };
-                  setFormData(updatedData);
-                }}
-              />
-            </Stack>
-            {!formData.ignoreEndDate && (
-              <Stack direction="row" spacing={2} alignItems="center">
-                <TextField
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleInputChange('startDate')}
-                  variant="outlined"
-                  sx={{ flex: 1 }}
-                  error={hasFieldError(fieldErrors, 'startDate')}
-                  helperText={getFirstFieldError(fieldErrors, 'startDate')}
-                />
-                <TextField
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleInputChange('endDate')}
-                  variant="outlined"
-                  sx={{ flex: 1 }}
-                  error={hasFieldError(fieldErrors, 'endDate')}
-                  helperText={getFirstFieldError(fieldErrors, 'endDate')}
-                />
-              </Stack>
-            )}
-          </Box>
-
-          <Box>
-            <Typography variant="h5" fontWeight={700} mb={2}>Промокоды</Typography>
-            <Typography variant="body2" color="text.secondary" maxWidth="md">
-              Для какого участка будет спеймерован уникальный промокод, который отправится при добавлении в группу амбассадоров, а также будет отправлен указанные ниже награды
-            </Typography>
-          </Box>
-
-          {/* <Box>
-            <Typography variant="subtitle2" mb={1}>
-              Тип награды
-            </Typography>
-            <FormControl fullWidth>
-              <Select
-                value={formData.rewardType}
-                onChange={handleSelectChange('rewardType')}
-                variant="outlined"
-              >
-                {rewardTypes.map((type) => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box> */}
-
-          <Box>
-            <Typography variant="subtitle2" mb={1}>
-              Единицы награды
-            </Typography>
-            <FormControl fullWidth>
-              <Select
-                value={formData.rewardUnits}
-                onChange={handleSelectChange('rewardUnits')}
-                variant="outlined"
-              >
-                {rewardUnits.map((unit) => (
-                  <MenuItem key={unit.value} value={unit.value}>
-                    {unit.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box>
-            <Typography variant="subtitle2" mb={1}>
-              Награда для привлеченных пользователей
-            </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <TextField
-                type="number"
-                value={formData.rewardValue}
-                onChange={handleInputChange('rewardValue')}
-                variant="outlined"
-                sx={{ flex: 1 }}
-                error={hasFieldError(fieldErrors, 'rewardValue')}
-                helperText={getFirstFieldError(fieldErrors, 'rewardValue')}
-              />
-              <Typography variant="body2" color="text.secondary">
-                {formData.rewardUnits === 'rub' ? 'руб' :
-                 formData.rewardUnits === 'usd' ? 'долл' :
-                 formData.rewardUnits === 'eur' ? 'евро' :
-                 formData.rewardUnits === 'points' ? 'баллов' :
-                 formData.rewardUnits === 'items' ? 'штук' : 'ед'}
-              </Typography>
-            </Stack>
-          </Box>
-
-          <Box>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="subtitle2">
-                Ограничить число использования каждого промокода
-              </Typography>
-              <Switch
-                checked={!formData.ignorePromoCodeUsageLimit}
-                onChange={(e) => {
-                  const newValue = !e.target.checked;
-                  const updatedData = {
-                    ...formData,
-                    ignorePromoCodeUsageLimit: newValue
-                  };
-                  setFormData(updatedData);
-                }}
-              />
-            </Stack>
-            {!formData.ignorePromoCodeUsageLimit && (
-              <Stack direction="row" spacing={2} alignItems="center">
-                <TextField
-                  type="number"
-                  value={formData.promoCodeUsageLimit}
-                  onChange={handleInputChange('promoCodeUsageLimit')}
-                  variant="outlined"
-                  sx={{ flex: 1 }}
-                  error={hasFieldError(fieldErrors, 'promoCodeUsageLimit')}
-                  helperText={getFirstFieldError(fieldErrors, 'promoCodeUsageLimit')}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  раз
-                </Typography>
-              </Stack>
-            )}
-          </Box>
+          <SprintPromoCodesSection
+            formData={formData}
+            onInputChange={handleInputChange}
+            onSelectChange={handleSelectChange}
+            fieldErrors={fieldErrors}
+            onIgnorePromoCodeUsageLimitChange={handleIgnorePromoCodeUsageLimitChange}
+          />
         </Stack>
 
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
-          {sprintId !== 'new' && (
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleDelete}
-              disabled={isUpdating || isCreating}
-              sx={{ minWidth: 120 }}
-            >
-              Удалить
-            </Button>
-          )}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleSave()}
-            disabled={isUpdating || isCreating}
-            sx={{ minWidth: 120 }}
-          >
-            {isUpdating || isCreating 
-              ? (sprintId !== 'new' ? 'Сохранение...' : 'Создание...') 
-              : (sprintId !== 'new' ? 'Сохранить' : 'Добавить')
-            }
-          </Button>
-        </Box>
+        <SprintActionButtons
+          isNewSprint={isNewSprint}
+          onSave={() => handleSave()}
+          onDelete={handleDelete}
+          isCreating={isCreating}
+          isUpdating={isUpdating}
+        />
       </Box>
 
-      <Snackbar
-        open={showCopyNotification}
-        autoHideDuration={3000}
-        onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
-          Скопировано
-        </Alert>
-      </Snackbar>
+      <SprintNotifications
+        showCopySuccess={showCopyNotification}
+        showCopyError={showCopyError}
+        showSaveSuccess={showSaveNotification}
+        sprintId={sprintId}
+        isNewSprint={isNewSprint}
+        onCloseCopySuccess={() => setShowCopyNotification(false)}
+        onCloseCopyError={() => setShowCopyError(false)}
+        onCloseSaveSuccess={() => setShowSaveNotification(false)}
+      />
 
-      <Snackbar
-        open={showCopyError}
-        autoHideDuration={5000}
-        onClose={handleCloseCopyError}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseCopyError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
-          Браузер запретил копирование, но вы можете сделать это вручную: {sprintId}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={showSaveNotification}
-        autoHideDuration={3000}
-        onClose={handleCloseSaveNotification}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseSaveNotification} severity="success" sx={{ width: '100%' }}>
-          {sprintId !== 'new' ? 'Спринт успешно сохранен' : 'Спринт успешно создан'}
-        </Alert>
-      </Snackbar>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteSprintDialog
         open={showDeleteDialog}
-        onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Подтверждение удаления
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Вы уверены, что хотите удалить спринт "{sprint?.name}"? Это действие нельзя будет отменить.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary" disabled={isUpdating}>
-            Отмена
-          </Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus disabled={isUpdating}>
-            {isUpdating ? 'Удаление...' : 'Удалить'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        sprintName={sprint?.name}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isUpdating={isUpdating}
+      />
     </Box>
-  )
-}
+  );
+};
 
-export default SprintSetting
+export default SprintSetting;
