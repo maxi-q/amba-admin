@@ -19,7 +19,7 @@ export const SubscriberGroupCard = ({
   onCopy,
 }: SubscriberGroupCardProps) => {
   return (
-    <Paper sx={{ borderRadius: 3 }}>
+    <Paper elevation={0} sx={{ borderRadius: 3, border: 'none', boxShadow: 'none' }}>
       <Typography variant="h6" fontWeight={600} mb={2}>{title}</Typography>
 
       <Stack direction="row" alignItems="center" spacing={2} mb={2}>

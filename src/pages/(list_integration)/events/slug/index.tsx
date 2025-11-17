@@ -242,7 +242,7 @@ const EventsSetting = () => {
     );
   }
 
-  if (!event && !isNewEvent) {
+  if (!isNewEvent && eventData && !event) {
     return <EventNotFoundState />;
   }
 

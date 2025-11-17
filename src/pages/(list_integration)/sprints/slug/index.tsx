@@ -214,7 +214,7 @@ const SprintSetting = () => {
     );
   }
 
-  if (!sprint && !isNewSprint) {
+  if (!isNewSprint && sprints.length > 0 && !sprint) {
     return <SprintNotFoundState />;
   }
 

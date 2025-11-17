@@ -12,7 +12,11 @@ export const statusLabels: Record<SprintStatus, string> = {
   past: "прошедший",
 };
 
-export const checkSprintStatus = (startDate: string | null, endDate: string | null) => {
+export const checkSprintStatus = (startDate: string | null, endDate: string | null, ignoreEndDate: boolean = false) => {
+  if (ignoreEndDate) {
+    return { label: statusLabels.active, color: statusColors.active };
+  }
+
   const now = new Date();
   const start = new Date(startDate || '');
   const end = new Date(endDate || '');

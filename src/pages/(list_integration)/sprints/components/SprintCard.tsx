@@ -11,8 +11,8 @@ interface SprintCardProps {
 
 export const SprintCard = ({ sprint }: SprintCardProps) => {
   const dateRange = formatDateRange(sprint.startDate, sprint.endDate);
-  const active = isSprintActive(sprint.startDate, sprint.endDate);
-  const { label, color } = checkSprintStatus(sprint.startDate, sprint.endDate);
+  const active = sprint.ignoreEndDate ? true : isSprintActive(sprint.startDate, sprint.endDate);
+  const { label, color } = checkSprintStatus(sprint.startDate, sprint.endDate, sprint.ignoreEndDate);
 
   return (
     <Paper
