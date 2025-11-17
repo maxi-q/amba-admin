@@ -18,7 +18,8 @@ export function usePatchSprint() {
     onSuccess: (updatedSprint) => {
       if (updatedSprint) {
         queryClient.invalidateQueries({
-          queryKey: [QueryKeys.SPRINTS, updatedSprint.roomId]
+          queryKey: [QueryKeys.SPRINTS, updatedSprint.roomId],
+          exact: false
         });
       }
     }

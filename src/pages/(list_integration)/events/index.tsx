@@ -50,7 +50,7 @@ export default function EventsPage() {
 
       <Stack spacing={2}>
         {activeEvents.length === 0 ? (
-          <EventsEmptyState />
+          <EventsEmptyState onCreateClick={handleCreateEvent} />
         ) : (
           activeEvents.map((event) => (
             <EventCard

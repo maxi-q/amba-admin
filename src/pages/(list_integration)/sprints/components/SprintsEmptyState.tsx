@@ -1,15 +1,30 @@
-import { Box, Typography } from "@mui/material";
+import { Alert, Link } from "@mui/material";
 
-export const SprintsEmptyState = () => {
+interface SprintsEmptyStateProps {
+  onCreateClick: () => void;
+}
+
+export const SprintsEmptyState = ({ onCreateClick }: SprintsEmptyStateProps) => {
   return (
-    <Box sx={{ textAlign: 'center', py: 4 }}>
-      <Typography variant="body1" color="text.secondary" mb={2}>
-        Спринтов пока нет
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Создайте первый спринт, чтобы начать работу
-      </Typography>
-    </Box>
+    <Alert severity="info" sx={{ mb: 3 }}>
+      Спринтов пока нет.{' '}
+      <Link
+        component="button"
+        onClick={onCreateClick}
+        sx={{
+          textDecoration: 'underline',
+          cursor: 'pointer',
+          color: 'inherit',
+          border: 'none',
+          background: 'none',
+          padding: 0,
+          font: 'inherit',
+        }}
+      >
+        Создайте первый спринт
+      </Link>
+      , чтобы начать работу.
+    </Alert>
   );
 };
 

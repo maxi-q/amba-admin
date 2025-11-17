@@ -46,7 +46,7 @@ export default function SprintList() {
 
       <Stack spacing={2}>
         {activeSprints.length === 0 ? (
-          <SprintsEmptyState />
+          <SprintsEmptyState onCreateClick={handleCreateSprint} />
         ) : (
           activeSprints.map((sprint) => (
             <SprintCard key={sprint.id} sprint={sprint} />

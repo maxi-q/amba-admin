@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Box, Stack, Alert, Typography } from "@mui/material";
 import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
@@ -17,6 +17,7 @@ import { SprintNotFoundState } from "./components/SprintNotFoundState";
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
+  const navigate = useNavigate();
   const isNewSprint = sprintId === 'new';
 
   const {
@@ -111,9 +112,13 @@ const SprintSetting = () => {
 
   useEffect(() => {
     if (isUpdateSuccess) {
-      setShowSaveNotification(true);
+      if (formData.isDeleted) {
+        navigate(`/rooms/${slug}/sprints`);
+      } else {
+        setShowSaveNotification(true);
+      }
     }
-  }, [isUpdateSuccess]);
+  }, [isUpdateSuccess, formData.isDeleted, slug, navigate]);
 
   const handleSave = (isDeleted: boolean = false) => {
     setFieldErrors({});

@@ -1,13 +1,29 @@
-import { Alert } from "@mui/material";
+import { Alert, Link } from "@mui/material";
 
-/**
- * Компонент для отображения пустого состояния списка событий
- * Показывается, когда события не найдены
- */
-export const EventsEmptyState = () => {
+interface EventsEmptyStateProps {
+  onCreateClick: () => void;
+}
+
+export const EventsEmptyState = ({ onCreateClick }: EventsEmptyStateProps) => {
   return (
     <Alert severity="info" sx={{ mb: 3 }}>
-      События не найдены. Создайте первое событие для этой комнаты.
+      События не найдены.{' '}
+      <Link
+        component="button"
+        onClick={onCreateClick}
+        sx={{
+          textDecoration: 'underline',
+          cursor: 'pointer',
+          color: 'inherit',
+          border: 'none',
+          background: 'none',
+          padding: 0,
+          font: 'inherit',
+        }}
+      >
+        Создайте первое событие
+      </Link>
+      {' '}для этой комнаты.
     </Alert>
   );
 };

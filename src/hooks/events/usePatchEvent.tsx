@@ -20,7 +20,8 @@ export function usePatchEvent() {
     onSuccess: (updatedEvent, { eventId }) => {
       if (updatedEvent) {
         queryClient.invalidateQueries({
-          queryKey: [QueryKeys.EVENTS, updatedEvent.roomId]
+          queryKey: [QueryKeys.EVENTS, updatedEvent.roomId],
+          exact: false
         });
         queryClient.setQueryData([QueryKeys.EVENTS, updatedEvent.roomId, eventId], updatedEvent);
       }

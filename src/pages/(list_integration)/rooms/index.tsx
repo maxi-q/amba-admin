@@ -88,7 +88,7 @@ export default function RoomsPage() {
             <RoomCard key={room.id} room={room} />
           ))
         ) : (
-          <RoomsEmptyState />
+          <RoomsEmptyState onCreateClick={handleCreateRoom} />
         )}
       </List>
 
