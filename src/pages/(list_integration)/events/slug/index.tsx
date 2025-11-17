@@ -1,26 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  TextField,
-  Breadcrumbs,
-  Link as MuiLink,
-  Stack,
-  FormControl,
-  Select,
-  MenuItem,
-  Paper,
-  Switch,
-  Snackbar,
-  Alert,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-} from "@mui/material";
+import { useNavigate, useParams } from "react-router-dom";
+import { Box, Paper, Stack, Alert, Typography } from "@mui/material";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useCreateEvent } from "@/hooks/events/useCreateEvent";
 import { usePatchEvent } from "@/hooks/events/usePatchEvent";
@@ -29,18 +9,20 @@ import { useGetProject } from "@/hooks/projects/useGetProject";
 import { Loader } from "@/components/Loader";
 import type { IEvent, IPatchEventsRequest } from "@services/events/events.types";
 import { dateToInput } from "./helpers";
-
-const rewardUnits = [
-  { value: "points", label: "Баллы" },
-  { value: "rub", label: "Рубли" },
-  { value: "usd", label: "Доллары" },
-  { value: "eur", label: "Евро" },
-  { value: "items", label: "Штуки" },
-];
+import { EventPageHeader } from "./components/EventPageHeader";
+import { EventSettingsSection } from "./components/EventSettingsSection";
+import { PromoCodesSection } from "./components/PromoCodesSection";
+import { SubscriberGroupsSection } from "./components/SubscriberGroupsSection";
+import { EventActionButtons } from "./components/EventActionButtons";
+import { DeleteEventDialog } from "./components/DeleteEventDialog";
+import { EventNotifications } from "./components/EventNotifications";
+import { EventErrorState } from "./components/EventErrorState";
+import { EventNotFoundState } from "./components/EventNotFoundState";
 
 const EventsSetting = () => {
   const { eventId, slug } = useParams();
   const navigate = useNavigate();
+  const isNewEvent = eventId === 'new';
 
   const {
     events: eventData,
@@ -103,7 +85,7 @@ const EventsSetting = () => {
   const [prefix, setPrefix] = useState<string>('');
 
   useEffect(() => {
-    if (eventData && eventId !== 'new') {
+    if (eventData && !isNewEvent) {
       const foundEvent = eventData.find(event => event.id === eventId);
       if (foundEvent) {
         setEvent(foundEvent);
@@ -119,22 +101,16 @@ const EventsSetting = () => {
           ignorePromoCodeUsageLimit: foundEvent.ignorePromoCodeUsageLimit,
           isDeleted: foundEvent.isDeleted,
         });
-        // Устанавливаем префикс из существующего события (если есть поле prefix в IEvent)
-        setPrefix(foundEvent.name); // Пока используем name как префикс
+        setPrefix(foundEvent.name);
       }
     }
-  }, [eventId, eventData]);
+  }, [eventId, eventData, isNewEvent]);
 
-  useEffect(()=>{
-    console.log(formData)
-  }, [formData])
-
-  // Навигация после успешного удаления
   useEffect(() => {
     if (isUpdateSuccess && formData.isDeleted) {
       navigate(`/rooms/${slug}/events`);
     }
-  }, [isUpdateSuccess, formData.isDeleted, slug]);
+  }, [isUpdateSuccess, formData.isDeleted, slug, navigate]);
 
   const handleSave = async (isDeleted: boolean = false) => {
     const storeData = {
@@ -148,11 +124,9 @@ const EventsSetting = () => {
       promoCodeUsageLimit: formData.promoCodeUsageLimit,
       ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
       isDeleted: isDeleted,
-    }
+    };
 
-    // Проверяем префикс только при создании нового события
-    if (eventId === 'new' && !isDeleted) {
-      // Сначала проверяем валидацию
+    if (isNewEvent && !isDeleted) {
       if (prefixValidationError) {
         return;
       }
@@ -174,7 +148,7 @@ const EventsSetting = () => {
           }
         },
       });
-    } else if (eventId !== 'new') {
+    } else if (!isNewEvent) {
       patchEvent({
         data: storeData,
         eventId: eventId || ''
@@ -189,7 +163,6 @@ const EventsSetting = () => {
   const handleConfirmDelete = async () => {
     setShowDeleteDialog(false);
     await handleSave(true);
-    // Навигация будет выполнена после успешного удаления через useEffect
   };
 
   const handleCancelDelete = () => {
@@ -238,19 +211,20 @@ const EventsSetting = () => {
     }
   };
 
-  const handleCloseNotification = () => {
-    setShowCopyNotification(false);
+  const handleIgnoreEndDateChange = (value: boolean) => {
+    setFormData({
+      ...formData,
+      ignoreEndDate: value
+    });
   };
 
-  const handleCloseCopyError = () => {
-    setShowCopyError(false);
+  const handleIgnorePromoCodeUsageLimitChange = (value: boolean) => {
+    setFormData({
+      ...formData,
+      ignorePromoCodeUsageLimit: value
+    });
   };
 
-  const handleClosePrefixError = () => {
-    setShowPrefixError(false);
-  };
-
-  // Показываем загрузку
   if (isLoadingEvents || isLoadingProject) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
@@ -259,413 +233,98 @@ const EventsSetting = () => {
     );
   }
 
-  // Показываем ошибку
   if (isEventsError || isProjectError) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        {isEventsError && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            Ошибка при загрузке событий: {eventsError?.message || 'Неизвестная ошибка'}
-          </Alert>
-        )}
-        {isProjectError && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            Ошибка при загрузке проекта: {projectError?.message || 'Неизвестная ошибка'}
-          </Alert>
-        )}
-        <Button
-          variant="outlined"
-          onClick={() => window.location.reload()}
-        >
-          Попробовать снова
-        </Button>
-      </Box>
+      <EventErrorState
+        eventsError={eventsError?.message}
+        projectError={projectError?.message}
+      />
     );
   }
 
-  // Показываем предупреждение, если событие не найдено
-  if (!event && eventId !== 'new') {
-    return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Событие не найдено
-        </Alert>
-      </Box>
-    );
+  if (!event && !isNewEvent) {
+    return <EventNotFoundState />;
   }
 
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
-          <MuiLink component={Link} to={`/rooms/${slug}/events`} underline="hover" color="inherit">
-            Список событий
-          </MuiLink>
-          <Typography variant="body2" color="text.primary">
-            {eventId !== 'new' ? event?.name : 'Новое событие'}
-          </Typography>
-        </Breadcrumbs>
-        {eventId !== 'new' && (
-          <MuiLink
-            variant="body2"
-            underline="always"
-            color="inherit"
-            sx={{
-              userSelect: "none",
-              cursor: "pointer"
-            }}
-            onClick={handleCopyEventId}
-          >
-            Скопировать ID события
-          </MuiLink>
-        )}
-      </Box>
+      <EventPageHeader
+        eventName={event?.name}
+        onCopyEventId={handleCopyEventId}
+      />
 
       <Stack spacing={4}>
-        {/* Общие ошибки */}
         {(createGeneralError || updateGeneralError || checkPrefixGeneralError) && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {createGeneralError || updateGeneralError || checkPrefixGeneralError}
           </Alert>
         )}
 
-        {/* Settings Section */}
         <Paper elevation={0} sx={{ borderRadius: 2 }}>
           <Typography variant="h5" fontWeight={600} mb={3}>
             Настройки
           </Typography>
 
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="subtitle2" mb={1}>
-                Название
-              </Typography>
-              <TextField
-                fullWidth
-                placeholder="Будет показываться вам и определенным амбассадорам"
-                variant="outlined"
-                value={formData.name}
-                onChange={handleInputChange('name')}
-                error={!!(createValidationErrors.name || updateValidationErrors.name)}
-                helperText={(createValidationErrors.name || updateValidationErrors.name)?.join()}
-              />
-            </Box>
-
-            <Box>
-              <Typography variant="subtitle2" mb={1}>
-                Префикс промокода
-              </Typography>
-              <TextField
-                fullWidth
-                placeholder="Уникальный префикс для промокодов этого события"
-                variant="outlined"
-                value={prefix}
-                onChange={handlePrefixChange}
-                disabled={eventId !== 'new'}
-                error={!!(createValidationErrors.promoCodesPrefix || checkPrefixValidationErrors.promoCodesPrefix)}
-                helperText={
-                  (createValidationErrors.promoCodesPrefix || checkPrefixValidationErrors.promoCodesPrefix)?.join() ||
-                  prefixValidationError ||
-                  prefixOccupiedError ||
-                  (eventId !== 'new' ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов')
-                }
-              />
-            </Box>
-
-            <Box>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                <Typography variant="subtitle2">
-                  Ограничить событие датами
-                </Typography>
-                <Switch
-                  checked={!formData.ignoreEndDate}
-                  onChange={(e) => {
-                    const newValue = !e.target.checked;
-                    const updatedData = {
-                      ...formData,
-                      ignoreEndDate: newValue
-                    };
-                    setFormData(updatedData);
-                  }}
-                />
-              </Stack>
-              {!formData.ignoreEndDate && (
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <TextField
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleInputChange('startDate')}
-                    variant="outlined"
-                    sx={{ flex: 1 }}
-                    error={!!(createValidationErrors.startDate || updateValidationErrors.startDate)}
-                    helperText={(createValidationErrors.startDate || updateValidationErrors.startDate)?.join()}
-                  />
-                  <TextField
-                    type="date"
-                    value={formData.endDate}
-                    onChange={handleInputChange('endDate')}
-                    variant="outlined"
-                    sx={{ flex: 1 }}
-                    error={!!(createValidationErrors.endDate || updateValidationErrors.endDate)}
-                    helperText={(createValidationErrors.endDate || updateValidationErrors.endDate)?.join()}
-                  />
-                </Stack>
-              )}
-            </Box>
-
-            {/* <FormControlLabel
-              control={
-                <Switch defaultChecked />
-              }
-              label="Автоматически добавить в список амбассадоров"
-            /> */}
-
-            <Box>
-              <Typography variant="h5" fontWeight={700} mb={2}>Промокоды</Typography>
-              <Typography variant="body2" color="text.secondary" maxWidth="md">
-                Для какого участка будет спеймерован уникальный промокод, который отправится при добавлении в группу амбассадоров, а также будет отправлен указанные ниже награды
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography variant="subtitle2" mb={1}>
-                Единицы награды
-              </Typography>
-              <FormControl fullWidth>
-                <Select
-                  value={formData.rewardUnits}
-                  onChange={handleSelectChange('rewardUnits')}
-                  variant="outlined"
-                >
-                  {rewardUnits.map((unit) => (
-                    <MenuItem key={unit.value} value={unit.value}>
-                      {unit.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Box>
-              <Typography variant="subtitle2" mb={1}>
-                Награда для привлеченных пользователей
-              </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <TextField
-                  type="number"
-                  value={formData.rewardValue}
-                  onChange={handleInputChange('rewardValue')}
-                  variant="outlined"
-                  sx={{ flex: 1 }}
-                  error={!!(createValidationErrors.rewardValue || updateValidationErrors.rewardValue)}
-                  helperText={(createValidationErrors.rewardValue || updateValidationErrors.rewardValue)?.join()}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  {formData.rewardUnits === 'rub' ? 'руб' :
-                   formData.rewardUnits === 'usd' ? 'долл' :
-                   formData.rewardUnits === 'eur' ? 'евро' :
-                   formData.rewardUnits === 'points' ? 'баллов' :
-                   formData.rewardUnits === 'items' ? 'штук' : 'ед'}
-                </Typography>
-              </Stack>
-            </Box>
-
-            <Box>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-                <Typography variant="subtitle2">
-                  Ограничить число использования каждого промокода
-                </Typography>
-                <Switch
-                  checked={!formData.ignorePromoCodeUsageLimit}
-                  onChange={(e) => {
-                    const newValue = !e.target.checked;
-                    const updatedData = {
-                      ...formData,
-                      ignorePromoCodeUsageLimit: newValue
-                    };
-                    setFormData(updatedData);
-                  }}
-                />
-              </Stack>
-              {!formData.ignorePromoCodeUsageLimit && (
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <TextField
-                    type="number"
-                    value={formData.promoCodeUsageLimit}
-                    onChange={handleInputChange('promoCodeUsageLimit')}
-                    variant="outlined"
-                    sx={{ flex: 1 }}
-                    error={!!(createValidationErrors.promoCodeUsageLimit || updateValidationErrors.promoCodeUsageLimit)}
-                    helperText={(createValidationErrors.promoCodeUsageLimit || updateValidationErrors.promoCodeUsageLimit)?.join()}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    раз
-                  </Typography>
-                </Stack>
-              )}
-            </Box>
-            {/* <Box mt={3}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.isDeleted}
-                    onChange={handleSwitchChange('isDeleted')}
-                    color="error"
-                  />
-                }
-                label="Удалить событие"
-              />
-            </Box> */}
-          </Stack>
+          <EventSettingsSection
+            formData={formData}
+            prefix={prefix}
+            onInputChange={handleInputChange}
+            onPrefixChange={handlePrefixChange}
+            createValidationErrors={createValidationErrors}
+            updateValidationErrors={updateValidationErrors}
+            prefixValidationError={prefixValidationError}
+            prefixOccupiedError={prefixOccupiedError}
+            checkPrefixValidationErrors={checkPrefixValidationErrors}
+            isNewEvent={isNewEvent}
+            onIgnoreEndDateChange={handleIgnoreEndDateChange}
+          />
         </Paper>
 
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-          {eventId !== 'new' && (
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleDelete}
-              sx={{ minWidth: 120 }}
-              disabled={isUpdating}
-            >
-              Удалить
-            </Button>
-          )}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleSave()}
-            sx={{ minWidth: 120 }}
-            disabled={isCreating || isUpdating || isCheckingPrefix}
-          >
-            {isCreating || isUpdating || isCheckingPrefix
-              ? 'Сохранение...' 
-              : (eventId !== 'new' ? 'Сохранить' : 'Добавить')
-            }
-          </Button>
-        </Box>
-        {eventId !== 'new' && event && (
-        <Paper sx={{ borderRadius: 2 }}>
-          <Typography
-            variant="h6"
-            fontWeight={600}
-            mb={2}
-          >
-            Группы подписчиков
-          </Typography>
-
-          <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-            <Box sx={{ width: 40, height: 40, borderRadius: "50%", border: "2px dashed #ccc" }} />
-            <Box>
-              <Typography variant="body1" fontWeight={500}>
-                Группа подписчиков в Senler для подачи заявки участие в событии
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                ID: 2353
-              </Typography>
-            </Box>
-          </Stack>
-
-          <Stack spacing={1} mt={2}>
-            <Typography variant="subtitle2" pb={0.5}>
-              Ссылка для вступления в группу для подачи заявки:
-            </Typography>
-            <TextField
-              value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.pendingSubscriptionId}&force=1`}
-              InputProps={{
-                readOnly: true,
-              }}
-              fullWidth
-              size="small"
-              sx={{ pb: 3 }}
-            />
-            <Typography variant="subtitle2" pb={0.5}>
-              Ссылка для вступления в группу для одобренных участников:
-            </Typography>
-            <TextField
-              value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.approvedSubscriptionId}&force=1`}
-              InputProps={{
-                readOnly: true,
-              }}
-              fullWidth
-              size="small"
-              sx={{ pb: 3 }}
-            />
-            <Typography variant="subtitle2" pt={0.5}>
-              Ссылка для вступления в группу для исключенных участников:
-            </Typography>
-            <TextField
-              value={`https://vk.com/app5898182_-${project?.channelExternalId}#s=${event.rejectedSubscriptionId}&force=1`}
-              InputProps={{
-                readOnly: true,
-              }}
-              fullWidth
-              size="small"
-            />
-          </Stack>
+        <Paper elevation={0} sx={{ borderRadius: 2 }}>
+          <PromoCodesSection
+            formData={formData}
+            onInputChange={handleInputChange}
+            onSelectChange={handleSelectChange}
+            createValidationErrors={createValidationErrors}
+            updateValidationErrors={updateValidationErrors}
+            onIgnorePromoCodeUsageLimitChange={handleIgnorePromoCodeUsageLimitChange}
+          />
         </Paper>
+
+        <EventActionButtons
+          isNewEvent={isNewEvent}
+          onSave={() => handleSave()}
+          onDelete={handleDelete}
+          isCreating={isCreating}
+          isUpdating={isUpdating}
+          isCheckingPrefix={isCheckingPrefix}
+        />
+
+        {!isNewEvent && event && (
+          <SubscriberGroupsSection
+            event={event}
+            channelExternalId={project?.channelExternalId}
+          />
         )}
       </Stack>
 
-      <Snackbar
-        open={showCopyNotification}
-        autoHideDuration={3000}
-        onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
-          {/* ID события скопирован в буфер обмена */}
-          Скопировано
-        </Alert>
-      </Snackbar>
+      <EventNotifications
+        showCopySuccess={showCopyNotification}
+        showCopyError={showCopyError}
+        showPrefixError={showPrefixError}
+        eventId={eventId}
+        prefix={prefix}
+        onCloseCopySuccess={() => setShowCopyNotification(false)}
+        onCloseCopyError={() => setShowCopyError(false)}
+        onClosePrefixError={() => setShowPrefixError(false)}
+      />
 
-      <Snackbar
-        open={showCopyError}
-        autoHideDuration={5000}
-        onClose={handleCloseCopyError}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseCopyError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
-          Браузер запретил копирование, но вы можете сделать это вручную: {eventId}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={showPrefixError}
-        autoHideDuration={5000}
-        onClose={handleClosePrefixError}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleClosePrefixError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
-          Префикс "{prefix}" уже занят. Пожалуйста, выберите другой префикс.
-        </Alert>
-      </Snackbar>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteEventDialog
         open={showDeleteDialog}
-        onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Подтверждение удаления
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Вы уверены, что хотите удалить событие "{event?.name}"? Это действие нельзя будет отменить.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={handleCancelDelete} color="primary">
-              Отмена
-            </Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" autoFocus>
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
+        eventName={event?.name}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </Box>
   );
 };
