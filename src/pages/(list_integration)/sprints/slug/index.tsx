@@ -137,6 +137,10 @@ const SprintSetting = () => {
       isDeleted: isDeleted,
     };
 
+    if (isDeleted && !isNewSprint) {
+      setFormData(prev => ({ ...prev, isDeleted: true }));
+    }
+
     if (!isNewSprint) {
       patchSprint({
         data: storeData,

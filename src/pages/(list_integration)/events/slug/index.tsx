@@ -126,6 +126,10 @@ const EventsSetting = () => {
       isDeleted: isDeleted,
     };
 
+    if (isDeleted && !isNewEvent) {
+      setFormData(prev => ({ ...prev, isDeleted: true }));
+    }
+
     if (isNewEvent && !isDeleted) {
       if (prefixValidationError) {
         return;
