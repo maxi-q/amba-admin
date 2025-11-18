@@ -3,6 +3,7 @@ import { Box, Alert } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
+import { useDeleteRoom } from "@/hooks/rooms/useDeleteRoom";
 import { useRotateSecretKey } from "@/hooks/rooms/useRotateSecretKey";
 import { SettingsLoadingState } from "./components/SettingsLoadingState";
 import { SettingsErrorState } from "./components/SettingsErrorState";
@@ -34,6 +35,14 @@ export default function SettingPage() {
   } = useUpdateRoom();
 
   const {
+    deleteRoom,
+    isPending: isDeleting,
+    isValidationError: isDeleteValidationError,
+    validationErrors: deleteValidationErrors,
+    generalError: deleteGeneralError
+  } = useDeleteRoom();
+
+  const {
     rotateSecretKey,
     isPending: isRotating,
     isValidationError: isRotateValidationError,
@@ -63,11 +72,17 @@ export default function SettingPage() {
     if (isUpdateValidationError && Object.keys(updateValidationErrors).length > 0) {
       setFieldErrors(updateValidationErrors);
       setGeneralError('');
+    } else if (isDeleteValidationError && Object.keys(deleteValidationErrors).length > 0) {
+      setFieldErrors(deleteValidationErrors);
+      setGeneralError('');
     } else if (isRotateValidationError && Object.keys(rotateValidationErrors).length > 0) {
       setFieldErrors(rotateValidationErrors);
       setGeneralError('');
     } else if (updateGeneralError) {
       setGeneralError(updateGeneralError);
+      setFieldErrors({});
+    } else if (deleteGeneralError) {
+      setGeneralError(deleteGeneralError);
       setFieldErrors({});
     } else if (rotateGeneralError) {
       setGeneralError(rotateGeneralError);
@@ -76,7 +91,7 @@ export default function SettingPage() {
       setFieldErrors({});
       setGeneralError('');
     }
-  }, [isUpdateValidationError, updateValidationErrors, updateGeneralError, isRotateValidationError, rotateValidationErrors, rotateGeneralError]);
+  }, [isUpdateValidationError, updateValidationErrors, updateGeneralError, isDeleteValidationError, deleteValidationErrors, deleteGeneralError, isRotateValidationError, rotateValidationErrors, rotateGeneralError]);
 
   useEffect(() => {
     if (isUpdateSuccess) {
@@ -119,10 +134,7 @@ export default function SettingPage() {
     setFieldErrors({});
     setGeneralError('');
 
-    updateRoom({
-      data: { isDeleted: true },
-      id: slug
-    });
+    deleteRoom(slug);
   };
 
   const handleCancelDelete = () => {
@@ -180,7 +192,7 @@ export default function SettingPage() {
       <RoomActionButtons
         onSave={handleSaveName}
         onDelete={handleDelete}
-        isUpdating={isUpdating}
+        isUpdating={isUpdating || isDeleting}
       />
 
       <WebhookSection
@@ -206,7 +218,7 @@ export default function SettingPage() {
         roomName={room.name}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
-        isUpdating={isUpdating}
+        isUpdating={isDeleting}
       />
 
       <SettingsNotifications
