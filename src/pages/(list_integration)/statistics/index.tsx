@@ -1,18 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ru } from 'date-fns/locale';
-import { subDays } from 'date-fns';
+import { subDays, format } from 'date-fns';
 
 import { DateRangeSelector } from './components/DateRangeSelector';
 import { FilterSelector } from './components/FilterSelector';
 import { EventChart } from './components/EventChart';
 import { EventList } from './components/EventList';
 
-import { mockEventData, mockChartData } from './helpers/mockData';
-import { filterEvents } from './helpers/filters';
+import { useGetRoomAnalytics } from '@/hooks/rooms/useGetRoomAnalytics';
+import { useGetRoomPromoCodeUsages } from '@/hooks/rooms/useGetRoomPromoCodeUsages';
+import { useSprints } from '@/hooks/sprints/useSprints';
+import { useEvents } from '@/hooks/events/useEvents';
+import type { EventData } from './types';
 
 export default function StatisticsPage() {
   const { slug } = useParams();
@@ -22,16 +25,73 @@ export default function StatisticsPage() {
   const [selectedSprints, setSelectedSprints] = useState<string[]>([]);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
-  // Фильтрация событий по выбранным фильтрам
-  const filteredEvents = filterEvents(
-    mockEventData,
-    selectedAmbassadors,
-    selectedSprints,
-    selectedEvents
+  const analyticsParams = useMemo(() => ({
+    ambassadorId: selectedAmbassadors[0] || undefined,
+    eventId: selectedEvents[0] || undefined,
+    sprintId: selectedSprints[0] || undefined,
+    dateFrom: format(startDate, 'yyyy-MM-dd'),
+    dateTo: format(endDate, 'yyyy-MM-dd'),
+  }), [selectedAmbassadors, selectedEvents, selectedSprints, startDate, endDate]);
+
+  const { analytics } = useGetRoomAnalytics(
+    slug || '',
+    analyticsParams
   );
 
-  // Фильтрация данных графика
-  const filteredChartData = mockChartData;
+  const filteredChartData = useMemo(() => {
+    if (!analytics?.items) return [];
+    return analytics.items.map(item => ({
+      date: item.date,
+      count: item.count,
+    }));
+  }, [analytics]);
+
+  // Получение данных об использовании промокодов
+  const {
+    items: promoCodeUsages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingUsages,
+  } = useGetRoomPromoCodeUsages(slug || '', {
+    ...analyticsParams,
+    size: 5,
+  });
+
+  // Получение списка спринтов для получения названий
+  const { sprints } = useSprints({ page: 1, size: 100 }, slug || '');
+
+  // Получение списка событий для получения названий
+  const { events } = useEvents({ page: 1, size: 100 }, slug || '');
+
+  // Преобразование данных в формат EventData
+  const filteredEvents = useMemo<EventData[]>(() => {
+    if (!promoCodeUsages || promoCodeUsages.length === 0) return [];
+
+    return promoCodeUsages.map((usage) => {
+      // Определяем название спринта или события
+      let eventName = 'Не указано';
+      if (usage.sprintId) {
+        const sprint = sprints.find((s) => s.id === usage.sprintId);
+        eventName = sprint?.name || 'Спринт';
+      } else if (usage.eventId) {
+        const event = events.find((e) => e.id === usage.eventId);
+        eventName = event?.name || 'Событие';
+      }
+
+      // Форматируем дату
+      const date = usage.createdAt
+        ? format(new Date(usage.createdAt), 'dd.MM.yyyy')
+        : '';
+
+      return {
+        id: usage.id,
+        name: eventName,
+        event: eventName,
+        date,
+      };
+    });
+  }, [promoCodeUsages, sprints, events]);
 
   const handleStartDateChange = (date: Date | null) => {
     if (date) setStartDate(date);
@@ -75,6 +135,10 @@ export default function StatisticsPage() {
         {/* Список событий */}
         <EventList
           events={filteredEvents}
+          onLoadMore={fetchNextPage}
+          hasMore={hasNextPage || false}
+          isLoadingMore={isFetchingNextPage}
+          isLoading={isLoadingUsages}
         />
       </Box>
     </LocalizationProvider>

@@ -2,7 +2,11 @@ import { instance } from '@services/config/axios';
 import type { 
   ICreateRoomRequest, 
   ICreateRoomResponse, 
+  IGetRoomAnalyticsRequest, 
+  IGetRoomAnalyticsResponse, 
   IGetRoomByIdResponse, 
+  IGetRoomPromoCodeUsagesRequest, 
+  IGetRoomPromoCodeUsagesResponse, 
   IGetRoomResponse, 
   IRotateSecretKeyResponse, 
   IUpdateRoomsRequest, 
@@ -42,6 +46,18 @@ class RoomsService extends BaseService {
   async deleteRoomById(id: string): Promise<null> {
     return this.handleApiCall(() =>
       instance.delete<null>(`${this._BASE_URL}/${id}`, { headers: getContentType() })
+    );
+  }
+
+  async getRoomAnalytics(id: string, data: IGetRoomAnalyticsRequest): Promise<IGetRoomAnalyticsResponse> {
+    return this.handleApiCall(() =>
+      instance.get<IGetRoomAnalyticsResponse>(`${this._BASE_URL}/${id}/analytics`, { params: data, headers: getContentType() })
+    );
+  }
+
+  async getRoomPromoCodeUsages(id: string, data: IGetRoomPromoCodeUsagesRequest): Promise<IGetRoomPromoCodeUsagesResponse> {
+    return this.handleApiCall(() =>
+      instance.get<IGetRoomPromoCodeUsagesResponse>(`${this._BASE_URL}/${id}/promo-code-usages`, { params: data, headers: getContentType() })
     );
   }
 

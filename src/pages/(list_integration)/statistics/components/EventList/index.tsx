@@ -1,22 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Stack, Button } from '@mui/material';
+import { Box, Typography, Paper, Stack, Button, CircularProgress } from '@mui/material';
 import type { EventListProps, EventData } from '../../types';
 
-export const EventList = ({ events }: EventListProps) => {
-  const [displayedEvents, setDisplayedEvents] = useState(events.slice(0, 5));
-  const [hasMore, setHasMore] = useState(events.length > 5);
-
-  useEffect(() => {
-    setDisplayedEvents(events.slice(0, 5));
-    setHasMore(events.length > 5);
-  }, [events]);
-
-  const handleLoadMore = () => {
-    const currentLength = displayedEvents.length;
-    const nextBatch = events.slice(currentLength, currentLength + 5);
-    setDisplayedEvents([...displayedEvents, ...nextBatch]);
-    setHasMore(displayedEvents.length + nextBatch.length < events.length);
-  };
+export const EventList = ({ 
+  events, 
+  onLoadMore, 
+  hasMore = false, 
+  isLoadingMore = false,
+  isLoading = false 
+}: EventListProps) => {
+  if (isLoading && events.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -25,7 +23,7 @@ export const EventList = ({ events }: EventListProps) => {
       </Typography>
       
       <Stack spacing={2}>
-        {displayedEvents.map((event: EventData) => (
+        {events.map((event: EventData) => (
           <Paper
             key={event.id}
             sx={{
@@ -46,13 +44,14 @@ export const EventList = ({ events }: EventListProps) => {
           </Paper>
         ))}
         
-        {hasMore && (
+        {hasMore && onLoadMore && (
           <Button
             variant="outlined"
-            onClick={handleLoadMore}
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
             sx={{ mt: 2 }}
           >
-            Загрузить еще
+            {isLoadingMore ? 'Загрузка...' : 'Загрузить еще'}
           </Button>
         )}
       </Stack>

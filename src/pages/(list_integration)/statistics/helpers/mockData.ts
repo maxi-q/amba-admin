@@ -1,4 +1,4 @@
-import type { EventData, ChartData } from '../types';
+import type { EventData } from '../types';
 
 export const mockEventData: EventData[] = [
   { id: '1', name: 'Амбассадорович Н.Е.', event: 'активация промокода', date: '10.01.2025' },
@@ -11,15 +11,6 @@ export const mockEventData: EventData[] = [
   { id: '8', name: 'Новиков Н.Н.', event: 'покупка', date: '06.01.2025' },
   { id: '9', name: 'Федоров Ф.Ф.', event: 'активация промокода', date: '06.01.2025' },
   { id: '10', name: 'Соколов С.С.', event: 'регистрация', date: '05.01.2025' },
-];
-
-export const mockChartData: ChartData[] = [
-  { date: '05.01.2025', count: 1 },
-  { date: '06.01.2025', count: 2 },
-  { date: '07.01.2025', count: 2 },
-  { date: '08.01.2025', count: 2 },
-  { date: '09.01.2025', count: 2 },
-  { date: '10.01.2025', count: 1 },
 ];
 
 // Mock данные для амбассадоров (в будущем будет заменено на API)

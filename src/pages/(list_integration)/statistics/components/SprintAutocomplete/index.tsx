@@ -46,13 +46,24 @@ export const SprintAutocomplete = ({ selectedIds, onChange, roomId }: SprintAuto
       const selectedNotInFiltered = currentSelectedOptions.filter(opt => !selectedInFiltered.find(sf => sf.id === opt.id));
       setOptions([...selectedNotInFiltered, ...filteredOptions]);
     } else {
-      // Когда поле пустое, показываем только выбранные элементы (если есть) или пустой список
-      setOptions(currentSelectedOptions);
+      // Когда поле пустое, показываем первые 20 спринтов
+      const first20Sprints = sprints.slice(0, 20).map((sprint: ISprint) => ({
+        id: sprint.id,
+        label: sprint.name
+      }));
+
+      const selectedInFirst20 = first20Sprints.filter(opt => selectedIds.includes(opt.id));
+      const selectedNotInFirst20 = currentSelectedOptions.filter(opt => !selectedInFirst20.find(sf => sf.id === opt.id));
+      setOptions([...selectedNotInFirst20, ...first20Sprints]);
     }
   }, [debouncedInput, selectedIds, inputValue, sprints]);
 
   // Когда пользователь вводит текст (inputValue изменяется), сразу показываем результаты по полному тексту
   useEffect(() => {
+    const currentSelectedOptions = sprints
+      .filter((sprint: ISprint) => selectedIds.includes(sprint.id))
+      .map((sprint: ISprint) => ({ id: sprint.id, label: sprint.name }));
+
     if (inputValue.trim().length >= 1) {
       // Используем полный inputValue для поиска (не ждем debounce)
       const filtered = sprints
@@ -64,13 +75,19 @@ export const SprintAutocomplete = ({ selectedIds, onChange, roomId }: SprintAuto
         label: sprint.name
       }));
       
-      const currentSelectedOptions = sprints
-        .filter((sprint: ISprint) => selectedIds.includes(sprint.id))
-        .map((sprint: ISprint) => ({ id: sprint.id, label: sprint.name }));
-      
       const selectedInFiltered = filteredOptions.filter(opt => selectedIds.includes(opt.id));
       const selectedNotInFiltered = currentSelectedOptions.filter(opt => !selectedInFiltered.find(sf => sf.id === opt.id));
       setOptions([...selectedNotInFiltered, ...filteredOptions]);
+    } else {
+      // Когда поле пустое, показываем первые 20 спринтов
+      const first20Sprints = sprints.slice(0, 20).map((sprint: ISprint) => ({
+        id: sprint.id,
+        label: sprint.name
+      }));
+
+      const selectedInFirst20 = first20Sprints.filter(opt => selectedIds.includes(opt.id));
+      const selectedNotInFirst20 = currentSelectedOptions.filter(opt => !selectedInFirst20.find(sf => sf.id === opt.id));
+      setOptions([...selectedNotInFirst20, ...first20Sprints]);
     }
   }, [inputValue, selectedIds, sprints]);
 

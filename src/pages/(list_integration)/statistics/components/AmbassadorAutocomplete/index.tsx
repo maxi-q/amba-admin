@@ -8,7 +8,10 @@ const searchAmbassadors = async (query: string): Promise<AutocompleteOption[]> =
   await new Promise(resolve => setTimeout(resolve, 150));
 
   if (!query.trim()) {
-    return [];
+    // Когда запрос пустой, возвращаем первые 20 амбассадоров
+    return mockAmbassadors
+      .slice(0, 20)
+      .map(amb => ({ id: amb.id, label: amb.name }));
   }
 
   const filtered = mockAmbassadors
@@ -40,36 +43,40 @@ export const AmbassadorAutocomplete = ({ selectedIds, onChange }: AmbassadorAuto
       .filter(amb => selectedIds.includes(amb.id))
       .map(amb => ({ id: amb.id, label: amb.name }));
 
-    if (debouncedInput.trim().length >= 1) {
-      setIsLoading(true);
-      searchAmbassadors(debouncedInput).then(results => {
-        if (inputValue === debouncedInput || inputValue.trim().length === 0) {
-          const selectedInResults = results.filter(opt => selectedIds.includes(opt.id));
-          const selectedNotInResults = currentSelectedOptions.filter(opt => !selectedInResults.find(sr => sr.id === opt.id));
-          setOptions([...selectedNotInResults, ...results]);
-        }
-        setIsLoading(false);
-      });
-    } else {
-      setOptions(currentSelectedOptions);
+    setIsLoading(true);
+    searchAmbassadors(debouncedInput).then(results => {
+      if (inputValue === debouncedInput || inputValue.trim().length === 0) {
+        const selectedInResults = results.filter(opt => selectedIds.includes(opt.id));
+        const selectedNotInResults = currentSelectedOptions.filter(opt => !selectedInResults.find(sr => sr.id === opt.id));
+        setOptions([...selectedNotInResults, ...results]);
+      }
       setIsLoading(false);
-    }
+    });
   }, [debouncedInput, selectedIds, inputValue]);
 
   useEffect(() => {
+    const currentSelectedOptions = mockAmbassadors
+      .filter(amb => selectedIds.includes(amb.id))
+      .map(amb => ({ id: amb.id, label: amb.name }));
+
     if (inputValue.trim().length >= 1) {
       const filtered = mockAmbassadors
         .filter(amb => amb.name.toLowerCase().includes(inputValue.toLowerCase()))
         .slice(0, 10)
         .map(amb => ({ id: amb.id, label: amb.name }));
 
-      const currentSelectedOptions = mockAmbassadors
-        .filter(amb => selectedIds.includes(amb.id))
-        .map(amb => ({ id: amb.id, label: amb.name }));
-
       const selectedInFiltered = filtered.filter(opt => selectedIds.includes(opt.id));
       const selectedNotInFiltered = currentSelectedOptions.filter(opt => !selectedInFiltered.find(sf => sf.id === opt.id));
       setOptions([...selectedNotInFiltered, ...filtered]);
+    } else {
+      // Когда поле пустое, показываем первые 20 амбассадоров
+      const first20Ambassadors = mockAmbassadors
+        .slice(0, 20)
+        .map(amb => ({ id: amb.id, label: amb.name }));
+
+      const selectedInFirst20 = first20Ambassadors.filter(opt => selectedIds.includes(opt.id));
+      const selectedNotInFirst20 = currentSelectedOptions.filter(opt => !selectedInFirst20.find(sf => sf.id === opt.id));
+      setOptions([...selectedNotInFirst20, ...first20Ambassadors]);
     }
   }, [inputValue, selectedIds]);
 

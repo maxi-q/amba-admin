@@ -32,6 +32,10 @@ export interface EventChartProps {
 
 export interface EventListProps {
   events: EventData[];
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  isLoading?: boolean;
 }
 
 export interface AutocompleteOption {

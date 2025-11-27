@@ -46,3 +46,48 @@ export interface IGetRoomByIdResponse {
 }
 
 export type IRotateSecretKeyResponse = string
+
+export interface IGetRoomAnalyticsRequest {
+  ambassadorId?: string;
+  eventId?: string;
+  sprintId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface IGetRoomAnalyticsResponse {
+  items: {
+    date: string;
+    count: number;
+  }[];
+  total: number;
+}
+
+export interface IGetRoomPromoCodeUsagesRequest {
+  ambassadorId?: string;
+  eventId?: string;
+  sprintId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface IGetRoomPromoCodeUsagesResponse {
+  items: {
+    id: string;
+    projectId: string;
+    roomId: string;
+    sprintId: string;
+    eventId: string;
+    ambassadorId: string;
+    uniqueId: string;
+    additionalUniqueId: string;
+    payload: object;
+    createdAt: string;
+  }[],
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+}
