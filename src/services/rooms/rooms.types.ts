@@ -48,9 +48,9 @@ export interface IGetRoomByIdResponse {
 export type IRotateSecretKeyResponse = string
 
 export interface IGetRoomAnalyticsRequest {
-  ambassadorId?: string;
-  eventId?: string;
-  sprintId?: string;
+  ambassadorId?: string[];
+  eventId?: string[];
+  sprintId?: string[];
   dateFrom?: string;
   dateTo?: string;
 }
@@ -64,9 +64,9 @@ export interface IGetRoomAnalyticsResponse {
 }
 
 export interface IGetRoomPromoCodeUsagesRequest {
-  ambassadorId?: string;
-  eventId?: string;
-  sprintId?: string;
+  ambassadorId?: string[];
+  eventId?: string[];
+  sprintId?: string[];
   dateFrom?: string;
   dateTo?: string;
   page?: number;

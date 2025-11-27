@@ -3,4 +3,5 @@ export enum QueryKeys {
   EVENTS = 'events',
   SPRINTS = 'sprints',
   PROJECT = 'project',
+  AMBASSADORS = 'ambassadors',
 }

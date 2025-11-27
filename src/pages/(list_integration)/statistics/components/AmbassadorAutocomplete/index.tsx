@@ -1,84 +1,52 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Autocomplete, TextField, Chip, Box } from '@mui/material';
 import { useDebounce } from 'use-debounce';
 import type { AmbassadorAutocompleteProps, AutocompleteOption } from '../../types';
-import { mockAmbassadors } from '../../helpers/mockData';
-
-const searchAmbassadors = async (query: string): Promise<AutocompleteOption[]> => {
-  await new Promise(resolve => setTimeout(resolve, 150));
-
-  if (!query.trim()) {
-    // Когда запрос пустой, возвращаем первые 20 амбассадоров
-    return mockAmbassadors
-      .slice(0, 20)
-      .map(amb => ({ id: amb.id, label: amb.name }));
-  }
-
-  const filtered = mockAmbassadors
-    .filter(amb =>
-      amb.name.toLowerCase().includes(query.toLowerCase())
-    )
-    .slice(0, 10)
-    .map(amb => ({ id: amb.id, label: amb.name }));
-
-  return filtered;
-};
+import { useAmbassadors } from '@/hooks/ambassador/useAmbassadors';
 
 export const AmbassadorAutocomplete = ({ selectedIds, onChange }: AmbassadorAutocompleteProps) => {
   const [inputValue, setInputValue] = useState('');
   const [options, setOptions] = useState<AutocompleteOption[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [debouncedInput] = useDebounce(inputValue, 200);
 
-  const selectedOptions = mockAmbassadors
-    .filter(amb => selectedIds.includes(amb.id))
-    .map(amb => ({ id: amb.id, label: amb.name }));
+  // Запрос амбассадоров с фильтрацией по имени, если есть поисковый запрос
+  const { ambassadors, isLoading } = useAmbassadors({
+    page: 1,
+    size: debouncedInput.trim() ? 10 : 20,
+    nameContains: debouncedInput.trim() || undefined,
+  });
+
+  // Преобразование данных амбассадоров в формат для Autocomplete
+  const ambassadorOptions = useMemo<AutocompleteOption[]>(() => {
+    return ambassadors.map(amb => ({
+      id: amb.id,
+      label: (amb as any).name || amb.promoCode || amb.id,
+    }));
+  }, [ambassadors]);
+
+  // Выбранные опции
+  const selectedOptions = useMemo(() => {
+    return ambassadorOptions.filter(opt => selectedIds.includes(opt.id));
+  }, [ambassadorOptions, selectedIds]);
 
   useEffect(() => {
-    if (inputValue !== debouncedInput && inputValue.trim().length > 0) {
-      return;
-    }
-
-    const currentSelectedOptions = mockAmbassadors
-      .filter(amb => selectedIds.includes(amb.id))
-      .map(amb => ({ id: amb.id, label: amb.name }));
-
-    setIsLoading(true);
-    searchAmbassadors(debouncedInput).then(results => {
-      if (inputValue === debouncedInput || inputValue.trim().length === 0) {
-        const selectedInResults = results.filter(opt => selectedIds.includes(opt.id));
-        const selectedNotInResults = currentSelectedOptions.filter(opt => !selectedInResults.find(sr => sr.id === opt.id));
-        setOptions([...selectedNotInResults, ...results]);
-      }
-      setIsLoading(false);
-    });
-  }, [debouncedInput, selectedIds, inputValue]);
-
-  useEffect(() => {
-    const currentSelectedOptions = mockAmbassadors
-      .filter(amb => selectedIds.includes(amb.id))
-      .map(amb => ({ id: amb.id, label: amb.name }));
-
-    if (inputValue.trim().length >= 1) {
-      const filtered = mockAmbassadors
-        .filter(amb => amb.name.toLowerCase().includes(inputValue.toLowerCase()))
-        .slice(0, 10)
-        .map(amb => ({ id: amb.id, label: amb.name }));
+    if (debouncedInput.trim().length >= 1) {
+      // Фильтруем локально по введенному тексту
+      const filtered = ambassadorOptions
+        .filter(opt => opt.label.toLowerCase().includes(debouncedInput.toLowerCase()))
+        .slice(0, 10);
 
       const selectedInFiltered = filtered.filter(opt => selectedIds.includes(opt.id));
-      const selectedNotInFiltered = currentSelectedOptions.filter(opt => !selectedInFiltered.find(sf => sf.id === opt.id));
+      const selectedNotInFiltered = selectedOptions.filter(opt => !selectedInFiltered.find(sf => sf.id === opt.id));
       setOptions([...selectedNotInFiltered, ...filtered]);
     } else {
       // Когда поле пустое, показываем первые 20 амбассадоров
-      const first20Ambassadors = mockAmbassadors
-        .slice(0, 20)
-        .map(amb => ({ id: amb.id, label: amb.name }));
-
+      const first20Ambassadors = ambassadorOptions.slice(0, 20);
       const selectedInFirst20 = first20Ambassadors.filter(opt => selectedIds.includes(opt.id));
-      const selectedNotInFirst20 = currentSelectedOptions.filter(opt => !selectedInFirst20.find(sf => sf.id === opt.id));
+      const selectedNotInFirst20 = selectedOptions.filter(opt => !selectedInFirst20.find(sf => sf.id === opt.id));
       setOptions([...selectedNotInFirst20, ...first20Ambassadors]);
     }
-  }, [inputValue, selectedIds]);
+  }, [debouncedInput, selectedIds, ambassadorOptions, selectedOptions]);
 
   const handleChange = (_: any, newValue: AutocompleteOption[]) => {
     const newIds = newValue.map(option => option.id);

@@ -26,9 +26,9 @@ export default function StatisticsPage() {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
 
   const analyticsParams = useMemo(() => ({
-    ambassadorId: selectedAmbassadors[0] || undefined,
-    eventId: selectedEvents[0] || undefined,
-    sprintId: selectedSprints[0] || undefined,
+    ambassadorId: selectedAmbassadors.length > 0 ? selectedAmbassadors : undefined,
+    eventId: selectedEvents.length > 0 ? selectedEvents : undefined,
+    sprintId: selectedSprints.length > 0 ? selectedSprints : undefined,
     dateFrom: format(startDate, 'yyyy-MM-dd'),
     dateTo: format(endDate, 'yyyy-MM-dd'),
   }), [selectedAmbassadors, selectedEvents, selectedSprints, startDate, endDate]);
