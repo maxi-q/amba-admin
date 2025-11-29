@@ -60,6 +60,10 @@ export default function RoomsPage() {
     createRoom({
       name: formData.name,
       webhookUrl: formData.webhookUrl,
+    }, {
+      onSuccess: () => {
+        handleCloseDialog();
+      }
     });
   };
 
