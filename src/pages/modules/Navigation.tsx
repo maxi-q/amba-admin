@@ -21,10 +21,27 @@ import { SelectActionPage } from "../(Bot_step)/main";
 import { RoomRedirect } from "..";
 import { AuthPage } from "../auth";
 import { RedirectAuthPage } from "../redirect_auth";
+import { useEffect } from "react";
+import { useMessage } from "@messages/messageProvider";
 
 
 export const Navigation = () => {
   const { context } = getUrlParams()
+  const { sendMessage } = useMessage()
+
+  useEffect(() => {
+    const data = {
+      request: {
+        type: 'SenlerAppResizeWindow',
+        params: {
+          width: 1200,
+          height: 651
+        }
+      }
+    }
+
+    sendMessage(data, window.parent);
+  }, []);
 
   if (context === 'Bot_step') {
     return (

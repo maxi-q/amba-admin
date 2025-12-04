@@ -110,66 +110,70 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         </MuiLink>
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0.5, mb: 4 }}>
-        <NavLink
-          to="setting"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Button
-              fullWidth
-              variant="outlined"
-              disabled={isActive}
-            >
-              Настройки
-            </Button>
-          )}
-        </NavLink>
-        <NavLink
-          to="sprints"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Button
-              fullWidth
-              variant="outlined"
-              disabled={isActive}
-            >
-              Спринты
-            </Button>
-          )}
-        </NavLink>
-        <NavLink
-          to="events"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Button
-              fullWidth
-              variant="outlined"
-              disabled={isActive}
-            >
-              События
-            </Button>
-          )}
-        </NavLink>
-        <NavLink
-          to="statistics"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Button
-              fullWidth
-              variant="outlined"
-              disabled={isActive}
-            >
-              Статистика
-            </Button>
-          )}
-        </NavLink>
-      </Box>
+      <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
+        <Box sx={{ width: "200px", display: "flex", flexDirection: "column", gap: 0.5, flexShrink: 0 }}>
+          <NavLink
+            to="setting"
+            style={{ textDecoration: "none" }}
+          >
+            {({ isActive }) => (
+              <Button
+                fullWidth
+                variant="outlined"
+                disabled={isActive}
+              >
+                Настройки
+              </Button>
+            )}
+          </NavLink>
+          <NavLink
+            to="sprints"
+            style={{ textDecoration: "none" }}
+          >
+            {({ isActive }) => (
+              <Button
+                fullWidth
+                variant="outlined"
+                disabled={isActive}
+              >
+                Спринты
+              </Button>
+            )}
+          </NavLink>
+          <NavLink
+            to="events"
+            style={{ textDecoration: "none" }}
+          >
+            {({ isActive }) => (
+              <Button
+                fullWidth
+                variant="outlined"
+                disabled={isActive}
+              >
+                События
+              </Button>
+            )}
+          </NavLink>
+          <NavLink
+            to="statistics"
+            style={{ textDecoration: "none" }}
+          >
+            {({ isActive }) => (
+              <Button
+                fullWidth
+                variant="outlined"
+                disabled={isActive}
+              >
+                Статистика
+              </Button>
+            )}
+          </NavLink>
+        </Box>
 
-      {children}
+        <Box sx={{ flex: 1 }}>
+          {children}
+        </Box>
+      </Box>
 
       <Snackbar
         open={showCopyNotification}

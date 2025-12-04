@@ -3,15 +3,12 @@ import { useGetProject } from "@/hooks/projects/useGetProject";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { Loader } from "@components/Loader";
-import { useMessage } from "@messages/messageProvider";
 import  { Box } from "@mui/material";
-import { useEffect } from "react";
 import { useParams, Outlet } from "react-router-dom";
 import { RoomBox } from "../(list_integration)";
 
 export const RoomLayout = () => {
   const { slug } = useParams();
-  const { sendMessage } = useMessage()
 
   const {
     room,
@@ -37,20 +34,6 @@ export const RoomLayout = () => {
     isError: isProjectError,
     error: projectError
   } = useGetProject();
-
-  useEffect(() => {
-    const data = {
-      request: {
-        type: 'SenlerAppResizeWindow',
-        params: {
-          width: 1000,
-          height: 651
-        }
-      }
-    }
-
-    sendMessage(data, window.parent);
-  }, []);
 
   const isLoading = isLoadingRoom || isLoadingSprints || isLoadingEvents || isLoadingProject;
 
