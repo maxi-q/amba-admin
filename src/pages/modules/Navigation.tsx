@@ -11,7 +11,8 @@ import {
   EventsPage,
   EventsInfo,
   EventsSetting,
-  StatisticsPage
+  StatisticsPage,
+  SprintsLayout
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -80,10 +81,12 @@ export const Navigation = () => {
         <Route path="setting" element={<SettingPage />} />
         <Route path="setting/info" element={<SettingsInfo />} />
 
-        <Route index path="sprints" element={<SprintList />} />
-        <Route path="sprints/:sprintId" element={<SprintSetting />} />
-        <Route path="sprints/settings" element={<SprintSettingsPage />} />
-        <Route path="sprints/info" element={<SprintInfo />} />
+        <Route path="sprints" element={<SprintsLayout />}>
+          <Route index element={<SprintList />} />
+          <Route path=":sprintId" element={<SprintSetting />} />
+          <Route path="settings" element={<SprintSettingsPage />} />
+          <Route path="info" element={<SprintInfo />} />
+        </Route>
 
         <Route path="events" element={<EventsPage />} />
         <Route path="events/info" element={<EventsInfo />} />

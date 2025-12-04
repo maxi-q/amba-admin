@@ -2,7 +2,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Box, Stack } from "@mui/material";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { Loader } from "@/components/Loader";
-import { SprintsHeader } from "./components/SprintsHeader";
 import { SprintsErrorState } from "./components/SprintsErrorState";
 import { SprintsEmptyState } from "./components/SprintsEmptyState";
 import { SprintCard } from "./components/SprintCard";
@@ -41,9 +40,7 @@ export default function SprintList() {
   const activeSprints = sprints.filter((sprint) => !sprint.isDeleted);
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <SprintsHeader infoLink="info" />
-
+    <Box sx={{ width: "100%", px: 2, pb: 3 }}>
       <Stack spacing={2}>
         {activeSprints.length === 0 ? (
           <SprintsEmptyState onCreateClick={handleCreateSprint} />

@@ -10,6 +10,7 @@ import EventsSetting from './events/slug';
 import SprintSettingsPage from './sprints/settings';
 import SettingsInfo from './settings/info';
 import StatisticsPage from './statistics';
+import { SprintsLayout } from './sprints/SprintsLayout';
 
 export {
     SettingPage,
@@ -23,5 +24,6 @@ export {
     EventsSetting,
     SprintSettingsPage,
     SettingsInfo,
-    StatisticsPage
+    StatisticsPage,
+    SprintsLayout
 };
