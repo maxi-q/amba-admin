@@ -168,6 +168,34 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               </Button>
             )}
           </NavLink>
+          <NavLink
+            to="code"
+            style={{ textDecoration: "none" }}
+          >
+            {({ isActive }) => (
+              <Button
+                fullWidth
+                variant="outlined"
+                disabled={isActive}
+              >
+                Код для сайта
+              </Button>
+            )}
+          </NavLink>
+          <NavLink
+            to="webhook"
+            style={{ textDecoration: "none" }}
+          >
+            {({ isActive }) => (
+              <Button
+                fullWidth
+                variant="outlined"
+                disabled={isActive}
+              >
+                Webhook
+              </Button>
+            )}
+          </NavLink>
         </Box>
 
         <Box sx={{ flex: 1 }}>

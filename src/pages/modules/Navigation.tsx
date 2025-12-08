@@ -12,7 +12,9 @@ import {
   EventsInfo,
   EventsSetting,
   StatisticsPage,
-  SprintsLayout
+  SprintsLayout,
+  CodePage,
+  WebhookPage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -80,6 +82,8 @@ export const Navigation = () => {
         <Route index element={<RoomRedirect />} />
         <Route path="setting" element={<SettingPage />} />
         <Route path="setting/info" element={<SettingsInfo />} />
+        <Route path="code" element={<CodePage />} />
+        <Route path="webhook" element={<WebhookPage />} />
 
         <Route path="sprints" element={<SprintsLayout />}>
           <Route index element={<SprintList />} />

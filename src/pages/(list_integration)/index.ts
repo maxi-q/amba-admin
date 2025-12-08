@@ -11,6 +11,8 @@ import SprintSettingsPage from './sprints/settings';
 import SettingsInfo from './settings/info';
 import StatisticsPage from './statistics';
 import { SprintsLayout } from './sprints/SprintsLayout';
+import CodePage from './code';
+import WebhookPage from './webhook';
 
 export {
     SettingPage,
@@ -25,5 +27,7 @@ export {
     SprintSettingsPage,
     SettingsInfo,
     StatisticsPage,
-    SprintsLayout
+    SprintsLayout,
+    CodePage,
+    WebhookPage
 };
