@@ -38,7 +38,7 @@ export const Navigation = () => {
         type: 'SenlerAppResizeWindow',
         params: {
           width: 1200,
-          height: 651
+          height: 652
         }
       }
     }
