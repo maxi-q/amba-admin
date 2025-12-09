@@ -5,12 +5,14 @@ import { useRooms } from "@/hooks/rooms/useRooms"
 import { useEvents } from "@/hooks/events/useEvents"
 import { Loader } from "@/components/Loader"
 
+
 const COMMANDS = {
+  GET_AMBASSADOR_ROOM_STATUS: 'Получение статуса комнаты амбассадора',
+  GET_EVENT_INFO_AND_AMBASSADOR_STATUS: 'Получение информации события и статуса амбассадора',
+  GET_AMBASSADOR_BASE_PROMO_CODE: 'Получение промокода амбассадора',
+  GET_AMBASSADOR_EVENT_PROMO_CODE: 'Получение промокода события амбассадора',
   REGISTER_AND_ADD_AMBASSADOR_TO_ROOM: 'Регистрация амбассадора',
-  GET_AMBASSADOR_STATUS: 'Получение статуса амбассадора',
-  SET_BASE_PROMO_CODE: 'Установить базовый промокод',
-  GET_BASE_PROMO_CODE: 'Получить базовый промокод',
-  GET_EVENT_PROMO_CODE: 'Получить промокод события',
+  SET_AMBASSADOR_BASE_PROMO_CODE: 'Установка нового промокода амбассадора',
 }
 
 interface ISelectActionPageProps {
@@ -23,7 +25,7 @@ interface ISelectActionPageProps {
 
 export const SelectActionPage = () => {
 	const { message, sendMessage } = useMessage()
-  const [action, setAction] = useState<keyof typeof COMMANDS>('GET_AMBASSADOR_STATUS')
+  const [action, setAction] = useState<keyof typeof COMMANDS>('GET_AMBASSADOR_ROOM_STATUS')
   const [selectedRoom, setSelectedRoom] = useState<string>('')
   const [selectedEvent, setSelectedEvent] = useState<string>('')
 
@@ -56,7 +58,7 @@ export const SelectActionPage = () => {
     };
 
     // Добавляем eventId только если выбрана команда get_event_promo и есть выбранное событие
-    if (action === 'GET_EVENT_PROMO_CODE' && selectedEvent && publicPayload && publicPayload.settings) {
+    if ((action === 'GET_EVENT_INFO_AND_AMBASSADOR_STATUS' || action === 'GET_AMBASSADOR_EVENT_PROMO_CODE') && selectedEvent && publicPayload && publicPayload.settings) {
       publicPayload.settings.eventId = selectedEvent;
     }
 
@@ -168,7 +170,7 @@ export const SelectActionPage = () => {
         </Box>
       )}
 
-      {selectedRoom && action === 'GET_EVENT_PROMO_CODE' && (
+      {selectedRoom && (action === 'GET_EVENT_INFO_AND_AMBASSADOR_STATUS' || action === 'GET_AMBASSADOR_EVENT_PROMO_CODE') && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
             Событие:
