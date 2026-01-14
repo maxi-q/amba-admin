@@ -3,15 +3,16 @@ import { Link, NavLink, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
-  Button,
   Breadcrumbs,
   Link as MuiLink,
   Snackbar,
   Alert,
+  Button,
 } from "@mui/material";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { Loader } from "@/components/Loader";
 import { useState } from "react";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface RoomBoxProps {
   children: ReactNode | ReactNode[];
@@ -86,44 +87,40 @@ const RoomBox = ({ children }: RoomBoxProps) => {
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
-          <MuiLink component={Link} to="/" underline="hover" color="inherit">
-            Список комнат
-          </MuiLink>
-          <Typography variant="body2" color="text.primary">
-            {roomData?.name}
-          </Typography>
-        </Breadcrumbs>
-        <MuiLink
-          variant="body2"
-          underline="always"
-          color="inherit"
-          onClick={handleCopyRoomId}
-          sx={{
-            userSelect: "none",
-            cursor: "pointer"
-          }}
-        >
-          Скопировать ID комнаты
-        </MuiLink>
-      </Box>
-
-      <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
-        <Box sx={{ width: "200px", display: "flex", flexDirection: "column", gap: 0.5, flexShrink: 0 }}>
+    <Box sx={{ width: "100%", display: "flex", minHeight: "100%" }}>
+      {/* Sidebar */}
+      <Box sx={{ 
+        width: "200px", 
+        minHeight: "652px",
+        display: "flex", 
+        flexDirection: "column", 
+        flexShrink: 0,
+        borderRight: "1px solid #e0e0e0",
+        backgroundColor: "white"
+      }}>
           <NavLink
             to="setting"
             style={{ textDecoration: "none" }}
           >
             {({ isActive }) => (
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isActive}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                  color: isActive ? "white" : "text.primary",
+                  borderBottom: "1px solid #e0e0e0",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                  }
+                }}
               >
-                Настройки
-              </Button>
+                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                  Настройки
+                </Typography>
+              </Box>
             )}
           </NavLink>
           <NavLink
@@ -131,13 +128,24 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             style={{ textDecoration: "none" }}
           >
             {({ isActive }) => (
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isActive}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                  color: isActive ? "white" : "text.primary",
+                  borderBottom: "1px solid #e0e0e0",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                  }
+                }}
               >
-                Спринты
-              </Button>
+                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                  Спринты
+                </Typography>
+              </Box>
             )}
           </NavLink>
           <NavLink
@@ -145,13 +153,24 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             style={{ textDecoration: "none" }}
           >
             {({ isActive }) => (
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isActive}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                  color: isActive ? "white" : "text.primary",
+                  borderBottom: "1px solid #e0e0e0",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                  }
+                }}
               >
-                События
-              </Button>
+                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                  События
+                </Typography>
+              </Box>
             )}
           </NavLink>
           <NavLink
@@ -159,13 +178,24 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             style={{ textDecoration: "none" }}
           >
             {({ isActive }) => (
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isActive}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                  color: isActive ? "white" : "text.primary",
+                  borderBottom: "1px solid #e0e0e0",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                  }
+                }}
               >
-                Статистика
-              </Button>
+                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                  Статистика
+                </Typography>
+              </Box>
             )}
           </NavLink>
           <NavLink
@@ -173,13 +203,24 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             style={{ textDecoration: "none" }}
           >
             {({ isActive }) => (
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isActive}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                  color: isActive ? "white" : "text.primary",
+                  borderBottom: "1px solid #e0e0e0",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                  }
+                }}
               >
-                Код для сайта
-              </Button>
+                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                  Код для сайта
+                </Typography>
+              </Box>
             )}
           </NavLink>
           <NavLink
@@ -187,18 +228,53 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             style={{ textDecoration: "none" }}
           >
             {({ isActive }) => (
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isActive}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                  color: isActive ? "white" : "text.primary",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                  }
+                }}
               >
-                Webhook
-              </Button>
+                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                  Webhook
+                </Typography>
+              </Box>
             )}
           </NavLink>
         </Box>
 
-        <Box sx={{ flex: 1 }}>
+      {/* Right side: Breadcrumbs + Content */}
+      <Box sx={{ flex: 1, px: 3, py: 3 }}>
+        <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
+            <MuiLink component={Link} to="/" underline="hover" color="inherit">
+              Список комнат
+            </MuiLink>
+            <Typography variant="body2" color="text.primary">
+              {roomData?.name}
+            </Typography>
+          </Breadcrumbs>
+          <MuiLink
+            variant="body2"
+            underline="always"
+            color="inherit"
+            onClick={handleCopyRoomId}
+            sx={{
+              userSelect: "none",
+              cursor: "pointer"
+            }}
+          >
+            Скопировать ID комнаты
+          </MuiLink>
+        </Box>
+
+        <Box>
           {children}
         </Box>
       </Box>

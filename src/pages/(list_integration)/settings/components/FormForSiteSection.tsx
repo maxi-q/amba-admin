@@ -5,6 +5,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { ContentCopy } from "@mui/icons-material";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface FormForSiteSectionProps {
   roomId?: string;
@@ -50,9 +51,9 @@ export const FormForSiteSection = ({ roomId, onCopy }: FormForSiteSectionProps) 
                 position: 'absolute',
                 top: 8,
                 right: 8,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                color: PRIMARY_COLOR
               }}
-              color="primary"
             >
               <ContentCopy />
             </IconButton>
@@ -99,9 +100,9 @@ export const FormForSiteSection = ({ roomId, onCopy }: FormForSiteSectionProps) 
                 position: 'absolute',
                 top: 8,
                 right: 8,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                color: PRIMARY_COLOR
               }}
-              color="primary"
             >
               <ContentCopy />
             </IconButton>

@@ -1,4 +1,5 @@
 import { Box, Button } from "@mui/material";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface RoomActionButtonsProps {
   onSave: () => void;
@@ -20,10 +21,16 @@ export const RoomActionButtons = ({ onSave, onDelete, isUpdating }: RoomActionBu
       </Button>
       <Button
         variant="contained"
-        color="primary"
         onClick={onSave}
         disabled={isUpdating}
-        sx={{ minWidth: 120 }}
+        sx={{ 
+          minWidth: 120,
+          backgroundColor: PRIMARY_COLOR,
+          "&:hover": {
+            backgroundColor: PRIMARY_COLOR,
+            opacity: 0.9
+          }
+        }}
       >
         {isUpdating ? 'Сохранение...' : 'Сохранить'}
       </Button>

@@ -9,6 +9,7 @@ import {
 import { Refresh, ContentCopy } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface WebhookSectionProps {
   webhookUrl: string;
@@ -54,10 +55,16 @@ export const WebhookSection = ({
         />
         <Button
           variant="contained"
-          color="primary"
           onClick={onSaveWebhook}
           disabled={isUpdating}
-          sx={{ minWidth: 120 }}
+          sx={{ 
+            minWidth: 120,
+            backgroundColor: PRIMARY_COLOR,
+            "&:hover": {
+              backgroundColor: PRIMARY_COLOR,
+              opacity: 0.9
+            }
+          }}
         >
           {isUpdating ? 'Сохранение...' : 'Сохранить'}
         </Button>
@@ -80,21 +87,20 @@ export const WebhookSection = ({
           InputProps={{
             readOnly: true,
             endAdornment: (
-              <IconButton
-                onClick={onCopySecretKey}
-                color="primary"
-                size="small"
-                sx={{ mr: 0.5 }}
-              >
-                <ContentCopy />
-              </IconButton>
+                <IconButton
+                    onClick={onCopySecretKey}
+                    size="small"
+                    sx={{ mr: 0.5, color: PRIMARY_COLOR }}
+                  >
+                    <ContentCopy />
+                  </IconButton>
             )
           }}
         />
         <IconButton 
           onClick={onRotateSecretKey} 
-          color="primary"
           disabled={isRotating}
+          sx={{ color: PRIMARY_COLOR }}
         >
           <Refresh sx={{ 
             animation: isRotating ? 'spin 1s linear infinite' : 'none',
@@ -110,8 +116,7 @@ export const WebhookSection = ({
         component={RouterLink}
         to={`/rooms/${slug}/setting/info`}
         underline="hover"
-        color="primary"
-        sx={{ cursor: 'pointer' }}
+        sx={{ cursor: 'pointer', color: PRIMARY_COLOR }}
       >
         описание формата вебхука
       </Link>

@@ -1,12 +1,13 @@
 import { Box, Typography, Paper, Stack, Button, CircularProgress } from '@mui/material';
 import type { EventListProps, EventData } from '../../types';
 
-export const EventList = ({ 
-  events, 
-  onLoadMore, 
-  hasMore = false, 
+export const EventList = ({
+  events,
+  onLoadMore,
+  total,
+  hasMore = false,
   isLoadingMore = false,
-  isLoading = false 
+  isLoading = false
 }: EventListProps) => {
   if (isLoading && events.length === 0) {
     return (
@@ -19,9 +20,9 @@ export const EventList = ({
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Количество: {events.length}
+        Количество: {total}
       </Typography>
-      
+
       <Stack spacing={2}>
         {events.map((event: EventData) => (
           <Paper

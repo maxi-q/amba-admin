@@ -135,6 +135,7 @@ export default function StatisticsPage() {
         {/* Список событий */}
         <EventList
           events={filteredEvents}
+          total={analytics?.total}
           onLoadMore={fetchNextPage}
           hasMore={hasNextPage || false}
           isLoadingMore={isFetchingNextPage}

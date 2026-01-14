@@ -6,6 +6,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface DeleteRoomDialogProps {
   open: boolean;
@@ -38,7 +39,7 @@ export const DeleteRoomDialog = ({
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} color="primary" disabled={isUpdating}>
+        <Button onClick={onCancel} disabled={isUpdating} sx={{ color: PRIMARY_COLOR }}>
           Отмена
         </Button>
         <Button onClick={onConfirm} color="error" variant="contained" autoFocus disabled={isUpdating}>

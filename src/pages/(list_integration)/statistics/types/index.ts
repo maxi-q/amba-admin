@@ -36,6 +36,7 @@ export interface EventListProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   isLoading?: boolean;
+  total?: number;
 }
 
 export interface AutocompleteOption {
