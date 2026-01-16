@@ -12,4 +12,7 @@ export enum MutationKeys {
 
   EVENTS = 'events',
   SPRINTS = 'sprints',
+
+  APPROVE_ROOM_APPLICATIONS = 'approveRoomApplications',
+  APPROVE_EVENT_APPLICATIONS = 'approveEventApplications',
 }

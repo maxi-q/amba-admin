@@ -24,3 +24,70 @@ export interface IGetAmbassadorsResponse {
   total: number;
   totalPages: number;
 }
+
+export interface IGetRoomApplicationsRequest {
+  status: 'pending' | 'approved' | 'rejected';
+  roomIds: string[];
+  page: number;
+  size: number;
+}
+
+export interface IRoomApplication {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  inn: number;
+  phone: string;
+  juridicalType: 'physical' | 'ip' | 'juridical';
+  status: 'pending' | 'approved' | 'rejected';
+  ambassadorId: string;
+  roomId: string;
+}
+export interface IGetRoomApplicationsResponse {
+  items: IRoomApplication[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface IApproveRoomApplicationsRequest {
+  ids: string[];
+}
+
+export interface IApproveRoomApplicationsResponse {
+  approvedCount: number;
+}
+
+export interface IGetEventApplicationsRequest {
+  status: 'pending' | 'approved' | 'rejected';
+  eventIds: string[];
+  page: number;
+  size: number;
+}
+
+export interface IEventApplication {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'pending' | 'approved' | 'rejected';
+  ambassadorId: string;
+  eventId: string;
+}
+
+export interface IGetEventApplicationsResponse {
+  items: IEventApplication[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface IApproveEventApplicationsRequest {
+  ids: string[];
+}
+
+export interface IApproveEventApplicationsResponse {
+  approvedCount: 0;
+}
