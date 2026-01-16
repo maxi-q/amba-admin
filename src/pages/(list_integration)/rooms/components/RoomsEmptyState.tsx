@@ -1,4 +1,5 @@
 import { Alert, Link } from "@mui/material";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface RoomsEmptyStateProps {
   onCreateClick: () => void;
@@ -14,11 +15,12 @@ export const RoomsEmptyState = ({ onCreateClick }: RoomsEmptyStateProps) => {
         sx={{
           textDecoration: 'underline',
           cursor: 'pointer',
-          color: 'inherit',
+          color: PRIMARY_COLOR,
           border: 'none',
           background: 'none',
           padding: 0,
           font: 'inherit',
+          fontWeight: 500
         }}
       >
         Создайте первую комнату

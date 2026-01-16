@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface CreateRoomDialogProps {
   open: boolean;
@@ -53,7 +54,7 @@ export const CreateRoomDialog = ({
         }
       }}
     >
-      <AppBar sx={{ position: 'relative' }}>
+      <AppBar sx={{ position: 'relative', backgroundColor: PRIMARY_COLOR }}>
         <Toolbar>
           <IconButton
             edge="start"
@@ -96,6 +97,14 @@ export const CreateRoomDialog = ({
             onClick={onClose}
             variant="outlined"
             size="large"
+            sx={{ 
+              borderColor: PRIMARY_COLOR, 
+              color: PRIMARY_COLOR,
+              "&:hover": {
+                borderColor: PRIMARY_COLOR,
+                backgroundColor: "rgba(66, 139, 202, 0.04)"
+              }
+            }}
           >
             Отмена
           </Button>
@@ -104,6 +113,13 @@ export const CreateRoomDialog = ({
             variant="contained"
             disabled={!formData.name.trim() || isPending}
             size="large"
+            sx={{ 
+              backgroundColor: PRIMARY_COLOR,
+              "&:hover": {
+                backgroundColor: PRIMARY_COLOR,
+                opacity: 0.9
+              }
+            }}
           >
             {isPending ? 'Создание...' : 'Создать'}
           </Button>

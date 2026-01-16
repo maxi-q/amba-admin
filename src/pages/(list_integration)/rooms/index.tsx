@@ -83,10 +83,10 @@ export default function RoomsPage() {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", width: "100%", px: 2, py: 3 }}>
+    <Box sx={{ minHeight: "652px", width: "100%", px: 3, py: 3 }}>
       <RoomsHeader />
       <CreateRoomButton onClick={handleCreateRoom} />
-      <List>
+      <List sx={{ p: 0 }}>
         {rooms.length ? (
           rooms.map((room) => (
             <RoomCard key={room.id} room={room} />
