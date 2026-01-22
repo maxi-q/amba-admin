@@ -89,165 +89,189 @@ const RoomBox = ({ children }: RoomBoxProps) => {
   return (
     <Box sx={{ width: "100%", display: "flex", minHeight: "100%" }}>
       {/* Sidebar */}
-      <Box sx={{ 
-        width: "200px", 
+      <Box sx={{
+        width: "200px",
         minHeight: "652px",
-        display: "flex", 
-        flexDirection: "column", 
+        display: "flex",
+        flexDirection: "column",
         flexShrink: 0,
         borderRight: "1px solid #e0e0e0",
         backgroundColor: "white"
       }}>
-          <NavLink
-            to="setting"
-            style={{ textDecoration: "none" }}
-          >
-            {({ isActive }) => (
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                  color: isActive ? "white" : "text.primary",
-                  borderBottom: "1px solid #e0e0e0",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                  }
-                }}
-              >
-                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                  Настройки
-                </Typography>
-              </Box>
-            )}
-          </NavLink>
-          <NavLink
-            to="sprints"
-            style={{ textDecoration: "none" }}
-          >
-            {({ isActive }) => (
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                  color: isActive ? "white" : "text.primary",
-                  borderBottom: "1px solid #e0e0e0",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                  }
-                }}
-              >
-                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                  Спринты
-                </Typography>
-              </Box>
-            )}
-          </NavLink>
-          <NavLink
-            to="events"
-            style={{ textDecoration: "none" }}
-          >
-            {({ isActive }) => (
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                  color: isActive ? "white" : "text.primary",
-                  borderBottom: "1px solid #e0e0e0",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                  }
-                }}
-              >
-                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                  События
-                </Typography>
-              </Box>
-            )}
-          </NavLink>
-          <NavLink
-            to="statistics"
-            style={{ textDecoration: "none" }}
-          >
-            {({ isActive }) => (
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                  color: isActive ? "white" : "text.primary",
-                  borderBottom: "1px solid #e0e0e0",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                  }
-                }}
-              >
-                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                  Статистика
-                </Typography>
-              </Box>
-            )}
-          </NavLink>
-          <NavLink
-            to="code"
-            style={{ textDecoration: "none" }}
-          >
-            {({ isActive }) => (
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                  color: isActive ? "white" : "text.primary",
-                  borderBottom: "1px solid #e0e0e0",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                  }
-                }}
-              >
-                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                  Код для сайта
-                </Typography>
-              </Box>
-            )}
-          </NavLink>
-          <NavLink
-            to="webhook"
-            style={{ textDecoration: "none" }}
-          >
-            {({ isActive }) => (
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                  color: isActive ? "white" : "text.primary",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                  }
-                }}
-              >
-                <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                  Webhook
-                </Typography>
-              </Box>
-            )}
-          </NavLink>
-        </Box>
+        <NavLink
+          to="setting"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                borderBottom: "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Настройки
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        <NavLink
+          to="sprints"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                borderBottom: "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Спринты
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        <NavLink
+          to="events"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                borderBottom: "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                События
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        <NavLink
+          to="statistics"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                borderBottom: "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Статистика
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        <NavLink
+          to="code"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                borderBottom: "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Код для сайта
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        <NavLink
+          to="webhook"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Webhook
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        <NavLink
+          to="applications"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Заявки
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+      </Box>
 
       {/* Right side: Breadcrumbs + Content */}
       <Box sx={{ flex: 1, px: 3, py: 3 }}>

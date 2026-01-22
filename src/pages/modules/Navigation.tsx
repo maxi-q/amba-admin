@@ -14,7 +14,8 @@ import {
   StatisticsPage,
   SprintsLayout,
   CodePage,
-  WebhookPage
+  WebhookPage,
+  ApplicationsPage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -97,6 +98,7 @@ export const Navigation = () => {
         <Route path="events/:eventId" element={<EventsSetting />} />
 
         <Route path="statistics" element={<StatisticsPage />} />
+        <Route path="applications" element={<ApplicationsPage />} />
 
         <Route path="*" element={<RoomRedirect />} />
       </Route>

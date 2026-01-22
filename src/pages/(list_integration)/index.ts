@@ -13,6 +13,7 @@ import StatisticsPage from './statistics';
 import { SprintsLayout } from './sprints/SprintsLayout';
 import CodePage from './code';
 import WebhookPage from './webhook';
+import ApplicationsPage from './applications';
 
 export {
     SettingPage,
@@ -29,5 +30,6 @@ export {
     StatisticsPage,
     SprintsLayout,
     CodePage,
-    WebhookPage
+    WebhookPage,
+    ApplicationsPage
 };
