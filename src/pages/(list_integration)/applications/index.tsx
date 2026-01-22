@@ -43,8 +43,6 @@ export default function ApplicationsPage() {
   const {
     applications: roomApplications,
     isLoading: isLoadingRoom,
-    isError: isRoomError,
-    error: roomError,
     refetch: refetchRoom
   } = useRoomApplications({
     status: appliedRoomStatus,
@@ -57,8 +55,6 @@ export default function ApplicationsPage() {
   const {
     applications: eventApplications,
     isLoading: isLoadingEvent,
-    isError: isEventError,
-    error: eventError,
     refetch: refetchEvent
   } = useEventApplications({
     status: appliedEventStatus,
@@ -142,20 +138,12 @@ export default function ApplicationsPage() {
   };
 
   const isLoading = isLoadingRoomData || (activeTab === 'room' ? isLoadingRoom : isLoadingEvent);
-  const isError = isRoomDataError || (activeTab === 'room' ? isRoomError : isEventError);
-  const error = roomDataError || (activeTab === 'room' ? roomError : eventError);
   const applications = activeTab === 'room' ? roomApplications : eventApplications;
   const isApproving = activeTab === 'room' ? isApprovingRoom : isApprovingEvent;
   const approveError = activeTab === 'room' ? roomApproveError : eventApproveError;
   const currentStatus = activeTab === 'room' ? roomStatus : eventStatus;
   const appliedStatus = activeTab === 'room' ? appliedRoomStatus : appliedEventStatus;
   const handleStatusChange = activeTab === 'room' ? handleRoomStatusChange : handleEventStatusChange;
-  
-  // Check if filters have changed from applied values
-  const hasFilterChanges = activeTab === 'room' 
-    ? roomStatus !== appliedRoomStatus
-    : eventStatus !== appliedEventStatus || 
-      JSON.stringify(selectedEventIds) !== JSON.stringify(appliedEventIds);
 
   if (isLoadingRoomData) {
     return <SettingsLoadingState />;
