@@ -8,8 +8,10 @@ interface ApplicationCardProps {
   type: 'room' | 'event';
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
-  isApproving: boolean;
+  isApprovingThis: boolean;
   showActions?: boolean;
+  eventName?: string; // For event applications
+  ambassadorName?: string; // For event applications
 }
 
 const formatDate = (dateString: string) => {
@@ -54,10 +56,13 @@ export const ApplicationCard = ({
   type,
   onApprove,
   onDelete,
-  isApproving,
-  showActions = true
+  isApprovingThis,
+  showActions = true,
+  eventName,
+  ambassadorName
 }: ApplicationCardProps) => {
   const isRoomApplication = type === 'room';
+  const isEventApplication = type === 'event';
   const roomApp = application as IRoomApplication;
 
   return (
@@ -78,6 +83,11 @@ export const ApplicationCard = ({
           {isRoomApplication && roomApp.name && (
             <Typography variant="body1" fontWeight={500}>
               {roomApp.name}
+            </Typography>
+          )}
+          {isEventApplication && eventName && (
+            <Typography variant="body1" fontWeight={500}>
+              {eventName}
             </Typography>
           )}
           {isRoomApplication && roomApp.juridicalType && (
@@ -107,9 +117,16 @@ export const ApplicationCard = ({
               ИНН: {roomApp.inn}
             </Typography>
           )}
-          <Typography variant="body2" color="text.secondary">
-            ID амбассадора: {application.ambassadorId}
-          </Typography>
+          {isEventApplication && (
+            <Typography variant="body2" color="text.secondary">
+              Амбассадор: {ambassadorName || application.ambassadorId}
+            </Typography>
+          )}
+          {isRoomApplication && (
+            <Typography variant="body2" color="text.secondary">
+              ID амбассадора: {application.ambassadorId}
+            </Typography>
+          )}
         </Box>
 
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
@@ -124,7 +141,7 @@ export const ApplicationCard = ({
             size="small"
             startIcon={<Check />}
             onClick={() => onApprove(application.id)}
-            disabled={isApproving}
+            disabled={isApprovingThis}
             sx={{
               backgroundColor: PRIMARY_COLOR,
               "&:hover": {
@@ -133,7 +150,7 @@ export const ApplicationCard = ({
               }
             }}
           >
-            {isApproving ? 'Одобрение...' : 'Одобрить'}
+            {isApprovingThis ? 'Одобрение...' : 'Одобрить'}
           </Button>
           <Button
             variant="outlined"
@@ -141,7 +158,7 @@ export const ApplicationCard = ({
             color="error"
             startIcon={<Delete />}
             onClick={() => onDelete(application.id)}
-            disabled={isApproving}
+            disabled={isApprovingThis}
           >
             Удалить
           </Button>

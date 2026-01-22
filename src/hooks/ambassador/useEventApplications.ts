@@ -7,7 +7,7 @@ export function useEventApplications(data: IGetEventApplicationsRequest) {
   const { data: applicationsData, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.EVENT_APPLICATIONS, data.status, data.eventIds, data.page, data.size],
     queryFn: () => ambassadorService.getEventApplications(data),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 2,
   });
 

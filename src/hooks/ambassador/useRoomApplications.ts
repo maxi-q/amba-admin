@@ -7,7 +7,7 @@ export function useRoomApplications(data: IGetRoomApplicationsRequest) {
   const { data: applicationsData, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.ROOM_APPLICATIONS, data.status, data.roomIds, data.page, data.size],
     queryFn: () => ambassadorService.getRoomApplications(data),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 2,
   });
 
