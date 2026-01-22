@@ -199,11 +199,6 @@ export default function ApplicationsPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    // TODO: Implement delete functionality
-    console.log('Delete application:', id);
-  };
-
   const handleApproveAll = () => {
     const ids = applications.map(app => app.id);
     if (ids.length === 0) return;
@@ -382,7 +377,6 @@ export default function ApplicationsPage() {
                   application={application}
                   type={activeTab}
                   onApprove={handleApprove}
-                  onDelete={handleDelete}
                   isApprovingThis={approvingIds.has(application.id)}
                   showActions={appliedStatus === 'pending'}
                   eventName={activeTab === 'event' ? eventNameMap.get((application as { eventId: string }).eventId) : undefined}
