@@ -2,8 +2,57 @@ import { Box, Paper, Typography } from '@mui/material';
 import type { EventChartProps, ChartData } from '../../types';
 
 export const EventChart = ({ data }: EventChartProps) => {
-  const maxCount = Math.max(...data.map((d: ChartData) => d.count));
-  
+  const maxCount = Math.max(...data.map((d: ChartData) => d.count), 0);
+
+  // Генерируем максимум 10 подписей для оси Y
+  const getYAxisLabels = () => {
+    const maxLabels = 10;
+    const step = Math.max(1, Math.ceil(maxCount / maxLabels));
+    const labels: number[] = [];
+    for (let i = 0; i <= maxCount; i += step) {
+      labels.push(i);
+      if (labels.length >= maxLabels) break;
+    }
+    // Всегда добавляем максимальное значение, если его еще нет
+    if (labels[labels.length - 1] !== maxCount && maxCount > 0) {
+      labels[labels.length - 1] = maxCount;
+    }
+    return labels;
+  };
+
+  const yAxisLabels = getYAxisLabels();
+
+  // Генерируем разумное количество подписей для оси X (максимум 8 для избежания наложения)
+  const getXAxisLabels = () => {
+    const maxLabels = 8; // Максимум 8 подписей для лучшей читаемости
+    if (data.length === 0) return [];
+    if (data.length === 1) return [0];
+
+    // Если данных мало, показываем все
+    if (data.length <= maxLabels) {
+      return data.map((_, index) => index);
+    }
+
+    // Для большого количества данных равномерно распределяем подписи
+    const step = Math.ceil(data.length / maxLabels);
+    const indices: number[] = [0]; // Всегда начинаем с первой даты
+
+    // Добавляем промежуточные индексы
+    for (let i = step; i < data.length - 1; i += step) {
+      indices.push(i);
+      if (indices.length >= maxLabels - 1) break; // Оставляем место для последней даты
+    }
+
+    // Всегда добавляем последний индекс
+    if (indices[indices.length - 1] !== data.length - 1) {
+      indices.push(data.length - 1);
+    }
+
+    return indices;
+  };
+
+  const xAxisLabelIndices = getXAxisLabels();
+
   return (
     <Paper
       sx={{
@@ -35,7 +84,7 @@ export const EventChart = ({ data }: EventChartProps) => {
           ))}
           
           {/* Горизонтальные линии сетки */}
-          {Array.from({ length: maxCount + 1 }, (_, i) => i).map(value => {
+          {yAxisLabels.map(value => {
             const y = 250 - (value * 230) / maxCount;
             return (
               <line
@@ -50,8 +99,8 @@ export const EventChart = ({ data }: EventChartProps) => {
             );
           })}
           
-          {/* Вертикальная ось Y - количество событий */}
-          {Array.from({ length: maxCount + 1 }, (_, i) => i).map(value => {
+          {/* Вертикальная ось Y - количество событий (максимум 10 подписей) */}
+          {yAxisLabels.map(value => {
             const y = 250 - (value * 230) / maxCount;
             return (
               <text
@@ -73,7 +122,7 @@ export const EventChart = ({ data }: EventChartProps) => {
             stroke="#4caf50"
             strokeWidth="3"
             points={data.map((point: ChartData, index: number) => 
-              `${80 + (index * 720) / (data.length - 1)},${250 - (point.count * 230) / maxCount}`
+              `${80 + (index * 720) / Math.max(1, data.length - 1)},${250 - (point.count * 230) / Math.max(1, maxCount)}`
             ).join(' ')}
           />
           
@@ -81,8 +130,8 @@ export const EventChart = ({ data }: EventChartProps) => {
           {data.map((point: ChartData, index: number) => (
             <circle
               key={index}
-              cx={80 + (index * 720) / (data.length - 1)}
-              cy={250 - (point.count * 230) / maxCount}
+              cx={80 + (index * 720) / Math.max(1, data.length - 1)}
+              cy={250 - (point.count * 230) / Math.max(1, maxCount)}
               r="6"
               fill="#4caf50"
               stroke="#fff"
@@ -90,17 +139,17 @@ export const EventChart = ({ data }: EventChartProps) => {
             />
           ))}
           
-          {/* Подписи дат на оси X */}
-          {data.map((point: ChartData, index: number) => (
+          {/* Подписи дат на оси X (только выбранные индексы) */}
+          {xAxisLabelIndices.map(index => (
             <text
-              key={index}
-              x={80 + (index * 720) / (data.length - 1)}
+              key={`x-${index}`}
+              x={80 + (index * 720) / Math.max(1, data.length - 1)}
               y="280"
               textAnchor="middle"
               fontSize="11"
               fill="#666"
             >
-              {point.date}
+              {data[index]?.date}
             </text>
           ))}
           
