@@ -34,17 +34,19 @@ export const Navigation = () => {
   const { sendMessage } = useMessage()
 
   useEffect(() => {
-    const data = {
-      request: {
-        type: 'SenlerAppResizeWindow',
-        params: {
-          width: 1200,
-          height: 652
+    if (context === 'list_integration') {
+      const data = {
+        request: {
+          type: 'SenlerAppResizeWindow',
+          params: {
+            width: 1200,
+            height: 652
+          }
         }
       }
-    }
 
-    sendMessage(data, window.parent);
+      sendMessage(data, window.parent);
+    }
   }, []);
 
   if (context === 'Bot_step') {
