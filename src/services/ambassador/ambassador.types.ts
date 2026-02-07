@@ -54,10 +54,11 @@ export interface IGetRoomApplicationsResponse {
 
 export interface IApproveRoomApplicationsRequest {
   ids: string[];
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 export interface IApproveRoomApplicationsResponse {
-  approvedCount: number;
+  updatedCount: number;
 }
 
 export interface IGetEventApplicationsRequest {
@@ -90,4 +91,12 @@ export interface IApproveEventApplicationsRequest {
 
 export interface IApproveEventApplicationsResponse {
   approvedCount: 0;
+}
+
+export interface IApproveAllPendingRoomApplicationsRequest {
+  roomId: string;
+}
+
+export interface IApproveAllPendingRoomApplicationsResponse {
+  approvedCount: number
 }

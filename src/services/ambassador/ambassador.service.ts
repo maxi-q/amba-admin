@@ -1,5 +1,5 @@
 import { instance } from '@services/config/axios';
-import type { IGetAmbassadorsResponse, IGetAmbassadorsRequest, IApproveEventApplicationsRequest, IApproveEventApplicationsResponse, IApproveRoomApplicationsRequest, IApproveRoomApplicationsResponse, IGetEventApplicationsRequest, IGetEventApplicationsResponse, IGetRoomApplicationsRequest, IGetRoomApplicationsResponse } from './ambassador.types';
+import type { IGetAmbassadorsResponse, IGetAmbassadorsRequest, IApproveEventApplicationsRequest, IApproveEventApplicationsResponse, IApproveRoomApplicationsRequest, IApproveRoomApplicationsResponse, IGetEventApplicationsRequest, IGetEventApplicationsResponse, IGetRoomApplicationsRequest, IGetRoomApplicationsResponse, IApproveAllPendingRoomApplicationsRequest, IApproveAllPendingRoomApplicationsResponse } from './ambassador.types';
 import { getContentType } from '@services/config/axios.helper';
 
 
@@ -15,7 +15,7 @@ class AmbassadorService {
   }
 
   async approveRoomApplications(data: IApproveRoomApplicationsRequest) {
-    return instance.post<IApproveRoomApplicationsResponse>(`${this._BASE_URL}/room-applications/approve`, data, { headers: getContentType() });
+    return instance.patch<IApproveRoomApplicationsResponse>(`${this._BASE_URL}/room-applications/status`, data, { headers: getContentType() });
   }
 
   async getEventApplications(data: IGetEventApplicationsRequest) {
@@ -24,6 +24,10 @@ class AmbassadorService {
 
   async approveEventApplications(data: IApproveEventApplicationsRequest) {
     return instance.post<IApproveEventApplicationsResponse>(`${this._BASE_URL}/event-applications/approve`, data, { headers: getContentType() });
+  }
+
+  async approveAllPendingRoomApplications(data: IApproveAllPendingRoomApplicationsRequest) {
+    return instance.post<IApproveAllPendingRoomApplicationsResponse>(`${this._BASE_URL}/room-applications/approve-all`, data, { headers: getContentType() });
   }
 }
 

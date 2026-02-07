@@ -13,6 +13,7 @@ import { SettingsErrorState } from "../settings/components/SettingsErrorState";
 import { ApplicationCard } from "./components/ApplicationCard";
 import { EventAutocomplete } from "../statistics/components/EventAutocomplete";
 import { PRIMARY_COLOR } from "@/constants/colors";
+import { useApproveAllPendingRoomApplications } from "@/hooks/ambassador/useApproveAllPendingRoomApplications";
 
 type TabType = 'room' | 'event';
 type StatusType = 'pending' | 'approved' | 'rejected';
@@ -20,22 +21,22 @@ type StatusType = 'pending' | 'approved' | 'rejected';
 export default function ApplicationsPage() {
   const { slug } = useParams();
   const [activeTab, setActiveTab] = useState<TabType>('room');
-  
+
   // Filter states (for UI)
   const [roomStatus, setRoomStatus] = useState<StatusType>('pending');
   const [eventStatus, setEventStatus] = useState<StatusType>('pending');
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
-  
+
   // Applied filter states (for API calls)
   const [appliedRoomStatus, setAppliedRoomStatus] = useState<StatusType>('pending');
   const [appliedEventStatus, setAppliedEventStatus] = useState<StatusType>('pending');
   const [appliedEventIds, setAppliedEventIds] = useState<string[]>([]);
-  
+
   // Pagination states
   const [roomPage, setRoomPage] = useState(1);
   const [eventPage, setEventPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  
+
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
@@ -116,24 +117,31 @@ export default function ApplicationsPage() {
     generalError: eventApproveError
   } = useApproveEventApplications();
 
+  const {
+    approveAllPendingRoomApplications,
+    isSuccess: isAllPendingApproveSuccess,
+    isError: isAllPendingApproveError,
+    generalError: allPendingApproveError,
+  } = useApproveAllPendingRoomApplications()
+
   // Handle successful approval
   useEffect(() => {
-    if (isRoomApproveSuccess || isEventApproveSuccess) {
+    if (isRoomApproveSuccess || isEventApproveSuccess || isAllPendingApproveSuccess) {
       setShowSuccessNotification(true);
       // Move approved IDs to approvedIds set for immediate removal from UI
       setApprovedIds(prev => new Set([...prev, ...approvingIds]));
       setApprovingIds(new Set());
       setIsApprovingAll(false);
     }
-  }, [isRoomApproveSuccess, isEventApproveSuccess]);
+  }, [isRoomApproveSuccess, isEventApproveSuccess, isAllPendingApproveSuccess]);
 
   // Handle error - clear approving state
   useEffect(() => {
-    if (isRoomApproveError || isEventApproveError) {
+    if (isRoomApproveError || isEventApproveError || isAllPendingApproveError) {
       setApprovingIds(new Set());
       setIsApprovingAll(false);
     }
-  }, [isRoomApproveError, isEventApproveError]);
+  }, [isRoomApproveError, isEventApproveError, isAllPendingApproveError]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: TabType) => {
     setActiveTab(newValue);
@@ -193,27 +201,31 @@ export default function ApplicationsPage() {
   const handleApprove = (id: string) => {
     setApprovingIds(prev => new Set(prev).add(id));
     if (activeTab === 'room') {
-      approveRoomApplications({ ids: [id] });
+      approveRoomApplications({ ids: [id], status: 'approved' });
     } else {
       approveEventApplications({ ids: [id] });
     }
   };
 
+  const handleReject = (id: string) => {
+    setApprovingIds(prev => new Set(prev).add(id));
+    if (activeTab === 'room') {
+      approveRoomApplications({ ids: [id], status: 'rejected' });
+    }
+  };
+
   const handleApproveAll = () => {
     const ids = applications.map(app => app.id);
-    if (ids.length === 0) return;
-    
+    if (ids.length === 0 || !slug) return;
+
     setIsApprovingAll(true);
     setApprovingIds(new Set(ids));
-    if (activeTab === 'room') {
-      approveRoomApplications({ ids });
-    } else {
-      approveEventApplications({ ids });
-    }
+    approveAllPendingRoomApplications({roomId: slug})
   };
 
   const isLoading = isLoadingRoomData || (activeTab === 'room' ? isLoadingRoom : isLoadingEvent);
   const rawApplications = activeTab === 'room' ? roomApplications : eventApplications;
+
   // Filter out already approved applications
   const applications = rawApplications.filter(app => !approvedIds.has(app.id));
   const approveError = activeTab === 'room' ? roomApproveError : eventApproveError;
@@ -320,6 +332,11 @@ export default function ApplicationsPage() {
           {approveError}
         </Alert>
       )}
+      {approveError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {allPendingApproveError}
+        </Alert>
+      )}
 
       {!isLoading && (
         <>
@@ -377,7 +394,8 @@ export default function ApplicationsPage() {
                   application={application}
                   type={activeTab}
                   onApprove={handleApprove}
-                  isApprovingThis={approvingIds.has(application.id)}
+                  onReject={activeTab == 'room' ? handleReject : () => {}}
+                  isProcessedThis={approvingIds.has(application.id)}
                   showActions={appliedStatus === 'pending'}
                   eventName={activeTab === 'event' ? eventNameMap.get((application as { eventId: string }).eventId) : undefined}
                   ambassadorName={activeTab === 'event' ? ambassadorNameMap.get(application.ambassadorId) : undefined}

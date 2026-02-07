@@ -1,5 +1,5 @@
 import { Box, Typography, Button, Chip } from "@mui/material";
-import { Check } from "@mui/icons-material";
+import { Check, Close } from "@mui/icons-material";
 import type { IRoomApplication, IEventApplication } from "@services/ambassador/ambassador.types";
 import { PRIMARY_COLOR } from "@/constants/colors";
 
@@ -7,7 +7,8 @@ interface ApplicationCardProps {
   application: IRoomApplication | IEventApplication;
   type: 'room' | 'event';
   onApprove: (id: string) => void;
-  isApprovingThis: boolean;
+  onReject: (id: string) => void;
+  isProcessedThis: boolean;
   showActions?: boolean;
   eventName?: string; // For event applications
   ambassadorName?: string; // For event applications
@@ -54,7 +55,8 @@ export const ApplicationCard = ({
   application,
   type,
   onApprove,
-  isApprovingThis,
+  isProcessedThis,
+  onReject,
   showActions = true,
   eventName,
   ambassadorName
@@ -139,7 +141,7 @@ export const ApplicationCard = ({
             size="small"
             startIcon={<Check />}
             onClick={() => onApprove(application.id)}
-            disabled={isApprovingThis}
+            disabled={isProcessedThis}
             sx={{
               backgroundColor: PRIMARY_COLOR,
               "&:hover": {
@@ -148,8 +150,22 @@ export const ApplicationCard = ({
               }
             }}
           >
-            {isApprovingThis ? 'Одобрение...' : 'Одобрить'}
+            {isProcessedThis ? 'Загрузка...' : 'Одобрить'}
           </Button>
+          {
+            isRoomApplication && (
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                startIcon={<Close />}
+                onClick={() => onReject(application.id)}
+                disabled={isProcessedThis}
+              >
+                {isProcessedThis ? '...' : 'Отклонить'}
+              </Button>
+            )
+          }
         </Box>
       )}
     </Box>

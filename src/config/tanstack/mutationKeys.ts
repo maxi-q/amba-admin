@@ -15,4 +15,8 @@ export enum MutationKeys {
 
   APPROVE_ROOM_APPLICATIONS = 'approveRoomApplications',
   APPROVE_EVENT_APPLICATIONS = 'approveEventApplications',
+  APPROVE_ALL_PENDING_ROOM_APPLICATIONS = 'approveAllPendingRoomApplications',
+
+  CREATE_CREATIVE_TASK = 'createCreativeTask',
+  UPDATE_CREATIVE_TASK = 'updateCreativeTask',
 }

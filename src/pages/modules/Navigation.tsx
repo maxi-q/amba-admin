@@ -15,7 +15,8 @@ import {
   SprintsLayout,
   CodePage,
   WebhookPage,
-  ApplicationsPage
+  ApplicationsPage,
+  CreativeTasksPage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -101,6 +102,7 @@ export const Navigation = () => {
 
         <Route path="statistics" element={<StatisticsPage />} />
         <Route path="applications" element={<ApplicationsPage />} />
+        <Route path="creativetasks" element={<CreativeTasksPage />} />
 
         <Route path="*" element={<RoomRedirect />} />
       </Route>

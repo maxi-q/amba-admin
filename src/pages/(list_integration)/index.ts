@@ -14,6 +14,7 @@ import { SprintsLayout } from './sprints/SprintsLayout';
 import CodePage from './code';
 import WebhookPage from './webhook';
 import ApplicationsPage from './applications';
+import CreativeTasksPage from './creativetasks';
 
 export {
     SettingPage,
@@ -31,5 +32,6 @@ export {
     SprintsLayout,
     CodePage,
     WebhookPage,
-    ApplicationsPage
+    ApplicationsPage,
+    CreativeTasksPage
 };
