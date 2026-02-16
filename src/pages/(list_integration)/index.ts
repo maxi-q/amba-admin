@@ -15,6 +15,7 @@ import CodePage from './code';
 import WebhookPage from './webhook';
 import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
+import BotsPage from './bots';
 
 export {
     SettingPage,
@@ -33,5 +34,6 @@ export {
     CodePage,
     WebhookPage,
     ApplicationsPage,
-    CreativeTasksPage
+    CreativeTasksPage,
+    BotsPage
 };

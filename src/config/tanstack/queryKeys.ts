@@ -6,6 +6,7 @@ export enum QueryKeys {
   AMBASSADORS = 'ambassadors',
   ROOM_APPLICATIONS = 'roomApplications',
   EVENT_APPLICATIONS = 'eventApplications',
+  BOTS = 'bots',
 
   CREATIVE_TASKS = 'creativeTasks',
   CREATIVE_TASK = 'creativeTask',

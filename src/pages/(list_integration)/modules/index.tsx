@@ -295,6 +295,30 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             </Box>
           )}
         </NavLink>
+        <NavLink
+          to="bots"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Боты
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
       </Box>
 
       {/* Right side: Breadcrumbs + Content */}

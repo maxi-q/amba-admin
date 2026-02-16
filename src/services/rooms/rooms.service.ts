@@ -2,6 +2,7 @@ import { instance } from '@services/config/axios';
 import type { 
   ICreateRoomRequest, 
   ICreateRoomResponse, 
+  IGetBotsResponse, 
   IGetRoomAnalyticsRequest, 
   IGetRoomAnalyticsResponse, 
   IGetRoomByIdResponse, 
@@ -66,6 +67,14 @@ class RoomsService extends BaseService {
       instance.put<IRotateSecretKeyResponse>(`${this._BASE_URL}/${id}/rotateSecretKey`, undefined, { headers: getContentType() })
     );
   }
+
+  async getBots () {
+    return instance.get<IGetBotsResponse>(`${this._BASE_URL}/bots`, { headers: getContentType() });
+  }
+
+  // async patchBots (data: IPatchBotsRequest) {
+  //   return instance.get<IPatchBotsResponse>(`${this._BASE_URL}/bots`, { headers: getContentType() });
+  // }
 }
 
 const roomsService = new RoomsService();
