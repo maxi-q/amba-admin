@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link, NavLink, useParams } from "react-router-dom";
+import { Link, NavLink, useParams, useLocation } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -20,8 +20,13 @@ interface RoomBoxProps {
 
 const RoomBox = ({ children }: RoomBoxProps) => {
   const { slug } = useParams();
+  const location = useLocation();
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [showCopyError, setShowCopyError] = useState(false);
+  const isBotsAnchor = location.pathname.endsWith("setting") && location.hash === "#bots";
+  const isWebhookAnchor = location.pathname.endsWith("setting") && location.hash === "#webhook";
+  const creativeTaskId = location.pathname.match(/\/creativetasks\/([^/]+)/)?.[1] ?? null;
+  const isCreativeTaskDetail = !!creativeTaskId;
 
   // Получаем данные комнаты по ID
   const {
@@ -109,7 +114,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
                 py: 1.5,
                 backgroundColor: isActive ? PRIMARY_COLOR : "white",
                 color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
+                borderBottom: "none",
                 cursor: "pointer",
                 transition: "all 0.2s",
                 "&:hover": {
@@ -123,6 +128,54 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             </Box>
           )}
         </NavLink>
+        <Link
+          to="setting#bots"
+          style={{ textDecoration: "none" }}
+        >
+          <Box
+            sx={{
+              pl: 3.5,
+              pr: 2,
+              py: 1,
+              backgroundColor: isBotsAnchor ? PRIMARY_COLOR : "white",
+              color: isBotsAnchor ? "white" : "text.primary",
+              borderBottom: "none",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              "&:hover": {
+                backgroundColor: isBotsAnchor ? PRIMARY_COLOR : "#f5f5f5"
+              }
+            }}
+          >
+            <Typography variant="body2" sx={{ fontSize: "0.8125rem" }} fontWeight={isBotsAnchor ? 500 : 400}>
+              Боты
+            </Typography>
+          </Box>
+        </Link>
+        <Link
+          to="setting#webhook"
+          style={{ textDecoration: "none" }}
+        >
+          <Box
+            sx={{
+              pl: 3.5,
+              pr: 2,
+              py: 1,
+              backgroundColor: isWebhookAnchor ? PRIMARY_COLOR : "white",
+              color: isWebhookAnchor ? "white" : "text.primary",
+              borderBottom: "1px solid #e0e0e0",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              "&:hover": {
+                backgroundColor: isWebhookAnchor ? PRIMARY_COLOR : "#f5f5f5"
+              }
+            }}
+          >
+            <Typography variant="body2" sx={{ fontSize: "0.8125rem" }} fontWeight={isWebhookAnchor ? 500 : 400}>
+              Webhook
+            </Typography>
+          </Box>
+        </Link>
         <NavLink
           to="sprints"
           style={{ textDecoration: "none" }}
@@ -174,6 +227,83 @@ const RoomBox = ({ children }: RoomBoxProps) => {
           )}
         </NavLink>
         <NavLink
+          to="creativetasks"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive && !isCreativeTaskDetail ? PRIMARY_COLOR : "white",
+                color: isActive && !isCreativeTaskDetail ? "white" : "text.primary",
+                borderBottom: isCreativeTaskDetail ? "none" : "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive && !isCreativeTaskDetail ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive && !isCreativeTaskDetail ? 500 : 400}>
+                Креативы
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        {isCreativeTaskDetail && creativeTaskId && (
+          <Link
+            to={`/rooms/${slug}/creativetasks/${creativeTaskId}`}
+            style={{ textDecoration: "none" }}
+          >
+            <Box
+              sx={{
+                pl: 3.5,
+                pr: 2,
+                py: 1,
+                backgroundColor: PRIMARY_COLOR,
+                color: "white",
+                borderBottom: "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: PRIMARY_COLOR,
+                  opacity: 0.9
+                }
+              }}
+            >
+              <Typography variant="body2" sx={{ fontSize: "0.8125rem" }} fontWeight={500}>
+                Ответы
+              </Typography>
+            </Box>
+          </Link>
+        )}
+        <NavLink
+          to="applications"
+          style={{ textDecoration: "none" }}
+        >
+          {({ isActive }) => (
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                backgroundColor: isActive ? PRIMARY_COLOR : "white",
+                color: isActive ? "white" : "text.primary",
+                borderBottom: "1px solid #e0e0e0",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
+                }
+              }}
+            >
+              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
+                Заявки
+              </Typography>
+            </Box>
+          )}
+        </NavLink>
+        <NavLink
           to="statistics"
           style={{ textDecoration: "none" }}
         >
@@ -219,102 +349,6 @@ const RoomBox = ({ children }: RoomBoxProps) => {
             >
               <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
                 Код для сайта
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="webhook"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Webhook
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="applications"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Заявки
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="creativetasks"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Креативы
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="bots"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Боты
               </Typography>
             </Box>
           )}

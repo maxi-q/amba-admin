@@ -12,10 +12,9 @@ import SettingsInfo from './settings/info';
 import StatisticsPage from './statistics';
 import { SprintsLayout } from './sprints/SprintsLayout';
 import CodePage from './code';
-import WebhookPage from './webhook';
 import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
-import BotsPage from './bots';
+import CreativeTaskDetailPage from './creativetasks/CreativeTaskDetailPage';
 
 export {
     SettingPage,
@@ -32,8 +31,7 @@ export {
     StatisticsPage,
     SprintsLayout,
     CodePage,
-    WebhookPage,
     ApplicationsPage,
     CreativeTasksPage,
-    BotsPage
+    CreativeTaskDetailPage
 };

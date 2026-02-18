@@ -15,7 +15,9 @@ export interface IRoomData {
   webhookUrl: string,
   secretKey: string,
   isDeleted: boolean,
-  projectId: string
+  projectId: string,
+  notificationCreativeTaskApprovedBotId?: string,
+  notificationCreativeTaskRejectedBotId?: string,
 }
 
 export type ICreateRoomResponse = IRoomData
@@ -44,7 +46,9 @@ export interface IGetRoomByIdResponse {
   webhookUrl: string,
   secretKey: string,
   isDeleted: boolean,
-  projectId: string
+  projectId: string,
+  notificationCreativeTaskApprovedBotId?: string,
+  notificationCreativeTaskRejectedBotId?: string,
 }
 
 export type IRotateSecretKeyResponse = string
@@ -92,18 +96,4 @@ export interface IGetRoomPromoCodeUsagesResponse {
   size: number;
   total: number;
   totalPages: number;
-}
-
-export interface IBotItem {
-  bot_id: string
-  title: string
-  date: string
-  active: string
-  published: string
-  tags: string[]
-}
-
-export interface IGetBotsResponse {
-  items: IBotItem[]
-  count: number
 }

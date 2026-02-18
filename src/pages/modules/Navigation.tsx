@@ -14,10 +14,9 @@ import {
   StatisticsPage,
   SprintsLayout,
   CodePage,
-  WebhookPage,
   ApplicationsPage,
   CreativeTasksPage,
-  BotsPage
+  CreativeTaskDetailPage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -88,7 +87,6 @@ export const Navigation = () => {
         <Route path="setting" element={<SettingPage />} />
         <Route path="setting/info" element={<SettingsInfo />} />
         <Route path="code" element={<CodePage />} />
-        <Route path="webhook" element={<WebhookPage />} />
 
         <Route path="sprints" element={<SprintsLayout />}>
           <Route index element={<SprintList />} />
@@ -103,8 +101,8 @@ export const Navigation = () => {
 
         <Route path="statistics" element={<StatisticsPage />} />
         <Route path="applications" element={<ApplicationsPage />} />
+        <Route path="creativetasks/:taskId" element={<CreativeTaskDetailPage />} />
         <Route path="creativetasks" element={<CreativeTasksPage />} />
-        <Route path="bots" element={<BotsPage />} />
 
         <Route path="*" element={<RoomRedirect />} />
       </Route>

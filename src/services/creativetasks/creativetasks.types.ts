@@ -70,3 +70,11 @@ export interface IGetSubmissionsResponse {
 }
 
 export type IGetSubmissionResponse = ISubmission
+
+export interface IUpdateSubmissionStatusRequest {
+  status: 'pending' | 'approved' | 'rejected'
+  reviewComment: string
+  rewardValue: number
+}
+
+export type IUpdateSubmissionStatusResponse = ISubmission

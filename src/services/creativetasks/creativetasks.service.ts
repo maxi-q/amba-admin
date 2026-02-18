@@ -1,6 +1,6 @@
 import { instance } from '@services/config/axios';
 import { getContentType } from '@services/config/axios.helper';
-import type { ICreateCreativeTaskRequest, ICreateCreativeTaskResponse, IGetCreativeTaskResponse, IGetRoomCreativeTasksRequest, IGetRoomCreativeTasksResponse, IGetSubmissionResponse, IGetSubmissionsRequest, IGetSubmissionsResponse, IUpdateCreativeTaskRequest, IUpdateCreativeTaskResponse } from './creativetasks.types';
+import type { ICreateCreativeTaskRequest, ICreateCreativeTaskResponse, IGetCreativeTaskResponse, IGetRoomCreativeTasksRequest, IGetRoomCreativeTasksResponse, IGetSubmissionResponse, IGetSubmissionsRequest, IGetSubmissionsResponse, IUpdateCreativeTaskRequest, IUpdateCreativeTaskResponse, IUpdateSubmissionStatusRequest, IUpdateSubmissionStatusResponse } from './creativetasks.types';
 
 
 class CreativeTasksService {
@@ -28,6 +28,10 @@ class CreativeTasksService {
 
   async getSubmission(submissionId: string) {
     return instance.get<IGetSubmissionResponse>(`${this._BASE_URL}/submissions/${submissionId}`, { headers: getContentType() });
+  }
+
+  async updateSubmissionStatus(id: string, data: IUpdateSubmissionStatusRequest) {
+    return instance.patch<IUpdateSubmissionStatusResponse>(`${this._BASE_URL}/submissions/${id}/status`, data, { headers: getContentType() });
   }
 }
 

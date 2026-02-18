@@ -19,4 +19,5 @@ export enum MutationKeys {
 
   CREATE_CREATIVE_TASK = 'createCreativeTask',
   UPDATE_CREATIVE_TASK = 'updateCreativeTask',
+  UPDATE_SUBMISSION_STATUS = 'updateSubmissionStatus',
 }

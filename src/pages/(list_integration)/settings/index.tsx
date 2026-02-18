@@ -1,6 +1,6 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { Box, Alert } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
 import { useDeleteRoom } from "@/hooks/rooms/useDeleteRoom";
@@ -11,9 +11,14 @@ import { RoomNameSection } from "./components/RoomNameSection";
 import { RoomActionButtons } from "./components/RoomActionButtons";
 import { DeleteRoomDialog } from "./components/DeleteRoomDialog";
 import { SettingsNotifications } from "./components/SettingsNotifications";
+import { SettingsBotsSection } from "./components/SettingsBotsSection";
+import { SettingsWebhookSection } from "./components/SettingsWebhookSection";
 
 export default function SettingPage() {
   const { slug } = useParams();
+  const location = useLocation();
+  const botsSectionRef = useRef<HTMLDivElement>(null);
+  const webhookSectionRef = useRef<HTMLDivElement>(null);
 
   const {
     room,
@@ -43,6 +48,7 @@ export default function SettingPage() {
   const [roomName, setRoomName] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string>('');
@@ -77,6 +83,14 @@ export default function SettingPage() {
       setShowSaveNotification(true);
     }
   }, [isUpdateSuccess]);
+
+  useEffect(() => {
+    if (location.hash === "#bots" && botsSectionRef.current) {
+      botsSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    } else if (location.hash === "#webhook" && webhookSectionRef.current) {
+      webhookSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [location.hash]);
 
   const handleSaveName = () => {
     if (!slug) return;
@@ -148,11 +162,28 @@ export default function SettingPage() {
         isUpdating={isDeleting}
       />
 
+      <Box id="bots" ref={botsSectionRef}>
+        <SettingsBotsSection
+          slug={slug ?? ""}
+          room={room}
+          onSaveSuccess={() => setShowSaveNotification(true)}
+        />
+      </Box>
+
+      <Box id="webhook" ref={webhookSectionRef}>
+        <SettingsWebhookSection
+          slug={slug ?? ""}
+          room={room}
+          onSaveSuccess={() => setShowSaveNotification(true)}
+          onCopySuccess={() => setShowCopyNotification(true)}
+        />
+      </Box>
+
       <SettingsNotifications
         showSaveSuccess={showSaveNotification}
-        showCopySuccess={false}
+        showCopySuccess={showCopyNotification}
         onCloseSaveSuccess={() => setShowSaveNotification(false)}
-        onCloseCopySuccess={() => {}}
+        onCloseCopySuccess={() => setShowCopyNotification(false)}
       />
     </Box>
   );

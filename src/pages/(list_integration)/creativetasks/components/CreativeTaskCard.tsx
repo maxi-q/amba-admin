@@ -9,6 +9,7 @@ import {
   Collapse
 } from "@mui/material";
 import { Edit as EditIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from "@mui/icons-material";
+import { Link } from "react-router-dom";
 import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
 import { formatDateRange, isTaskActive } from "../utils/creativetaskUtils";
 import { TaskSubmissionsList } from "./TaskSubmissionsList";
@@ -30,6 +31,8 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
 
   return (
     <Paper
+      component={Link}
+      to={`../creativetasks/${task.id}`}
       sx={{
         p: 2,
         borderRadius: 3,
@@ -37,6 +40,8 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
         bgcolor: task.isDeleted ? "grey.50" : "background.paper",
         border: active ? "2px solid" : "1px solid",
         borderColor: active ? "success.main" : "divider",
+        textDecoration: "none",
+        color: "inherit",
         "&:hover": {
           bgcolor: task.isDeleted ? "grey.100" : "action.hover"
         }
@@ -78,7 +83,7 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
           </Typography>
         </Box>
 
-        <Stack direction="row" alignItems="center" spacing={1}>
+        <Stack direction="row" alignItems="center" spacing={1} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           {!task.isDeleted && (
             <Chip
               label={active ? "Активна" : "Неактивна"}
@@ -87,17 +92,35 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
               sx={{ borderRadius: 1 }}
             />
           )}
-          <IconButton size="small" onClick={() => setExpanded((e) => !e)} aria-label={expanded ? "Свернуть" : "Развернуть"}>
+          <IconButton
+            size="small"
+            component="span"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setExpanded((prev) => !prev);
+            }}
+            aria-label={expanded ? "Свернуть" : "Развернуть"}
+          >
             {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
           </IconButton>
-          <IconButton size="small" onClick={() => onEdit(task)} aria-label="Редактировать">
+          <IconButton
+            size="small"
+            component="span"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit(task);
+            }}
+            aria-label="Редактировать"
+          >
             <EditIcon fontSize="small" sx={{ color: PRIMARY_COLOR }} />
           </IconButton>
         </Stack>
       </Box>
 
       <Collapse in={expanded}>
-        <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
+        <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
             Заявки по задаче
           </Typography>
