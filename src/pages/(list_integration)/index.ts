@@ -16,6 +16,7 @@ import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
 import CreativeTaskDetailPage from './creativetasks/CreativeTaskDetailPage';
 import InvitationsPage from './invitations';
+import OrdPage from './ord';
 
 export {
     SettingPage,
@@ -35,5 +36,6 @@ export {
     ApplicationsPage,
     CreativeTasksPage,
     CreativeTaskDetailPage,
-    InvitationsPage
+    InvitationsPage,
+    OrdPage
 };

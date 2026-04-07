@@ -1,16 +1,19 @@
 import { instance } from '@services/config/axios';
-import type { 
-  ICreateRoomRequest, 
-  ICreateRoomResponse, 
-  IGetRoomAnalyticsRequest, 
-  IGetRoomAnalyticsResponse, 
-  IGetRoomByIdResponse, 
-  IGetRoomPromoCodeUsagesRequest, 
-  IGetRoomPromoCodeUsagesResponse, 
-  IGetRoomResponse, 
-  IRotateSecretKeyResponse, 
-  IUpdateRoomsRequest, 
+import type {
+  ICreateRoomRequest,
+  ICreateRoomResponse,
+  IGetRoomAnalyticsRequest,
+  IGetRoomAnalyticsResponse,
+  IGetRoomByIdResponse,
+  IGetRoomPromoCodeUsagesRequest,
+  IGetRoomPromoCodeUsagesResponse,
+  IGetRoomResponse,
+  IRotateSecretKeyResponse,
+  IUpdateRoomsRequest,
   IUpdateRoomsResponse,
+  IRoomOrdProfile,
+  ICreateRoomOrdProfileRequest,
+  IUpdateRoomOrdProfileRequest,
 } from './rooms.types';
 import { getContentType } from '@services/config/axios.helper';
 import { BaseService } from '@services/config/base.service';
@@ -64,6 +67,18 @@ class RoomsService extends BaseService {
   async rotateSecretKey(id: string): Promise<IRotateSecretKeyResponse> {
     return this.handleApiCall(() =>
       instance.put<IRotateSecretKeyResponse>(`${this._BASE_URL}/${id}/rotateSecretKey`, undefined, { headers: getContentType() })
+    );
+  }
+
+  async createRoomOrdProfile(roomId: string, data: ICreateRoomOrdProfileRequest): Promise<IRoomOrdProfile> {
+    return this.handleApiCall(() =>
+      instance.post<IRoomOrdProfile>(`${this._BASE_URL}/${roomId}/ord-profile`, data, { headers: getContentType() })
+    );
+  }
+
+  async updateRoomOrdProfile(roomId: string, data: IUpdateRoomOrdProfileRequest): Promise<IRoomOrdProfile> {
+    return this.handleApiCall(() =>
+      instance.put<IRoomOrdProfile>(`${this._BASE_URL}/${roomId}/ord-profile`, data, { headers: getContentType() })
     );
   }
 

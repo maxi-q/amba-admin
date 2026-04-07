@@ -1,5 +1,5 @@
 import { instance } from '@services/config/axios';
-import type { IGetAmbassadorsResponse, IGetAmbassadorsRequest, IApproveEventApplicationsRequest, IApproveEventApplicationsResponse, IApproveRoomApplicationsRequest, IApproveRoomApplicationsResponse, IGetEventApplicationsRequest, IGetEventApplicationsResponse, IGetRoomApplicationsRequest, IGetRoomApplicationsResponse, IApproveAllPendingRoomApplicationsRequest, IApproveAllPendingRoomApplicationsResponse } from './ambassador.types';
+import type { IGetAmbassadorsResponse, IGetAmbassadorsRequest, IApproveEventApplicationsRequest, IApproveEventApplicationsResponse, IApproveRoomApplicationsRequest, IApproveRoomApplicationsResponse, IGetEventApplicationsRequest, IGetEventApplicationsResponse, IGetRoomApplicationsRequest, IGetRoomApplicationsResponse, IApproveAllPendingRoomApplicationsRequest, IApproveAllPendingRoomApplicationsResponse, IGetMyOrdContractsResponse } from './ambassador.types';
 import { getContentType } from '@services/config/axios.helper';
 
 
@@ -28,6 +28,11 @@ class AmbassadorService {
 
   async approveAllPendingRoomApplications(data: IApproveAllPendingRoomApplicationsRequest) {
     return instance.post<IApproveAllPendingRoomApplicationsResponse>(`${this._BASE_URL}/room-applications/approve-all`, data, { headers: getContentType() });
+  }
+
+  /** GET /me/ord-contracts — ОРД-контракты текущего амбассадора */
+  async getMyOrdContracts() {
+    return instance.get<IGetMyOrdContractsResponse>(`${this._BASE_URL}/me/ord-contracts`, { headers: getContentType() });
   }
 }
 

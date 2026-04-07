@@ -4,6 +4,9 @@ export enum MutationKeys {
   DELETE_ROOM = 'deleteRoom',
   ROTATE_SECRET_KEY = 'rotateSecretKey',
 
+  CREATE_ROOM_ORD_PROFILE = 'createRoomOrdProfile',
+  UPDATE_ROOM_ORD_PROFILE = 'updateRoomOrdProfile',
+
   CREATE_SPRINT = 'createSprint',
   PATCH_SPRINT = 'patchSprint',
 

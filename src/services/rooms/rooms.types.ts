@@ -97,3 +97,34 @@ export interface IGetRoomPromoCodeUsagesResponse {
   total: number;
   totalPages: number;
 }
+
+/** Соответствует Prisma OrdJuridicalType / backend CreateRoomOrdProfileRequestDto */
+export type IOrdJuridicalType = 'physical' | 'ip' | 'juridical';
+
+/** Соответствует Prisma OrdSyncStatus / backend RoomOrdProfileResponseDto */
+export type IOrdSyncStatus = 'pending' | 'synced' | 'error';
+
+/** Ответ POST / PUT rooms/:id/ord-profile — RoomOrdProfileResponseDto */
+export interface IRoomOrdProfile {
+  id: string;
+  inn: string;
+  name: string;
+  phone: string;
+  juridicalType: IOrdJuridicalType;
+  syncStatus: IOrdSyncStatus;
+  lastError: string | null;
+}
+
+/** Тело POST rooms/:id/ord-profile — CreateRoomOrdProfileRequestDto */
+export interface ICreateRoomOrdProfileRequest {
+  inn: string;
+  name: string;
+  phone: string;
+  juridicalType: IOrdJuridicalType;
+}
+
+/** Тело PUT rooms/:id/ord-profile — UpdateRoomOrdProfileRequestDto */
+export interface IUpdateRoomOrdProfileRequest {
+  name?: string;
+  phone?: string;
+}

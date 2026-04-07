@@ -100,3 +100,10 @@ export interface IApproveAllPendingRoomApplicationsRequest {
 export interface IApproveAllPendingRoomApplicationsResponse {
   approvedCount: number
 }
+
+/** Элемент списка GET ambassador/me/ord-contracts (ОРД-контракты текущего амбассадора) — дополнить полями по OpenAPI */
+export interface IOrdContract {
+  id: string
+}
+
+export type IGetMyOrdContractsResponse = IOrdContract[]
