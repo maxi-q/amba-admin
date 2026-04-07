@@ -20,4 +20,10 @@ export enum MutationKeys {
   CREATE_CREATIVE_TASK = 'createCreativeTask',
   UPDATE_CREATIVE_TASK = 'updateCreativeTask',
   UPDATE_SUBMISSION_STATUS = 'updateSubmissionStatus',
+  ADD_CREATIVE_TASK_WHITELIST = 'addCreativeTaskWhitelist',
+  REMOVE_CREATIVE_TASK_WHITELIST = 'removeCreativeTaskWhitelist',
+
+  CREATE_INVITATION = 'createInvitation',
+  UPDATE_INVITATION = 'updateInvitation',
+  DELETE_INVITATION = 'deleteInvitation',
 }

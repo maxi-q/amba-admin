@@ -1,14 +1,20 @@
+import { useState } from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
-import { Box, Typography, Paper, Chip, Link } from "@mui/material";
+import { Box, Typography, Paper, Chip, Link, IconButton, Stack } from "@mui/material";
+import { Edit as EditIcon } from "@mui/icons-material";
 import { useCreativeTask } from "@/hooks/creativetasks/useCreativeTask";
 import { TaskDetailSubmissionsList } from "./components/TaskDetailSubmissionsList";
+import { CreativeTaskWhitelistSection } from "./components/CreativeTaskWhitelistSection";
+import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
 import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
 import { CreativeTasksErrorState } from "./components/CreativeTasksErrorState";
 import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
+import { PRIMARY_COLOR } from "@/constants/colors";
 
 export default function CreativeTaskDetailPage() {
   const { slug, taskId } = useParams<{ slug: string; taskId: string }>();
-  const { task, isLoading, isError, error } = useCreativeTask(taskId ?? "");
+  const { task, isLoading, isError, error, refetch } = useCreativeTask(taskId ?? "");
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -76,18 +82,38 @@ export default function CreativeTaskDetailPage() {
               {dateRange}
             </Typography>
           </Box>
-          {!task.isDeleted && (
-            <Chip
-              label={active ? "Активна" : "Неактивна"}
-              color={active ? "success" : "default"}
+          <Stack direction="row" alignItems="center" spacing={1}>
+            {!task.isDeleted && (
+              <Chip
+                label={active ? "Активна" : "Неактивна"}
+                color={active ? "success" : "default"}
+                size="small"
+                sx={{ borderRadius: 1 }}
+              />
+            )}
+            <IconButton
               size="small"
-              sx={{ borderRadius: 1 }}
-            />
-          )}
+              onClick={() => setEditOpen(true)}
+              aria-label="Редактировать задачу"
+            >
+              <EditIcon fontSize="small" sx={{ color: PRIMARY_COLOR }} />
+            </IconButton>
+          </Stack>
         </Box>
       </Paper>
 
+      <EditCreativeTaskDialog
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        task={task}
+        onSuccess={() => {
+          void refetch();
+        }}
+      />
+
       <TaskDetailSubmissionsList taskId={task.id} />
+
+      <CreativeTaskWhitelistSection task={task} />
     </Box>
   );
 }

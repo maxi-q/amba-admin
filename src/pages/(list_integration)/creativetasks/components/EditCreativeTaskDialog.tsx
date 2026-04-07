@@ -53,6 +53,7 @@ export function EditCreativeTaskDialog({
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [isDeleted, setIsDeleted] = useState(false);
+  const [isWhitelistEnabled, setIsWhitelistEnabled] = useState(false);
 
   const { task: currentTask, isLoading: isLoadingTask } = useCreativeTask(task?.id ?? "");
   const {
@@ -72,6 +73,7 @@ export function EditCreativeTaskDialog({
       setStartsAt(toLocalDateTime(data.startsAt));
       setEndsAt(toLocalDateTime(data.endsAt));
       setIsDeleted(data.isDeleted);
+      setIsWhitelistEnabled(data.isWhitelistEnabled ?? false);
     }
   }, [data, open]);
 
@@ -89,7 +91,8 @@ export function EditCreativeTaskDialog({
       description: description.trim(),
       startsAt: toISOString(startsAt),
       endsAt: toISOString(endsAt),
-      isDeleted
+      isDeleted,
+      isWhitelistEnabled,
     };
     updateCreativeTask({ id: task.id, data: payload });
   };
@@ -149,6 +152,16 @@ export function EditCreativeTaskDialog({
               InputLabelProps={{ shrink: true }}
               error={!!validationErrors?.endsAt?.length}
               helperText={validationErrors?.endsAt?.[0]}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isWhitelistEnabled}
+                  onChange={(e) => setIsWhitelistEnabled(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Вайтлист: только выбранные амбассадоры могут участвовать"
             />
             <FormControlLabel
               control={

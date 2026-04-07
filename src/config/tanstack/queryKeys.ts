@@ -12,4 +12,7 @@ export enum QueryKeys {
   CREATIVE_TASK = 'creativeTask',
   SUBMISSIONS = 'submissions',
   SUBMISSION = 'submission',
+  CREATIVE_TASK_WHITELIST = 'creativeTaskWhitelist',
+
+  INVITATIONS = 'invitations',
 }

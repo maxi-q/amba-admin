@@ -47,6 +47,23 @@ export const EventSettingsSection = ({
 
       <Box>
         <Typography variant="subtitle2" mb={1}>
+          Описание
+        </Typography>
+        <TextField
+          fullWidth
+          placeholder="Текст описания события"
+          variant="outlined"
+          multiline
+          minRows={3}
+          value={formData.description}
+          onChange={onInputChange('description')}
+          error={!!(createValidationErrors?.description || updateValidationErrors?.description)}
+          helperText={(createValidationErrors?.description || updateValidationErrors?.description)?.join()}
+        />
+      </Box>
+
+      <Box>
+        <Typography variant="subtitle2" mb={1}>
           Префикс промокода
         </Typography>
         <TextField

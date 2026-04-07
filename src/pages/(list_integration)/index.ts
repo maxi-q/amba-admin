@@ -15,6 +15,7 @@ import CodePage from './code';
 import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
 import CreativeTaskDetailPage from './creativetasks/CreativeTaskDetailPage';
+import InvitationsPage from './invitations';
 
 export {
     SettingPage,
@@ -33,5 +34,6 @@ export {
     CodePage,
     ApplicationsPage,
     CreativeTasksPage,
-    CreativeTaskDetailPage
+    CreativeTaskDetailPage,
+    InvitationsPage
 };

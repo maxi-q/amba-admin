@@ -1,5 +1,6 @@
 export interface ICreateEventRequest {
   name: string,
+  description: string,
   promoCodesPrefix: string,
   startDate: string | null,
   endDate: string | null,
@@ -18,6 +19,7 @@ export interface ICreateEventResponse {
   createdAt: string,
   updatedAt: string,
   name: string,
+  description: string,
   promoCodesPrefix: string,
   startDate: string,
   endDate: string,
@@ -40,6 +42,7 @@ export interface IEvent {
   createdAt: string,
   updatedAt: string,
   name: string,
+  description: string,
   startDate: string | null,
   endDate: string | null,
   ignoreEndDate: boolean,
@@ -69,6 +72,7 @@ export interface IGetEventsRequest {
 
 export interface IPatchEventsRequest {
   name: string,
+  description: string,
   startDate: string | null,
   endDate: string | null,
   ignoreEndDate: boolean,
@@ -85,6 +89,7 @@ export interface IPatchEventsResponse {
   createdAt: string,
   updatedAt: string,
   name: string,
+  description: string,
   promoCodesPrefix: string,
   startDate: string,
   endDate: string,

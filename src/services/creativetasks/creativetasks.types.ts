@@ -11,6 +11,7 @@ export interface ICreativeTask {
   startsAt: string
   endsAt: string
   isDeleted: boolean
+  isWhitelistEnabled: boolean
   roomId: string
 }
 
@@ -30,6 +31,7 @@ export interface IUpdateCreativeTaskRequest {
   startsAt: string
   endsAt: string
   isDeleted: boolean
+  isWhitelistEnabled?: boolean
 }
 
 export type IUpdateCreativeTaskResponse = ICreativeTask
@@ -78,3 +80,29 @@ export interface IUpdateSubmissionStatusRequest {
 }
 
 export type IUpdateSubmissionStatusResponse = ISubmission
+
+/** Query: page, size (опционально, см. OpenAPI creative-tasks/{taskId}/whitelist GET) */
+export interface IGetCreativeTaskWhitelistRequest {
+  page?: number
+  size?: number
+}
+
+/** Элемент вайтлиста (GET /creative-tasks/{taskId}/whitelist) */
+export interface ICreativeTaskWhitelistItem {
+  ambassadorId: string
+  /** Если бэкенд отдаёт промокод в элементе вайтлиста */
+  promoCode?: string
+}
+
+export interface IGetCreativeTaskWhitelistResponse {
+  items: ICreativeTaskWhitelistItem[]
+  page: number
+  size: number
+  total: number
+  totalPages: number
+}
+
+/** POST /creative-tasks/{taskId}/whitelist */
+export interface IAddToCreativeTaskWhitelistRequest {
+  ambassadorId: string
+}

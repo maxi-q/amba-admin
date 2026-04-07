@@ -72,6 +72,7 @@ const EventsSetting = () => {
   const [prefixOccupiedError, setPrefixOccupiedError] = useState<string>('');
   const [formData, setFormData] = useState<IPatchEventsRequest>({
     name: '',
+    description: '',
     startDate: null,
     endDate: null,
     ignoreEndDate: false,
@@ -91,6 +92,7 @@ const EventsSetting = () => {
         setEvent(foundEvent);
         setFormData({
           name: foundEvent.name,
+          description: foundEvent.description ?? '',
           startDate: dateToInput(foundEvent.startDate),
           endDate: dateToInput(foundEvent.endDate),
           ignoreEndDate: foundEvent.ignoreEndDate,
@@ -115,6 +117,7 @@ const EventsSetting = () => {
   const handleSave = async (isDeleted: boolean = false) => {
     const storeData = {
       name: formData.name,
+      description: formData.description,
       startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
       endDate: dateToInput(formData.endDate),
       ignoreEndDate: formData.ignoreEndDate,

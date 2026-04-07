@@ -1,6 +1,23 @@
 import { instance } from '@services/config/axios';
 import { getContentType } from '@services/config/axios.helper';
-import type { ICreateCreativeTaskRequest, ICreateCreativeTaskResponse, IGetCreativeTaskResponse, IGetRoomCreativeTasksRequest, IGetRoomCreativeTasksResponse, IGetSubmissionResponse, IGetSubmissionsRequest, IGetSubmissionsResponse, IUpdateCreativeTaskRequest, IUpdateCreativeTaskResponse, IUpdateSubmissionStatusRequest, IUpdateSubmissionStatusResponse } from './creativetasks.types';
+import type {
+  IAddToCreativeTaskWhitelistRequest,
+  ICreativeTaskWhitelistItem,
+  ICreateCreativeTaskRequest,
+  ICreateCreativeTaskResponse,
+  IGetCreativeTaskResponse,
+  IGetCreativeTaskWhitelistRequest,
+  IGetCreativeTaskWhitelistResponse,
+  IGetRoomCreativeTasksRequest,
+  IGetRoomCreativeTasksResponse,
+  IGetSubmissionResponse,
+  IGetSubmissionsRequest,
+  IGetSubmissionsResponse,
+  IUpdateCreativeTaskRequest,
+  IUpdateCreativeTaskResponse,
+  IUpdateSubmissionStatusRequest,
+  IUpdateSubmissionStatusResponse,
+} from './creativetasks.types';
 
 
 class CreativeTasksService {
@@ -32,6 +49,18 @@ class CreativeTasksService {
 
   async updateSubmissionStatus(id: string, data: IUpdateSubmissionStatusRequest) {
     return instance.patch<IUpdateSubmissionStatusResponse>(`${this._BASE_URL}/submissions/${id}/status`, data, { headers: getContentType() });
+  }
+
+  async getCreativeTaskWhitelist(taskId: string, params?: IGetCreativeTaskWhitelistRequest) {
+    return instance.get<IGetCreativeTaskWhitelistResponse>(`${this._BASE_URL}/${taskId}/whitelist`, { params, headers: getContentType() });
+  }
+
+  async addToCreativeTaskWhitelist(taskId: string, data: IAddToCreativeTaskWhitelistRequest) {
+    return instance.post<ICreativeTaskWhitelistItem>(`${this._BASE_URL}/${taskId}/whitelist`, data, { headers: getContentType() });
+  }
+
+  async removeFromCreativeTaskWhitelist(taskId: string, ambassadorId: string) {
+    return instance.delete<void>(`${this._BASE_URL}/${taskId}/whitelist/${ambassadorId}`, { headers: getContentType() });
   }
 }
 
