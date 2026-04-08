@@ -62,6 +62,8 @@ export interface ISubmission {
   reviewComment: string
   taskId: string
   ambassadorId: string
+  /** Заполняется после одобрения заявки */
+  rewardValue?: number | null
 }
 export interface IGetSubmissionsResponse {
   items: ISubmission[]
