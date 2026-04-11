@@ -171,9 +171,6 @@ export default function OrdPage() {
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             Создать профиль ОРД
           </Typography>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-            POST /api/rooms/{"{id}"}/ord-profile
-          </Typography>
           {createGeneralError ? (
             <Alert severity="error" sx={{ mb: 2 }}>
               {createGeneralError}
@@ -243,9 +240,6 @@ export default function OrdPage() {
         <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             Обновить профиль ОРД
-          </Typography>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-            PUT /api/rooms/{"{id}"}/ord-profile
           </Typography>
           {updateGeneralError ? (
             <Alert severity="error" sx={{ mb: 2 }}>
