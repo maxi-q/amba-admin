@@ -1,83 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Paper,
-  Stack,
-  TextField,
-  Button,
-  Alert,
-  MenuItem,
-  Divider,
-  Chip,
-} from "@mui/material";
+import { useQueryClient } from "@tanstack/react-query";
+import { Alert, Box, Stack, Typography } from "@mui/material";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useCreateRoomOrdProfile } from "@/hooks/rooms/useCreateRoomOrdProfile";
 import { useUpdateRoomOrdProfile } from "@/hooks/rooms/useUpdateRoomOrdProfile";
 import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
-import { PRIMARY_COLOR } from "@/constants/colors";
-import type { IOrdJuridicalType, IOrdSyncStatus, IRoomOrdProfile } from "@services/rooms/rooms.types";
-
-const JURIDICAL_OPTIONS: { value: IOrdJuridicalType; label: string }[] = [
-  { value: "physical", label: "Физ. лицо" },
-  { value: "ip", label: "ИП" },
-  { value: "juridical", label: "Юр. лицо" },
-];
-
-const SYNC_LABELS: Record<IOrdSyncStatus, string> = {
-  pending: "Ожидает синхронизации",
-  synced: "Синхронизировано",
-  error: "Ошибка синхронизации",
-};
-
-function OrdProfileSummary({ profile }: { profile: IRoomOrdProfile }) {
-  return (
-    <Stack spacing={1} sx={{ mt: 2 }}>
-      <Typography variant="subtitle2" color="text.secondary">
-        Ответ сервера
-      </Typography>
-      <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1}>
-        <Chip size="small" label={`ID: ${profile.id}`} variant="outlined" />
-        <Chip size="small" label={`ИНН: ${profile.inn}`} variant="outlined" />
-        <Chip
-          size="small"
-          label={SYNC_LABELS[profile.syncStatus]}
-          color={profile.syncStatus === "synced" ? "success" : profile.syncStatus === "error" ? "error" : "default"}
-          variant="outlined"
-        />
-      </Stack>
-      <Typography variant="body2">{profile.name}</Typography>
-      <Typography variant="body2" color="text.secondary">
-        {profile.phone}
-      </Typography>
-      {profile.lastError ? (
-        <Alert severity="warning" sx={{ py: 0 }}>
-          {profile.lastError}
-        </Alert>
-      ) : null}
-    </Stack>
-  );
-}
+import { QueryKeys } from "@/config/tanstack/queryKeys";
+import type { IOrdJuridicalType } from "@services/rooms/rooms.types";
+import { EMPTY_FIO, isFioComplete, joinFio, parseFioFromApi } from "@/utils/fio";
+import { formatRuMobileInput, INITIAL_RU_PHONE_DISPLAY, isCompleteRuMobile, ruPhoneToE164 } from "@/utils/ruPhone";
+import { validateInn } from "@/utils/validateInn";
+import { CreateOrdProfileForm } from "./components/CreateOrdProfileForm";
+import { OrdProfileCard } from "./components/OrdProfileCard";
+import { ORD_COPY } from "./ord.constants";
 
 /**
- * ОРД: POST и PUT профиля комнаты (rooms/:id/ord-profile).
+ * ОРД: POST и PUT профиля комнаты (`rooms/:id/ord-profile`).
  */
 export default function OrdPage() {
+  const queryClient = useQueryClient();
   const { slug } = useParams<{ slug: string }>();
   const { room, isLoading, isError, error } = useGetRoomById(slug ?? "");
   const roomId = room?.id ?? "";
 
   const [createInn, setCreateInn] = useState("");
-  const [createName, setCreateName] = useState("");
-  const [createPhone, setCreatePhone] = useState("");
+  const [createFio, setCreateFio] = useState(EMPTY_FIO);
+  const [createPhone, setCreatePhone] = useState(INITIAL_RU_PHONE_DISPLAY);
   const [createJuridical, setCreateJuridical] = useState<IOrdJuridicalType>("physical");
+  const [createAttempted, setCreateAttempted] = useState(false);
 
-  const [updateName, setUpdateName] = useState("");
-  const [updatePhone, setUpdatePhone] = useState("");
-
-  const [lastCreateResult, setLastCreateResult] = useState<IRoomOrdProfile | null>(null);
-  const [lastUpdateResult, setLastUpdateResult] = useState<IRoomOrdProfile | null>(null);
+  const [isEditingOrd, setIsEditingOrd] = useState(false);
+  const [editFio, setEditFio] = useState(EMPTY_FIO);
+  const [editPhone, setEditPhone] = useState(INITIAL_RU_PHONE_DISPLAY);
+  const [editAttempted, setEditAttempted] = useState(false);
 
   const {
     createRoomOrdProfile,
@@ -95,41 +51,79 @@ export default function OrdPage() {
     reset: resetUpdate,
   } = useUpdateRoomOrdProfile();
 
+  const ordPerson = room?.ordPerson ?? null;
+
+  useEffect(() => {
+    if (!ordPerson) setIsEditingOrd(false);
+  }, [ordPerson?.id]);
+
+  const invalidateRoom = () => {
+    if (roomId) queryClient.invalidateQueries({ queryKey: [QueryKeys.ROOMS, roomId] });
+  };
+
+  const innOk = !validateInn(createInn, createJuridical).error;
+  const createFormValid = innOk && isFioComplete(createFio) && isCompleteRuMobile(createPhone);
+
   const handleCreate = () => {
     if (!roomId) return;
+    if (!createFormValid) {
+      setCreateAttempted(true);
+      return;
+    }
+    setCreateAttempted(false);
     resetCreate();
-    setLastCreateResult(null);
+    const { normalized: innNormalized } = validateInn(createInn, createJuridical);
     createRoomOrdProfile(
       {
         roomId,
         data: {
-          inn: createInn.trim(),
-          name: createName.trim(),
-          phone: createPhone.trim(),
+          inn: innNormalized,
+          name: joinFio(createFio),
+          phone: ruPhoneToE164(createPhone),
           juridicalType: createJuridical,
         },
       },
-      {
-        onSuccess: (data) => setLastCreateResult(data),
-      }
+      { onSuccess: invalidateRoom }
     );
   };
 
-  const handleUpdate = () => {
-    if (!roomId) return;
-    const name = updateName.trim();
-    const phone = updatePhone.trim();
-    const data: { name?: string; phone?: string } = {};
-    if (name) data.name = name;
-    if (phone) data.phone = phone;
-    if (!data.name && !data.phone) return;
-
+  const handleStartEdit = () => {
+    if (!ordPerson) return;
     resetUpdate();
-    setLastUpdateResult(null);
+    setEditAttempted(false);
+    setEditFio(parseFioFromApi(ordPerson.name));
+    setEditPhone(formatRuMobileInput(ordPerson.phone));
+    setIsEditingOrd(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingOrd(false);
+    setEditAttempted(false);
+    resetUpdate();
+  };
+
+  const handleSave = () => {
+    if (!roomId || !ordPerson) return;
+    const fullName = joinFio(editFio);
+    const phone = ruPhoneToE164(editPhone);
+    if (!isFioComplete(editFio) || !isCompleteRuMobile(editPhone)) {
+      setEditAttempted(true);
+      return;
+    }
+    const payload: { name?: string; phone?: string } = {};
+    if (fullName !== ordPerson.name) payload.name = fullName;
+    if (phone !== ordPerson.phone) payload.phone = phone;
+    if (!payload.name && !payload.phone) return;
+
+    setEditAttempted(false);
+    resetUpdate();
     updateRoomOrdProfile(
-      { roomId, data },
+      { roomId, data: payload },
       {
-        onSuccess: (d) => setLastUpdateResult(d),
+        onSuccess: () => {
+          invalidateRoom();
+          setIsEditingOrd(false);
+        },
       }
     );
   };
@@ -145,135 +139,55 @@ export default function OrdPage() {
   if (isError || !room) {
     return (
       <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error">{(error as Error)?.message ?? "Комната не найдена"}</Alert>
+        <Alert severity="error">{(error as Error)?.message ?? ORD_COPY.roomNotFound}</Alert>
       </Box>
     );
   }
 
-  const createDisabled =
-    !roomId ||
-    isCreatePending ||
-    !createInn.trim() ||
-    !createName.trim() ||
-    !createPhone.trim();
-
-  const updateDisabled =
-    !roomId || isUpdatePending || (!updateName.trim() && !updatePhone.trim());
-
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-        ОРД
+        {ORD_COPY.pageTitle}
       </Typography>
 
       <Stack spacing={3}>
-        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            Создать профиль ОРД
-          </Typography>
-          {createGeneralError ? (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {createGeneralError}
-            </Alert>
-          ) : null}
-          <Stack spacing={2} maxWidth={480}>
-            <TextField
-              label="ИНН"
-              size="small"
-              value={createInn}
-              onChange={(e) => setCreateInn(e.target.value)}
-              required
-              error={!!createValidationErrors.inn?.length}
-              helperText={createValidationErrors.inn?.[0]}
-            />
-            <TextField
-              label="Наименование"
-              size="small"
-              value={createName}
-              onChange={(e) => setCreateName(e.target.value)}
-              required
-              error={!!createValidationErrors.name?.length}
-              helperText={createValidationErrors.name?.[0]}
-            />
-            <TextField
-              label="Телефон"
-              size="small"
-              value={createPhone}
-              onChange={(e) => setCreatePhone(e.target.value)}
-              required
-              error={!!createValidationErrors.phone?.length}
-              helperText={createValidationErrors.phone?.[0]}
-            />
-            <TextField
-              select
-              label="Юридический тип"
-              size="small"
-              value={createJuridical}
-              onChange={(e) => setCreateJuridical(e.target.value as IOrdJuridicalType)}
-              error={!!createValidationErrors.juridicalType?.length}
-              helperText={createValidationErrors.juridicalType?.[0]}
-            >
-              {JURIDICAL_OPTIONS.map((o) => (
-                <MenuItem key={o.value} value={o.value}>
-                  {o.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Button
-              variant="contained"
-              disabled={createDisabled}
-              onClick={handleCreate}
-              sx={{
-                alignSelf: "flex-start",
-                backgroundColor: PRIMARY_COLOR,
-                "&:hover": { backgroundColor: PRIMARY_COLOR, opacity: 0.9 },
-              }}
-            >
-              {isCreatePending ? "Отправка…" : "Создать"}
-            </Button>
-          </Stack>
-          {lastCreateResult ? <OrdProfileSummary profile={lastCreateResult} /> : null}
-        </Paper>
+        {!ordPerson ? (
+          <CreateOrdProfileForm
+            roomId={roomId}
+            inn={createInn}
+            onInnChange={setCreateInn}
+            fio={createFio}
+            onFioChange={(patch) => setCreateFio((prev) => ({ ...prev, ...patch }))}
+            phone={createPhone}
+            setPhone={setCreatePhone}
+            juridicalType={createJuridical}
+            onJuridicalChange={setCreateJuridical}
+            submitAttempted={createAttempted}
+            onSubmit={handleCreate}
+            isPending={isCreatePending}
+            generalError={createGeneralError}
+            apiErrors={createValidationErrors}
+          />
+        ) : null}
 
-        <Divider />
-
-        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            Обновить профиль ОРД
-          </Typography>
-          {updateGeneralError ? (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {updateGeneralError}
-            </Alert>
-          ) : null}
-          <Stack spacing={2} maxWidth={480}>
-            <TextField
-              label="Наименование"
-              size="small"
-              value={updateName}
-              onChange={(e) => setUpdateName(e.target.value)}
-              error={!!updateValidationErrors.name?.length}
-              helperText={updateValidationErrors.name?.[0] ?? "Необязательно, если меняете только телефон"}
-            />
-            <TextField
-              label="Телефон"
-              size="small"
-              value={updatePhone}
-              onChange={(e) => setUpdatePhone(e.target.value)}
-              error={!!updateValidationErrors.phone?.length}
-              helperText={updateValidationErrors.phone?.[0]}
-            />
-            <Button
-              variant="outlined"
-              disabled={updateDisabled}
-              onClick={handleUpdate}
-              sx={{ alignSelf: "flex-start" }}
-            >
-              {isUpdatePending ? "Отправка…" : "Сохранить изменения"}
-            </Button>
-          </Stack>
-          {lastUpdateResult ? <OrdProfileSummary profile={lastUpdateResult} /> : null}
-        </Paper>
+        {ordPerson ? (
+          <OrdProfileCard
+            profile={ordPerson}
+            roomId={roomId}
+            isEditing={isEditingOrd}
+            onStartEdit={handleStartEdit}
+            onCancelEdit={handleCancelEdit}
+            editFio={editFio}
+            onEditFioPatch={(patch) => setEditFio((prev) => ({ ...prev, ...patch }))}
+            editPhone={editPhone}
+            setEditPhone={setEditPhone}
+            onSave={handleSave}
+            isUpdatePending={isUpdatePending}
+            updateGeneralError={updateGeneralError}
+            apiErrors={updateValidationErrors}
+            editAttempted={editAttempted}
+          />
+        ) : null}
       </Stack>
     </Box>
   );

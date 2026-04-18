@@ -49,6 +49,8 @@ export interface IGetRoomByIdResponse {
   projectId: string,
   notificationCreativeTaskApprovedBotId?: string,
   notificationCreativeTaskRejectedBotId?: string,
+  /** GET /rooms/:id — профиль ОРД (OrdPerson), см. RoomOrdProfileResponseDto */
+  ordPerson: IRoomOrdProfile | null,
 }
 
 export type IRotateSecretKeyResponse = string
@@ -101,18 +103,15 @@ export interface IGetRoomPromoCodeUsagesResponse {
 /** Соответствует Prisma OrdJuridicalType / backend CreateRoomOrdProfileRequestDto */
 export type IOrdJuridicalType = 'physical' | 'ip' | 'juridical';
 
-/** Соответствует Prisma OrdSyncStatus / backend RoomOrdProfileResponseDto */
-export type IOrdSyncStatus = 'pending' | 'synced' | 'error';
-
-/** Ответ POST / PUT rooms/:id/ord-profile — RoomOrdProfileResponseDto */
+/** Ответ POST / PUT rooms/:id/ord-profile и поле ordPerson в GET /rooms/:id — RoomOrdProfileResponseDto */
 export interface IRoomOrdProfile {
   id: string;
   inn: string;
   name: string;
   phone: string;
   juridicalType: IOrdJuridicalType;
-  syncStatus: IOrdSyncStatus;
-  lastError: string | null;
+  syncedAt: string | null;
+  lastSyncError: string | null;
 }
 
 /** Тело POST rooms/:id/ord-profile — CreateRoomOrdProfileRequestDto */
