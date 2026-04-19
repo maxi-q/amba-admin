@@ -39,10 +39,12 @@ export interface IRoomApplication {
   name: string;
   inn: number;
   phone: string;
-  juridicalType: 'physical' | 'ip' | 'juridical';
+  juridicalType: 'physical' | 'ip' | 'juridical' | null;
   status: 'pending' | 'approved' | 'rejected';
   ambassadorId: string;
   roomId: string;
+  /** ID OrdPerson (BaseAmbassadorRoomApplicationDto) — нужен для ОРД-договоров */
+  ordPersonId: string;
 }
 export interface IGetRoomApplicationsResponse {
   items: IRoomApplication[];

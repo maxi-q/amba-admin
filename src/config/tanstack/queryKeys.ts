@@ -15,4 +15,7 @@ export enum QueryKeys {
   CREATIVE_TASK_WHITELIST = 'creativeTaskWhitelist',
 
   INVITATIONS = 'invitations',
+
+  /** GET rooms/:roomId/ord-contracts, GET .../:contractId */
+  ROOM_ORD_CONTRACTS = 'roomOrdContracts',
 }

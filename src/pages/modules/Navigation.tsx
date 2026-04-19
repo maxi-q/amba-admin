@@ -18,7 +18,10 @@ import {
   CreativeTasksPage,
   CreativeTaskDetailPage,
   InvitationsPage,
-  OrdPage
+  OrdLayout,
+  OrdContractsPage,
+  OrdProfilePage,
+  OrdContractDetailPage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -104,7 +107,11 @@ export const Navigation = () => {
         <Route path="statistics" element={<StatisticsPage />} />
         <Route path="applications" element={<ApplicationsPage />} />
         <Route path="invitations" element={<InvitationsPage />} />
-        <Route path="ord" element={<OrdPage />} />
+        <Route path="ord" element={<OrdLayout />}>
+          <Route index element={<OrdContractsPage />} />
+          <Route path="profile" element={<OrdProfilePage />} />
+          <Route path=":contractId" element={<OrdContractDetailPage />} />
+        </Route>
         <Route path="creativetasks/:taskId" element={<CreativeTaskDetailPage />} />
         <Route path="creativetasks" element={<CreativeTasksPage />} />
 

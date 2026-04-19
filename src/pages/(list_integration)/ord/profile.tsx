@@ -18,7 +18,7 @@ import { ORD_COPY } from "./ord.constants";
 /**
  * ОРД: POST и PUT профиля комнаты (`rooms/:id/ord-profile`).
  */
-export default function OrdPage() {
+export default function OrdProfilePage() {
   const queryClient = useQueryClient();
   const { slug } = useParams<{ slug: string }>();
   const { room, isLoading, isError, error } = useGetRoomById(slug ?? "");
@@ -147,7 +147,7 @@ export default function OrdPage() {
   return (
     <Box sx={{ width: "100%", px: 2, py: 3 }}>
       <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
-        {ORD_COPY.pageTitle}
+        {ORD_COPY.profileSectionTitle}
       </Typography>
 
       <Stack spacing={3}>

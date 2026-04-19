@@ -14,6 +14,10 @@ import type {
   IRoomOrdProfile,
   ICreateRoomOrdProfileRequest,
   IUpdateRoomOrdProfileRequest,
+  IGetRoomOrdContractsRequest,
+  IGetRoomOrdContractsResponse,
+  IRoomOrdContractItem,
+  ICreateRoomOrdContractRequest,
 } from './rooms.types';
 import { getContentType } from '@services/config/axios.helper';
 import { BaseService } from '@services/config/base.service';
@@ -79,6 +83,37 @@ class RoomsService extends BaseService {
   async updateRoomOrdProfile(roomId: string, data: IUpdateRoomOrdProfileRequest): Promise<IRoomOrdProfile> {
     return this.handleApiCall(() =>
       instance.put<IRoomOrdProfile>(`${this._BASE_URL}/${roomId}/ord-profile`, data, { headers: getContentType() })
+    );
+  }
+
+  async getRoomOrdContracts(roomId: string, params?: IGetRoomOrdContractsRequest): Promise<IGetRoomOrdContractsResponse> {
+    return this.handleApiCall(() =>
+      instance.get<IGetRoomOrdContractsResponse>(`${this._BASE_URL}/${roomId}/ord-contracts`, {
+        params,
+        headers: getContentType(),
+      })
+    );
+  }
+
+  async getRoomOrdContractById(roomId: string, contractId: string): Promise<IRoomOrdContractItem> {
+    return this.handleApiCall(() =>
+      instance.get<IRoomOrdContractItem>(`${this._BASE_URL}/${roomId}/ord-contracts/${contractId}`, {
+        headers: getContentType(),
+      })
+    );
+  }
+
+  async createRoomOrdContract(roomId: string, data: ICreateRoomOrdContractRequest): Promise<IRoomOrdContractItem> {
+    return this.handleApiCall(() =>
+      instance.post<IRoomOrdContractItem>(`${this._BASE_URL}/${roomId}/ord-contracts`, data, {
+        headers: getContentType(),
+      })
+    );
+  }
+
+  async deleteRoomOrdContract(roomId: string, contractId: string): Promise<void> {
+    return this.handleApiCall(() =>
+      instance.delete<void>(`${this._BASE_URL}/${roomId}/ord-contracts/${contractId}`, { headers: getContentType() })
     );
   }
 
