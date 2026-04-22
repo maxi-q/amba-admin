@@ -1,5 +1,14 @@
-import { Box, Alert } from "@mui/material";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  Alert,
+  AlertDescription,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@senler/ui";
 import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
 import { useRotateSecretKey } from "@/hooks/rooms/useRotateSecretKey";
 import { WebhookSection } from "./WebhookSection";
@@ -21,7 +30,6 @@ export function SettingsWebhookSection({
   const {
     updateRoom,
     isPending: isUpdating,
-    isSuccess: isUpdateSuccess,
     isValidationError: isUpdateValidationError,
     validationErrors: updateValidationErrors,
     generalError: updateGeneralError,
@@ -48,10 +56,16 @@ export function SettingsWebhookSection({
   }, [room]);
 
   useEffect(() => {
-    if (isUpdateValidationError && Object.keys(updateValidationErrors).length > 0) {
+    if (
+      isUpdateValidationError &&
+      Object.keys(updateValidationErrors).length > 0
+    ) {
       setFieldErrors(updateValidationErrors);
       setGeneralError("");
-    } else if (isRotateValidationError && Object.keys(rotateValidationErrors).length > 0) {
+    } else if (
+      isRotateValidationError &&
+      Object.keys(rotateValidationErrors).length > 0
+    ) {
       setFieldErrors(rotateValidationErrors);
       setGeneralError("");
     } else if (updateGeneralError) {
@@ -73,19 +87,24 @@ export function SettingsWebhookSection({
     rotateGeneralError,
   ]);
 
-  useEffect(() => {
-    if (isUpdateSuccess) onSaveSuccess?.();
-  }, [isUpdateSuccess, onSaveSuccess]);
-
   const handleSaveWebhook = () => {
     setFieldErrors({});
     setGeneralError("");
-    updateRoom({ data: { webhookUrl }, id: slug });
+    updateRoom(
+      { data: { webhookUrl }, id: slug },
+      {
+        onSuccess: () => {
+          toast.success("Настройки успешно сохранены");
+          onSaveSuccess?.();
+        },
+      }
+    );
   };
 
   const handleCopySecretKey = async () => {
     try {
       await navigator.clipboard.writeText(secretKey || "");
+      toast.success("Скопировано");
       onCopySuccess?.();
     } catch (error) {
       console.error("Ошибка при копировании:", error);
@@ -99,24 +118,32 @@ export function SettingsWebhookSection({
   };
 
   return (
-    <Box component="section" sx={{ mt: 4, pt: 3, borderTop: "1px solid #e0e0e0" }}>
-      {generalError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {generalError}
-        </Alert>
-      )}
-      <WebhookSection
-        webhookUrl={webhookUrl}
-        secretKey={secretKey}
-        slug={slug}
-        fieldErrors={fieldErrors}
-        isUpdating={isUpdating}
-        isRotating={isRotating}
-        onWebhookUrlChange={setWebhookUrl}
-        onSaveWebhook={handleSaveWebhook}
-        onCopySecretKey={handleCopySecretKey}
-        onRotateSecretKey={handleRotateSecretKey}
-      />
-    </Box>
+    <Card id="webhook">
+      <CardHeader>
+        <CardTitle className="text-lg">Вебхук</CardTitle>
+        <CardDescription>
+          URL и секретный ключ для входящих уведомлений
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        {generalError ? (
+          <Alert variant="destructive">
+            <AlertDescription>{generalError}</AlertDescription>
+          </Alert>
+        ) : null}
+        <WebhookSection
+          webhookUrl={webhookUrl}
+          secretKey={secretKey}
+          slug={slug}
+          fieldErrors={fieldErrors}
+          isUpdating={isUpdating}
+          isRotating={isRotating}
+          onWebhookUrlChange={setWebhookUrl}
+          onSaveWebhook={handleSaveWebhook}
+          onCopySecretKey={handleCopySecretKey}
+          onRotateSecretKey={handleRotateSecretKey}
+        />
+      </CardContent>
+    </Card>
   );
 }

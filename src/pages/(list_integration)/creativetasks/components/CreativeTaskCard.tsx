@@ -1,19 +1,10 @@
 import { useState } from "react";
-import {
-  Box,
-  Paper,
-  Stack,
-  Typography,
-  Chip,
-  IconButton,
-  Collapse
-} from "@mui/material";
-import { Edit as EditIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
+import { Badge, Card, CardContent, Button } from "@senler/ui";
 import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
 import { formatDateRange, isTaskActive } from "../utils/creativetaskUtils";
 import { TaskSubmissionsList } from "./TaskSubmissionsList";
-import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface CreativeTaskCardProps {
   task: ICreativeTask;
@@ -30,103 +21,110 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
   const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt);
 
   return (
-    <Paper
-      component={Link}
+    <Link
       to={`../creativetasks/${task.id}`}
-      sx={{
-        p: 2,
-        borderRadius: 3,
-        opacity: task.isDeleted ? 0.6 : 1,
-        bgcolor: task.isDeleted ? "grey.50" : "background.paper",
-        border: active ? "2px solid" : "1px solid",
-        borderColor: active ? "success.main" : "divider",
-        textDecoration: "none",
-        color: "inherit",
-        "&:hover": {
-          bgcolor: task.isDeleted ? "grey.100" : "action.hover"
-        }
-      }}
+      className={`block overflow-hidden rounded-xl border text-card-foreground no-underline transition-colors hover:border-primary/50 hover:bg-accent/20 ${
+        task.isDeleted ? "border-border opacity-60" : "border-border"
+      } ${active ? "ring-2 ring-green-600/40 dark:ring-green-500/40" : ""}`}
     >
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            variant="h6"
-            fontWeight={500}
-            mb={1}
-            sx={{
-              textDecoration: task.isDeleted ? "line-through" : "none",
-              color: task.isDeleted ? "text.disabled" : "inherit"
-            }}
-          >
-            {task.title}
-          </Typography>
-          <Typography
-            variant="body2"
-            color={task.isDeleted ? "text.disabled" : "text.secondary"}
-            sx={{
-              textDecoration: task.isDeleted ? "line-through" : "none",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden"
-            }}
-          >
-            {task.description || "—"}
-          </Typography>
-          <Typography
-            variant="body2"
-            color={task.isDeleted ? "text.disabled" : active ? "success.main" : "text.secondary"}
-            fontWeight={active ? 500 : 400}
-            sx={{ mt: 1, textDecoration: task.isDeleted ? "line-through" : "none" }}
-          >
-            {dateRange}
-          </Typography>
-        </Box>
+      <Card className="border-0 shadow-none">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h3
+                className={`mb-1 text-lg font-medium leading-snug ${
+                  task.isDeleted
+                    ? "text-muted-foreground line-through"
+                    : "text-foreground"
+                }`}
+              >
+                {task.title}
+              </h3>
+              <p
+                className={`line-clamp-2 text-sm ${
+                  task.isDeleted
+                    ? "text-muted-foreground line-through"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {task.description || "—"}
+              </p>
+              <p
+                className={`mt-1 text-sm ${
+                  task.isDeleted
+                    ? "text-muted-foreground line-through"
+                    : active
+                      ? "font-medium text-green-700 dark:text-green-400"
+                      : "text-muted-foreground"
+                }`}
+              >
+                {dateRange}
+              </p>
+            </div>
 
-        <Stack direction="row" alignItems="center" spacing={1} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-          {!task.isDeleted && (
-            <Chip
-              label={active ? "Активна" : "Неактивна"}
-              color={active ? "success" : "default"}
-              size="small"
-              sx={{ borderRadius: 1 }}
-            />
-          )}
-          <IconButton
-            size="small"
-            component="span"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setExpanded((prev) => !prev);
-            }}
-            aria-label={expanded ? "Свернуть" : "Развернуть"}
-          >
-            {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-          </IconButton>
-          <IconButton
-            size="small"
-            component="span"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit(task);
-            }}
-            aria-label="Редактировать"
-          >
-            <EditIcon fontSize="small" sx={{ color: PRIMARY_COLOR }} />
-          </IconButton>
-        </Stack>
-      </Box>
+            <div
+              className="flex shrink-0 items-center gap-1"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              {!task.isDeleted ? (
+                <Badge variant={active ? "success" : "secondary"}>
+                  {active ? "Активна" : "Неактивна"}
+                </Badge>
+              ) : null}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setExpanded((prev) => !prev);
+                }}
+                aria-label={expanded ? "Свернуть" : "Развернуть"}
+              >
+                {expanded ? (
+                  <ChevronUp className="size-4" />
+                ) : (
+                  <ChevronDown className="size-4" />
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9 text-primary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEdit(task);
+                }}
+                aria-label="Редактировать"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            </div>
+          </div>
 
-      <Collapse in={expanded}>
-        <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            Заявки по задаче
-          </Typography>
-          <TaskSubmissionsList taskId={task.id} page={1} size={5} status="pending" />
-        </Box>
-      </Collapse>
-    </Paper>
+          {expanded ? (
+            <div
+              className="mt-4 border-t border-border pt-4"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <p className="mb-2 text-sm font-medium text-muted-foreground">
+                Заявки по задаче
+              </p>
+              <TaskSubmissionsList taskId={task.id} page={1} size={5} status="pending" />
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </Link>
   );
 }

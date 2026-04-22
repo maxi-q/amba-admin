@@ -1,19 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Alert,
+  AlertDescription,
   Button,
-  TextField,
-  Stack,
-  Alert
-} from "@mui/material";
+  InputField,
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@senler/ui";
+import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 import { useCreateCreativeTask } from "@/hooks/creativetasks/useCreateCreativeTask";
 import type { ICreateCreativeTaskRequest } from "@services/creativetasks/creativetasks.types";
-import { PRIMARY_COLOR } from "@/constants/colors";
 
-/** Преобразует локальную datetime строку в ISO */
+const DESC_CLASS =
+  "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+/** Локальная datetime строка → ISO */
 function toISOString(localDateTime: string): string {
   if (!localDateTime) return "";
   return new Date(localDateTime).toISOString();
@@ -30,7 +35,7 @@ export function CreateCreativeTaskDialog({
   open,
   onClose,
   roomId,
-  onSuccess
+  onSuccess,
 }: CreateCreativeTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,21 +45,9 @@ export function CreateCreativeTaskDialog({
   const {
     createCreativeTask,
     isPending,
-    isSuccess,
     generalError,
-    validationErrors
+    validationErrors,
   } = useCreateCreativeTask();
-
-  useEffect(() => {
-    if (isSuccess) {
-      setTitle("");
-      setDescription("");
-      setStartsAt("");
-      setEndsAt("");
-      onClose();
-      onSuccess?.();
-    }
-  }, [isSuccess, onClose, onSuccess]);
 
   useEffect(() => {
     if (!open) {
@@ -72,80 +65,113 @@ export function CreateCreativeTaskDialog({
       description: description.trim(),
       startsAt: toISOString(startsAt),
       endsAt: toISOString(endsAt),
-      roomId
+      roomId,
     };
-    createCreativeTask(payload);
+    createCreativeTask(payload, {
+      onSuccess: () => {
+        onClose();
+        onSuccess?.();
+      },
+    });
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Создать креативную задачу</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 1 }}>
-          {generalError && (
-            <Alert severity="error">{generalError}</Alert>
-          )}
-          <TextField
-            label="Название"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-            size="small"
-            error={!!validationErrors?.title?.length}
-            helperText={validationErrors?.title?.[0]}
-            required
-          />
-          <TextField
-            label="Описание"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            size="small"
-            multiline
-            rows={3}
-            error={!!validationErrors?.description?.length}
-            helperText={validationErrors?.description?.[0]}
-          />
-          <TextField
-            label="Дата начала"
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            error={!!validationErrors?.startsAt?.length}
-            helperText={validationErrors?.startsAt?.[0]}
-          />
-          <TextField
-            label="Дата окончания"
-            type="datetime-local"
-            value={endsAt}
-            onChange={(e) => setEndsAt(e.target.value)}
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            error={!!validationErrors?.endsAt?.length}
-            helperText={validationErrors?.endsAt?.[0]}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={isPending}>
-          Отмена
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={isPending || !title.trim()}
-          sx={{
-            backgroundColor: PRIMARY_COLOR,
-            "&:hover": { backgroundColor: PRIMARY_COLOR, opacity: 0.9 }
-          }}
-        >
-          {isPending ? "Создание…" : "Создать"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="flex !h-[100dvh] !max-h-[100dvh] flex-col gap-0 rounded-none border-0 p-0"
+      >
+        <SheetHeader className="shrink-0 flex-row items-center gap-2 space-y-0 border-b border-border bg-primary px-3 py-3 text-primary-foreground">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            onClick={onClose}
+            aria-label="Закрыть"
+          >
+            <X className="size-5" />
+          </Button>
+          <SheetTitle className="flex-1 text-left text-lg font-medium text-primary-foreground">
+            Создать креативную задачу
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-6">
+          {generalError ? (
+            <Alert variant="destructive" className="w-full">
+              <AlertDescription>{generalError}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Название *</p>
+            <InputField
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              error={hasFieldError(validationErrors, "title")}
+              helperText={getFirstFieldError(validationErrors, "title") ?? undefined}
+              aria-label="Название"
+            />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Описание</p>
+            <textarea
+              className={DESC_CLASS}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              aria-label="Описание"
+            />
+            {hasFieldError(validationErrors, "description") ? (
+              <p className="text-sm text-destructive">
+                {getFirstFieldError(validationErrors, "description")}
+              </p>
+            ) : null}
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Дата начала</p>
+            <InputField
+              type="datetime-local"
+              value={startsAt}
+              onChange={(e) => setStartsAt(e.target.value)}
+              error={hasFieldError(validationErrors, "startsAt")}
+              helperText={getFirstFieldError(validationErrors, "startsAt") ?? undefined}
+              aria-label="Дата начала"
+            />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Дата окончания</p>
+            <InputField
+              type="datetime-local"
+              value={endsAt}
+              onChange={(e) => setEndsAt(e.target.value)}
+              error={hasFieldError(validationErrors, "endsAt")}
+              helperText={getFirstFieldError(validationErrors, "endsAt") ?? undefined}
+              aria-label="Дата окончания"
+            />
+          </div>
+        </div>
+
+        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">
+          <Button type="button" variant="outline" size="lg" onClick={onClose} disabled={isPending}>
+            Отмена
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleSubmit}
+            disabled={isPending || !title.trim()}
+          >
+            {isPending ? "Создание…" : "Создать"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -1,7 +1,6 @@
-import { Box, Typography, Paper, Stack, IconButton, Chip } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { Pencil, Trash2 } from "lucide-react";
+import { Badge, Button, Card, CardContent } from "@senler/ui";
 import type { IInvitation } from "@services/invitations/invitations.types";
-import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface InvitationCardProps {
   invitation: IInvitation;
@@ -22,23 +21,19 @@ function IdLine({
 }) {
   const safe = ids ?? [];
   if (safe.length === 0) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        {label}: —
-      </Typography>
-    );
+    return <p className="text-sm text-muted-foreground">{label}: —</p>;
   }
   return (
-    <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-        {label}
-      </Typography>
-      <Stack direction="row" flexWrap="wrap" useFlexGap spacing={0.5}>
+    <div>
+      <p className="mb-1 text-sm text-muted-foreground">{label}</p>
+      <div className="flex flex-wrap gap-1">
         {safe.map((id) => (
-          <Chip key={id} size="small" variant="outlined" label={resolve(id)} />
+          <Badge key={id} variant="secondary" className="font-normal">
+            {resolve(id)}
+          </Badge>
         ))}
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 }
 
@@ -54,46 +49,60 @@ export function InvitationCard({
   const eventIds = invitation.eventIds ?? [];
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" color="text.secondary">
-            Подписчики ВК (subscriberId)
-          </Typography>
-          {vkTargets.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              —
-            </Typography>
-          ) : (
-            <Stack direction="row" flexWrap="wrap" useFlexGap spacing={0.5} sx={{ mt: 0.5 }}>
-              {vkTargets.map((t, i) => (
-                <Chip
-                  key={`${t.subscriberId}-${i}`}
-                  size="small"
-                  variant="outlined"
-                  label={t.subscriberId}
-                  sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}
-                />
-              ))}
-            </Stack>
-          )}
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-            Создано: {new Date(invitation.createdAt).toLocaleString("ru-RU")}
-          </Typography>
-          <Stack spacing={1.5} sx={{ mt: 2 }}>
-            <IdLine label="Креативные задачи" ids={taskIds} resolve={resolveTaskLabel} />
-            <IdLine label="События" ids={eventIds} resolve={resolveEventLabel} />
-          </Stack>
-        </Box>
-        <Stack direction="row" spacing={0.5}>
-          <IconButton size="small" aria-label="Редактировать" onClick={() => onEdit(invitation)}>
-            <EditIcon fontSize="small" sx={{ color: PRIMARY_COLOR }} />
-          </IconButton>
-          <IconButton size="small" aria-label="Удалить" color="error" onClick={() => onDelete(invitation)}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Stack>
-      </Box>
-    </Paper>
+    <Card className="border border-border shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-muted-foreground">
+              Подписчики ВК (subscriberId)
+            </p>
+            {vkTargets.length === 0 ? (
+              <p className="mt-1 text-sm text-muted-foreground">—</p>
+            ) : (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {vkTargets.map((t, i) => (
+                  <Badge
+                    key={`${t.subscriberId}-${i}`}
+                    variant="outline"
+                    className="font-mono text-xs font-normal"
+                  >
+                    {t.subscriberId}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <p className="mt-2 block text-xs text-muted-foreground">
+              Создано: {new Date(invitation.createdAt).toLocaleString("ru-RU")}
+            </p>
+            <div className="mt-3 flex flex-col gap-3">
+              <IdLine label="Креативные задачи" ids={taskIds} resolve={resolveTaskLabel} />
+              <IdLine label="События" ids={eventIds} resolve={resolveEventLabel} />
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-0.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-9 text-primary"
+              aria-label="Редактировать"
+              onClick={() => onEdit(invitation)}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-9 text-destructive hover:bg-destructive/10"
+              aria-label="Удалить"
+              onClick={() => onDelete(invitation)}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

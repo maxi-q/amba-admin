@@ -1,10 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Alert, Button, Chip, Paper, Stack, Typography } from "@mui/material";
+import { Alert, AlertDescription, Badge, Button, Card, CardContent } from "@senler/ui";
 import type { IRoomOrdProfile } from "@services/rooms/rooms.types";
 import type { FioParts } from "@/utils/fio";
 import { joinFio } from "@/utils/fio";
 import { isCompleteRuMobile, ruPhoneToE164 } from "@/utils/ruPhone";
-import { ORD_COPY, ORD_STATIC_FIELDS_SX, ordContainedPrimarySx } from "../ord.constants";
+import { ORD_COPY } from "../ord.constants";
 import { getOrdSyncPresentation, ordJuridicalLabel } from "../ord.utils";
 import { FioTextFields } from "./FioTextFields";
 import { RuPhoneTextField } from "./RuPhoneTextField";
@@ -27,6 +27,14 @@ type Props = {
   apiErrors: ApiFieldErrors;
   editAttempted: boolean;
 };
+
+function syncBadgeVariant(
+  color: "default" | "success" | "error"
+): "secondary" | "success" | "destructive" {
+  if (color === "error") return "destructive";
+  if (color === "success") return "success";
+  return "secondary";
+}
 
 export function OrdProfileCard({
   profile,
@@ -57,40 +65,37 @@ export function OrdProfileCard({
   const mergeFio = (patch: Partial<FioParts>) => onEditFioPatch(patch);
 
   return (
-    <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        {ORD_COPY.profileSectionTitle}
-      </Typography>
+    <Card className="max-w-2xl border border-border shadow-sm">
+      <CardContent className="p-4 sm:p-6">
+        <h3 className="mb-3 text-base font-semibold text-foreground">{ORD_COPY.profileSectionTitle}</h3>
 
-      {updateGeneralError ? (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {updateGeneralError}
-        </Alert>
-      ) : null}
+        {updateGeneralError ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{updateGeneralError}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      <Stack spacing={2}>
-        <Stack spacing={1.25} sx={ORD_STATIC_FIELDS_SX}>
-          <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1}>
-            <Chip size="small" label={`ID: ${profile.id}`} variant="outlined" />
-            <Chip
-              size="small"
-              label={sync.label}
-              color={sync.color === "default" ? "default" : sync.color}
-              variant="outlined"
-            />
-          </Stack>
-          <Typography variant="body2">ИНН: {profile.inn}</Typography>
-          <Typography variant="body2">Юридический тип: {ordJuridicalLabel(profile.juridicalType)}</Typography>
-        </Stack>
+        <div className="mb-4 flex flex-col gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline" className="font-mono text-xs">
+              ID: {profile.id}
+            </Badge>
+            <Badge variant={syncBadgeVariant(sync.color)}>{sync.label}</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground/90">ИНН: {profile.inn}</p>
+          <p className="text-sm text-muted-foreground/90">
+            Юридический тип: {ordJuridicalLabel(profile.juridicalType)}
+          </p>
+        </div>
 
         {profile.lastSyncError ? (
-          <Alert severity="warning" sx={{ py: 0 }}>
-            {profile.lastSyncError}
+          <Alert className="mb-4 border-amber-500/40 bg-amber-500/5">
+            <AlertDescription>{profile.lastSyncError}</AlertDescription>
           </Alert>
         ) : null}
 
         {isEditing ? (
-          <Stack spacing={2} maxWidth={480}>
+          <div className="mb-4 grid max-w-md gap-4">
             <FioTextFields
               value={editFio}
               onChange={mergeFio}
@@ -98,41 +103,47 @@ export function OrdProfileCard({
               showRequiredErrors={editAttempted}
             />
             <RuPhoneTextField
-              label="Телефон"
               value={editPhone}
               setValue={setEditPhone}
               error={(!phoneOk && editAttempted) || !!apiErrors.phone?.length}
               helperText={phoneHint}
             />
-          </Stack>
+          </div>
         ) : (
-          <Stack spacing={0.5}>
-            <Typography variant="body1" fontWeight={600}>
-              {profile.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {profile.phone}
-            </Typography>
-          </Stack>
+          <div className="mb-4 space-y-0.5">
+            <p className="text-base font-semibold text-foreground">{profile.name}</p>
+            <p className="text-sm text-muted-foreground">{profile.phone}</p>
+          </div>
         )}
 
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ pt: 0.5 }}>
+        <div className="flex flex-wrap gap-2 pt-1">
           {isEditing ? (
             <>
-              <Button variant="contained" disabled={saveDisabled} onClick={onSave} sx={ordContainedPrimarySx}>
+              <Button
+                type="button"
+                size="lg"
+                onClick={onSave}
+                disabled={saveDisabled}
+              >
                 {isUpdatePending ? ORD_COPY.savePending : ORD_COPY.save}
               </Button>
-              <Button variant="text" onClick={onCancelEdit} disabled={isUpdatePending}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="lg"
+                onClick={onCancelEdit}
+                disabled={isUpdatePending}
+              >
                 {ORD_COPY.cancel}
               </Button>
             </>
           ) : (
-            <Button variant="outlined" onClick={onStartEdit} sx={{ alignSelf: "flex-start" }}>
+            <Button type="button" variant="outline" size="lg" onClick={onStartEdit}>
               {ORD_COPY.edit}
             </Button>
           )}
-        </Stack>
-      </Stack>
-    </Paper>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

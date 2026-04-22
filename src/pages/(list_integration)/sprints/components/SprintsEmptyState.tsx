@@ -1,4 +1,4 @@
-import { Alert, Link } from "@mui/material";
+import { Alert, AlertDescription } from "@senler/ui";
 
 interface SprintsEmptyStateProps {
   onCreateClick: () => void;
@@ -6,25 +6,18 @@ interface SprintsEmptyStateProps {
 
 export const SprintsEmptyState = ({ onCreateClick }: SprintsEmptyStateProps) => {
   return (
-    <Alert severity="info" sx={{ mb: 3 }}>
-      Спринтов пока нет.{' '}
-      <Link
-        component="button"
-        onClick={onCreateClick}
-        sx={{
-          textDecoration: 'underline',
-          cursor: 'pointer',
-          color: 'inherit',
-          border: 'none',
-          background: 'none',
-          padding: 0,
-          font: 'inherit',
-        }}
-      >
-        Создайте первый спринт
-      </Link>
-      , чтобы начать работу.
+    <Alert className="mb-3">
+      <AlertDescription className="inline-block">
+        Спринтов пока нет.{" "}
+        <button
+          type="button"
+          onClick={onCreateClick}
+          className=" cursor-pointer border-0 bg-transparent p-0 align-baseline font-medium text-primary underline underline-offset-2 hover:text-primary/90"
+        >
+          Создайте первый спринт
+        </button>
+        , чтобы начать работу.
+      </AlertDescription>
     </Alert>
   );
 };
-

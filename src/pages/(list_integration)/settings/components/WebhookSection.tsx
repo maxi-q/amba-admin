@@ -1,15 +1,7 @@
-import {
-  Typography,
-  TextField,
-  Box,
-  Button,
-  IconButton,
-  Link,
-} from "@mui/material";
-import { Refresh, ContentCopy } from "@mui/icons-material";
-import { Link as RouterLink } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { Copy, RefreshCw } from "lucide-react";
+import { Button, InputField } from "@senler/ui";
 import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
-import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface WebhookSectionProps {
   webhookUrl: string;
@@ -36,91 +28,85 @@ export const WebhookSection = ({
   onCopySecretKey,
   onRotateSecretKey,
 }: WebhookSectionProps) => {
+  const errs = fieldErrors ?? {};
+
   return (
-    <Box sx={{ mb: 2 }}>
-      <Typography variant="h6" mb={2}>Вебхук</Typography>
-      
-      <Typography variant="subtitle2" mb={1.5}>
-        Адрес:
-      </Typography>
-      <Box display="flex" gap={2} mb={2}>
-        <TextField
-          fullWidth
-          value={webhookUrl}
-          onChange={(e) => onWebhookUrlChange(e.target.value)}
-          size="medium"
-          variant="outlined"
-          error={hasFieldError(fieldErrors || {}, 'webhookUrl')}
-          helperText={getFirstFieldError(fieldErrors || {}, 'webhookUrl')}
-        />
-        <Button
-          variant="contained"
-          onClick={onSaveWebhook}
-          disabled={isUpdating}
-          sx={{ 
-            minWidth: 120,
-            backgroundColor: PRIMARY_COLOR,
-            "&:hover": {
-              backgroundColor: PRIMARY_COLOR,
-              opacity: 0.9
-            }
-          }}
+    <div className="grid gap-4">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Адрес</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <div className="min-w-0 flex-1">
+            <InputField
+              value={webhookUrl}
+              onChange={(e) => onWebhookUrlChange(e.target.value)}
+              error={hasFieldError(errs, "webhookUrl")}
+              helperText={getFirstFieldError(errs, "webhookUrl") ?? undefined}
+              aria-label="URL вебхука"
+            />
+          </div>
+          <Button
+            type="button"
+            size="lg"
+            className="h-10 shrink-0 self-start"
+            onClick={onSaveWebhook}
+            disabled={isUpdating}
+          >
+            {isUpdating ? "Сохранение…" : "Сохранить"}
+          </Button>
+        </div>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        На этот адрес будут отправляться запросы после того как привлечённый
+        пользователь активировал промокод
+      </p>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Секретный ключ</p>
+        <div className="flex flex-row items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <InputField
+              type="password"
+              readOnly
+              value={secretKey || ""}
+              aria-label="Секретный ключ"
+              endAdornment={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={onCopySecretKey}
+                  aria-label="Скопировать секретный ключ"
+                >
+                  <Copy className="size-4" />
+                </Button>
+              }
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="size-10 shrink-0 p-0"
+            onClick={onRotateSecretKey}
+            disabled={isRotating}
+            aria-label="Обновить секретный ключ"
+          >
+            <RefreshCw
+              className={`size-4 ${isRotating ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </div>
+      </div>
+
+      {slug ? (
+        <Link
+          to={`/rooms/${slug}/setting/info`}
+          className="text-sm text-primary underline underline-offset-4 hover:text-primary/90"
         >
-          {isUpdating ? 'Сохранение...' : 'Сохранить'}
-        </Button>
-      </Box>
-
-      <Typography variant="body2" color="text.secondary" mb={3}>
-        На этот адрес будут отправляться запросы после того как привлеченный пользователь активировал промокод
-      </Typography>
-
-      <Typography variant="subtitle2" mb={1.5}>
-        Секретный ключ
-      </Typography>
-      <Box display="flex" gap={2} mb={2}>
-        <TextField
-          fullWidth
-          value={secretKey || ''}
-          size="medium"
-          variant="outlined"
-          type="password"
-          InputProps={{
-            readOnly: true,
-            endAdornment: (
-                <IconButton
-                    onClick={onCopySecretKey}
-                    size="small"
-                    sx={{ mr: 0.5, color: PRIMARY_COLOR }}
-                  >
-                    <ContentCopy />
-                  </IconButton>
-            )
-          }}
-        />
-        <IconButton 
-          onClick={onRotateSecretKey} 
-          disabled={isRotating}
-          sx={{ color: PRIMARY_COLOR }}
-        >
-          <Refresh sx={{ 
-            animation: isRotating ? 'spin 1s linear infinite' : 'none',
-            '@keyframes spin': {
-              '0%': { transform: 'rotate(0deg)' },
-              '100%': { transform: 'rotate(360deg)' }
-            }
-          }} />
-        </IconButton>
-      </Box>
-
-      <Link
-        component={RouterLink}
-        to={`/rooms/${slug}/setting/info`}
-        underline="hover"
-        sx={{ cursor: 'pointer', color: PRIMARY_COLOR }}
-      >
-        описание формата вебхука
-      </Link>
-    </Box>
+          описание формата вебхука
+        </Link>
+      ) : null}
+    </div>
   );
 };
-

@@ -1,14 +1,12 @@
 import { useParams } from "react-router-dom";
-import { Box, Stack, Alert } from "@mui/material";
+import { toast } from "sonner";
+import { Alert, AlertDescription, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetProject } from "@/hooks/projects/useGetProject";
-import { Loader } from "@/components/Loader";
-import { useState } from "react";
 import { SprintSettingsHeader } from "./components/SprintSettingsHeader";
 import { SubscriberGroupCard } from "./components/SubscriberGroupCard";
 import { SprintSettingsErrorState } from "./components/SprintSettingsErrorState";
-import { SprintSettingsNotification } from "./components/SprintSettingsNotification";
 
 export default function SprintSettingsPage() {
   const { slug } = useParams();
@@ -17,33 +15,38 @@ export default function SprintSettingsPage() {
     room,
     isLoading: isLoadingRoom,
     isError: isRoomError,
-    error: roomError
-  } = useGetRoomById(slug || '');
+    error: roomError,
+  } = useGetRoomById(slug || "");
 
-  const { 
-    sprints, 
-    isLoading: isLoadingSprints, 
-    isError: isSprintsError, 
-    error: sprintsError 
-  } = useSprints(
-    { page: 1, size: 100 },
-    slug || ''
-  );
+  const {
+    sprints,
+    isLoading: isLoadingSprints,
+    isError: isSprintsError,
+    error: sprintsError,
+  } = useSprints({ page: 1, size: 100 }, slug || "");
 
   const {
     project,
     isLoading: isLoadingProject,
     isError: isProjectError,
-    error: projectError
+    error: projectError,
   } = useGetProject();
 
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const handleCopy = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Скопировано");
+    } catch (error) {
+      console.error("Ошибка при копировании:", error);
+      toast.error("Не удалось скопировать ссылку");
+    }
+  };
 
   if (isLoadingRoom || isLoadingSprints || isLoadingProject) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
@@ -59,18 +62,18 @@ export default function SprintSettingsPage() {
 
   if (!room || !project) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        {!room && (
-          <Alert severity="warning">
-            Данные комнаты не найдены
+      <div className="w-full px-4 py-6">
+        {!room ? (
+          <Alert className="mb-2">
+            <AlertDescription>Данные комнаты не найдены</AlertDescription>
           </Alert>
-        )}
-        {!project && (
-          <Alert severity="warning">
-            Данные проекта не найдены
+        ) : null}
+        {!project ? (
+          <Alert>
+            <AlertDescription>Данные проекта не найдены</AlertDescription>
           </Alert>
-        )}
-      </Box>
+        ) : null}
+      </div>
     );
   }
 
@@ -113,25 +116,16 @@ export default function SprintSettingsPage() {
     },
   ];
 
-  const handleCopy = async (link: string) => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setShowCopyNotification(true);
-    } catch (error) {
-      console.error('Ошибка при копировании:', error);
-    }
-  };
-
-  const activeSprints = sprints.filter(sprint => !sprint.isDeleted).length;
+  const activeSprints = sprints.filter((sprint) => !sprint.isDeleted).length;
   const totalSprints = sprints.length;
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
+    <div className="w-full px-2 py-6">
       <SprintSettingsHeader
         activeSprints={activeSprints}
         totalSprints={totalSprints}
       />
-      <Stack spacing={3}>
+      <div className="flex flex-col gap-4">
         {groups.map((group) => (
           <SubscriberGroupCard
             key={group.id}
@@ -143,12 +137,7 @@ export default function SprintSettingsPage() {
             onCopy={handleCopy}
           />
         ))}
-      </Stack>
-
-      <SprintSettingsNotification
-        open={showCopyNotification}
-        onClose={() => setShowCopyNotification(false)}
-      />
-    </Box>
+      </div>
+    </div>
   );
 }

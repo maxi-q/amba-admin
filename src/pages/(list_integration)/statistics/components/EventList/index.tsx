@@ -1,5 +1,5 @@
-import { Box, Typography, Paper, Stack, Button, CircularProgress } from '@mui/material';
-import type { EventListProps, EventData } from '../../types';
+import { Button, Card, CardContent, PageLoader } from "@senler/ui";
+import type { EventListProps, EventData } from "../../types";
 
 export const EventList = ({
   events,
@@ -7,55 +7,46 @@ export const EventList = ({
   total,
   hasMore = false,
   isLoadingMore = false,
-  isLoading = false
+  isLoading = false,
 }: EventListProps) => {
   if (isLoading && events.length === 0) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex min-h-[200px] items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Количество: {total}
-      </Typography>
+    <div>
+      <h3 className="mb-3 text-lg font-semibold tracking-tight text-foreground">
+        Количество: {total ?? "—"}
+      </h3>
 
-      <Stack spacing={2}>
+      <div className="flex flex-col gap-3">
         {events.map((event: EventData) => (
-          <Paper
-            key={event.id}
-            sx={{
-              p: 2,
-              borderRadius: 3,
-              border: '1px solid #e0e0e0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <Typography variant="body1" fontWeight={500}>
-              {event.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {event.event} {event.date}
-            </Typography>
-          </Paper>
+          <Card key={event.id} className="border border-border shadow-sm">
+            <CardContent className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-base font-medium text-foreground">{event.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {event.event} {event.date}
+              </p>
+            </CardContent>
+          </Card>
         ))}
-        
-        {hasMore && onLoadMore && (
+
+        {hasMore && onLoadMore ? (
           <Button
-            variant="outlined"
+            type="button"
+            variant="outline"
+            className="mt-1 w-full sm:w-auto"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            sx={{ mt: 2 }}
           >
-            {isLoadingMore ? 'Загрузка...' : 'Загрузить еще'}
+            {isLoadingMore ? "Загрузка…" : "Загрузить ещё"}
           </Button>
-        )}
-      </Stack>
-    </Box>
+        ) : null}
+      </div>
+    </div>
   );
 };

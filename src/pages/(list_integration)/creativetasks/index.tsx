@@ -1,7 +1,13 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
-import { Box, Stack, FormControl, InputLabel, Select, MenuItem, Pagination } from "@mui/material";
-import { Loader } from "@/components/Loader";
+import {
+  PageLoader,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
 import { CreativeTasksHeader } from "./components/CreativeTasksHeader";
@@ -11,8 +17,7 @@ import { CreateCreativeTaskButton } from "./components/CreateCreativeTaskButton"
 import { CreativeTaskCard } from "./components/CreativeTaskCard";
 import { CreateCreativeTaskDialog } from "./components/CreateCreativeTaskDialog";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
-import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
-import { PRIMARY_COLOR } from "@/constants/colors";
+import { CreativesPaginationControls } from "./components/CreativesPaginationControls";
 import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -29,13 +34,13 @@ export default function CreativeTasksPage() {
   const [editTask, setEditTask] = useState<ICreativeTask | null>(null);
 
   const {
-    room: roomData,
+    room,
     isLoading: isLoadingRoom,
     isError: isRoomError,
-    error: roomError
+    error: roomError,
   } = useGetRoomById(slug ?? "");
 
-  const roomId = roomData?.id ?? "";
+  const roomId = room?.id ?? "";
 
   const {
     tasks,
@@ -43,33 +48,28 @@ export default function CreativeTasksPage() {
     isError: isTasksError,
     error: tasksError,
     refetch,
-    pagination
+    pagination,
   } = useRoomCreativeTasks(roomId, { page, size: pageSize });
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
-  };
-
-  const handlePageSizeChange = (event: { target: { value: unknown } }) => {
-    const size = Number(event.target.value);
-    setPageSize(size);
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(Number(value));
     setPage(1);
   };
 
   const handleCreateSuccess = () => {
-    refetch();
+    void refetch();
   };
 
   const handleEditSuccess = () => {
     setEditTask(null);
-    refetch();
+    void refetch();
   };
 
   if (isLoadingRoom) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <SettingsLoadingState />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center px-2 py-6">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
@@ -82,46 +82,40 @@ export default function CreativeTasksPage() {
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
+    <div className="w-full px-2 py-3">
       <CreativeTasksHeader />
 
-      <Stack spacing={2}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 2
-          }}
-        >
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CreateCreativeTaskButton
             onClick={() => setCreateDialogOpen(true)}
           />
-          {pagination && pagination.totalPages > 0 && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>На странице</InputLabel>
-                <Select
-                  value={pageSize}
-                  label="На странице"
-                  onChange={handlePageSizeChange}
-                >
+          {pagination && pagination.totalPages > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">На странице</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={handlePageSizeChange}
+              >
+                <SelectTrigger className="h-9 w-[120px]">
+                  <SelectValue placeholder="Размер" />
+                </SelectTrigger>
+                <SelectContent>
                   {PAGE_SIZE_OPTIONS.map((n) => (
-                    <MenuItem key={n} value={n}>
+                    <SelectItem key={n} value={String(n)}>
                       {n}
-                    </MenuItem>
+                    </SelectItem>
                   ))}
-                </Select>
-              </FormControl>
-            </Box>
-          )}
-        </Box>
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
+        </div>
 
         {isLoadingTasks ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-            <Loader />
-          </Box>
+          <div className="flex justify-center py-8">
+            <PageLoader label="Загрузка задач…" />
+          </div>
         ) : isTasksError ? (
           <CreativeTasksErrorState
             errorMessage={(tasksError as Error)?.message}
@@ -132,23 +126,11 @@ export default function CreativeTasksPage() {
           />
         ) : (
           <>
-            {pagination && (
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: 1
-                }}
-              >
-                <Box component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                  Всего: {pagination.total}
-                </Box>
-              </Box>
-            )}
+            {pagination ? (
+              <p className="text-sm text-muted-foreground">Всего: {pagination.total}</p>
+            ) : null}
 
-            <Stack spacing={2}>
+            <div className="flex flex-col gap-3">
               {tasks.map((task) => (
                 <CreativeTaskCard
                   key={task.id}
@@ -156,26 +138,19 @@ export default function CreativeTasksPage() {
                   onEdit={setEditTask}
                 />
               ))}
-            </Stack>
+            </div>
 
-            {pagination && pagination.totalPages > 1 && (
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                <Pagination
-                  count={pagination.totalPages}
-                  page={page}
-                  onChange={handlePageChange}
-                  color="primary"
-                  sx={{
-                    "& .MuiPaginationItem-root.Mui-selected": {
-                      backgroundColor: PRIMARY_COLOR
-                    }
-                  }}
-                />
-              </Box>
-            )}
+            {pagination && pagination.totalPages > 1 ? (
+              <CreativesPaginationControls
+                page={page}
+                totalPages={pagination.totalPages}
+                onPageChange={setPage}
+                className="mt-2"
+              />
+            ) : null}
           </>
         )}
-      </Stack>
+      </div>
 
       <CreateCreativeTaskDialog
         open={createDialogOpen}
@@ -190,6 +165,6 @@ export default function CreativeTasksPage() {
         task={editTask}
         onSuccess={handleEditSuccess}
       />
-    </Box>
+    </div>
   );
 }

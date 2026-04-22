@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Alert, Box, Stack, Typography } from "@mui/material";
+import { Alert, AlertDescription, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useCreateRoomOrdProfile } from "@/hooks/rooms/useCreateRoomOrdProfile";
 import { useUpdateRoomOrdProfile } from "@/hooks/rooms/useUpdateRoomOrdProfile";
-import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
 import { QueryKeys } from "@/config/tanstack/queryKeys";
 import type { IOrdJuridicalType } from "@services/rooms/rooms.types";
 import { EMPTY_FIO, isFioComplete, joinFio, parseFioFromApi } from "@/utils/fio";
@@ -130,27 +129,29 @@ export default function OrdProfilePage() {
 
   if (isLoading) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <SettingsLoadingState />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center px-2 py-6">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
   if (isError || !room) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error">{(error as Error)?.message ?? ORD_COPY.roomNotFound}</Alert>
-      </Box>
+      <div className="w-full px-2 py-3">
+        <Alert variant="destructive">
+          <AlertDescription>{(error as Error)?.message ?? ORD_COPY.roomNotFound}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+    <div className="w-full px-2 pb-6">
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-foreground">
         {ORD_COPY.profileSectionTitle}
-      </Typography>
+      </h2>
 
-      <Stack spacing={3}>
+      <div className="flex flex-col gap-6">
         {!ordPerson ? (
           <CreateOrdProfileForm
             roomId={roomId}
@@ -188,7 +189,7 @@ export default function OrdProfilePage() {
             editAttempted={editAttempted}
           />
         ) : null}
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,4 @@
-import { Button, Stack } from "@mui/material";
-import { PRIMARY_COLOR } from "@/constants/colors";
+import { Button } from "@senler/ui";
 
 interface CreateRoomButtonProps {
   onClick: () => void;
@@ -7,22 +6,10 @@ interface CreateRoomButtonProps {
 
 export const CreateRoomButton = ({ onClick }: CreateRoomButtonProps) => {
   return (
-    <Stack direction="row" justifyContent="flex-start" mb={2}>
-      <Button
-        onClick={onClick}
-        variant="contained"
-        sx={{ 
-          mt: 2,
-          backgroundColor: PRIMARY_COLOR,
-          "&:hover": {
-            backgroundColor: PRIMARY_COLOR,
-            opacity: 0.9
-          }
-        }}
-      >
+    <div className="mb-4 mt-2 flex flex-row justify-start">
+      <Button type="button" onClick={onClick} size="lg">
         Создать комнату
       </Button>
-    </Stack>
+    </div>
   );
 };
-

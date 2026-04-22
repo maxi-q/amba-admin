@@ -1,11 +1,13 @@
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@senler/ui";
 
 interface DeleteSprintDialogProps {
   open: boolean;
@@ -23,29 +25,31 @@ export const DeleteSprintDialog = ({
   isUpdating,
 }: DeleteSprintDialogProps) => {
   return (
-    <Dialog
+    <AlertDialog
       open={open}
-      onClose={onCancel}
-      aria-labelledby="delete-dialog-title"
-      aria-describedby="delete-dialog-description"
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
     >
-      <DialogTitle id="delete-dialog-title">
-        Подтверждение удаления
-      </DialogTitle>
-      <DialogContent>
-        <DialogContentText id="delete-dialog-description">
-          Вы уверены, что хотите удалить спринт "{sprintName}"? Это действие нельзя будет отменить.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel} color="primary" disabled={isUpdating}>
-          Отмена
-        </Button>
-        <Button onClick={onConfirm} color="error" variant="contained" autoFocus disabled={isUpdating}>
-          {isUpdating ? 'Удаление...' : 'Удалить'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Подтверждение удаления</AlertDialogTitle>
+          <AlertDialogDescription>
+            Вы уверены, что хотите удалить спринт «{sprintName}»? Это действие
+            нельзя будет отменить.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isUpdating}>Отмена</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isUpdating}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
+          >
+            {isUpdating ? "Удаление…" : "Удалить"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
-

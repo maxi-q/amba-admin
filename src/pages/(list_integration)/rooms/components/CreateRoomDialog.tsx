@@ -1,18 +1,16 @@
 import {
-  Dialog,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Typography,
-  Container,
-  Box,
-  TextField,
-  Button,
   Alert,
-} from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
+  AlertDescription,
+  Button,
+  InputField,
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@senler/ui";
+import { X } from "lucide-react";
 import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
-import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface CreateRoomDialogProps {
   open: boolean;
@@ -39,93 +37,64 @@ export const CreateRoomDialog = ({
   onInputChange,
 }: CreateRoomDialogProps) => {
   return (
-    <Dialog
+    <Sheet
       open={open}
-      onClose={onClose}
-      fullScreen
-      sx={{
-        '& .MuiDialog-paper': {
-          margin: 0,
-          maxHeight: '100vh',
-          maxWidth: '100vw',
-          height: '100vh',
-          width: '100vw',
-          zIndex: 1300,
-        }
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
       }}
     >
-      <AppBar sx={{ position: 'relative', backgroundColor: PRIMARY_COLOR }}>
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={onClose}
-            aria-label="close"
-          >
-            <CloseIcon />
-          </IconButton>
-          <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-            Создать новую комнату
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="sm" sx={{ py: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          {generalError && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {generalError}
-            </Alert>
-          )}
-
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Название комнаты"
-            fullWidth
-            variant="outlined"
-            value={formData.name}
-            onChange={onInputChange('name')}
-            error={hasFieldError(fieldErrors, 'name')}
-            helperText={getFirstFieldError(fieldErrors, 'name')}
-            sx={{ mb: 3 }}
-          />
-        </Box>
-
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, pt: 2 }}>
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="flex !h-[100dvh] !max-h-[100dvh] flex-col gap-0 rounded-none border-0 p-0"
+      >
+        <SheetHeader className="shrink-0 flex-row items-center gap-2 space-y-0 border-b border-border bg-primary px-3 py-3 text-primary-foreground">
           <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             onClick={onClose}
-            variant="outlined"
-            size="large"
-            sx={{ 
-              borderColor: PRIMARY_COLOR, 
-              color: PRIMARY_COLOR,
-              "&:hover": {
-                borderColor: PRIMARY_COLOR,
-                backgroundColor: "rgba(66, 139, 202, 0.04)"
-              }
-            }}
+            aria-label="Закрыть"
           >
+            <X className="size-5" />
+          </Button>
+          <SheetTitle className="flex-1 text-left text-lg font-medium text-primary-foreground">
+            Создать новую комнату
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="flex min-h-0 flex-1 flex-col justify-center px-4 py-6">
+          {generalError ? (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{generalError}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <InputField
+            autoFocus
+            label="Название комнаты"
+            value={formData.name}
+            onChange={onInputChange("name")}
+            error={hasFieldError(fieldErrors, "name")}
+            helperText={getFirstFieldError(fieldErrors, "name") ?? undefined}
+          />
+        </div>
+
+        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">
+          <Button type="button" variant="outline" size="lg" onClick={onClose}>
             Отмена
           </Button>
           <Button
-            onClick={onSubmit}
-            variant="contained"
+            type="button"
+            size="lg"
             disabled={!formData.name.trim() || isPending}
-            size="large"
-            sx={{ 
-              backgroundColor: PRIMARY_COLOR,
-              "&:hover": {
-                backgroundColor: PRIMARY_COLOR,
-                opacity: 0.9
-              }
-            }}
+            onClick={onSubmit}
           >
-            {isPending ? 'Создание...' : 'Создать'}
+            {isPending ? "Создание…" : "Создать"}
           </Button>
-        </Box>
-      </Container>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };
-

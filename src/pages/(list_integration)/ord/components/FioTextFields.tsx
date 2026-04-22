@@ -1,4 +1,4 @@
-import { Stack, TextField } from "@mui/material";
+import { InputField } from "@senler/ui";
 import type { FioParts } from "@/utils/fio";
 import { ORD_COPY } from "../ord.constants";
 
@@ -27,39 +27,71 @@ function fieldHelper(
   return undefined;
 }
 
+function FieldBlock({
+  legend,
+  ariaLabel,
+  value,
+  onChange,
+  error,
+  helperText,
+}: {
+  legend: string;
+  ariaLabel: string;
+  value: string;
+  onChange: (v: string) => void;
+  error: boolean;
+  helperText?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-foreground">
+        {legend}
+        <span className="text-destructive" aria-hidden>
+          {" "}
+          *
+        </span>
+      </p>
+      <InputField
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        error={error}
+        helperText={helperText}
+        aria-label={ariaLabel}
+      />
+    </div>
+  );
+}
+
 /**
  * Три обязательных поля: Имя, Фамилия, Отчество (в API склеиваются как «Фамилия Имя Отчество»).
  */
 export function FioTextFields({ value, onChange, apiNameError, showRequiredErrors }: Props) {
   return (
-    <Stack spacing={2}>
-      <TextField
-        label="Имя"
-        size="small"
-        required
+    <div className="grid max-w-md gap-3">
+      <FieldBlock
+        legend="Имя"
+        ariaLabel="Имя"
         value={value.given}
-        onChange={(e) => onChange({ given: e.target.value })}
+        onChange={(v) => onChange({ given: v })}
         error={fieldError(!value.given.trim(), showRequiredErrors, apiNameError)}
         helperText={fieldHelper("first", !value.given.trim(), showRequiredErrors, apiNameError)}
       />
-      <TextField
-        label="Фамилия"
-        size="small"
-        required
+      <FieldBlock
+        legend="Фамилия"
+        ariaLabel="Фамилия"
         value={value.family}
-        onChange={(e) => onChange({ family: e.target.value })}
+        onChange={(v) => onChange({ family: v })}
         error={fieldError(!value.family.trim(), showRequiredErrors, apiNameError)}
         helperText={fieldHelper("rest", !value.family.trim(), showRequiredErrors, apiNameError)}
       />
-      <TextField
-        label="Отчество"
-        size="small"
-        required
+      <FieldBlock
+        legend="Отчество"
+        ariaLabel="Отчество"
         value={value.patronymic}
-        onChange={(e) => onChange({ patronymic: e.target.value })}
+        onChange={(v) => onChange({ patronymic: v })}
         error={fieldError(!value.patronymic.trim(), showRequiredErrors, apiNameError)}
         helperText={fieldHelper("rest", !value.patronymic.trim(), showRequiredErrors, apiNameError)}
       />
-    </Stack>
+    </div>
   );
 }

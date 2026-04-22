@@ -1,4 +1,4 @@
-import { Box, Alert } from "@mui/material";
+import { Alert, AlertDescription } from "@senler/ui";
 
 interface SprintSettingsErrorStateProps {
   roomError?: string;
@@ -6,25 +6,34 @@ interface SprintSettingsErrorStateProps {
   projectError?: string;
 }
 
-export const SprintSettingsErrorState = ({ roomError, sprintsError, projectError }: SprintSettingsErrorStateProps) => {
+export const SprintSettingsErrorState = ({
+  roomError,
+  sprintsError,
+  projectError,
+}: SprintSettingsErrorStateProps) => {
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      {roomError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Ошибка при загрузке комнаты: {roomError}
+    <div className="w-full px-4 py-6">
+      {roomError ? (
+        <Alert variant="destructive" className="mb-2">
+          <AlertDescription>
+            Ошибка при загрузке комнаты: {roomError}
+          </AlertDescription>
         </Alert>
-      )}
-      {sprintsError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Ошибка при загрузке спринтов: {sprintsError}
+      ) : null}
+      {sprintsError ? (
+        <Alert variant="destructive" className="mb-2">
+          <AlertDescription>
+            Ошибка при загрузке спринтов: {sprintsError}
+          </AlertDescription>
         </Alert>
-      )}
-      {projectError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Ошибка при загрузке проекта: {projectError}
+      ) : null}
+      {projectError ? (
+        <Alert variant="destructive" className="mb-2">
+          <AlertDescription>
+            Ошибка при загрузке проекта: {projectError}
+          </AlertDescription>
         </Alert>
-      )}
-    </Box>
+      ) : null}
+    </div>
   );
 };
-

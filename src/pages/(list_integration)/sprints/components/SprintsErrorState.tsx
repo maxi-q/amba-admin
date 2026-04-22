@@ -1,4 +1,4 @@
-import { Box, Alert, Button } from "@mui/material";
+import { Alert, AlertDescription, Button } from "@senler/ui";
 
 interface SprintsErrorStateProps {
   errorMessage?: string;
@@ -6,17 +6,16 @@ interface SprintsErrorStateProps {
 
 export const SprintsErrorState = ({ errorMessage }: SprintsErrorStateProps) => {
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Alert severity="error" sx={{ mb: 3 }}>
-        Ошибка при загрузке спринтов: {errorMessage || 'Неизвестная ошибка'}
+    <div className="w-full px-4 py-6">
+      <Alert variant="destructive" className="mb-4">
+        <AlertDescription>
+          Ошибка при загрузке спринтов:{" "}
+          {errorMessage ?? "Неизвестная ошибка"}
+        </AlertDescription>
       </Alert>
-      <Button
-        variant="outlined"
-        onClick={() => window.location.reload()}
-      >
+      <Button type="button" variant="outline" onClick={() => window.location.reload()}>
         Попробовать снова
       </Button>
-    </Box>
+    </div>
   );
 };
-

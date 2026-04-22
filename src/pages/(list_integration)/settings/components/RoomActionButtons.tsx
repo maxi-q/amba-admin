@@ -1,5 +1,4 @@
-import { Box, Button } from "@mui/material";
-import { PRIMARY_COLOR } from "@/constants/colors";
+import { Button } from "@senler/ui";
 
 interface RoomActionButtonsProps {
   onSave: () => void;
@@ -7,34 +6,24 @@ interface RoomActionButtonsProps {
   isUpdating: boolean;
 }
 
-export const RoomActionButtons = ({ onSave, onDelete, isUpdating }: RoomActionButtonsProps) => {
+export const RoomActionButtons = ({
+  onSave,
+  onDelete,
+  isUpdating,
+}: RoomActionButtonsProps) => {
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, my: 4 }}>
+    <div className="flex flex-row flex-wrap justify-end gap-2 pt-2">
       <Button
-        variant="outlined"
-        color="error"
+        type="button"
+        variant="destructive"
         onClick={onDelete}
         disabled={isUpdating}
-        sx={{ minWidth: 120 }}
       >
         Удалить
       </Button>
-      <Button
-        variant="contained"
-        onClick={onSave}
-        disabled={isUpdating}
-        sx={{ 
-          minWidth: 120,
-          backgroundColor: PRIMARY_COLOR,
-          "&:hover": {
-            backgroundColor: PRIMARY_COLOR,
-            opacity: 0.9
-          }
-        }}
-      >
-        {isUpdating ? 'Сохранение...' : 'Сохранить'}
+      <Button type="button" onClick={onSave} disabled={isUpdating}>
+        {isUpdating ? "Сохранение…" : "Сохранить"}
       </Button>
-    </Box>
+    </div>
   );
 };
-

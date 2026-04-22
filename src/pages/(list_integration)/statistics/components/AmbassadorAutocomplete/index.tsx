@@ -1,107 +1,123 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Autocomplete, TextField, Chip, Box } from '@mui/material';
-import { useDebounce } from 'use-debounce';
-import type { AmbassadorAutocompleteProps, AutocompleteOption } from '../../types';
-import { useAmbassadors } from '@/hooks/ambassador/useAmbassadors';
+import { useMemo, useState } from "react";
+import { X } from "lucide-react";
+import { useDebounce } from "use-debounce";
+import { Badge, Button, InputField, PageLoader } from "@senler/ui";
+import type { AmbassadorAutocompleteProps, AutocompleteOption } from "../../types";
+import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
 
 export const AmbassadorAutocomplete = ({ selectedIds, onChange }: AmbassadorAutocompleteProps) => {
-  const [inputValue, setInputValue] = useState('');
-  const [options, setOptions] = useState<AutocompleteOption[]>([]);
-  const [debouncedInput] = useDebounce(inputValue, 200);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch] = useDebounce(search, 200);
 
-  // Запрос амбассадоров с фильтрацией по имени, если есть поисковый запрос
   const { ambassadors, isLoading } = useAmbassadors({
     page: 1,
-    size: debouncedInput.trim() ? 10 : 20,
-    nameContains: debouncedInput.trim() || undefined,
+    size: debouncedSearch.trim() ? 10 : 20,
+    nameContains: debouncedSearch.trim() || undefined,
   });
 
-  // Преобразование данных амбассадоров в формат для Autocomplete
-  const ambassadorOptions = useMemo<AutocompleteOption[]>(() => {
-    return ambassadors.map(amb => ({
+  const options = useMemo<AutocompleteOption[]>(() => {
+    return ambassadors.map((amb) => ({
       id: amb.id,
-      label: (amb as any).name || amb.promoCode || amb.id,
+      label: (amb as { name?: string }).name || amb.promoCode || amb.id,
     }));
   }, [ambassadors]);
 
-  // Выбранные опции
-  const selectedOptions = useMemo(() => {
-    return ambassadorOptions.filter(opt => selectedIds.includes(opt.id));
-  }, [ambassadorOptions, selectedIds]);
+  const labelById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const o of options) m.set(o.id, o.label);
+    return m;
+  }, [options]);
 
-  useEffect(() => {
-    if (debouncedInput.trim().length >= 1) {
-      // Фильтруем локально по введенному тексту
-      const filtered = ambassadorOptions
-        .filter(opt => opt.label.toLowerCase().includes(debouncedInput.toLowerCase()))
-        .slice(0, 10);
-
-      const selectedInFiltered = filtered.filter(opt => selectedIds.includes(opt.id));
-      const selectedNotInFiltered = selectedOptions.filter(opt => !selectedInFiltered.find(sf => sf.id === opt.id));
-      setOptions([...selectedNotInFiltered, ...filtered]);
+  const displayOptions = useMemo(() => {
+    const selectedOpts: AutocompleteOption[] = selectedIds
+      .map((id) => ({ id, label: labelById.get(id) ?? id }))
+      .filter((o) => o.id);
+    const q = debouncedSearch.toLowerCase().trim();
+    let list = options;
+    if (q.length >= 1) {
+      list = options.filter((o) => o.label.toLowerCase().includes(q)).slice(0, 10);
     } else {
-      // Когда поле пустое, показываем первые 20 амбассадоров
-      const first20Ambassadors = ambassadorOptions.slice(0, 20);
-      const selectedInFirst20 = first20Ambassadors.filter(opt => selectedIds.includes(opt.id));
-      const selectedNotInFirst20 = selectedOptions.filter(opt => !selectedInFirst20.find(sf => sf.id === opt.id));
-      setOptions([...selectedNotInFirst20, ...first20Ambassadors]);
+      list = options.slice(0, 20);
     }
-  }, [debouncedInput, selectedIds, ambassadorOptions, selectedOptions]);
+    const merged: AutocompleteOption[] = [];
+    const seen = new Set<string>();
+    for (const o of [...selectedOpts, ...list]) {
+      if (seen.has(o.id)) continue;
+      seen.add(o.id);
+      merged.push(o);
+    }
+    return merged;
+  }, [options, debouncedSearch, selectedIds, labelById]);
 
-  const handleChange = (_: any, newValue: AutocompleteOption[]) => {
-    const newIds = newValue.map(option => option.id);
-    onChange(newIds);
+  const toggle = (id: string) => {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter((x) => x !== id));
+    } else {
+      onChange([...selectedIds, id]);
+    }
+  };
+
+  const remove = (id: string) => {
+    onChange(selectedIds.filter((x) => x !== id));
   };
 
   return (
-    <Autocomplete
-      multiple
-      options={options}
-      value={selectedOptions}
-      inputValue={inputValue}
-      onInputChange={(_, newInputValue, reason) => {
-        if (reason === 'input' || reason === 'clear') {
-          setInputValue(newInputValue);
-        }
-      }}
-      onChange={(_, newValue) => {
-        handleChange(_, newValue);
-        if (newValue.length > selectedOptions.length) {
-          setInputValue('');
-        }
-      }}
-      loading={isLoading}
-      getOptionLabel={(option) => option.label || ''}
-      isOptionEqualToValue={(option, value) => option.id === value.id}
-      freeSolo={false}
-      openOnFocus={inputValue.length > 0 || options.length > 0}
-      handleHomeEndKeys
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="Амбассадор"
-          placeholder="Начните вводить имя..."
-          variant="outlined"
-          size="small"
-          inputProps={{
-            ...params.inputProps,
-            autoComplete: 'off',
-          }}
-        />
-      )}
-      renderTags={(value, getTagProps) => (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-          {value.map((option, index) => (
-            <Chip
-              {...getTagProps({ index })}
-              key={option.id}
-              label={option.label}
-              size="small"
-            />
+    <div className="grid w-full gap-2">
+      <p className="text-sm font-medium text-foreground">Амбассадор</p>
+      <InputField
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Начните вводить имя или промокод…"
+        aria-label="Поиск амбассадора"
+      />
+      {selectedIds.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedIds.map((id) => (
+            <Badge
+              key={id}
+              variant="secondary"
+              className="flex max-w-full items-center gap-1 py-0.5 pl-2 pr-0.5 font-normal"
+            >
+              <span className="max-w-[220px] truncate">{labelById.get(id) ?? id}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-6 shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label={`Убрать: ${labelById.get(id) ?? id}`}
+                onClick={() => remove(id)}
+              >
+                <X className="size-3.5" />
+              </Button>
+            </Badge>
           ))}
-        </Box>
-      )}
-      sx={{ width: '100%', minWidth: 300 }}
-    />
+        </div>
+      ) : null}
+      <div className="max-h-48 overflow-y-auto rounded-md border border-border p-2">
+        {isLoading ? (
+          <div className="flex justify-center py-6">
+            <PageLoader label="Загрузка…" />
+          </div>
+        ) : displayOptions.length === 0 ? (
+          <p className="py-2 text-center text-sm text-muted-foreground">Ничего не найдено</p>
+        ) : (
+          <ul className="space-y-0.5">
+            {displayOptions.map((opt) => (
+              <li key={opt.id}>
+                <label className="flex cursor-pointer items-start gap-2 rounded px-1 py-1.5 text-sm hover:bg-muted/60">
+                  <input
+                    type="checkbox"
+                    className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                    checked={selectedIds.includes(opt.id)}
+                    onChange={() => toggle(opt.id)}
+                  />
+                  <span className="min-w-0 leading-snug">{opt.label}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 };

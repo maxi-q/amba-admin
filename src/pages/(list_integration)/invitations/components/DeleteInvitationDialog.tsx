@@ -1,12 +1,15 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
   Alert,
-} from "@mui/material";
+  AlertDescription,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@senler/ui";
 import type { IInvitation } from "@services/invitations/invitations.types";
 
 interface DeleteInvitationDialogProps {
@@ -33,39 +36,48 @@ export function DeleteInvitationDialog({
       .slice(0, 3)
       .join(", ") ?? "";
 
+  const more = (invitation?.targets?.length ?? 0) > 3;
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Удалить приглашение?</DialogTitle>
-      <DialogContent>
-        {errorMessage ? (
-          <Alert severity="error" sx={{ mb: 1 }}>
-            {errorMessage}
-          </Alert>
-        ) : null}
-        <Typography variant="body2" color="text.secondary">
-          Будет удалена запись приглашения
-          {preview ? (
-            <>
-              {" "}
-              (ВК:{" "}
-              <Typography component="span" variant="body2" sx={{ fontFamily: "monospace" }}>
-                {preview}
-                {(invitation?.targets?.length ?? 0) > 3 ? "…" : ""}
-              </Typography>
-              )
-            </>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Удалить приглашение?</AlertDialogTitle>
+          {errorMessage ? (
+            <Alert variant="destructive" className="mt-2">
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
           ) : null}
-          . Действие необратимо.
-        </Typography>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} disabled={isPending}>
-          Отмена
-        </Button>
-        <Button color="error" variant="contained" onClick={onConfirm} disabled={isPending}>
-          {isPending ? "Удаление…" : "Удалить"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <AlertDialogDescription className="text-left">
+            Будет удалена запись приглашения
+            {preview ? (
+              <>
+                {" "}
+                (ВК:{" "}
+                <span className="font-mono text-foreground">{preview}</span>
+                {more ? "…" : ""}
+                )
+              </>
+            ) : null}
+            . Действие необратимо.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>Отмена</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
+          >
+            {isPending ? "Удаление…" : "Удалить"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

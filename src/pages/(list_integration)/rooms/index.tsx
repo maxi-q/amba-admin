@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, List } from "@mui/material";
-import { Loader } from "../../../components/Loader";
+import { PageLoader } from "@senler/ui";
 import { useRooms } from "@/hooks/rooms/useRooms";
 import { useCreateRoom } from "@/hooks/rooms/useCreateRoom";
 import { RoomsHeader } from "./components/RoomsHeader";
@@ -76,17 +75,17 @@ export default function RoomsPage() {
 
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader />
-      </Box>
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
   return (
-    <Box sx={{ minHeight: "652px", width: "100%", px: 3, py: 3 }}>
+    <div className="min-h-[652px] w-full px-6 py-6">
       <RoomsHeader />
       <CreateRoomButton onClick={handleCreateRoom} />
-      <List sx={{ p: 0 }}>
+      <div className="flex flex-col p-0">
         {rooms.length ? (
           rooms.map((room) => (
             <RoomCard key={room.id} room={room} />
@@ -94,7 +93,7 @@ export default function RoomsPage() {
         ) : (
           <RoomsEmptyState onCreateClick={handleCreateRoom} />
         )}
-      </List>
+      </div>
 
       <CreateRoomDialog
         open={openDialog}
@@ -106,6 +105,6 @@ export default function RoomsPage() {
         onSubmit={handleSubmit}
         onInputChange={handleInputChange}
       />
-    </Box>
+    </div>
   );
 }

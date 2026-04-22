@@ -1,4 +1,4 @@
-import { Box, Button } from "@mui/material";
+import { Button } from "@senler/ui";
 
 interface SprintActionButtonsProps {
   isNewSprint: boolean;
@@ -18,31 +18,26 @@ export const SprintActionButtons = ({
   const isLoading = isCreating || isUpdating;
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
-      {!isNewSprint && (
+    <div className="mt-6 flex flex-wrap justify-end gap-2">
+      {!isNewSprint ? (
         <Button
-          variant="outlined"
-          color="error"
+          type="button"
+          variant="destructive"
           onClick={onDelete}
           disabled={isLoading}
-          sx={{ minWidth: 120 }}
         >
           Удалить
         </Button>
-      )}
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={onSave}
-        disabled={isLoading}
-        sx={{ minWidth: 120 }}
-      >
+      ) : null}
+      <Button type="button" onClick={onSave} disabled={isLoading}>
         {isLoading
-          ? (isNewSprint ? 'Создание...' : 'Сохранение...')
-          : (isNewSprint ? 'Добавить' : 'Сохранить')
-        }
+          ? isNewSprint
+            ? "Создание…"
+            : "Сохранение…"
+          : isNewSprint
+            ? "Добавить"
+            : "Сохранить"}
       </Button>
-    </Box>
+    </div>
   );
 };
-

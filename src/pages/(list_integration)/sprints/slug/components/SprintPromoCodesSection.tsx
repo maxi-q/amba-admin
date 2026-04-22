@@ -1,11 +1,23 @@
-import { Box, FormControl, MenuItem, Select, Stack, Switch, TextField, Typography } from "@mui/material";
+import {
+  InputField,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+} from "@senler/ui";
 import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
 import { rewardUnits, getRewardUnitShortName } from "../constants/rewardUnits";
 
 interface SprintPromoCodesSectionProps {
   formData: IPatchSprintsRequest;
-  onInputChange: (field: keyof IPatchSprintsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onSelectChange: (field: keyof IPatchSprintsRequest) => (event: any) => void;
+  onInputChange: (
+    field: keyof IPatchSprintsRequest
+  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelectChange: (
+    field: keyof IPatchSprintsRequest
+  ) => (event: { target: { value: string } }) => void;
   fieldErrors?: Record<string, string[]>;
   onIgnorePromoCodeUsageLimitChange: (value: boolean) => void;
 }
@@ -21,81 +33,87 @@ export const SprintPromoCodesSection = ({
   const hasError = (field: string) => !!fieldErrors?.[field];
 
   return (
-    <>
-      <Box>
-        <Typography variant="h5" fontWeight={700} mb={2}>Промокоды</Typography>
-        <Typography variant="body2" color="text.secondary" maxWidth="md">
-          Для какого участка будет спеймерован уникальный промокод, который отправится при добавлении в группу амбассадоров, а также будет отправлен указанные ниже награды
-        </Typography>
-      </Box>
+    <div className="grid gap-6">
+      <div>
+        <h3 className="mb-2 text-xl font-bold tracking-tight">Промокоды</h3>
+        <p className="max-w-3xl text-sm text-muted-foreground">
+          Для какого участка будет сгенерирован уникальный промокод, который
+          отправится при добавлении в группу амбассадоров, а также будут
+          отправлены указанные ниже награды
+        </p>
+      </div>
 
-      <Box>
-        <Typography variant="subtitle2" mb={1}>
-          Единицы награды
-        </Typography>
-        <FormControl fullWidth>
-          <Select
-            value={formData.rewardUnits}
-            onChange={onSelectChange('rewardUnits')}
-            variant="outlined"
-          >
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Единицы награды</p>
+        <Select
+          value={formData.rewardUnits}
+          onValueChange={(v) =>
+            onSelectChange("rewardUnits")({ target: { value: v } })
+          }
+        >
+          <SelectTrigger className="w-full max-w-md">
+            <SelectValue placeholder="Выберите единицу" />
+          </SelectTrigger>
+          <SelectContent>
             {rewardUnits.map((unit) => (
-              <MenuItem key={unit.value} value={unit.value}>
+              <SelectItem key={unit.value} value={unit.value}>
                 {unit.label}
-              </MenuItem>
+              </SelectItem>
             ))}
-          </Select>
-        </FormControl>
-      </Box>
+          </SelectContent>
+        </Select>
+      </div>
 
-      <Box>
-        <Typography variant="subtitle2" mb={1}>
-          Награда для привлеченных пользователей
-        </Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            type="number"
-            value={formData.rewardValue}
-            onChange={onInputChange('rewardValue')}
-            variant="outlined"
-            sx={{ flex: 1 }}
-            error={hasError('rewardValue')}
-            helperText={getFirstError('rewardValue')}
-          />
-          <Typography variant="body2" color="text.secondary">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">
+          Награда для привлечённых пользователей
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1 sm:max-w-xs">
+            <InputField
+              type="number"
+              value={String(formData.rewardValue)}
+              onChange={onInputChange("rewardValue")}
+              error={hasError("rewardValue")}
+              helperText={getFirstError("rewardValue") ?? undefined}
+              aria-label="Значение награды"
+            />
+          </div>
+          <p className="shrink-0 text-sm text-muted-foreground">
             {getRewardUnitShortName(formData.rewardUnits)}
-          </Typography>
-        </Stack>
-      </Box>
+          </p>
+        </div>
+      </div>
 
-      <Box>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="subtitle2">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-foreground">
             Ограничить число использования каждого промокода
-          </Typography>
+          </p>
           <Switch
             checked={!formData.ignorePromoCodeUsageLimit}
-            onChange={(e) => onIgnorePromoCodeUsageLimitChange(!e.target.checked)}
+            onCheckedChange={(checked) =>
+              onIgnorePromoCodeUsageLimitChange(!checked)
+            }
+            aria-label="Ограничить число использований промокода"
           />
-        </Stack>
-        {!formData.ignorePromoCodeUsageLimit && (
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              type="number"
-              value={formData.promoCodeUsageLimit}
-              onChange={onInputChange('promoCodeUsageLimit')}
-              variant="outlined"
-              sx={{ flex: 1 }}
-              error={hasError('promoCodeUsageLimit')}
-              helperText={getFirstError('promoCodeUsageLimit')}
-            />
-            <Typography variant="body2" color="text.secondary">
-              раз
-            </Typography>
-          </Stack>
-        )}
-      </Box>
-    </>
+        </div>
+        {!formData.ignorePromoCodeUsageLimit ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="min-w-0 flex-1 sm:max-w-xs">
+              <InputField
+                type="number"
+                value={String(formData.promoCodeUsageLimit)}
+                onChange={onInputChange("promoCodeUsageLimit")}
+                error={hasError("promoCodeUsageLimit")}
+                helperText={getFirstError("promoCodeUsageLimit") ?? undefined}
+                aria-label="Лимит использований промокода"
+              />
+            </div>
+            <p className="shrink-0 text-sm text-muted-foreground">раз</p>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 };
-

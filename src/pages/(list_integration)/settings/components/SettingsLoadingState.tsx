@@ -1,10 +1,9 @@
-import { Box, Typography } from "@mui/material";
+import { PageLoader } from "@senler/ui";
 
 export const SettingsLoadingState = () => {
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-      <Typography>Загрузка...</Typography>
-    </Box>
+    <div className="flex min-h-[200px] w-full items-center justify-center">
+      <PageLoader label="Загрузка…" />
+    </div>
   );
 };
-

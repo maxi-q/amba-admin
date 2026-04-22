@@ -1,4 +1,4 @@
-import { Box, Alert } from "@mui/material";
+import { Alert, AlertDescription } from "@senler/ui";
 
 interface SettingsErrorStateProps {
   errorMessage?: string;
@@ -6,11 +6,13 @@ interface SettingsErrorStateProps {
 
 export const SettingsErrorState = ({ errorMessage }: SettingsErrorStateProps) => {
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Alert severity="error">
-        Ошибка при загрузке комнаты: {errorMessage || 'Неизвестная ошибка'}
+    <div className="w-full px-4 py-6">
+      <Alert variant="destructive">
+        <AlertDescription>
+          Ошибка при загрузке комнаты:{" "}
+          {errorMessage ?? "Неизвестная ошибка"}
+        </AlertDescription>
       </Alert>
-    </Box>
+    </div>
   );
 };
-

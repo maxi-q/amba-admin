@@ -1,15 +1,13 @@
 import { useState } from "react";
-import { useParams, Link as RouterLink } from "react-router-dom";
-import { Box, Typography, Paper, Chip, Link, IconButton, Stack } from "@mui/material";
-import { Edit as EditIcon } from "@mui/icons-material";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { useCreativeTask } from "@/hooks/creativetasks/useCreativeTask";
 import { TaskDetailSubmissionsList } from "./components/TaskDetailSubmissionsList";
 import { CreativeTaskWhitelistSection } from "./components/CreativeTaskWhitelistSection";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
-import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
 import { CreativeTasksErrorState } from "./components/CreativeTasksErrorState";
 import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
-import { PRIMARY_COLOR } from "@/constants/colors";
+import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
 
 export default function CreativeTaskDetailPage() {
   const { slug, taskId } = useParams<{ slug: string; taskId: string }>();
@@ -18,9 +16,9 @@ export default function CreativeTaskDetailPage() {
 
   if (isLoading) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <SettingsLoadingState />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center px-2 py-6">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
@@ -36,71 +34,59 @@ export default function CreativeTaskDetailPage() {
   const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt);
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
+    <div className="w-full px-2 py-3">
       <Link
-        component={RouterLink}
         to={`/rooms/${slug ?? ""}/creativetasks`}
-        underline="hover"
-        sx={{ display: "inline-block", mb: 2, color: "text.secondary", fontSize: "0.875rem" }}
+        className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        ← К списку креативных задач
+        <ArrowLeft className="size-4" />
+        К списку креативных задач
       </Link>
 
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 3,
-          mb: 3,
-          borderRadius: 2,
-          opacity: task.isDeleted ? 0.7 : 1,
-        }}
+      <Card
+        className={`mb-4 border border-border ${task.isDeleted ? "opacity-70" : ""}`}
       >
-        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-          <Box>
-            <Typography
-              variant="h5"
-              fontWeight={600}
-              sx={{
-                textDecoration: task.isDeleted ? "line-through" : "none",
-                color: task.isDeleted ? "text.disabled" : "inherit",
-              }}
-            >
-              {task.title}
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                mt: 1,
-                whiteSpace: "pre-wrap",
-                textDecoration: task.isDeleted ? "line-through" : "none",
-              }}
-            >
-              {task.description || "—"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-              {dateRange}
-            </Typography>
-          </Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            {!task.isDeleted && (
-              <Chip
-                label={active ? "Активна" : "Неактивна"}
-                color={active ? "success" : "default"}
-                size="small"
-                sx={{ borderRadius: 1 }}
-              />
-            )}
-            <IconButton
-              size="small"
-              onClick={() => setEditOpen(true)}
-              aria-label="Редактировать задачу"
-            >
-              <EditIcon fontSize="small" sx={{ color: PRIMARY_COLOR }} />
-            </IconButton>
-          </Stack>
-        </Box>
-      </Paper>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1
+                className={`text-xl font-semibold tracking-tight sm:text-2xl ${
+                  task.isDeleted ? "text-muted-foreground line-through" : "text-foreground"
+                }`}
+              >
+                {task.title}
+              </h1>
+              <p
+                className={`mt-1 whitespace-pre-wrap text-sm sm:text-base ${
+                  task.isDeleted
+                    ? "text-muted-foreground line-through"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {task.description || "—"}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{dateRange}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {!task.isDeleted ? (
+                <Badge variant={active ? "success" : "secondary"}>
+                  {active ? "Активна" : "Неактивна"}
+                </Badge>
+              ) : null}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditOpen(true)}
+                className="text-primary"
+                aria-label="Редактировать задачу"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <EditCreativeTaskDialog
         open={editOpen}
@@ -114,6 +100,6 @@ export default function CreativeTaskDetailPage() {
       <TaskDetailSubmissionsList taskId={task.id} />
 
       <CreativeTaskWhitelistSection task={task} />
-    </Box>
+    </div>
   );
 }

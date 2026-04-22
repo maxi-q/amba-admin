@@ -1,36 +1,39 @@
 import { useState } from "react";
-import {
-  Box,
-  Typography,
-  Chip,
-  Button,
-  Stack,
-  Pagination,
-  Tabs,
-  Tab,
-  Paper,
-} from "@mui/material";
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
 import { useUpdateSubmissionStatus } from "@/hooks/creativetasks/useUpdateSubmissionStatus";
 import { SubmissionApproveDialog } from "./SubmissionApproveDialog";
 import { SubmissionRejectDialog } from "./SubmissionRejectDialog";
+import { CreativesPaginationControls } from "./CreativesPaginationControls";
 import type { ISubmission } from "@services/creativetasks/creativetasks.types";
-import { PRIMARY_COLOR } from "@/constants/colors";
-import { Loader } from "@/components/Loader";
+import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
 
 const statusLabels: Record<ISubmission["status"], string> = {
   pending: "На рассмотрении",
   approved: "Одобрено",
-  rejected: "Отклонено"
+  rejected: "Отклонено",
 };
 
-const statusColors: Record<ISubmission["status"], "default" | "success" | "error"> = {
-  pending: "default",
+const statusVariant: Record<
+  ISubmission["status"],
+  "success" | "destructive" | "secondary"
+> = {
+  pending: "secondary",
   approved: "success",
-  rejected: "error"
+  rejected: "destructive",
 };
+
+const tabInactive =
+  "relative border-0 border-b-2 border-transparent bg-transparent pb-2 pt-0.5 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
+const tabActive =
+  "relative border-0 border-b-2 border-primary bg-transparent pb-2 pt-0.5 text-[15px] font-semibold text-foreground";
 
 type StatusTab = ISubmission["status"];
+
+const TABS: { value: StatusTab; label: string }[] = [
+  { value: "pending", label: "На рассмотрении" },
+  { value: "approved", label: "Одобрено" },
+  { value: "rejected", label: "Отклонено" },
+];
 
 interface TaskDetailSubmissionsListProps {
   taskId: string;
@@ -46,7 +49,7 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
   const { submissions, isLoading, pagination } = useSubmissions(taskId, {
     page,
     size: pageSize,
-    status: statusTab
+    status: statusTab,
   });
 
   const { updateSubmissionStatus, isPending } = useUpdateSubmissionStatus();
@@ -70,113 +73,100 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
   };
 
   return (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-        Ответы на задачу
-      </Typography>
+    <div>
+      <h2 className="mb-2 text-lg font-semibold">Ответы на задачу</h2>
 
-      <Tabs
-        value={statusTab}
-        onChange={(_, v: StatusTab) => { setStatusTab(v); setPage(1); }}
-        sx={{
-          "& .MuiTab-root": { textTransform: "none" },
-          "& .Mui-selected": { color: PRIMARY_COLOR, fontWeight: 500 },
-          "& .MuiTabs-indicator": { backgroundColor: PRIMARY_COLOR },
-          mb: 2,
-        }}
-      >
-        <Tab label="На рассмотрении" value="pending" />
-        <Tab label="Одобрено" value="approved" />
-        <Tab label="Отклонено" value="rejected" />
-      </Tabs>
+      <div className="mb-2 border-b border-border">
+        <div className="flex flex-wrap gap-2 sm:gap-4" role="tablist" aria-label="Статус заявок">
+          {TABS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              className={statusTab === t.value ? tabActive : tabInactive}
+              aria-selected={statusTab === t.value}
+              onClick={() => {
+                setStatusTab(t.value);
+                setPage(1);
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <Loader />
-        </Box>
+        <div className="flex justify-center py-8">
+          <PageLoader label="Загрузка…" />
+        </div>
       ) : submissions.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
-          Заявок нет
-        </Typography>
+        <p className="text-sm text-muted-foreground">Заявок нет</p>
       ) : (
         <>
-          <Stack spacing={2}>
+          <div className="flex flex-col gap-3">
             {submissions.map((sub) => (
-              <Paper
-                key={sub.id}
-                variant="outlined"
-                sx={{ p: 2, borderRadius: 2 }}
-              >
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 1 }}>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
-                      {sub.content || "—"}
-                    </Typography>
-                    {sub.comment && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Комментарий: {sub.comment}
-                      </Typography>
-                    )}
-                    {sub.reviewComment && (
-                      <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                        Ответ модератора: {sub.reviewComment}
-                      </Typography>
-                    )}
-                    {sub.status === "approved" && sub.rewardValue != null && (
-                      <Typography variant="caption" color="success.main" display="block">
-                        Награда: {sub.rewardValue}
-                      </Typography>
-                    )}
-                  </Box>
-                  <Chip
-                    label={statusLabels[sub.status]}
-                    color={statusColors[sub.status]}
-                    size="small"
-                    sx={{ borderRadius: 1 }}
-                  />
-                </Box>
-                {sub.status === "pending" && (
-                  <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() => setApproveSubmission(sub)}
-                      disabled={isPending}
-                      sx={{
-                        backgroundColor: PRIMARY_COLOR,
-                        "&:hover": { backgroundColor: PRIMARY_COLOR, opacity: 0.9 },
-                      }}
-                    >
-                      Одобрить
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      onClick={() => setRejectSubmission(sub)}
-                      disabled={isPending}
-                    >
-                      Отклонить
-                    </Button>
-                  </Stack>
-                )}
-              </Paper>
+              <Card key={sub.id} className="border border-border shadow-none">
+                <CardContent className="p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="whitespace-pre-wrap text-sm text-foreground">
+                        {sub.content || "—"}
+                      </p>
+                      {sub.comment ? (
+                        <p className="mt-1.5 text-sm text-muted-foreground">
+                          Комментарий: {sub.comment}
+                        </p>
+                      ) : null}
+                      {sub.reviewComment ? (
+                        <p className="mt-1 block text-xs text-muted-foreground">
+                          Ответ модератора: {sub.reviewComment}
+                        </p>
+                      ) : null}
+                      {sub.status === "approved" && sub.rewardValue != null ? (
+                        <p className="mt-1 block text-xs text-green-700 dark:text-green-400">
+                          Награда: {sub.rewardValue}
+                        </p>
+                      ) : null}
+                    </div>
+                    <Badge variant={statusVariant[sub.status]}>
+                      {statusLabels[sub.status]}
+                    </Badge>
+                  </div>
+                  {sub.status === "pending" ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="default"
+                        onClick={() => setApproveSubmission(sub)}
+                        disabled={isPending}
+                      >
+                        Одобрить
+                      </Button>
+                      <Button
+                        type="button"
+                        size="default"
+                        variant="destructive"
+                        onClick={() => setRejectSubmission(sub)}
+                        disabled={isPending}
+                      >
+                        Отклонить
+                      </Button>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
             ))}
-          </Stack>
+          </div>
 
-          {pagination && pagination.totalPages > 1 && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-              <Pagination
-                count={pagination.totalPages}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-                color="primary"
-                sx={{
-                  "& .MuiPaginationItem-root.Mui-selected": { backgroundColor: PRIMARY_COLOR },
-                }}
-              />
-            </Box>
-          )}
+          {pagination && pagination.totalPages > 1 ? (
+            <CreativesPaginationControls
+              page={page}
+              totalPages={pagination.totalPages}
+              onPageChange={setPage}
+              className="mt-4"
+            />
+          ) : null}
         </>
       )}
 
@@ -194,6 +184,6 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
         onConfirm={handleRejectConfirm}
         isPending={isPending}
       />
-    </Box>
+    </div>
   );
 }

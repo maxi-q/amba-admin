@@ -1,6 +1,7 @@
 import { useParams, useLocation } from "react-router-dom";
-import { Box, Alert } from "@mui/material";
 import { useEffect, useState, useRef } from "react";
+import { toast } from "sonner";
+import { Alert, AlertDescription, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
 import { useDeleteRoom } from "@/hooks/rooms/useDeleteRoom";
@@ -10,7 +11,6 @@ import { SettingsNotFoundState } from "./components/SettingsNotFoundState";
 import { RoomNameSection } from "./components/RoomNameSection";
 import { RoomActionButtons } from "./components/RoomActionButtons";
 import { DeleteRoomDialog } from "./components/DeleteRoomDialog";
-import { SettingsNotifications } from "./components/SettingsNotifications";
 import { SettingsBotsSection } from "./components/SettingsBotsSection";
 import { SettingsWebhookSection } from "./components/SettingsWebhookSection";
 
@@ -24,16 +24,15 @@ export default function SettingPage() {
     room,
     isLoading: isLoadingRoom,
     isError: isRoomError,
-    error: roomError
-  } = useGetRoomById(slug || '');
+    error: roomError,
+  } = useGetRoomById(slug || "");
 
   const {
     updateRoom,
     isPending: isUpdating,
-    isSuccess: isUpdateSuccess,
     isValidationError: isUpdateValidationError,
     validationErrors: updateValidationErrors,
-    generalError: updateGeneralError
+    generalError: updateGeneralError,
   } = useUpdateRoom();
 
   const {
@@ -41,31 +40,34 @@ export default function SettingPage() {
     isPending: isDeleting,
     isValidationError: isDeleteValidationError,
     validationErrors: deleteValidationErrors,
-    generalError: deleteGeneralError
+    generalError: deleteGeneralError,
   } = useDeleteRoom();
 
-
-  const [roomName, setRoomName] = useState('');
+  const [roomName, setRoomName] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showSaveNotification, setShowSaveNotification] = useState(false);
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [generalError, setGeneralError] = useState<string>('');
+  const [generalError, setGeneralError] = useState<string>("");
 
   useEffect(() => {
     if (room) {
-      setRoomName(room.name || '');
+      setRoomName(room.name || "");
     }
   }, [room]);
 
   useEffect(() => {
-    if (isUpdateValidationError && Object.keys(updateValidationErrors).length > 0) {
+    if (
+      isUpdateValidationError &&
+      Object.keys(updateValidationErrors).length > 0
+    ) {
       setFieldErrors(updateValidationErrors);
-      setGeneralError('');
-    } else if (isDeleteValidationError && Object.keys(deleteValidationErrors).length > 0) {
+      setGeneralError("");
+    } else if (
+      isDeleteValidationError &&
+      Object.keys(deleteValidationErrors).length > 0
+    ) {
       setFieldErrors(deleteValidationErrors);
-      setGeneralError('');
+      setGeneralError("");
     } else if (updateGeneralError) {
       setGeneralError(updateGeneralError);
       setFieldErrors({});
@@ -74,15 +76,16 @@ export default function SettingPage() {
       setFieldErrors({});
     } else {
       setFieldErrors({});
-      setGeneralError('');
+      setGeneralError("");
     }
-  }, [isUpdateValidationError, updateValidationErrors, updateGeneralError, isDeleteValidationError, deleteValidationErrors, deleteGeneralError]);
-
-  useEffect(() => {
-    if (isUpdateSuccess) {
-      setShowSaveNotification(true);
-    }
-  }, [isUpdateSuccess]);
+  }, [
+    isUpdateValidationError,
+    updateValidationErrors,
+    updateGeneralError,
+    isDeleteValidationError,
+    deleteValidationErrors,
+    deleteGeneralError,
+  ]);
 
   useEffect(() => {
     if (location.hash === "#bots" && botsSectionRef.current) {
@@ -96,12 +99,16 @@ export default function SettingPage() {
     if (!slug) return;
 
     setFieldErrors({});
-    setGeneralError('');
+    setGeneralError("");
 
-    updateRoom({
-      data: { name: roomName },
-      id: slug
-    });
+    updateRoom(
+      { data: { name: roomName }, id: slug },
+      {
+        onSuccess: () => {
+          toast.success("Настройки успешно сохранены");
+        },
+      }
+    );
   };
 
   const handleDelete = () => {
@@ -113,7 +120,7 @@ export default function SettingPage() {
     if (!slug) return;
 
     setFieldErrors({});
-    setGeneralError('');
+    setGeneralError("");
 
     deleteRoom(slug);
   };
@@ -135,24 +142,31 @@ export default function SettingPage() {
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      {generalError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {generalError}
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-1 py-2 sm:px-0">
+      {generalError ? (
+        <Alert variant="destructive">
+          <AlertDescription>{generalError}</AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
-      <RoomNameSection
-        roomName={roomName}
-        onChange={setRoomName}
-        fieldErrors={fieldErrors}
-      />
-
-      <RoomActionButtons
-        onSave={handleSaveName}
-        onDelete={handleDelete}
-        isUpdating={isUpdating || isDeleting}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Основное</CardTitle>
+          <CardDescription>Название комнаты и опасные действия</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <RoomNameSection
+            roomName={roomName}
+            onChange={setRoomName}
+            fieldErrors={fieldErrors}
+          />
+          <RoomActionButtons
+            onSave={handleSaveName}
+            onDelete={handleDelete}
+            isUpdating={isUpdating || isDeleting}
+          />
+        </CardContent>
+      </Card>
 
       <DeleteRoomDialog
         open={showDeleteDialog}
@@ -162,29 +176,13 @@ export default function SettingPage() {
         isUpdating={isDeleting}
       />
 
-      <Box id="bots" ref={botsSectionRef}>
-        <SettingsBotsSection
-          slug={slug ?? ""}
-          room={room}
-          onSaveSuccess={() => setShowSaveNotification(true)}
-        />
-      </Box>
+      <div ref={botsSectionRef}>
+        <SettingsBotsSection slug={slug ?? ""} room={room} />
+      </div>
 
-      <Box id="webhook" ref={webhookSectionRef}>
-        <SettingsWebhookSection
-          slug={slug ?? ""}
-          room={room}
-          onSaveSuccess={() => setShowSaveNotification(true)}
-          onCopySuccess={() => setShowCopyNotification(true)}
-        />
-      </Box>
-
-      <SettingsNotifications
-        showSaveSuccess={showSaveNotification}
-        showCopySuccess={showCopyNotification}
-        onCloseSaveSuccess={() => setShowSaveNotification(false)}
-        onCloseCopySuccess={() => setShowCopyNotification(false)}
-      />
-    </Box>
+      <div ref={webhookSectionRef}>
+        <SettingsWebhookSection slug={slug ?? ""} room={room} />
+      </div>
+    </div>
   );
 }

@@ -1,60 +1,58 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Box, Stack, Alert, Typography } from "@mui/material";
+import { toast } from "sonner";
+import { Alert, AlertDescription, PageLoader } from "@senler/ui";
 import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { useSprints } from "@/hooks/sprints/useSprints";
-import type { IPatchSprintsRequest, ICreateSprintRequest } from "@services/sprints/sprints.types";
+import type {
+  IPatchSprintsRequest,
+  ICreateSprintRequest,
+  ISprint,
+} from "@services/sprints/sprints.types";
 import { dateToInput } from "./helpers";
-import { Loader } from "@/components/Loader";
 import { SprintPageHeader } from "./components/SprintPageHeader";
 import { SprintSettingsSection } from "./components/SprintSettingsSection";
 import { SprintPromoCodesSection } from "./components/SprintPromoCodesSection";
 import { SprintActionButtons } from "./components/SprintActionButtons";
 import { DeleteSprintDialog } from "./components/DeleteSprintDialog";
-import { SprintNotifications } from "./components/SprintNotifications";
 import { SprintNotFoundState } from "./components/SprintNotFoundState";
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
   const navigate = useNavigate();
-  const isNewSprint = sprintId === 'new';
+  const isNewSprint = sprintId === "new";
 
   const {
     createSprint,
     isPending: isCreating,
-    isSuccess: isCreateSuccess,
     isValidationError: isCreateValidationError,
     validationErrors: createValidationErrors,
-    generalError: createGeneralError
+    generalError: createGeneralError,
   } = useCreateSprint();
 
   const {
     patchSprint,
     isPending: isUpdating,
-    isSuccess: isUpdateSuccess,
     isValidationError: isUpdateValidationError,
     validationErrors: updateValidationErrors,
-    generalError: updateGeneralError
+    generalError: updateGeneralError,
   } = usePatchSprint();
 
   const { sprints, isLoading: isLoadingSprints } = useSprints(
     { page: 1, size: 100 },
-    slug || ''
+    slug || ""
   );
 
-  const [sprint, setSprint] = useState<any>(null);
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
-  const [showCopyError, setShowCopyError] = useState(false);
+  const [sprint, setSprint] = useState<ISprint | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [formData, setFormData] = useState<IPatchSprintsRequest>({
-    name: '',
+    name: "",
     startDate: null,
     endDate: null,
     ignoreEndDate: false,
-    rewardType: 'fix',
-    rewardUnits: '',
+    rewardType: "fix",
+    rewardUnits: "",
     rewardValue: 0,
     promoCodeUsageLimit: 0,
     ignorePromoCodeUsageLimit: false,
@@ -62,11 +60,11 @@ const SprintSetting = () => {
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [generalError, setGeneralError] = useState<string>('');
+  const [generalError, setGeneralError] = useState<string>("");
 
   useEffect(() => {
-    if (sprintId !== 'new' && sprints.length > 0) {
-      const foundSprint = sprints.find(sprint => sprint.id === sprintId);
+    if (sprintId !== "new" && sprints.length > 0) {
+      const foundSprint = sprints.find((s) => s.id === sprintId);
       if (foundSprint) {
         setSprint(foundSprint);
         setFormData({
@@ -86,12 +84,18 @@ const SprintSetting = () => {
   }, [sprintId, sprints]);
 
   useEffect(() => {
-    if (isCreateValidationError && Object.keys(createValidationErrors).length > 0) {
+    if (
+      isCreateValidationError &&
+      Object.keys(createValidationErrors).length > 0
+    ) {
       setFieldErrors(createValidationErrors);
-      setGeneralError('');
-    } else if (isUpdateValidationError && Object.keys(updateValidationErrors).length > 0) {
+      setGeneralError("");
+    } else if (
+      isUpdateValidationError &&
+      Object.keys(updateValidationErrors).length > 0
+    ) {
       setFieldErrors(updateValidationErrors);
-      setGeneralError('');
+      setGeneralError("");
     } else if (createGeneralError) {
       setGeneralError(createGeneralError);
       setFieldErrors({});
@@ -100,33 +104,26 @@ const SprintSetting = () => {
       setFieldErrors({});
     } else {
       setFieldErrors({});
-      setGeneralError('');
+      setGeneralError("");
     }
-  }, [isCreateValidationError, createValidationErrors, createGeneralError, isUpdateValidationError, updateValidationErrors, updateGeneralError]);
+  }, [
+    isCreateValidationError,
+    createValidationErrors,
+    createGeneralError,
+    isUpdateValidationError,
+    updateValidationErrors,
+    updateGeneralError,
+  ]);
 
-  useEffect(() => {
-    if (isCreateSuccess) {
-      setShowSaveNotification(true);
-    }
-  }, [isCreateSuccess]);
-
-  useEffect(() => {
-    if (isUpdateSuccess) {
-      if (formData.isDeleted) {
-        navigate(`/rooms/${slug}/sprints`);
-      } else {
-        setShowSaveNotification(true);
-      }
-    }
-  }, [isUpdateSuccess, formData.isDeleted, slug, navigate]);
-
-  const handleSave = (isDeleted: boolean = false) => {
+  const handleSave = (isDeletedFlag: boolean = false) => {
     setFieldErrors({});
-    setGeneralError('');
+    setGeneralError("");
 
     const storeData = {
       name: formData.name,
-      startDate: (formData.startDate ? new Date(formData.startDate) : new Date()).toISOString(),
+      startDate: (
+        formData.startDate ? new Date(formData.startDate) : new Date()
+      ).toISOString(),
       endDate: dateToInput(formData.endDate),
       ignoreEndDate: formData.ignoreEndDate,
       rewardType: formData.rewardType,
@@ -134,24 +131,36 @@ const SprintSetting = () => {
       rewardValue: formData.rewardValue,
       promoCodeUsageLimit: formData.promoCodeUsageLimit,
       ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
-      isDeleted: isDeleted,
+      isDeleted: isDeletedFlag,
     };
 
-    if (isDeleted && !isNewSprint) {
-      setFormData(prev => ({ ...prev, isDeleted: true }));
+    if (isDeletedFlag && !isNewSprint) {
+      setFormData((prev) => ({ ...prev, isDeleted: true }));
     }
 
     if (!isNewSprint) {
-      patchSprint({
-        data: storeData,
-        sprintId: sprintId || ''
-      });
+      patchSprint(
+        { data: storeData, sprintId: sprintId || "" },
+        {
+          onSuccess: (_, variables) => {
+            if (variables.data.isDeleted) {
+              navigate(`/rooms/${slug}/sprints`);
+            } else {
+              toast.success("Спринт успешно сохранён");
+            }
+          },
+        }
+      );
     } else if (slug) {
       const createData: ICreateSprintRequest = {
         ...storeData,
-        roomId: slug
+        roomId: slug,
       };
-      createSprint(createData);
+      createSprint(createData, {
+        onSuccess: () => {
+          toast.success("Спринт успешно создан");
+        },
+      });
     }
   };
 
@@ -168,53 +177,63 @@ const SprintSetting = () => {
     setShowDeleteDialog(false);
   };
 
-  const handleInputChange = (field: keyof IPatchSprintsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value;
-    const updatedData = {
-      ...formData,
-      [field]: field === 'rewardValue' || field === 'promoCodeUsageLimit' ? Number(newValue) : newValue
+  const handleInputChange =
+    (field: keyof IPatchSprintsRequest) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = event.target.value;
+      const updatedData = {
+        ...formData,
+        [field]:
+          field === "rewardValue" || field === "promoCodeUsageLimit"
+            ? Number(newValue)
+            : newValue,
+      };
+      setFormData(updatedData);
     };
-    setFormData(updatedData);
-  };
 
-  const handleSelectChange = (field: keyof IPatchSprintsRequest) => (event: any) => {
-    const newValue = event.target.value;
-    const updatedData = {
-      ...formData,
-      [field]: newValue
+  const handleSelectChange =
+    (field: keyof IPatchSprintsRequest) =>
+    (event: { target: { value: string } }) => {
+      const newValue = event.target.value;
+      setFormData({
+        ...formData,
+        [field]: newValue,
+      });
     };
-    setFormData(updatedData);
-  };
 
   const handleCopySprintId = async () => {
     try {
-      await navigator.clipboard.writeText(`ID спринта:${sprintId || 'Ошибка получения ID спринта'}`);
-      setShowCopyNotification(true);
+      await navigator.clipboard.writeText(
+        `ID спринта:${sprintId ?? "Ошибка получения ID спринта"}`
+      );
+      toast.success("Скопировано");
     } catch (error) {
-      console.error('Ошибка при копировании:', error);
-      setShowCopyError(true);
+      console.error("Ошибка при копировании:", error);
+      toast.error(
+        `Браузер запретил копирование. ID: ${sprintId ?? ""}`
+      );
     }
   };
 
   const handleIgnoreEndDateChange = (value: boolean) => {
     setFormData({
       ...formData,
-      ignoreEndDate: value
+      ignoreEndDate: value,
     });
   };
 
   const handleIgnorePromoCodeUsageLimitChange = (value: boolean) => {
     setFormData({
       ...formData,
-      ignorePromoCodeUsageLimit: value
+      ignorePromoCodeUsageLimit: value,
     });
   };
 
   if (isLoadingSprints) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
@@ -223,21 +242,21 @@ const SprintSetting = () => {
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      {generalError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {generalError}
+    <div className="w-full px-2 py-6">
+      {generalError ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{generalError}</AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
       <SprintPageHeader
         sprintName={sprint?.name}
         onCopySprintId={handleCopySprintId}
       />
 
-      <Box>
-        <Typography variant="h6" fontWeight={700} mb={2}>Настройки</Typography>
-        <Stack spacing={3}>
+      <div>
+        <h2 className="mb-4 text-lg font-bold tracking-tight">Настройки</h2>
+        <div className="flex flex-col gap-6">
           <SprintSettingsSection
             formData={formData}
             onInputChange={handleInputChange}
@@ -250,9 +269,11 @@ const SprintSetting = () => {
             onInputChange={handleInputChange}
             onSelectChange={handleSelectChange}
             fieldErrors={fieldErrors}
-            onIgnorePromoCodeUsageLimitChange={handleIgnorePromoCodeUsageLimitChange}
+            onIgnorePromoCodeUsageLimitChange={
+              handleIgnorePromoCodeUsageLimitChange
+            }
           />
-        </Stack>
+        </div>
 
         <SprintActionButtons
           isNewSprint={isNewSprint}
@@ -261,18 +282,7 @@ const SprintSetting = () => {
           isCreating={isCreating}
           isUpdating={isUpdating}
         />
-      </Box>
-
-      <SprintNotifications
-        showCopySuccess={showCopyNotification}
-        showCopyError={showCopyError}
-        showSaveSuccess={showSaveNotification}
-        sprintId={sprintId}
-        isNewSprint={isNewSprint}
-        onCloseCopySuccess={() => setShowCopyNotification(false)}
-        onCloseCopyError={() => setShowCopyError(false)}
-        onCloseSaveSuccess={() => setShowSaveNotification(false)}
-      />
+      </div>
 
       <DeleteSprintDialog
         open={showDeleteDialog}
@@ -281,7 +291,7 @@ const SprintSetting = () => {
         onCancel={handleCancelDelete}
         isUpdating={isUpdating}
       />
-    </Box>
+    </div>
   );
 };
 

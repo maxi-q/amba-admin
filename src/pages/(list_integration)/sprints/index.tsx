@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Stack } from "@mui/material";
 import { useSprints } from "@/hooks/sprints/useSprints";
-import { Loader } from "@/components/Loader";
+import { PageLoader } from "@senler/ui";
 import { SprintsErrorState } from "./components/SprintsErrorState";
 import { SprintsEmptyState } from "./components/SprintsEmptyState";
 import { SprintCard } from "./components/SprintCard";
@@ -11,14 +10,9 @@ export default function SprintList() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const {
-    sprints,
-    isLoading,
-    isError,
-    error
-  } = useSprints(
+  const { sprints, isLoading, isError, error } = useSprints(
     { page: 1, size: 100 },
-    slug || ''
+    slug || ""
   );
 
   const handleCreateSprint = () => {
@@ -27,9 +21,9 @@ export default function SprintList() {
 
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
@@ -40,8 +34,8 @@ export default function SprintList() {
   const activeSprints = sprints.filter((sprint) => !sprint.isDeleted);
 
   return (
-    <Box sx={{ width: "100%", px: 2, pb: 3 }}>
-      <Stack spacing={2}>
+    <div className="w-full px-2 pb-6">
+      <div className="flex flex-col gap-2">
         {activeSprints.length === 0 ? (
           <SprintsEmptyState onCreateClick={handleCreateSprint} />
         ) : (
@@ -51,7 +45,7 @@ export default function SprintList() {
         )}
 
         <CreateSprintButton onClick={handleCreateSprint} />
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 }

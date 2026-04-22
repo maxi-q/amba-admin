@@ -1,18 +1,16 @@
 import type { ReactNode } from "react";
-import { Link, NavLink, useParams, useLocation } from "react-router-dom";
+import { NavLink, useParams, useLocation } from "react-router-dom";
+import { useMemo } from "react";
+import { toast } from "sonner";
 import {
-  Box,
-  Typography,
-  Breadcrumbs,
-  Link as MuiLink,
-  Snackbar,
-  Alert,
-  Button,
-} from "@mui/material";
+  AppShell,
+  type AppShellBreadcrumb,
+  type AppShellNavigationGroup,
+  type AppShellNavigationItem,
+  type AppShellRenderLink,
+} from "@senler/ui/app-shell";
+import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
-import { Loader } from "@/components/Loader";
-import { useState } from "react";
-import { PRIMARY_COLOR } from "@/constants/colors";
 
 interface RoomBoxProps {
   children: ReactNode | ReactNode[];
@@ -21,443 +19,208 @@ interface RoomBoxProps {
 const RoomBox = ({ children }: RoomBoxProps) => {
   const { slug } = useParams();
   const location = useLocation();
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
-  const [showCopyError, setShowCopyError] = useState(false);
-  const isBotsAnchor = location.pathname.endsWith("setting") && location.hash === "#bots";
-  const isWebhookAnchor = location.pathname.endsWith("setting") && location.hash === "#webhook";
-  const creativeTaskId = location.pathname.match(/\/creativetasks\/([^/]+)/)?.[1] ?? null;
-  const isCreativeTaskDetail = !!creativeTaskId;
+  const creativeTaskId =
+    location.pathname.match(/\/creativetasks\/([^/]+)/)?.[1] ?? null;
 
-  // Получаем данные комнаты по ID
   const {
     room: roomData,
     isLoading,
     isError,
-    error
-  } = useGetRoomById(slug || '');
+    error,
+  } = useGetRoomById(slug || "");
+
+  const roomBase = slug ? `/rooms/${slug}` : "";
+  const currentPath = `${location.pathname}${location.hash}`;
+
+  const navigation = useMemo((): AppShellNavigationGroup[] => {
+    if (!roomBase) {
+      return [{ id: "main", items: [] }];
+    }
+
+    const items: AppShellNavigationItem[] = [
+      {
+        id: "setting",
+        label: "Настройки",
+        href: `${roomBase}/setting`,
+        match: (p) => p.split("#")[0] === `${roomBase}/setting`,
+        defaultOpen: true,
+        items: [
+          {
+            id: "bots",
+            label: "Боты",
+            href: `${roomBase}/setting#bots`,
+            match: (p) => p.includes("#bots"),
+          },
+          {
+            id: "webhook",
+            label: "Webhook",
+            href: `${roomBase}/setting#webhook`,
+            match: (p) => p.includes("#webhook"),
+          },
+        ],
+      },
+      {
+        id: "sprints",
+        label: "Спринты",
+        href: `${roomBase}/sprints`,
+      },
+      {
+        id: "events",
+        label: "События",
+        href: `${roomBase}/events`,
+      },
+      {
+        id: "creativetasks",
+        label: "Креативы",
+        href: `${roomBase}/creativetasks`,
+        match: (p) => {
+          const pt = p.split("#")[0];
+          return pt === `${roomBase}/creativetasks`;
+        },
+        defaultOpen: true,
+        ...(creativeTaskId
+          ? {
+            items: [
+              {
+                id: "creative-answers",
+                label: "Ответы",
+                href: `${roomBase}/creativetasks/${creativeTaskId}`,
+                match: (p) =>
+                  p.split("#")[0] ===
+                  `${roomBase}/creativetasks/${creativeTaskId}`,
+              },
+            ],
+          }
+          : {}),
+      },
+      {
+        id: "invitations",
+        label: "Приглашения",
+        href: `${roomBase}/invitations`,
+      },
+      {
+        id: "ord",
+        label: "ОРД",
+        href: `${roomBase}/ord`,
+      },
+      {
+        id: "applications",
+        label: "Заявки",
+        href: `${roomBase}/applications`,
+      },
+      {
+        id: "statistics",
+        label: "Статистика",
+        href: `${roomBase}/statistics`,
+      },
+      {
+        id: "code",
+        label: "Код для сайта",
+        href: `${roomBase}/code`,
+      },
+    ];
+
+    return [{ id: "room-nav", items }];
+  }, [roomBase, creativeTaskId]);
+
+  const headerBreadcrumbs: AppShellBreadcrumb[] = useMemo(
+    () => [
+      { id: "rooms", label: "Список комнат", href: "/" },
+      { id: "room-name", label: roomData?.name ?? "…" },
+    ],
+    [roomData?.name]
+  );
+
+  const renderLink: AppShellRenderLink = ({
+    href,
+    className,
+    children,
+    title,
+    ...props
+  }) => (
+    <NavLink to={href} className={className} title={title} {...props}>
+      {children}
+    </NavLink>
+  );
 
   const handleCopyRoomId = async () => {
     try {
-      await navigator.clipboard.writeText(`ID комнаты:${roomData?.id || 'Ошибка получения ID комнаты'}`);
-      setShowCopyNotification(true);
-    } catch (error) {
-      console.error('Ошибка при копировании:', error);
-      setShowCopyError(true);
+      await navigator.clipboard.writeText(
+        `ID комнаты:${roomData?.id ?? "Ошибка получения ID комнаты"}`
+      );
+      toast.success("Скопировано");
+    } catch {
+      console.error("Ошибка при копировании");
+      toast.error(
+        `Браузер запретил копирование. ID комнаты: ${roomData?.id ?? ""}`
+      );
     }
   };
 
-  const handleCloseNotification = () => {
-    setShowCopyNotification(false);
-  };
-
-  const handleCloseCopyError = () => {
-    setShowCopyError(false);
-  };
-
-  // Показываем загрузку
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Loader />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
-  // Показываем ошибку
   if (isError) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке комнаты: {error?.message || 'Неизвестная ошибка'}
+      <div className="w-full px-4 py-6">
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>
+            Ошибка при загрузке комнаты:{" "}
+            {error?.message ?? "Неизвестная ошибка"}
+          </AlertDescription>
         </Alert>
         <Button
-          variant="outlined"
+          type="button"
+          variant="outline"
           onClick={() => window.location.reload()}
         >
           Попробовать снова
         </Button>
-      </Box>
+      </div>
     );
   }
 
-  // Показываем предупреждение, если комната не найдена
   if (!roomData) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Комната не найдена
+      <div className="w-full px-4 py-6">
+        <Alert>
+          <AlertDescription>Комната не найдена</AlertDescription>
         </Alert>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", display: "flex", minHeight: "100%" }}>
-      {/* Sidebar */}
-      <Box sx={{
-        width: "200px",
-        minHeight: "652px",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        borderRight: "1px solid #e0e0e0",
-        backgroundColor: "white"
-      }}>
-        <NavLink
-          to="setting"
-          style={{ textDecoration: "none" }}
+    <AppShell
+      navigation={navigation}
+      currentPath={currentPath}
+      renderLink={renderLink}
+      brand={
+        <span className="truncate text-sm font-semibold text-sidebar-foreground">
+          {roomData.name}
+        </span>
+      }
+      headerBreadcrumbs={headerBreadcrumbs}
+      headerActions={
+        <Button
+          type="button"
+          variant="link"
+          className="h-auto shrink-0 px-0 text-[13px] font-normal"
+          onClick={handleCopyRoomId}
         >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "none",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Настройки
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <Link
-          to="setting#bots"
-          style={{ textDecoration: "none" }}
-        >
-          <Box
-            sx={{
-              pl: 3.5,
-              pr: 2,
-              py: 1,
-              backgroundColor: isBotsAnchor ? PRIMARY_COLOR : "white",
-              color: isBotsAnchor ? "white" : "text.primary",
-              borderBottom: "none",
-              cursor: "pointer",
-              transition: "all 0.2s",
-              "&:hover": {
-                backgroundColor: isBotsAnchor ? PRIMARY_COLOR : "#f5f5f5"
-              }
-            }}
-          >
-            <Typography variant="body2" sx={{ fontSize: "0.8125rem" }} fontWeight={isBotsAnchor ? 500 : 400}>
-              Боты
-            </Typography>
-          </Box>
-        </Link>
-        <Link
-          to="setting#webhook"
-          style={{ textDecoration: "none" }}
-        >
-          <Box
-            sx={{
-              pl: 3.5,
-              pr: 2,
-              py: 1,
-              backgroundColor: isWebhookAnchor ? PRIMARY_COLOR : "white",
-              color: isWebhookAnchor ? "white" : "text.primary",
-              borderBottom: "1px solid #e0e0e0",
-              cursor: "pointer",
-              transition: "all 0.2s",
-              "&:hover": {
-                backgroundColor: isWebhookAnchor ? PRIMARY_COLOR : "#f5f5f5"
-              }
-            }}
-          >
-            <Typography variant="body2" sx={{ fontSize: "0.8125rem" }} fontWeight={isWebhookAnchor ? 500 : 400}>
-              Webhook
-            </Typography>
-          </Box>
-        </Link>
-        <NavLink
-          to="sprints"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Спринты
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="events"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                События
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="creativetasks"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive && !isCreativeTaskDetail ? PRIMARY_COLOR : "white",
-                color: isActive && !isCreativeTaskDetail ? "white" : "text.primary",
-                borderBottom: isCreativeTaskDetail ? "none" : "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive && !isCreativeTaskDetail ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive && !isCreativeTaskDetail ? 500 : 400}>
-                Креативы
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        {isCreativeTaskDetail && creativeTaskId && (
-          <Link
-            to={`/rooms/${slug}/creativetasks/${creativeTaskId}`}
-            style={{ textDecoration: "none" }}
-          >
-            <Box
-              sx={{
-                pl: 3.5,
-                pr: 2,
-                py: 1,
-                backgroundColor: PRIMARY_COLOR,
-                color: "white",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: PRIMARY_COLOR,
-                  opacity: 0.9
-                }
-              }}
-            >
-              <Typography variant="body2" sx={{ fontSize: "0.8125rem" }} fontWeight={500}>
-                Ответы
-              </Typography>
-            </Box>
-          </Link>
-        )}
-        <NavLink
-          to="invitations"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Приглашения
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="ord"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                ОРД
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="applications"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Заявки
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="statistics"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Статистика
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-        <NavLink
-          to="code"
-          style={{ textDecoration: "none" }}
-        >
-          {({ isActive }) => (
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                backgroundColor: isActive ? PRIMARY_COLOR : "white",
-                color: isActive ? "white" : "text.primary",
-                borderBottom: "1px solid #e0e0e0",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                "&:hover": {
-                  backgroundColor: isActive ? PRIMARY_COLOR : "#f5f5f5"
-                }
-              }}
-            >
-              <Typography variant="body2" fontWeight={isActive ? 500 : 400}>
-                Код для сайта
-              </Typography>
-            </Box>
-          )}
-        </NavLink>
-      </Box>
-
-      {/* Right side: Breadcrumbs + Content */}
-      <Box sx={{ flex: 1, px: 3, py: 3 }}>
-        <Box sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
-            <MuiLink component={Link} to="/" underline="hover" color="inherit">
-              Список комнат
-            </MuiLink>
-            <Typography variant="body2" color="text.primary">
-              {roomData?.name}
-            </Typography>
-          </Breadcrumbs>
-          <MuiLink
-            variant="body2"
-            underline="always"
-            color="inherit"
-            onClick={handleCopyRoomId}
-            sx={{
-              userSelect: "none",
-              cursor: "pointer"
-            }}
-          >
-            Скопировать ID комнаты
-          </MuiLink>
-        </Box>
-
-        <Box>
-          {children}
-        </Box>
-      </Box>
-
-      <Snackbar
-        open={showCopyNotification}
-        autoHideDuration={3000}
-        onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseNotification} severity="success" sx={{ width: '100%', cursor: 'pointer' }}>
-          {/* ID комнаты скопирован в буфер обмена */}
-          Скопировано
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={showCopyError}
-        autoHideDuration={5000}
-        onClose={handleCloseCopyError}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleCloseCopyError} severity="error" sx={{ width: '100%', cursor: 'pointer' }}>
-          Браузер запретил копирование, но вы можете сделать это вручную: {roomData?.id}
-        </Alert>
-      </Snackbar>
-    </Box>
+          Скопировать ID комнаты
+        </Button>
+      }
+      sidebarClassName="h-auto min-h-dvh self-stretch"
+      mainClassName="min-h-min flex-none overflow-visible p-4 md:p-6"
+    >
+      {children}
+    </AppShell>
   );
 };
 

@@ -1,12 +1,11 @@
-import { Box, Alert } from "@mui/material";
+import { Alert, AlertDescription } from "@senler/ui";
 
 export const SprintNotFoundState = () => {
   return (
-    <Box sx={{ px: 2, py: 3 }}>
-      <Alert severity="error">
-        Спринт не найден
+    <div className="px-4 py-6">
+      <Alert variant="destructive">
+        <AlertDescription>Спринт не найден</AlertDescription>
       </Alert>
-    </Box>
+    </div>
   );
 };
-

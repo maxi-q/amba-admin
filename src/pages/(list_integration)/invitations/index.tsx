@@ -1,19 +1,16 @@
 import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Box, Button, Stack, Alert, Typography } from "@mui/material";
+import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
-import { Loader } from "@/components/Loader";
-import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
 import { InvitationsHeader } from "./components/InvitationsHeader";
 import { InvitationCard } from "./components/InvitationCard";
 import { InvitationFormDialog } from "./components/InvitationFormDialog";
 import { DeleteInvitationDialog } from "./components/DeleteInvitationDialog";
 import type { IInvitation } from "@services/invitations/invitations.types";
-import { PRIMARY_COLOR } from "@/constants/colors";
 
 export default function InvitationsPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -97,57 +94,55 @@ export default function InvitationsPage() {
 
   if (isLoadingRoom) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <SettingsLoadingState />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center px-2 py-6">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
   if (isRoomError || !room) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error">{(roomError as Error)?.message ?? "Комната не найдена"}</Alert>
-      </Box>
+      <div className="w-full px-2 py-6">
+        <Alert variant="destructive">
+          <AlertDescription>
+            {(roomError as Error)?.message ?? "Комната не найдена"}
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
+    <div className="w-full px-2 py-3">
       <InvitationsHeader />
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} sx={{ mb: 2 }}>
-        <Typography variant="body2" color="text.secondary">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
           Подписчики ВК (id в ВК), креативные задачи и события после регистрации.
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={openCreate}
-          disabled={!roomId}
-          sx={{
-            backgroundColor: PRIMARY_COLOR,
-            "&:hover": { backgroundColor: PRIMARY_COLOR, opacity: 0.9 },
-          }}
-        >
+        </p>
+        <Button type="button" size="lg" className="shrink-0" onClick={openCreate} disabled={!roomId}>
           Создать приглашение
         </Button>
-      </Stack>
+      </div>
 
       {isError ? (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {(error as Error)?.message ?? "Не удалось загрузить приглашения"}
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>
+            {(error as Error)?.message ?? "Не удалось загрузить приглашения"}
+          </AlertDescription>
         </Alert>
       ) : null}
 
       {isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <Loader />
-        </Box>
+        <div className="flex justify-center py-8">
+          <PageLoader label="Загрузка приглашений…" />
+        </div>
       ) : sortedInvitations.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <p className="text-sm text-muted-foreground">
           Пока нет приглашений. Создайте запись с subscriberId ВК после регистрации.
-        </Typography>
+        </p>
       ) : (
-        <Stack spacing={2}>
+        <div className="flex flex-col gap-3">
           {sortedInvitations.map((inv) => (
             <InvitationCard
               key={inv.id}
@@ -158,7 +153,7 @@ export default function InvitationsPage() {
               onDelete={setDeletingInvitation}
             />
           ))}
-        </Stack>
+        </div>
       )}
 
       <InvitationFormDialog
@@ -181,6 +176,6 @@ export default function InvitationsPage() {
         isPending={isDeletePending}
         errorMessage={deleteError}
       />
-    </Box>
+    </div>
   );
 }

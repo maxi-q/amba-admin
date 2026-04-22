@@ -1,44 +1,60 @@
-import { Tabs, Tab, Box } from "@mui/material";
-import { useMemo } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { NavLink, useParams } from "react-router-dom";
+
+const tabInactive =
+  "relative pb-3 pt-0 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
+const tabActive =
+  "relative pb-3 pt-0 text-[15px] font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary";
+
+/** Сегменты маршрута, для которых не показываем вкладку «Спринт» */
+const NO_SPRINT_TAB = new Set(["settings", "info"]);
 
 export const SprintsHeader = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const params = useParams();
+  const { slug, sprintId: sprintIdParam } = useParams<{
+    slug: string;
+    sprintId?: string;
+  }>();
 
-  const slug = params.slug || location.pathname.split('/rooms/')[1]?.split('/')[0];
+  const sprintSectionId =
+    sprintIdParam && !NO_SPRINT_TAB.has(sprintIdParam)
+      ? sprintIdParam
+      : undefined;
 
-  const isSettingsPage = useMemo(() => location.pathname.includes('/sprints/settings'), [location.pathname]);
-  const isSprintPage = useMemo(() => {
-    const pathMatch = location.pathname.match(/\/sprints\/([^/]+)/);
-    return pathMatch && pathMatch[1] !== 'settings' && pathMatch[1] !== 'info';
-  }, [location.pathname]);
+  const listPath = slug ? `/rooms/${slug}/sprints` : "";
+  const settingsPath = slug ? `/rooms/${slug}/sprints/settings` : "";
+  const sprintPath =
+    slug && sprintSectionId
+      ? `/rooms/${slug}/sprints/${sprintSectionId}`
+      : "";
 
-  const currentTab = useMemo(() => {
-    if (isSettingsPage) return isSprintPage ? 2 : 1;
-    if (isSprintPage) return 1;
-    return 0;
-  }, [isSettingsPage, isSprintPage]);
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    if (!slug) return;
-
-    if (newValue === 0) {
-      navigate(`/rooms/${slug}/sprints`);
-    } else if (newValue === 1 || newValue === 2) {
-      navigate(`/rooms/${slug}/sprints/settings`);
-    }
-  };
+  if (!slug) {
+    return null;
+  }
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Tabs value={currentTab} onChange={handleTabChange}>
-        <Tab label="Список" />
-        {isSprintPage && <Tab label="Спринт" />}
-        <Tab label="Настройки" />
-      </Tabs>
-    </Box>
+    <div className="mb-2 border-b border-border">
+      <nav className="flex flex-wrap gap-6" aria-label="Раздел спринтов">
+        <NavLink
+          to={listPath}
+          end
+          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+        >
+          Список
+        </NavLink>
+        {sprintSectionId ? (
+          <NavLink
+            to={sprintPath}
+            className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+          >
+            Спринт
+          </NavLink>
+        ) : null}
+        <NavLink
+          to={settingsPath}
+          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+        >
+          Настройки
+        </NavLink>
+      </nav>
+    </div>
   );
 };
-

@@ -1,22 +1,18 @@
-import { Box, Typography } from "@mui/material";
-
 interface SprintSettingsHeaderProps {
   activeSprints: number;
   totalSprints: number;
 }
 
-export const SprintSettingsHeader = ({ activeSprints, totalSprints }: SprintSettingsHeaderProps) => {
+export const SprintSettingsHeader = ({
+  activeSprints,
+  totalSprints,
+}: SprintSettingsHeaderProps) => {
   return (
-    <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
-      <Box sx={{ textAlign: 'right' }}>
-        <Typography variant="body2" color="text.secondary">
-          Активных спринтов: {activeSprints}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Всего спринтов: {totalSprints}
-        </Typography>
-      </Box>
-    </Box>
+    <div className="mb-4 flex justify-end">
+      <div className="text-right text-sm text-muted-foreground">
+        <p>Активных спринтов: {activeSprints}</p>
+        <p>Всего спринтов: {totalSprints}</p>
+      </div>
+    </div>
   );
 };
-

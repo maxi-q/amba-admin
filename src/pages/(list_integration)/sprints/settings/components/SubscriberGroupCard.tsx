@@ -1,5 +1,5 @@
-import { Box, Paper, Stack, TextField, Typography, IconButton, List, ListItem, Link as MuiLink } from "@mui/material";
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Copy } from "lucide-react";
+import { Button, Card, CardContent, InputField } from "@senler/ui";
 
 interface SubscriberGroupCardProps {
   title: string;
@@ -19,49 +19,56 @@ export const SubscriberGroupCard = ({
   onCopy,
 }: SubscriberGroupCardProps) => {
   return (
-    <Paper elevation={0} sx={{ borderRadius: 3, border: 'none', boxShadow: 'none' }}>
-      <Typography variant="h6" fontWeight={600} mb={2}>{title}</Typography>
+    <Card className="border-border shadow-none">
+      <CardContent className="space-y-4 p-4 pt-6">
+        <h3 className="text-lg font-semibold leading-tight">{title}</h3>
 
-      <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-        <Box sx={{ width: 44, height: 44, borderRadius: "50%", bgcolor: "grey.200", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 20 }}>
-          VK
-        </Box>
-        <Box>
-          <Typography variant="body1" fontWeight={500}>{name}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            ID: {senlerId}{" "}
-            <MuiLink href="#" underline="hover">
-              перейти к редактированию
-            </MuiLink>
-          </Typography>
-        </Box>
-      </Stack>
+        <div className="flex items-center gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-base font-bold">
+            VK
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium leading-snug">{name}</p>
+            <p className="text-xs text-muted-foreground">
+              ID: {senlerId}{" "}
+              <a
+                href="#"
+                className="text-primary underline underline-offset-2 hover:text-primary/90"
+                onClick={(e) => e.preventDefault()}
+              >
+                перейти к редактированию
+              </a>
+            </p>
+          </div>
+        </div>
 
-      <List sx={{ mb: 2, ml: 2, listStyleType: 'decimal', pl: 2 }}>
-        {instructions.map((txt, idx) => (
-          <ListItem key={idx} sx={{ display: 'list-item', py: 0, px: 0, fontSize: 14, lineHeight: 1.5 }}>
-            {txt}
-          </ListItem>
-        ))}
-      </List>
+        <ol className="list-decimal space-y-1 pl-5 text-sm leading-relaxed text-foreground">
+          {instructions.map((txt, idx) => (
+            <li key={idx}>{txt}</li>
+          ))}
+        </ol>
 
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <TextField
-          value={link}
-          InputProps={{ readOnly: true }}
-          size="small"
-          fullWidth
-        />
-        <IconButton
-          onClick={() => onCopy(link)}
-          title="Копировать"
-          color="primary"
-          sx={{ ml: 1 }}
-        >
-          <ContentCopyIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-    </Paper>
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <InputField
+              readOnly
+              value={link}
+              aria-label="Ссылка"
+              className="[&_input]:text-sm"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-10 shrink-0"
+            title="Копировать"
+            onClick={() => onCopy(link)}
+          >
+            <Copy className="size-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
-

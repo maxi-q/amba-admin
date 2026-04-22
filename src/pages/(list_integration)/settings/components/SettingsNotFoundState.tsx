@@ -1,12 +1,11 @@
-import { Box, Alert } from "@mui/material";
+import { Alert, AlertDescription } from "@senler/ui";
 
 export const SettingsNotFoundState = () => {
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Alert severity="warning">
-        Комната не найдена
+    <div className="w-full px-4 py-6">
+      <Alert>
+        <AlertDescription>Комната не найдена</AlertDescription>
       </Alert>
-    </Box>
+    </div>
   );
 };
-

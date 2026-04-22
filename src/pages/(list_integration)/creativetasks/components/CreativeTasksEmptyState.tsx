@@ -1,4 +1,4 @@
-import { Alert, Link } from "@mui/material";
+import { Alert, AlertDescription } from "@senler/ui";
 
 interface CreativeTasksEmptyStateProps {
   onCreateClick: () => void;
@@ -6,24 +6,18 @@ interface CreativeTasksEmptyStateProps {
 
 export function CreativeTasksEmptyState({ onCreateClick }: CreativeTasksEmptyStateProps) {
   return (
-    <Alert severity="info" sx={{ mb: 3 }}>
-      Креативных задач пока нет.{" "}
-      <Link
-        component="button"
-        onClick={onCreateClick}
-        sx={{
-          textDecoration: "underline",
-          cursor: "pointer",
-          color: "inherit",
-          border: "none",
-          background: "none",
-          padding: 0,
-          font: "inherit"
-        }}
-      >
-        Создайте первую задачу
-      </Link>
-      , чтобы начать.
+    <Alert className="mb-3">
+      <AlertDescription>
+        Креативных задач пока нет.{" "}
+        <button
+          type="button"
+          onClick={onCreateClick}
+          className="inline cursor-pointer border-0 bg-transparent p-0 align-baseline font-medium text-primary underline underline-offset-2 hover:text-primary/90"
+        >
+          Создайте первую задачу
+        </button>
+        , чтобы начать.
+      </AlertDescription>
     </Alert>
   );
 }

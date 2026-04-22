@@ -1,12 +1,9 @@
-import { Typography, Box } from "@mui/material";
-
 export const RoomsHeader = () => {
   return (
-    <Box sx={{ mb: 2 }}>
-      <Typography variant="h6" fontWeight={500}>
+    <div className="mb-2">
+      <h2 className="text-xl font-medium leading-none tracking-tight">
         Список комнат
-      </Typography>
-    </Box>
+      </h2>
+    </div>
   );
 };
-

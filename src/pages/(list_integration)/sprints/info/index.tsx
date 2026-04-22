@@ -1,143 +1,135 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  IconButton,
-  List,
-  ListItem,
-  Stack,
-  Paper,
-} from "@mui/material";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@senler/ui";
 
 const SprintInfo = () => {
   const navigate = useNavigate();
 
   return (
-    <Paper elevation={0} sx={{ 
-      position: 'absolute', 
-      top: 0, 
-      left: 0, 
-      right: 0, 
-      bottom: 0, 
-      bgcolor: 'white',
-      display: 'flex',
-      justifyContent: 'center',
-      overflow: 'auto'
-    }}>
-      <Box sx={{ p: { xs: 2, md: 4 }, width: '100%' }}>
-        <Box mb={2}>
-          <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }}>
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
-        
-        <Typography variant="h4" fontWeight={700} mb={3}>
+    <div className="absolute inset-0 flex justify-center overflow-auto bg-background">
+      <div className="w-full p-4 md:p-8">
+        <div className="mb-4">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="mr-2"
+            onClick={() => navigate(-1)}
+            aria-label="Назад"
+          >
+            <ArrowLeft className="size-5" />
+          </Button>
+        </div>
+
+        <h1 className="mb-6 text-2xl font-bold tracking-tight md:text-3xl">
           Что такое спринты?
-        </Typography>
-        
-        <Stack spacing={3}>
-          <Typography variant="body1">
-            Спринт — это формат кампании с амбассадорами, где все участники из выбранной комнаты автоматически принимают участие, используя свой постоянный промокод. Такой формат идеально подходит для длительных или повторяющихся активностей с едиными условиями участия и вознаграждений.
-          </Typography>
-          
-          <Box>
-            <Typography variant="h5" fontWeight={600} mb={2}>
-              ⚙️Особенности спринта:
-            </Typography>
-            <List sx={{ pl: 2 }}>
-              <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                <Typography variant="body1">
-                  <strong>Автоматическое участие:</strong> Все амбассадоры, добавленные в комнату, автоматически становятся участниками каждого активного спринта. Не требуется ручной отбор или приглашение.
-                </Typography>
-              </ListItem>
-              <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                <Typography variant="body1">
-                  <strong>Единый промокод:</strong> У каждого амбассадора есть один постоянный промокод, используемый во всех спринтах. Это упрощает отслеживание результатов и продвижение.
-                </Typography>
-              </ListItem>
-              <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                <Typography variant="body1">
-                  <strong>Фиксированные условия:</strong> Условия по вознаграждению (бонус пользователю и награда амбассадору) едины в рамках спринта и применяются ко всем участникам.
-                </Typography>
-              </ListItem>
-              <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                <Typography variant="body1">
-                  <strong>Аналитика по периоду:</strong> Статистика привязывается ко времени действия спринта, что позволяет оценивать эффективность конкретного периода активности. Удобно для регулярных метрик и A/B-тестирования.
-                </Typography>
-              </ListItem>
-            </List>
-          </Box>
-          
-          <Box>
-            <Typography variant="h5" fontWeight={600} mb={2}>
+        </h1>
+
+        <div className="flex max-w-3xl flex-col gap-8 text-foreground">
+          <p className="text-base leading-relaxed">
+            Спринт — это формат кампании с амбассадорами, где все участники из
+            выбранной комнаты автоматически принимают участие, используя свой
+            постоянный промокод. Такой формат идеально подходит для длительных
+            или повторяющихся активностей с едиными условиями участия и
+            вознаграждений.
+          </p>
+
+          <section>
+            <h2 className="mb-3 text-xl font-semibold">
+              ⚙️ Особенности спринта:
+            </h2>
+            <ul className="list-disc space-y-2 pl-5 text-base leading-relaxed">
+              <li>
+                <strong>Автоматическое участие:</strong> Все амбассадоры,
+                добавленные в комнату, автоматически становятся участниками
+                каждого активного спринта. Не требуется ручной отбор или
+                приглашение.
+              </li>
+              <li>
+                <strong>Единый промокод:</strong> У каждого амбассадора есть
+                один постоянный промокод, используемый во всех спринтах. Это
+                упрощает отслеживание результатов и продвижение.
+              </li>
+              <li>
+                <strong>Фиксированные условия:</strong> Условия по
+                вознаграждению (бонус пользователю и награда амбассадору) едины в
+                рамках спринта и применяются ко всем участникам.
+              </li>
+              <li>
+                <strong>Аналитика по периоду:</strong> Статистика привязывается
+                ко времени действия спринта, что позволяет оценивать эффективность
+                конкретного периода активности. Удобно для регулярных метрик и
+                A/B-тестирования.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="mb-4 text-xl font-semibold">
               Отличия Событий от Спринтов
-            </Typography>
-            <Stack spacing={2}>
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Формат участия:
-                </Typography>
-                <Typography variant="body1" mb={1}>
-                  В спринтах участвуют все амбассадоры, добавленные в комнату, автоматически.
-                </Typography>
-                <Typography variant="body1">
-                  В событиях вы вручную выбираете участников: добавляете всех или рассылаете персональные приглашения.
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Промокоды:
-                </Typography>
-                <Typography variant="body1" mb={1}>
-                  В спринтах у каждого амбассадора есть один постоянный промокод, который действует на протяжении всех спринтов.
-                </Typography>
-                <Typography variant="body1">
-                  В событиях для каждого амбассадора создаётся уникальный промокод, привязанный к конкретному событию.
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Условия вознаграждений:
-                </Typography>
-                <Typography variant="body1" mb={1}>
+            </h2>
+            <div className="flex flex-col gap-6">
+              <div>
+                <h3 className="mb-2 text-lg font-medium">Формат участия:</h3>
+                <p className="mb-2 text-base leading-relaxed">
+                  В спринтах участвуют все амбассадоры, добавленные в комнату,
+                  автоматически.
+                </p>
+                <p className="text-base leading-relaxed">
+                  В событиях вы вручную выбираете участников: добавляете всех или
+                  рассылаете персональные приглашения.
+                </p>
+              </div>
+              <div>
+                <h3 className="mb-2 text-lg font-medium">Промокоды:</h3>
+                <p className="mb-2 text-base leading-relaxed">
+                  В спринтах у каждого амбассадора есть один постоянный промокод,
+                  который действует на протяжении всех спринтов.
+                </p>
+                <p className="text-base leading-relaxed">
+                  В событиях для каждого амбассадора создаётся уникальный
+                  промокод, привязанный к конкретному событию.
+                </p>
+              </div>
+              <div>
+                <h3 className="mb-2 text-lg font-medium">Условия вознаграждений:</h3>
+                <p className="mb-2 text-base leading-relaxed">
                   В спринтах действуют единые условия для всех участников.
-                </Typography>
-                <Typography variant="body1">
-                  В событиях можно задавать индивидуальные условия: как для пользователя, так и для амбассадора.
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Аналитика:
-                </Typography>
-                <Typography variant="body1" mb={1}>
-                  В спринтах статистика собирается по активному по дате периоду (то есть по времени действия спринта).
-                </Typography>
-                <Typography variant="body1">
-                  В событиях аналитика ведётся по каждому мероприятию отдельно — это позволяет видеть эффективность по каждому каналу привлечения и по каждому амбассадору.
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Гибкость настройки:
-                </Typography>
-                <Typography variant="body1" mb={1}>
-                  Спринты лучше подходят для рутинных, регулярных кампаний с минимальной настройкой.
-                </Typography>
-                <Typography variant="body1">
-                  События дают максимум гибкости: подходят для конференций, коллабораций, временных акций, где важны индивидуальные условия и точная аналитика.
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
-        </Stack>
-      </Box>
-    </Paper>
+                </p>
+                <p className="text-base leading-relaxed">
+                  В событиях можно задавать индивидуальные условия: как для
+                  пользователя, так и для амбассадора.
+                </p>
+              </div>
+              <div>
+                <h3 className="mb-2 text-lg font-medium">Аналитика:</h3>
+                <p className="mb-2 text-base leading-relaxed">
+                  В спринтах статистика собирается по активному по дате периоду
+                  (то есть по времени действия спринта).
+                </p>
+                <p className="text-base leading-relaxed">
+                  В событиях аналитика ведётся по каждому мероприятию отдельно —
+                  это позволяет видеть эффективность по каждому каналу привлечения
+                  и по каждому амбассадору.
+                </p>
+              </div>
+              <div>
+                <h3 className="mb-2 text-lg font-medium">Гибкость настройки:</h3>
+                <p className="mb-2 text-base leading-relaxed">
+                  Спринты лучше подходят для рутинных, регулярных кампаний с
+                  минимальной настройкой.
+                </p>
+                <p className="text-base leading-relaxed">
+                  События дают максимум гибкости: подходят для конференций,
+                  коллабораций, временных акций, где важны индивидуальные условия и
+                  точная аналитика.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
   );
 };
 

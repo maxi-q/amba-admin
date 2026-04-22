@@ -1,4 +1,3 @@
-import { PRIMARY_COLOR } from "@/constants/colors";
 import type {
   IOrdContractActionType,
   IOrdContractSubjectType,
@@ -58,11 +57,4 @@ export const ORD_COPY = {
   savePending: "Сохранение…",
   edit: "Изменить",
   cancel: "Отмена",
-} as const;
-
-export const ORD_STATIC_FIELDS_SX = { opacity: 0.58 };
-
-export const ordContainedPrimarySx = {
-  backgroundColor: PRIMARY_COLOR,
-  "&:hover": { backgroundColor: PRIMARY_COLOR, opacity: 0.9 },
 } as const;

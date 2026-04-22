@@ -1,9 +1,11 @@
-import { Box, Stack, TextField, Typography, Switch } from "@mui/material";
+import { InputField, Switch } from "@senler/ui";
 import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
 
 interface SprintSettingsSectionProps {
   formData: IPatchSprintsRequest;
-  onInputChange: (field: keyof IPatchSprintsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onInputChange: (
+    field: keyof IPatchSprintsRequest
+  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
   fieldErrors?: Record<string, string[]>;
   onIgnoreEndDateChange: (value: boolean) => void;
 }
@@ -18,56 +20,55 @@ export const SprintSettingsSection = ({
   const hasError = (field: string) => !!fieldErrors?.[field];
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="subtitle2" mb={1}>
-          Название
-        </Typography>
-        <TextField
-          fullWidth
-          placeholder="Будет показываться вам и определенным амбассадорам"
-          variant="outlined"
+    <div className="grid gap-6">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Название</p>
+        <InputField
+          placeholder="Будет показываться вам и определённым амбассадорам"
           value={formData.name}
-          onChange={onInputChange('name')}
-          error={hasError('name')}
-          helperText={getFirstError('name')}
+          onChange={onInputChange("name")}
+          error={hasError("name")}
+          helperText={getFirstError("name") ?? undefined}
+          aria-label="Название спринта"
         />
-      </Box>
+      </div>
 
-      <Box>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="subtitle2">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-foreground">
             Ограничить спринт датами
-          </Typography>
+          </p>
           <Switch
             checked={!formData.ignoreEndDate}
-            onChange={(e) => onIgnoreEndDateChange(!e.target.checked)}
+            onCheckedChange={(checked) => onIgnoreEndDateChange(!checked)}
+            aria-label="Ограничить спринт датами"
           />
-        </Stack>
-        {!formData.ignoreEndDate && (
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              type="date"
-              value={formData.startDate}
-              onChange={onInputChange('startDate')}
-              variant="outlined"
-              sx={{ flex: 1 }}
-              error={hasError('startDate')}
-              helperText={getFirstError('startDate')}
-            />
-            <TextField
-              type="date"
-              value={formData.endDate}
-              onChange={onInputChange('endDate')}
-              variant="outlined"
-              sx={{ flex: 1 }}
-              error={hasError('endDate')}
-              helperText={getFirstError('endDate')}
-            />
-          </Stack>
-        )}
-      </Box>
-    </Stack>
+        </div>
+        {!formData.ignoreEndDate ? (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div className="min-w-0 flex-1">
+              <InputField
+                type="date"
+                value={formData.startDate ?? ""}
+                onChange={onInputChange("startDate")}
+                error={hasError("startDate")}
+                helperText={getFirstError("startDate") ?? undefined}
+                aria-label="Дата начала"
+              />
+            </div>
+            <div className="min-w-0 flex-1">
+              <InputField
+                type="date"
+                value={formData.endDate ?? ""}
+                onChange={onInputChange("endDate")}
+                error={hasError("endDate")}
+                helperText={getFirstError("endDate") ?? undefined}
+                aria-label="Дата окончания"
+              />
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 };
-

@@ -2,21 +2,23 @@ import { useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
-  Box,
+  AlertDescription,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+  Card,
+  CardContent,
+  PageLoader,
+} from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomOrdContract } from "@/hooks/rooms/useRoomOrdContract";
 import { useDeleteRoomOrdContract } from "@/hooks/rooms/useDeleteRoomOrdContract";
-import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
 import {
   ORD_CONTRACT_ACTION_OPTIONS,
   ORD_CONTRACT_SUBJECT_OPTIONS,
@@ -24,7 +26,10 @@ import {
 } from "./ord.constants";
 import { formatOrdDate, ordContractTypeLabel } from "./ord.utils";
 
-function labelFromOptions<T extends string>(options: { value: T; label: string }[], value: T | null | undefined): string {
+function labelFromOptions<T extends string>(
+  options: { value: T; label: string }[],
+  value: T | null | undefined
+): string {
   if (value == null) return "—";
   return options.find((o) => o.value === value)?.label ?? value;
 }
@@ -43,7 +48,8 @@ export default function OrdContractDetailPage() {
     error: contractError,
   } = useRoomOrdContract(roomId, contractId ?? "");
 
-  const { deleteRoomOrdContract, isPending: isDeletePending, generalError: deleteError } = useDeleteRoomOrdContract();
+  const { deleteRoomOrdContract, isPending: isDeletePending, generalError: deleteError } =
+    useDeleteRoomOrdContract();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleDelete = () => {
@@ -61,71 +67,81 @@ export default function OrdContractDetailPage() {
 
   if (!contractId) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error">Не указан договор</Alert>
-      </Box>
+      <div className="w-full px-2 py-3">
+        <Alert variant="destructive">
+          <AlertDescription>Не указан договор</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   if (isRoomLoading || (roomId && contractId && isContractLoading)) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <SettingsLoadingState />
-      </Box>
+      <div className="flex min-h-[40vh] w-full items-center justify-center px-2 py-6">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
   if (isRoomErr || !room) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error">{(roomError as Error)?.message ?? ORD_COPY.roomNotFound}</Alert>
-      </Box>
+      <div className="w-full px-2 py-3">
+        <Alert variant="destructive">
+          <AlertDescription>{(roomError as Error)?.message ?? ORD_COPY.roomNotFound}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   if (isContractErr || !contract) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Alert severity="error">{(contractError as Error)?.message ?? "Договор не найден"}</Alert>
-        <Button component={RouterLink} to={`/rooms/${slug}/ord`} sx={{ mt: 2 }}>
+      <div className="w-full space-y-4 px-2 py-3">
+        <Alert variant="destructive">
+          <AlertDescription>{(contractError as Error)?.message ?? "Договор не найден"}</AlertDescription>
+        </Alert>
+        <RouterLink
+          to={`/rooms/${slug}/ord`}
+          className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-4 text-sm font-medium text-foreground ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
           К списку договоров
-        </Button>
-      </Box>
+        </RouterLink>
+      </div>
     );
   }
 
   const c = contract;
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} flexWrap="wrap" gap={1}>
-        <Typography variant="h6" fontWeight={700}>
-          {ORD_COPY.contractDetail}
-        </Typography>
-        <Stack direction="row" spacing={1}>
-          <Button component={RouterLink} to={`/rooms/${slug}/ord`} variant="outlined" size="small">
+    <div className="w-full px-2 pb-6">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <h2 className="text-xl font-bold tracking-tight text-foreground">{ORD_COPY.contractDetail}</h2>
+        <div className="flex flex-wrap gap-2">
+          <RouterLink
+            to={`/rooms/${slug}/ord`}
+            className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
             К списку
-          </Button>
+          </RouterLink>
           <Button
-            color="error"
-            variant="outlined"
-            size="small"
+            type="button"
+            variant="destructive"
+            size="sm"
             onClick={() => setConfirmOpen(true)}
             disabled={isDeletePending}
           >
             {ORD_COPY.deleteContract}
           </Button>
-        </Stack>
-      </Stack>
+        </div>
+      </div>
 
       {deleteError ? (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {deleteError}
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{deleteError}</AlertDescription>
         </Alert>
       ) : null}
 
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <Stack spacing={1.5}>
+      <Card className="border border-border shadow-sm">
+        <CardContent className="space-y-3 p-4 sm:p-6">
           <Row label="Тип" value={ordContractTypeLabel(c.type)} />
           <Row label="Дата заключения" value={formatOrdDate(c.date)} />
           <Row label="Дата окончания" value={c.dateEnd ? formatOrdDate(c.dateEnd) : "—"} />
@@ -133,48 +149,55 @@ export default function OrdContractDetailPage() {
           <Row label="Тип действия" value={labelFromOptions(ORD_CONTRACT_ACTION_OPTIONS, c.actionType)} />
           <Row label="Предмет" value={labelFromOptions(ORD_CONTRACT_SUBJECT_OPTIONS, c.subjectType)} />
           <Row label="Флаги" value={c.flags.length ? c.flags.join(", ") : "—"} />
-          <Typography variant="subtitle2" sx={{ pt: 1 }}>
-            {ORD_COPY.client}
-          </Typography>
-          <Typography variant="body2">
+          <p className="pt-2 text-sm font-semibold text-foreground">{ORD_COPY.client}</p>
+          <p className="text-sm text-foreground">
             {c.clientOrdPerson.name} · ИНН {c.clientOrdPerson.inn}
-          </Typography>
-          <Typography variant="subtitle2" sx={{ pt: 1 }}>
-            {ORD_COPY.contractor}
-          </Typography>
-          <Typography variant="body2">
+          </p>
+          <p className="pt-2 text-sm font-semibold text-foreground">{ORD_COPY.contractor}</p>
+          <p className="text-sm text-foreground">
             {c.contractorOrdPerson.name} · ИНН {c.contractorOrdPerson.inn}
-          </Typography>
+          </p>
           <Row label="Синхронизация" value={c.syncedAt ? formatOrdDate(c.syncedAt) : "—"} />
           {c.lastSyncError ? (
-            <Alert severity="warning">{c.lastSyncError}</Alert>
+            <Alert className="border-amber-500/40 bg-amber-500/5">
+              <AlertDescription>{c.lastSyncError}</AlertDescription>
+            </Alert>
           ) : null}
-        </Stack>
-      </Paper>
+        </CardContent>
+      </Card>
 
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Удалить договор?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Это действие нельзя отменить.</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Отмена</Button>
-          <Button color="error" variant="contained" onClick={handleDelete} disabled={isDeletePending}>
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      <AlertDialog
+        open={confirmOpen}
+        onOpenChange={(next) => {
+          if (!next) setConfirmOpen(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить договор?</AlertDialogTitle>
+            <AlertDialogDescription>Это действие нельзя отменить.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletePending}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletePending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              {isDeletePending ? "Удаление…" : "Удалить"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 160 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Stack>
+    <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
+      <p className="min-w-[10rem] shrink-0 text-sm text-muted-foreground">{label}</p>
+      <p className="text-sm text-foreground">{value}</p>
+    </div>
   );
 }

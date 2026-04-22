@@ -1,32 +1,46 @@
-import { Box, Tab, Tabs } from "@mui/material";
 import { useMemo } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { ORD_COPY } from "../ord.constants";
+
+const tabInactive =
+  "relative pb-3 pt-0 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
+const tabActive =
+  "relative pb-3 pt-0 text-[15px] font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary";
 
 export const OrdHeader = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const params = useParams();
 
-  const slug = params.slug || location.pathname.split("/rooms/")[1]?.split("/")[0];
+  const slug =
+    params.slug || location.pathname.split("/rooms/")[1]?.split("/")[0] || "";
 
-  const currentTab = useMemo(() => (location.pathname.includes("/ord/profile") ? 1 : 0), [location.pathname]);
+  const { isContractsTab, isProfileTab } = useMemo(() => {
+    if (!slug) return { isContractsTab: false, isProfileTab: false };
+    const p = location.pathname;
+    const base = `/rooms/${slug}/ord`;
+    const isProfile = p.includes(`${base}/profile`);
+    const isContracts = p.includes(base) && !isProfile;
+    return { isContractsTab: isContracts, isProfileTab: isProfile };
+  }, [location.pathname, slug]);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    if (!slug) return;
-    if (newValue === 0) {
-      navigate(`/rooms/${slug}/ord`);
-    } else {
-      navigate(`/rooms/${slug}/ord/profile`);
-    }
-  };
+  if (!slug) return null;
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Tabs value={currentTab} onChange={handleTabChange}>
-        <Tab label={ORD_COPY.contractsTab} />
-        <Tab label={ORD_COPY.profileTab} />
-      </Tabs>
-    </Box>
+    <div className="mb-2 border-b border-border">
+      <nav className="flex flex-wrap gap-6" aria-label="Раздел ОРД">
+        <Link
+          to={`/rooms/${slug}/ord`}
+          className={isContractsTab ? tabActive : tabInactive}
+        >
+          {ORD_COPY.contractsTab}
+        </Link>
+        <Link
+          to={`/rooms/${slug}/ord/profile`}
+          className={isProfileTab ? tabActive : tabInactive}
+        >
+          {ORD_COPY.profileTab}
+        </Link>
+      </nav>
+    </div>
   );
 };

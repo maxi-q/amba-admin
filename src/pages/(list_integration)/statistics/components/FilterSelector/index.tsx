@@ -1,20 +1,19 @@
-import { Stack } from '@mui/material';
-import type { FilterSelectorProps } from '../../types';
-import { AmbassadorAutocomplete } from '../AmbassadorAutocomplete';
-import { SprintAutocomplete } from '../SprintAutocomplete';
-import { EventAutocomplete } from '../EventAutocomplete';
+import type { FilterSelectorProps } from "../../types";
+import { AmbassadorAutocomplete } from "../AmbassadorAutocomplete";
+import { SprintAutocomplete } from "../SprintAutocomplete";
+import { EventAutocomplete } from "../EventAutocomplete";
 
-export const FilterSelector = ({ 
+export const FilterSelector = ({
   selectedAmbassadors,
   selectedSprints,
   selectedEvents,
   onAmbassadorsChange,
   onSprintsChange,
   onEventsChange,
-  roomId
+  roomId,
 }: FilterSelectorProps & { roomId: string }) => {
   return (
-    <Stack spacing={2} sx={{ mb: 3 }}>
+    <div className="mb-6 flex flex-col gap-4">
       <AmbassadorAutocomplete
         selectedIds={selectedAmbassadors}
         onChange={onAmbassadorsChange}
@@ -29,6 +28,6 @@ export const FilterSelector = ({
         onChange={onEventsChange}
         roomId={roomId}
       />
-    </Stack>
+    </div>
   );
 };

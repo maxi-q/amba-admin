@@ -1,4 +1,4 @@
-import { Box, TextField, Typography } from "@mui/material";
+import { InputField } from "@senler/ui";
 import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 
 interface RoomNameSectionProps {
@@ -7,22 +7,23 @@ interface RoomNameSectionProps {
   fieldErrors?: Record<string, string[]>;
 }
 
-export const RoomNameSection = ({ roomName, onChange, fieldErrors }: RoomNameSectionProps) => {
+export const RoomNameSection = ({
+  roomName,
+  onChange,
+  fieldErrors,
+}: RoomNameSectionProps) => {
+  const errs = fieldErrors ?? {};
+
   return (
-    <Box mb={4}>
-      <Typography variant="subtitle2" mb={1.5}>
-        Название:
-      </Typography>
-      <TextField
-        fullWidth
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-foreground">Название</p>
+      <InputField
         value={roomName}
         onChange={(e) => onChange(e.target.value)}
-        size="medium"
-        variant="outlined"
-        error={hasFieldError(fieldErrors || {}, 'name')}
-        helperText={getFirstFieldError(fieldErrors || {}, 'name')}
+        error={hasFieldError(errs, "name")}
+        helperText={getFirstFieldError(errs, "name") ?? undefined}
+        aria-label="Название комнаты"
       />
-    </Box>
+    </div>
   );
 };
-
