@@ -1,11 +1,5 @@
-import {
-  Typography,
-  TextField,
-  Box,
-  IconButton,
-} from "@mui/material";
-import { ContentCopy } from "@mui/icons-material";
-import { PRIMARY_COLOR } from "@/constants/colors";
+import { Copy } from "lucide-react";
+import { Button, Textarea } from "@senler/ui";
 
 interface FormForSiteSectionProps {
   roomId?: string;
@@ -19,97 +13,90 @@ export const FormForSiteSection = ({ roomId, onCopy }: FormForSiteSectionProps) 
   const exampleCode = `<a href="#" onclick="openPromoAmbSEN(123, 'sdfsdfg4', ${roomId || 56})">Ввести промокод</a>`;
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Typography variant="h6" mb={2}>Форма для сайта</Typography>
+    <div className="mb-2">
+      <h1 className="mb-4 text-lg font-semibold text-foreground">Форма для сайта</h1>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <Box>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+      <div className="flex flex-col gap-8">
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-foreground">
             Код для установки на сайт
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Разместите код как можно ближе к началу страницы, Например, в пределах тегов &lt;head&gt;&lt;/head&gt; или &lt;body&gt;&lt;/body&gt;
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Это универсальный код, который подходит для всех комнат, его нужно вставить на сайт только один раз
-          </Typography>
-          <Box sx={{ position: 'relative' }}>
-            <TextField
-              multiline
-              rows={8}
-              fullWidth
+          </h2>
+          <p className="mb-2 text-sm text-muted-foreground">
+            Разместите код как можно ближе к началу страницы, например, в пределах тегов{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">&lt;head&gt;&lt;/head&gt;</code>{" "}
+            или{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">&lt;body&gt;&lt;/body&gt;</code>
+          </p>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Это универсальный код, который подходит для всех комнат, его нужно вставить
+            на сайт только один раз
+          </p>
+          <div className="relative">
+            <Textarea
+              readOnly
               value={installationCode}
-              variant="outlined"
-              InputProps={{
-                readOnly: true,
-                sx: { fontFamily: 'monospace', fontSize: '14px' }
-              }}
+              className="min-h-[10rem] w-full resize-y pr-12 font-mono text-sm"
             />
-            <IconButton
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1 bg-background/90 text-primary hover:bg-muted/90"
+              aria-label="Скопировать код установки"
               onClick={() => onCopy(installationCode)}
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                color: PRIMARY_COLOR
-              }}
             >
-              <ContentCopy />
-            </IconButton>
-          </Box>
-        </Box>
+              <Copy className="size-4" />
+            </Button>
+          </div>
+        </section>
 
-        <Box>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-foreground">
             Код для вызова формы с вводом промокода
-          </Typography>
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body1" sx={{ fontFamily: 'monospace', mb: 1 }}>
+          </h2>
+          <div className="mb-3 space-y-2 text-sm text-muted-foreground">
+            <p className="font-mono text-foreground">
               openPromoAmbSEN(&lt;unique_id&gt;, &lt;security_code&gt;, &lt;room_id&gt;)
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              <strong>unique_id</strong> - идентификатор, по которому нужно ограничивать повторное использование промокодов
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              <strong>security_code</strong> - секретный ключ для защиты запросов. Вы можете указать этот параметр, чтобы защитить использование промокодов от недобросовестных пользователей. Его нужно сгенерировать на сервере, чтобы защитить алгоритм его формирования. Например, можно использовать функцию md5, в которой зашифровать unique_id и придуманную вами строку, чтобы потом проверить в вебхуке данный параметр md5(unique_id+'45rtwtwb')
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              <strong>room_id</strong> - идентификатор комнаты. Текущий ID = {roomId || 'N/A'}
-            </Typography>
-          </Box>
-          
-          <Typography variant="body1" sx={{ mb: 1 }}>
-            Пример:
-          </Typography>
-          <Box sx={{ position: 'relative' }}>
-            <TextField
-              multiline
-              rows={2}
-              fullWidth
+            </p>
+            <p>
+              <strong className="text-foreground">unique_id</strong> — идентификатор, по
+              которому нужно ограничивать повторное использование промокодов
+            </p>
+            <p>
+              <strong className="text-foreground">security_code</strong> — секретный ключ
+              для защиты запросов. Вы можете указать этот параметр, чтобы защитить
+              использование промокодов от недобросовестных пользователей. Его нужно
+              сгенерировать на сервере, чтобы защитить алгоритм его формирования.
+              Например, можно использовать функцию md5, в которой зашифровать
+              unique_id и придуманную вами строку, чтобы потом проверить в вебхуке
+              данный параметр md5(unique_id+&apos;45rtwtwb&apos;)
+            </p>
+            <p>
+              <strong className="text-foreground">room_id</strong> — идентификатор комнаты.
+              Текущий ID = {roomId ?? "N/A"}
+            </p>
+          </div>
+
+          <p className="mb-2 text-sm font-medium text-foreground">Пример:</p>
+          <div className="relative">
+            <Textarea
+              readOnly
               value={exampleCode}
-              variant="outlined"
-              InputProps={{
-                readOnly: true,
-                sx: { fontFamily: 'monospace', fontSize: '14px' }
-              }}
+              className="min-h-[4.5rem] w-full resize-y pr-12 font-mono text-sm"
             />
-            <IconButton
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1 bg-background/90 text-primary hover:bg-muted/90"
+              aria-label="Скопировать пример"
               onClick={() => onCopy(exampleCode)}
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                color: PRIMARY_COLOR
-              }}
             >
-              <ContentCopy />
-            </IconButton>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+              <Copy className="size-4" />
+            </Button>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 };
-

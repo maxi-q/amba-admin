@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { useMessage } from '@/messages/messageProvider'
 import { MessageTypes } from '@/messages/types/messages.enum'
-import { Box, Typography, Paper, CircularProgress } from '@mui/material';
+import { Card, CardContent, CardHeader, CardTitle } from '@senler/ui';
+import { Loader2 } from 'lucide-react';
 
 export const RedirectAuthPage = () => {
 	const { sendMessage } = useMessage()
@@ -40,60 +41,28 @@ export const RedirectAuthPage = () => {
 	}, [])
 
 	return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-        p: 2,
-        background: '#428bca',
-      }}
+    <div
+      className="flex min-h-screen items-center justify-center bg-background p-2"
+      style={{ background: '#428bca' }}
     >
-      <Paper
-        elevation={8}
-        sx={{
-          p: 6,
-          borderRadius: 3,
-          maxWidth: 450,
-          width: '100%',
-          textAlign: 'center',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-        }}
-      >
-        <CircularProgress
-          size={60}
-          thickness={4}
-          sx={{
-            color: 'primary.main',
-            mb: 3,
-          }}
-        />
-        <Typography
-          variant="h5"
-          component="h1"
-          sx={{
-            fontWeight: 600,
-            color: 'text.primary',
-            mb: 2,
-          }}
-        >
-          Ожидание перенаправления
-        </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            color: 'text.secondary',
-            maxWidth: 300,
-            mx: 'auto',
-            lineHeight: 1.6,
-          }}
-        >
-          Пожалуйста, подождите, пока происходит перенаправление...
-        </Typography>
-      </Paper>
-    </Box>
-  )}
+      <Card className="w-full max-w-md border border-white/20 bg-white/95 text-center shadow-lg backdrop-blur">
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center" aria-hidden>
+            <Loader2
+              className="size-14 text-primary animate-spin"
+              strokeWidth={2.5}
+            />
+          </div>
+          <CardTitle className="text-xl font-semibold">
+            Ожидание перенаправления
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground">
+            Пожалуйста, подождите, пока происходит перенаправление…
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

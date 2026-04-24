@@ -1,10 +1,10 @@
-import { Box, Stack, TextField, Typography, Switch } from "@mui/material";
+import { InputField, Switch, Textarea } from "@senler/ui";
 import type { IPatchEventsRequest } from "@services/events/events.types";
 
 interface EventSettingsSectionProps {
   formData: IPatchEventsRequest;
   prefix: string;
-  onInputChange: (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onInputChange: (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onPrefixChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   createValidationErrors?: Record<string, string[]>;
   updateValidationErrors?: Record<string, string[]>;
@@ -28,95 +28,91 @@ export const EventSettingsSection = ({
   isNewEvent,
   onIgnoreEndDateChange,
 }: EventSettingsSectionProps) => {
+  const nameErr = createValidationErrors?.name || updateValidationErrors?.name;
+  const descErr = createValidationErrors?.description || updateValidationErrors?.description;
+  const startErr = createValidationErrors?.startDate || updateValidationErrors?.startDate;
+  const endErr = createValidationErrors?.endDate || updateValidationErrors?.endDate;
+  const prefixFieldErr = createValidationErrors?.promoCodesPrefix || checkPrefixValidationErrors?.promoCodesPrefix;
+
+  const prefixHelper =
+    prefixFieldErr?.join(", ") ||
+    prefixValidationError ||
+    prefixOccupiedError ||
+    (!isNewEvent
+      ? "Префикс создается один раз при создании события и не может быть изменен"
+      : "Префикс будет использоваться для генерации уникальных промокодов");
+
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="subtitle2" mb={1}>
-          Название
-        </Typography>
-        <TextField
-          fullWidth
+    <div className="grid gap-6">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Название</p>
+        <InputField
           placeholder="Будет показываться вам и определенным амбассадорам"
-          variant="outlined"
           value={formData.name}
-          onChange={onInputChange('name')}
-          error={!!(createValidationErrors?.name || updateValidationErrors?.name)}
-          helperText={(createValidationErrors?.name || updateValidationErrors?.name)?.join()}
+          onChange={onInputChange("name")}
+          error={!!nameErr}
+          helperText={nameErr?.join(", ")}
         />
-      </Box>
+      </div>
 
-      <Box>
-        <Typography variant="subtitle2" mb={1}>
-          Описание
-        </Typography>
-        <TextField
-          fullWidth
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Описание</p>
+        <Textarea
           placeholder="Текст описания события"
-          variant="outlined"
-          multiline
-          minRows={3}
+          className="min-h-[100px] w-full"
           value={formData.description}
-          onChange={onInputChange('description')}
-          error={!!(createValidationErrors?.description || updateValidationErrors?.description)}
-          helperText={(createValidationErrors?.description || updateValidationErrors?.description)?.join()}
+          onChange={onInputChange("description")}
         />
-      </Box>
+        {descErr ? (
+          <p className="text-sm text-destructive">{descErr.join(", ")}</p>
+        ) : null}
+      </div>
 
-      <Box>
-        <Typography variant="subtitle2" mb={1}>
-          Префикс промокода
-        </Typography>
-        <TextField
-          fullWidth
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Префикс промокода</p>
+        <InputField
           placeholder="Уникальный префикс для промокодов этого события"
-          variant="outlined"
           value={prefix}
           onChange={onPrefixChange}
           disabled={!isNewEvent}
-          error={!!(createValidationErrors?.promoCodesPrefix || checkPrefixValidationErrors?.promoCodesPrefix)}
-          helperText={
-            (createValidationErrors?.promoCodesPrefix || checkPrefixValidationErrors?.promoCodesPrefix)?.join() ||
-            prefixValidationError ||
-            prefixOccupiedError ||
-            (!isNewEvent ? 'Префикс создается один раз при создании события и не может быть изменен' : 'Префикс будет использоваться для генерации уникальных промокодов')
-          }
+          error={!!prefixFieldErr || !!prefixValidationError || !!prefixOccupiedError}
+          helperText={prefixHelper}
         />
-      </Box>
+      </div>
 
-      <Box>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="subtitle2">
-            Ограничить событие датами
-          </Typography>
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <span className="text-sm font-medium text-foreground">Ограничить событие датами</span>
           <Switch
             checked={!formData.ignoreEndDate}
-            onChange={(e) => onIgnoreEndDateChange(!e.target.checked)}
+            onCheckedChange={(c) => onIgnoreEndDateChange(!c)}
           />
-        </Stack>
+        </div>
         {!formData.ignoreEndDate && (
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField
-              type="date"
-              value={formData.startDate}
-              onChange={onInputChange('startDate')}
-              variant="outlined"
-              sx={{ flex: 1 }}
-              error={!!(createValidationErrors?.startDate || updateValidationErrors?.startDate)}
-              helperText={(createValidationErrors?.startDate || updateValidationErrors?.startDate)?.join()}
-            />
-            <TextField
-              type="date"
-              value={formData.endDate}
-              onChange={onInputChange('endDate')}
-              variant="outlined"
-              sx={{ flex: 1 }}
-              error={!!(createValidationErrors?.endDate || updateValidationErrors?.endDate)}
-              helperText={(createValidationErrors?.endDate || updateValidationErrors?.endDate)?.join()}
-            />
-          </Stack>
+          <div className="grid gap-3 sm:grid-cols-2 sm:items-start">
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Начало</p>
+              <InputField
+                type="date"
+                value={formData.startDate ?? ""}
+                onChange={onInputChange("startDate")}
+                error={!!startErr}
+                helperText={startErr?.join(", ")}
+              />
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Конец</p>
+              <InputField
+                type="date"
+                value={formData.endDate ?? ""}
+                onChange={onInputChange("endDate")}
+                error={!!endErr}
+                helperText={endErr?.join(", ")}
+              />
+            </div>
+          </div>
         )}
-      </Box>
-    </Stack>
+      </div>
+    </div>
   );
 };
-

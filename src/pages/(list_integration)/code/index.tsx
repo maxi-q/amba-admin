@@ -1,6 +1,5 @@
 import { useParams } from "react-router-dom";
-import { Box, Snackbar } from "@mui/material";
-import { useState } from "react";
+import { toast } from "sonner";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
 import { SettingsErrorState } from "../settings/components/SettingsErrorState";
@@ -15,16 +14,15 @@ export default function CodePage() {
     isLoading: isLoadingRoom,
     isError: isRoomError,
     error: roomError
-  } = useGetRoomById(slug || '');
-
-  const [showCopyNotification, setShowCopyNotification] = useState(false);
+  } = useGetRoomById(slug || "");
 
   const handleCopyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setShowCopyNotification(true);
+      toast.success("Скопировано в буфер обмена");
     } catch (error) {
-      console.error('Ошибка при копировании:', error);
+      console.error("Ошибка при копировании:", error);
+      toast.error("Не удалось скопировать в буфер обмена");
     }
   };
 
@@ -41,18 +39,8 @@ export default function CodePage() {
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <FormForSiteSection
-        roomId={room.id}
-        onCopy={handleCopyToClipboard}
-      />
-
-      <Snackbar
-        open={showCopyNotification}
-        autoHideDuration={3000}
-        onClose={() => setShowCopyNotification(false)}
-        message="Скопировано в буфер обмена"
-      />
-    </Box>
+    <div className="w-full px-2 py-4 md:py-6">
+      <FormForSiteSection roomId={room.id} onCopy={handleCopyToClipboard} />
+    </div>
   );
 }

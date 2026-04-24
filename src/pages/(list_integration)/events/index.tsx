@@ -1,8 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Stack } from "@mui/material";
 import { useEvents } from "@/hooks/events/useEvents";
-import { Loader } from "@/components/Loader";
-import { EventsHeader } from "./components/EventsHeader";
+import { PageLoader } from "@senler/ui";
 import { EventsErrorState } from "./components/EventsErrorState";
 import { EventsEmptyState } from "./components/EventsEmptyState";
 import { EventCard } from "./components/EventCard";
@@ -32,9 +30,9 @@ export default function EventsPage() {
 
   if (isLoading) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
-        <Loader />
-      </Box>
+      <div className="flex min-h-dvh w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
@@ -45,10 +43,8 @@ export default function EventsPage() {
   const activeEvents = eventData?.filter(event => !event.isDeleted) || [];
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <EventsHeader infoLink="info" />
-
-      <Stack spacing={2}>
+    <div className="w-full px-2 pb-6">
+      <div className="flex flex-col gap-2">
         {activeEvents.length === 0 ? (
           <EventsEmptyState onCreateClick={handleCreateEvent} />
         ) : (
@@ -62,7 +58,7 @@ export default function EventsPage() {
         )}
 
         <CreateEventButton onClick={handleCreateEvent} />
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 }

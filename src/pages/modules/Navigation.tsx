@@ -11,6 +11,7 @@ import {
   EventsPage,
   EventsInfo,
   EventsSetting,
+  EventsLayout,
   StatisticsPage,
   SprintsLayout,
   CodePage,
@@ -100,9 +101,11 @@ export const Navigation = () => {
           <Route path="info" element={<SprintInfo />} />
         </Route>
 
-        <Route path="events" element={<EventsPage />} />
-        <Route path="events/info" element={<EventsInfo />} />
-        <Route path="events/:eventId" element={<EventsSetting />} />
+        <Route path="events" element={<EventsLayout />}>
+          <Route index element={<EventsPage />} />
+          <Route path="info" element={<EventsInfo />} />
+          <Route path=":eventId" element={<EventsSetting />} />
+        </Route>
 
         <Route path="statistics" element={<StatisticsPage />} />
         <Route path="applications" element={<ApplicationsPage />} />

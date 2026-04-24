@@ -11,6 +11,7 @@ import SprintSettingsPage from './sprints/settings';
 import SettingsInfo from './settings/info';
 import StatisticsPage from './statistics';
 import { SprintsLayout } from './sprints/SprintsLayout';
+import { EventsLayout } from './events/EventsLayout';
 import CodePage from './code';
 import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
@@ -43,5 +44,6 @@ export {
     OrdLayout,
     OrdContractsPage,
     OrdProfilePage,
-    OrdContractDetailPage
+    OrdContractDetailPage,
+    EventsLayout
 };

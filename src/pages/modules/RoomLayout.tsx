@@ -3,7 +3,6 @@ import { useGetProject } from "@/hooks/projects/useGetProject";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { Loader } from "@components/Loader";
-import  { Box } from "@mui/material";
 import { useParams, Outlet } from "react-router-dom";
 import { RoomBox } from "../(list_integration)";
 
@@ -43,12 +42,12 @@ export const RoomLayout = () => {
 
   if (isRoomError || isSprintsError || isEventsError || isProjectError) {
     return (
-      <Box sx={{ width: "100%", px: 2, py: 3 }}>
+      <div className="w-full px-4 py-6">
         {isRoomError && <div>Ошибка загрузки комнаты: {roomError?.message}</div>}
         {isSprintsError && <div>Ошибка загрузки спринтов: {sprintsError?.message}</div>}
         {isEventsError && <div>Ошибка загрузки событий: {eventsError?.message}</div>}
         {isProjectError && <div>Ошибка загрузки проекта: {projectError?.message}</div>}
-      </Box>
+      </div>
     );
   }
 

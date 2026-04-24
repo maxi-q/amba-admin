@@ -1,178 +1,167 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  IconButton,
-  List,
-  ListItem,
-  Stack,
-  Paper,
-  Divider,
-} from "@mui/material";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@senler/ui";
 
 const SettingsInfo = () => {
   const navigate = useNavigate();
 
   return (
-    <Paper elevation={0} sx={{ 
-      position: 'absolute', 
-      top: 0, 
-      left: 0, 
-      right: 0, 
-      bottom: 0, 
-      bgcolor: 'white',
-      display: 'flex',
-      justifyContent: 'center',
-      overflow: 'auto'
-    }}>
-      <Box sx={{ p: { xs: 2, md: 4 }, width: '100%' }}>
-        <Box mb={2}>
-          <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }}>
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
+    <div className="flex min-h-full w-full justify-center overflow-auto bg-background text-foreground">
+      <div className="w-full p-4 md:p-8">
+        <div className="mb-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            onClick={() => navigate(-1)}
+            aria-label="Назад"
+          >
+            <ArrowLeft className="size-5" />
+          </Button>
+        </div>
 
-        <Typography variant="h4" fontWeight={700} mb={3}>
+        <h1 className="mb-6 text-2xl font-bold tracking-tight md:text-3xl">
           Формат вебхука
-        </Typography>
-        
-        <Stack spacing={4}>
-          {/* Формат запроса */}
-          <Box>
-            <Typography variant="h5" fontWeight={600} mb={2}>
-              Формат запроса
-            </Typography>
-            
-            <Box sx={{ bgcolor: 'grey.50', p: 3, borderRadius: 2 }}>
-              <Typography variant="body1" fontWeight={500} mb={1}>
-                Тип запроса: POST / JSON
-              </Typography>
-              
-              <Typography variant="h6" fontWeight={600} mb={2}>
-                Параметры:
-              </Typography>
-              
-              <List sx={{ pl: 2 }}>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>channel_id: int</code> — идентификатор канала в Senler
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>room_id: int</code> — идентификатор комнаты. Текущий ID = 56
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>sprint_id: int</code> — идентификатор спринта
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>ambassador_id: string</code> — идентификатор амбассдора (id ВКонтакте или в Телеграмме)
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>secret: string</code> — секретный ключ для безопасности (находится в комнате)
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>action: enum('promocode_activate')</code> — действие
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>unique_id: int</code> — идентификатор, по которому нужно ограничивать повторное использование промокодов, передается в форму ввода промокода на сайте. В случае сенлера тут нужно передать ID проекта
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>security_code:</code> — генерируется сайтом для возможности сделать защиту, передается в форму ввода промокода
-                  </Typography>
-                </ListItem>
-                <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                  <Typography variant="body1" component="span">
-                    <code>data:</code> object:
-                  </Typography>
-                  <List sx={{ pl: 4, mt: 1 }}>
-                    <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                      <Typography variant="body1" component="span">
-                        <code>value: string</code> — промокод
-                      </Typography>
-                    </ListItem>
-                    <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                      <Typography variant="body1" component="span">
-                        <code>reward:</code> object:
-                      </Typography>
-                      <List sx={{ pl: 4, mt: 1 }}>
-                        <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                          <Typography variant="body1" component="span">
-                            <code>type: enum('fix')</code> — тип награды
-                          </Typography>
-                        </ListItem>
-                        <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                          <Typography variant="body1" component="span">
-                            <code>value: int</code> — размер награды
-                          </Typography>
-                        </ListItem>
-                        <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                          <Typography variant="body1" component="span">
-                            <code>units: string</code> — единицы измерения награды, например 'руб'
-                          </Typography>
-                        </ListItem>
-                      </List>
-                    </ListItem>
-                  </List>
-                </ListItem>
-              </List>
-            </Box>
-          </Box>
+        </h1>
 
-          <Divider />
+        <div className="grid max-w-3xl gap-10">
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">Формат запроса</h2>
+            <div className="rounded-lg border border-border bg-muted/40 p-4 md:p-6">
+              <p className="mb-3 text-sm font-medium">Тип запроса: POST / JSON</p>
+              <h3 className="mb-2 text-base font-semibold">Параметры:</h3>
+              <ul className="list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    channel_id: int
+                  </code>{" "}
+                  — идентификатор канала в Senler
+                </li>
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    room_id: int
+                  </code>{" "}
+                  — идентификатор комнаты. Текущий ID = 56
+                </li>
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    sprint_id: int
+                  </code>{" "}
+                  — идентификатор спринта
+                </li>
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    ambassador_id: string
+                  </code>{" "}
+                  — идентификатор амбассдора (id ВКонтакте или в Телеграмме)
+                </li>
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    secret: string
+                  </code>{" "}
+                  — секретный ключ для безопасности (находится в комнате)
+                </li>
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    action: enum(&apos;promocode_activate&apos;)
+                  </code>{" "}
+                  — действие
+                </li>
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    unique_id: int
+                  </code>{" "}
+                  — идентификатор, по которому нужно ограничивать повторное
+                  использование промокодов, передается в форму ввода промокода
+                  на сайте. В случае сенлера тут нужно передать ID проекта
+                </li>
+                <li>
+                  <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                    security_code:
+                  </code>{" "}
+                  — генерируется сайтом для возможности сделать защиту,
+                  передается в форму ввода промокода
+                </li>
+                <li>
+                  <span className="block">
+                    <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                      data:
+                    </code>{" "}
+                    object:
+                  </span>
+                  <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                    <li>
+                      <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                        value: string
+                      </code>{" "}
+                      — промокод
+                    </li>
+                    <li>
+                      <span className="block">
+                        <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                          reward:
+                        </code>{" "}
+                        object:
+                      </span>
+                      <ul className="mt-1.5 list-disc space-y-1 pl-5">
+                        <li>
+                          <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                            type: enum(&apos;fix&apos;)
+                          </code>{" "}
+                          — тип награды
+                        </li>
+                        <li>
+                          <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                            value: int
+                          </code>{" "}
+                          — размер награды
+                        </li>
+                        <li>
+                          <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                            units: string
+                          </code>{" "}
+                          — единицы измерения награды, например &apos;руб&apos;
+                        </li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </section>
 
-          {/* Успешная обработка */}
-          <Box>
-            <Typography variant="h5" fontWeight={600} mb={2}>
-              Успешная обработка
-            </Typography>
-            <Typography variant="body1" mb={2}>
+          <div className="h-px bg-border" />
+
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">Успешная обработка</h2>
+            <p className="mb-3 text-sm text-muted-foreground">
               При успешном начислении награды на вебхук необходимо ответить:
-            </Typography>
-            <Box sx={{ bgcolor: 'grey.50', p: 3, borderRadius: 2 }}>
-              <Typography variant="body1" component="pre" sx={{ fontFamily: 'monospace', m: 0 }}>
+            </p>
+            <pre className="overflow-x-auto rounded-lg border border-border bg-muted/40 p-4 font-mono text-sm">
 {`{
   "success": true
 }`}
-              </Typography>
-            </Box>
-          </Box>
+            </pre>
+          </section>
 
-          <Divider />
+          <div className="h-px bg-border" />
 
-          {/* Ошибка обработки */}
-          <Box>
-            <Typography variant="h5" fontWeight={600} mb={2}>
-              Ошибка обработки
-            </Typography>
-            <Typography variant="body1" mb={2}>
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">Ошибка обработки</h2>
+            <p className="mb-3 text-sm text-muted-foreground">
               Если произошла ошибка, то отправить текст этой ошибки в формате:
-            </Typography>
-            <Box sx={{ bgcolor: 'grey.50', p: 3, borderRadius: 2 }}>
-              <Typography variant="body1" component="pre" sx={{ fontFamily: 'monospace', m: 0 }}>
+            </p>
+            <pre className="overflow-x-auto rounded-lg border border-border bg-muted/40 p-4 font-mono text-sm">
 {`{
   "success": false,
   "error": "Текст ошибки"
 }`}
-              </Typography>
-            </Box>
-          </Box>
-        </Stack>
-      </Box>
-    </Paper>
+            </pre>
+          </section>
+        </div>
+      </div>
+    </div>
   );
 };
 

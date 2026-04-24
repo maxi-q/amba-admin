@@ -1,47 +1,22 @@
-import { CircularProgress, Box } from '@mui/material';
+import { PageLoader } from '@senler/ui';
 
 interface LoaderProps {
+  className?: string;
   classNameDiv?: string;
-  size?: 'small' | 'medium' | 'large';
-  animation?: boolean;
-  color?: string;
-  [key: string]: any;
+  label?: string;
 }
 
 export const Loader = ({
+  className,
   classNameDiv = '',
-  size = 'medium',
-  animation = true,
-  color = '#fff',
-  ...props
+  label = 'Загрузка…',
 }: LoaderProps) => {
-  const getSize = () => {
-    switch (size) {
-      case 'small': return 20;
-      case 'large': return 40;
-      default: return 30;
-    }
-  };
-
+  const rootClass = className ?? classNameDiv;
   return (
-    <Box
-      className={classNameDiv}
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        height: '100%'
-      }}
+    <div
+      className={`flex w-full min-h-[200px] flex-1 items-center justify-center ${rootClass}`.trim()}
     >
-      <CircularProgress
-        size={getSize()}
-        sx={{
-          color: color,
-          animation: animation ? undefined : 'none'
-        }}
-        {...props}
-      />
-    </Box>
+      <PageLoader label={label} />
+    </div>
   );
 };

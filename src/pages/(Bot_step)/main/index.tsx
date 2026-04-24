@@ -1,9 +1,18 @@
 import { useMessage } from "@/messages/messageProvider"
-import { FormControl, Select, MenuItem, Typography, Box, Alert, Button } from "@mui/material"
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  PageLoader,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@senler/ui"
 import { useEffect, useState } from "react"
 import { useRooms } from "@/hooks/rooms/useRooms"
 import { useEvents } from "@/hooks/events/useEvents"
-import { Loader } from "@/components/Loader"
 
 
 const COMMANDS = {
@@ -13,7 +22,10 @@ const COMMANDS = {
   GET_AMBASSADOR_EVENT_PROMO_CODE: 'Получение промокода события амбассадора',
   REGISTER_AND_ADD_AMBASSADOR_TO_ROOM: 'Регистрация амбассадора',
   SET_AMBASSADOR_BASE_PROMO_CODE: 'Установка нового промокода амбассадора',
-}
+} as const
+
+const NO_ROOM = "__no_room__"
+const NO_EVENT = "__no_event__"
 
 interface ISelectActionPageProps {
   action?: keyof typeof COMMANDS
@@ -24,7 +36,7 @@ interface ISelectActionPageProps {
 }
 
 export const SelectActionPage = () => {
-	const { message, sendMessage } = useMessage()
+  const { message, sendMessage } = useMessage()
   const [action, setAction] = useState<keyof typeof COMMANDS>('GET_AMBASSADOR_ROOM_STATUS')
   const [selectedRoom, setSelectedRoom] = useState<string>('')
   const [selectedEvent, setSelectedEvent] = useState<string>('')
@@ -43,10 +55,10 @@ export const SelectActionPage = () => {
   const handleSetData = (mockMessage?: { private: any, public: any }) => {
     const { public: publicPayload } = mockMessage ? mockMessage : message.request.payload;
 
-    const { action, settings }: ISelectActionPageProps = JSON.parse(publicPayload || '{}');
-    if (action) setAction(action as keyof typeof COMMANDS)
-    if (settings?.roomId) setSelectedRoom(settings.roomId)
-    if (settings?.eventId) setSelectedEvent(settings.eventId)
+    const parsed: ISelectActionPageProps = JSON.parse(publicPayload || '{}');
+    if (parsed.action) setAction(parsed.action as keyof typeof COMMANDS)
+    if (parsed.settings?.roomId) setSelectedRoom(parsed.settings.roomId)
+    if (parsed.settings?.eventId) setSelectedEvent(parsed.settings.eventId)
   };
 
   const handleGetData = () => {
@@ -57,8 +69,7 @@ export const SelectActionPage = () => {
       }
     };
 
-    // Добавляем eventId только если выбрана команда get_event_promo и есть выбранное событие
-    if ((action === 'GET_EVENT_INFO_AND_AMBASSADOR_STATUS' || action === 'GET_AMBASSADOR_EVENT_PROMO_CODE') && selectedEvent && publicPayload && publicPayload.settings) {
+    if ((action === 'GET_EVENT_INFO_AND_AMBASSADOR_STATUS' || action === 'GET_AMBASSADOR_EVENT_PROMO_CODE') && selectedEvent && publicPayload.settings) {
       publicPayload.settings.eventId = selectedEvent;
     }
 
@@ -87,120 +98,109 @@ export const SelectActionPage = () => {
     if (message.request?.type === 'setData') handleSetData();
   }, [message]);
 
-  // Показываем загрузку
   if (isLoadingRooms) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
-        <Loader />
-      </Box>
+      <div className="flex min-h-[200px] w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
     );
   }
 
-  // Показываем ошибку
   if (isRoomsError) {
     return (
-      <Box>
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке комнат: {roomsError?.message || 'Неизвестная ошибка'}
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          <AlertDescription>
+            Ошибка при загрузке комнат: {roomsError?.message || 'Неизвестная ошибка'}
+          </AlertDescription>
         </Alert>
-        <Button
-          variant="outlined"
-          onClick={() => window.location.reload()}
-        >
+        <Button type="button" variant="outline" onClick={() => window.location.reload()}>
           Попробовать снова
         </Button>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <>
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-          Комната:
-        </Typography>
-        <FormControl fullWidth>
-           <Select
-             value={selectedRoom || ""}
-             onChange={(e) => setSelectedRoom(e.target.value)}
-             displayEmpty
-           >
-             {!selectedRoom && (
-               <MenuItem value="">
-                 <em>Выберите комнату</em>
-               </MenuItem>
-             )}
-
-            {rooms && rooms.length > 0 ? (
-              rooms.map((room) => (
-                <MenuItem key={room.id} value={room.id}>
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Комната:</p>
+        {rooms && rooms.length > 0 ? (
+          <Select
+            value={selectedRoom || NO_ROOM}
+            onValueChange={(v) => setSelectedRoom(v === NO_ROOM ? '' : v)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Выберите комнату" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_ROOM}>
+                <span className="text-muted-foreground">Выберите комнату</span>
+              </SelectItem>
+              {rooms.map((room) => (
+                <SelectItem key={room.id} value={room.id}>
                   {room.name}
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>
-                <em>Комнаты не найдены</em>
-              </MenuItem>
-            )}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-        </FormControl>
-      </Box>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            <em>Комнаты не найдены</em>
+          </p>
+        )}
+      </div>
 
       {selectedRoom && (
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-            Действие:
-          </Typography>
-          <FormControl fullWidth>
-             <Select
-               value={action || ""}
-               onChange={(e) => setAction(e.target.value)}
-               displayEmpty
-             >
-               {!action && (
-                 <MenuItem value="">
-                   <em>Выберите действие</em>
-                 </MenuItem>
-               )}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Действие:</p>
+          <Select
+            value={action}
+            onValueChange={(v) => setAction(v as keyof typeof COMMANDS)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Выберите действие" />
+            </SelectTrigger>
+            <SelectContent>
               {Object.entries(COMMANDS).map(([key, value]) => (
-                <MenuItem key={key} value={key}>{value}</MenuItem>
+                <SelectItem key={key} value={key}>
+                  {value}
+                </SelectItem>
               ))}
-            </Select>
-          </FormControl>
-        </Box>
+            </SelectContent>
+          </Select>
+        </div>
       )}
 
       {selectedRoom && (action === 'GET_EVENT_INFO_AND_AMBASSADOR_STATUS' || action === 'GET_AMBASSADOR_EVENT_PROMO_CODE') && (
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
-            Событие:
-          </Typography>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Событие:</p>
           {events.length > 0 ? (
-            <FormControl fullWidth>
-               <Select
-                 value={selectedEvent || ""}
-                 onChange={(e) => setSelectedEvent(e.target.value)}
-                 displayEmpty
-               >
-                 {!selectedEvent && (
-                   <MenuItem value="">
-                     <em>Выберите событие</em>
-                   </MenuItem>
-                 )}
+            <Select
+              value={selectedEvent || NO_EVENT}
+              onValueChange={(v) => setSelectedEvent(v === NO_EVENT ? '' : v)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Выберите событие" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_EVENT}>
+                  <span className="text-muted-foreground">Выберите событие</span>
+                </SelectItem>
                 {events.map((event) => (
-                  <MenuItem key={event.id} value={event.id}>
+                  <SelectItem key={event.id} value={event.id}>
                     {event.name}
-                  </MenuItem>
+                  </SelectItem>
                 ))}
-              </Select>
-            </FormControl>
+              </SelectContent>
+            </Select>
           ) : (
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+            <p className="text-sm italic text-muted-foreground">
               Нет созданных событий
-            </Typography>
+            </p>
           )}
-        </Box>
+        </div>
       )}
-    </>
+    </div>
   )
 }

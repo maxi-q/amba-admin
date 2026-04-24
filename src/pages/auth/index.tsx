@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Paper,
-  Stack,
-  Alert,
-  Button,
-} from "@mui/material";
+import { Alert, AlertDescription, Button, Card, CardContent, CardHeader, CardTitle } from "@senler/ui";
 import { getUrlParams } from "@helpers/index";
 import { useMessage } from "@/messages/messageProvider";
 import { useAuth } from "@/hooks/auth/useAuth";
@@ -63,7 +56,7 @@ export const AuthPage = () => {
         sign,
       }
     }, {
-      onError: (error: any) => {
+      onError: (error: { message?: string }) => {
         if (error?.message === 'PROJECT_ALREADY_EXISTS') {
           authMutation.mutate({
             userId: senlerUserId,
@@ -110,7 +103,7 @@ export const AuthPage = () => {
       const from = location.state?.from?.pathname || "/";
       navigate(from, { replace: true });
     }
-  }, [auth, location]);
+  }, [auth, location, navigate]);
 
   const openAuthPopup = () => {
     setIsLoading(true);
@@ -126,49 +119,40 @@ export const AuthPage = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-        p: 2,
-      }}
-    >
-      <Paper elevation={0} sx={{ p: 4, borderRadius: 2, maxWidth: 500, width: "100%" }}>
-        <Typography variant="h4" align="center" fontWeight={600} mb={3}>
-          Авторизация
-        </Typography>
-
+    <div className="flex min-h-screen items-center justify-center bg-background p-2">
+      <Card className="w-full max-w-md border shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-center text-2xl font-semibold">
+            Авторизация
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
+          <Alert variant="destructive" className="text-left">
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
-        )}.
+        )}
 
-        <Stack spacing={3}>
-          <Typography variant="body1" align="center" color="text.secondary">
-            {isLoading
-              ? "Выполняется авторизация..."
-              : "Для доступа к системе необходимо авторизоваться через Senler"
-            }
-          </Typography>
+        <p className="text-center text-sm text-muted-foreground">
+          {isLoading
+            ? "Выполняется авторизация…"
+            : "Для доступа к системе необходимо авторизоваться через Senler"
+          }
+        </p>
 
-          {!isLoading && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={openAuthPopup}
-              size="large"
-              disabled={authMutation.isPending || registerProjectWithAuthMutation.isPending}
-            >
-              Войти
-            </Button>
-          )}
-        </Stack>
-      </Paper>
-    </Box>
+        {!isLoading && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
+          <Button
+            type="button"
+            className="w-full"
+            size="lg"
+            onClick={openAuthPopup}
+            disabled={authMutation.isPending || registerProjectWithAuthMutation.isPending}
+          >
+            Войти
+          </Button>
+        )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };

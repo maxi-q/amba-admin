@@ -1,8 +1,9 @@
-import { Box, Paper, Stack, Typography, Chip, IconButton } from "@mui/material";
-import { Edit as EditIcon } from "@mui/icons-material";
+import { Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Badge, Card, CardContent } from "@senler/ui";
 import type { IEvent } from "@services/events/events.types";
 import { formatDateRange, isEventActive } from "../utils/eventUtils";
+import { checkEventStatus } from "../constants/eventStatus";
 
 interface EventCardProps {
   /** Данные события */
@@ -18,67 +19,62 @@ interface EventCardProps {
  */
 export const EventCard = ({ event, roomSlug }: EventCardProps) => {
   const dateRange = formatDateRange(event.startDate, event.endDate);
-  const active = event.ignoreEndDate ? true : isEventActive(event.startDate, event.endDate);
+  const active = event.ignoreEndDate
+    ? true
+    : isEventActive(event.startDate, event.endDate);
+  const { label, color } = checkEventStatus(
+    event.startDate,
+    event.endDate,
+    event.ignoreEndDate
+  );
+
+  const badgeVariant =
+    color === "success"
+      ? "success"
+      : color === "warning"
+        ? "warning"
+        : "secondary";
 
   return (
-    <Paper
-      component={Link}
+    <Link
       to={`/rooms/${roomSlug}/events/${event.id}`}
-      sx={{
-        p: 2,
-        borderRadius: 3,
-        textDecoration: 'none',
-        color: 'inherit',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        opacity: event.isDeleted ? 0.6 : 1,
-        bgcolor: event.isDeleted ? 'grey.50' : 'background.paper',
-        border: active ? '2px solid #4caf50' : '1px solid #e0e0e0',
-        '&:hover': {
-          bgcolor: event.isDeleted ? 'grey.100' : 'action.hover',
-        },
-        cursor: 'pointer',
-      }}
+      className={`block rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors hover:border-primary hover:bg-accent/30 ${
+        event.isDeleted ? "opacity-60" : ""
+      }`}
     >
-      <Box>
-        <Typography
-          variant="h6"
-          fontWeight={500}
-          mb={1}
-          sx={{
-            textDecoration: event.isDeleted ? 'line-through' : 'none',
-            color: event.isDeleted ? 'text.disabled' : 'inherit',
-          }}
-        >
-          {event.name}
-        </Typography>
-        <Typography
-          variant="body2"
-          color={event.isDeleted ? "text.disabled" : (active ? "success.main" : "text.secondary")}
-          fontWeight={active ? 500 : 400}
-          sx={{
-            textDecoration: event.isDeleted ? 'line-through' : 'none',
-          }}
-        >
-          {dateRange}
-        </Typography>
-      </Box>
+      <Card className="border-0 shadow-none">
+        <CardContent className="flex items-center justify-between gap-3 p-4">
+          <div className="min-w-0 flex-1">
+            <p
+              className={`mb-1 text-lg font-medium leading-tight ${
+                event.isDeleted
+                  ? "text-muted-foreground line-through"
+                  : "text-foreground"
+              }`}
+            >
+              {event.name}
+            </p>
+            <p
+              className={`text-sm ${
+                event.isDeleted
+                  ? "text-muted-foreground line-through"
+                  : active
+                    ? "font-medium text-green-700 dark:text-green-400"
+                    : "text-muted-foreground"
+              }`}
+            >
+              {dateRange}
+            </p>
+          </div>
 
-      <Stack direction="row" alignItems="center" spacing={2}>
-        {!event.isDeleted && (
-          <Chip
-            label={active ? "активный" : "неактивный"}
-            color={active ? "success" : "default"}
-            size="small"
-            sx={{ borderRadius: 1 }}
-          />
-        )}
-        <IconButton size="small">
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-    </Paper>
+          <div className="flex shrink-0 items-center gap-2">
+            {!event.isDeleted ? (
+              <Badge variant={badgeVariant}>{label}</Badge>
+            ) : null}
+            <Pencil className="size-4 text-muted-foreground" aria-hidden />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 };
-

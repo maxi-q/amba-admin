@@ -1,4 +1,4 @@
-import { Box, Alert, Button } from "@mui/material";
+import { Alert, AlertDescription, Button } from "@senler/ui";
 
 interface EventErrorStateProps {
   eventsError?: string;
@@ -7,24 +7,20 @@ interface EventErrorStateProps {
 
 export const EventErrorState = ({ eventsError, projectError }: EventErrorStateProps) => {
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      {eventsError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке событий: {eventsError}
+    <div className="w-full px-4 py-6">
+      {eventsError ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>Ошибка при загрузке событий: {eventsError}</AlertDescription>
         </Alert>
-      )}
-      {projectError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке проекта: {projectError}
+      ) : null}
+      {projectError ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>Ошибка при загрузке проекта: {projectError}</AlertDescription>
         </Alert>
-      )}
-      <Button
-        variant="outlined"
-        onClick={() => window.location.reload()}
-      >
+      ) : null}
+      <Button type="button" variant="outline" onClick={() => window.location.reload()}>
         Попробовать снова
       </Button>
-    </Box>
+    </div>
   );
 };
-

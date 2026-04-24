@@ -1,110 +1,95 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  IconButton,
-  List,
-  ListItem,
-  Stack,
-  Paper,
-} from "@mui/material";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@senler/ui";
 
 const EventsInfo = () => {
   const navigate = useNavigate();
 
   return (
-    <Paper elevation={0} sx={{ 
-      position: 'absolute', 
-      top: 0, 
-      left: 0, 
-      right: 0, 
-      bottom: 0, 
-      bgcolor: 'white',
-      display: 'flex',
-      justifyContent: 'center',
-      overflow: 'auto'
-    }}>
-      <Box sx={{ p: { xs: 2, md: 4 }, width: '100%' }}>
-        <Box mb={2}>
-          <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }}>
-            <ArrowBackIcon />
-          </IconButton>
-        </Box>
-        
-        <Typography variant="h4" fontWeight={700} mb={3}>
+    <div className="absolute inset-0 flex justify-center overflow-auto bg-background text-foreground">
+      <div className="w-full p-4 md:p-8">
+        <div className="mb-4">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="mr-2 shrink-0"
+            onClick={() => navigate(-1)}
+            aria-label="Назад"
+          >
+            <ArrowLeft className="size-5" />
+          </Button>
+        </div>
+
+        <h1 className="mb-6 text-2xl font-bold tracking-tight md:text-3xl">
           Что такое события?
-        </Typography>
-        
-        <Stack spacing={3}>
-          <Typography variant="body1">
-            События — это функция, которая позволяет создавать разовые активности. Под каждое событие автоматически создаются уникальные промокоды для каждого амбассадора.
-          </Typography>
-          
-          <Box>
-            <Typography variant="h5" fontWeight={600} mb={2}>
-              В событиях вы можете:
-            </Typography>
-            <List sx={{ pl: 2 }}>
-              <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                <Typography variant="body1">
-                  Назначить индивидуальные условия вознаграждений — бонус по промокоду для пользователя и награду амбассадору;
-                </Typography>
-              </ListItem>
-              <ListItem sx={{ display: 'list-item', py: 0, px: 0 }}>
-                <Typography variant="body1">
-                  Набрать амбассадоров под конкретное событие — добавить всех амбассадоров из комнаты или отправить персонализированное приглашение с предложением принять участие.
-                </Typography>
-              </ListItem>
-            </List>
-          </Box>
-          
-          <Typography variant="body1">
-            События хорошо подходят для конференций, коллабораций и ограниченных по времени акций, где важна гибкость в настройке и аналитика по конкретному событию.
-          </Typography>
-          
-          <Box>
-            <Typography variant="h5" fontWeight={600} mb={2}>
-              Отличия от Спринтов:
-            </Typography>
-            <Stack spacing={3}>
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Промокоды:
-                </Typography>
-                <Typography variant="body1" mb={1}>
+        </h1>
+
+        <div className="grid max-w-3xl gap-6 text-sm leading-relaxed md:text-base">
+          <p>
+            События — это функция, которая позволяет создавать разовые активности.
+            Под каждое событие автоматически создаются уникальные промокоды для
+            каждого амбассадора.
+          </p>
+
+          <div>
+            <h2 className="mb-3 text-lg font-semibold">В событиях вы можете:</h2>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>
+                Назначить индивидуальные условия вознаграждений — бонус по
+                промокоду для пользователя и награду амбассадору;
+              </li>
+              <li>
+                Набрать амбассадоров под конкретное событие — добавить всех
+                амбассадоров из комнаты или отправить персонализированное
+                приглашение с предложением принять участие.
+              </li>
+            </ul>
+          </div>
+
+          <p>
+            События хорошо подходят для конференций, коллабораций и ограниченных
+            по времени акций, где важна гибкость в настройке и аналитика по
+            конкретному событию.
+          </p>
+
+          <div>
+            <h2 className="mb-3 text-lg font-semibold">Отличия от Спринтов:</h2>
+            <div className="grid gap-6">
+              <div>
+                <h3 className="mb-1.5 text-base font-medium">Промокоды:</h3>
+                <p className="mb-1 text-muted-foreground">
                   Во всех спринтах амбассадор использует свой один промокод.
-                </Typography>
-                <Typography variant="body1">
+                </p>
+                <p>
                   Под каждое событие амбассадору создается отдельный промокод.
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Участники:
-                </Typography>
-                <Typography variant="body1" mb={1}>
-                  В каждом спринте автоматически участвуют все амбассадоры, добавленные в комнату.
-                </Typography>
-                <Typography variant="body1">
-                  В событиях вы подбираете участников под каждое новое событие — либо добавляете всех, либо рассылаете приглашения.
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="h6" fontWeight={500} mb={1}>
-                  Статистика:
-                </Typography>
-                <Typography variant="body1">
-                  В спринтах статистика привязывается к активному по дате спринту, а в событиях — к конкретному мероприятию и конкретному амбассадору по промокоду, это позволяет показывать аналитику по каналам привлечения событиям.
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
-        </Stack>
-      </Box>
-    </Paper>
+                </p>
+              </div>
+              <div>
+                <h3 className="mb-1.5 text-base font-medium">Участники:</h3>
+                <p className="mb-1 text-muted-foreground">
+                  В каждом спринте автоматически участвуют все амбассадоры,
+                  добавленные в комнату.
+                </p>
+                <p>
+                  В событиях вы подбираете участников под каждое новое
+                  событие — либо добавляете всех, либо рассылаете приглашения.
+                </p>
+              </div>
+              <div>
+                <h3 className="mb-1.5 text-base font-medium">Статистика:</h3>
+                <p>
+                  В спринтах статистика привязывается к активному по дате
+                  спринту, а в событиях — к конкретному мероприятию и
+                  конкретному амбассадору по промокоду, это позволяет показывать
+                  аналитику по каналам привлечения событиям.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

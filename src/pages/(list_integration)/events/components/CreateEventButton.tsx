@@ -1,4 +1,4 @@
-import { Box, Button } from "@mui/material";
+import { Button } from "@senler/ui";
 
 interface CreateEventButtonProps {
   /** Обработчик клика для создания нового события */
@@ -11,23 +11,15 @@ interface CreateEventButtonProps {
  */
 export const CreateEventButton = ({ onClick }: CreateEventButtonProps) => {
   return (
-    <Box display="flex" justifyContent="flex-end">
+    <div className="flex justify-end pt-1">
       <Button
-        variant="outlined"
-        sx={{
-          bgcolor: 'success.50',
-          borderColor: 'success.200',
-          color: 'success.700',
-          '&:hover': {
-            bgcolor: 'success.100',
-            borderColor: 'success.300',
-          },
-        }}
+        type="button"
+        variant="outline"
+        className="border-green-600/30 bg-green-500/10 text-green-800 hover:bg-green-500/20 dark:border-green-500/40 dark:text-green-400"
         onClick={onClick}
       >
         Добавить событие
       </Button>
-    </Box>
+    </div>
   );
 };
-

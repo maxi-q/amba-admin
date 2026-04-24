@@ -1,4 +1,4 @@
-import { Box, Button } from "@mui/material";
+import { Button } from "@senler/ui";
 
 interface EventActionButtonsProps {
   isNewEvent: boolean;
@@ -20,31 +20,29 @@ export const EventActionButtons = ({
   const isLoading = isCreating || isUpdating || isCheckingPrefix;
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+    <div className="flex flex-wrap justify-end gap-2">
       {!isNewEvent && (
         <Button
-          variant="outlined"
-          color="error"
+          type="button"
+          variant="outline"
+          className="min-w-[7.5rem] border-destructive text-destructive hover:bg-destructive/10"
           onClick={onDelete}
-          sx={{ minWidth: 120 }}
           disabled={isUpdating}
         >
           Удалить
         </Button>
       )}
       <Button
-        variant="contained"
-        color="primary"
+        type="button"
+        variant="default"
+        className="min-w-[7.5rem]"
         onClick={onSave}
-        sx={{ minWidth: 120 }}
         disabled={isLoading}
       >
         {isLoading
-          ? 'Сохранение...'
-          : (isNewEvent ? 'Добавить' : 'Сохранить')
-        }
+          ? "Сохранение…"
+          : (isNewEvent ? "Добавить" : "Сохранить")}
       </Button>
-    </Box>
+    </div>
   );
 };
-

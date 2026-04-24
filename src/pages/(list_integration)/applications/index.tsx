@@ -1,6 +1,17 @@
 import { useParams } from "react-router-dom";
-import { Box, Tabs, Tab, Alert, Snackbar, FormControl, InputLabel, Select, MenuItem, Stack, Button, Pagination, Typography } from "@mui/material";
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "sonner";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  PageLoader,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomApplications } from "@/hooks/ambassador/useRoomApplications";
 import { useEventApplications } from "@/hooks/ambassador/useEventApplications";
@@ -12,71 +23,72 @@ import { SettingsLoadingState } from "../settings/components/SettingsLoadingStat
 import { SettingsErrorState } from "../settings/components/SettingsErrorState";
 import { ApplicationCard } from "./components/ApplicationCard";
 import { EventAutocomplete } from "../statistics/components/EventAutocomplete";
-import { PRIMARY_COLOR } from "@/constants/colors";
 import { useApproveAllPendingRoomApplications } from "@/hooks/ambassador/useApproveAllPendingRoomApplications";
+import { CreativesPaginationControls } from "../creativetasks/components/CreativesPaginationControls";
 
-type TabType = 'room' | 'event';
-type StatusType = 'pending' | 'approved' | 'rejected';
+const tabInactive =
+  "relative border-0 bg-transparent px-0 pb-3 pt-0 text-left text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
+const tabActive =
+  "relative border-0 bg-transparent px-0 pb-3 pt-0 text-left text-[15px] font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary";
+
+type TabType = "room" | "event";
+type StatusType = "pending" | "approved" | "rejected";
+
+const STATUS_OPTIONS: { value: StatusType; label: string }[] = [
+  { value: "pending", label: "Ожидает рассмотрения" },
+  { value: "approved", label: "Одобрено" },
+  { value: "rejected", label: "Отклонено" },
+];
+
+const PAGE_SIZES = [10, 25, 50, 100] as const;
 
 export default function ApplicationsPage() {
   const { slug } = useParams();
-  const [activeTab, setActiveTab] = useState<TabType>('room');
+  const [activeTab, setActiveTab] = useState<TabType>("room");
 
-  // Filter states (for UI)
-  const [roomStatus, setRoomStatus] = useState<StatusType>('pending');
-  const [eventStatus, setEventStatus] = useState<StatusType>('pending');
+  const [roomStatus, setRoomStatus] = useState<StatusType>("pending");
+  const [eventStatus, setEventStatus] = useState<StatusType>("pending");
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
 
-  // Applied filter states (for API calls)
-  const [appliedRoomStatus, setAppliedRoomStatus] = useState<StatusType>('pending');
-  const [appliedEventStatus, setAppliedEventStatus] = useState<StatusType>('pending');
+  const [appliedRoomStatus, setAppliedRoomStatus] = useState<StatusType>("pending");
+  const [appliedEventStatus, setAppliedEventStatus] = useState<StatusType>("pending");
   const [appliedEventIds, setAppliedEventIds] = useState<string[]>([]);
 
-  // Pagination states
   const [roomPage, setRoomPage] = useState(1);
   const [eventPage, setEventPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [isApprovingAll, setIsApprovingAll] = useState(false);
 
-  // Get room data
   const {
     room: roomData,
     isLoading: isLoadingRoomData,
     isError: isRoomDataError,
     error: roomDataError
-  } = useGetRoomById(slug || '');
+  } = useGetRoomById(slug || "");
 
-  // Get events for displaying event names
-  const { events } = useEvents({ page: 1, size: 100 }, slug || '');
-
-  // Get ambassadors for displaying ambassador names
+  const { events } = useEvents({ page: 1, size: 100 }, slug || "");
   const { ambassadors } = useAmbassadors({ page: 1, size: 100 });
 
-  // Create a map of event IDs to event names
   const eventNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    events.forEach(event => {
+    events.forEach((event) => {
       map.set(event.id, event.name);
     });
     return map;
   }, [events]);
 
-  // Create a map of ambassador IDs to ambassador names
   const ambassadorNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    ambassadors.forEach(amb => {
-      // Use name if available, otherwise promoCode or id
-      const name = (amb as any).name || amb.promoCode || amb.id;
+    ambassadors.forEach((amb) => {
+      const name = (amb as { name?: string }).name || amb.promoCode || amb.id;
       map.set(amb.id, name);
     });
     return map;
   }, [ambassadors]);
 
-  // Room applications (using applied filters)
   const {
     applications: roomApplications,
     isLoading: isLoadingRoom,
@@ -89,7 +101,6 @@ export default function ApplicationsPage() {
     size: pageSize
   });
 
-  // Event applications (using applied filters)
   const {
     applications: eventApplications,
     isLoading: isLoadingEvent,
@@ -102,7 +113,6 @@ export default function ApplicationsPage() {
     size: pageSize
   });
 
-  // Approve mutations
   const {
     approveRoomApplications,
     isSuccess: isRoomApproveSuccess,
@@ -122,20 +132,17 @@ export default function ApplicationsPage() {
     isSuccess: isAllPendingApproveSuccess,
     isError: isAllPendingApproveError,
     generalError: allPendingApproveError,
-  } = useApproveAllPendingRoomApplications()
+  } = useApproveAllPendingRoomApplications();
 
-  // Handle successful approval
   useEffect(() => {
     if (isRoomApproveSuccess || isEventApproveSuccess || isAllPendingApproveSuccess) {
-      setShowSuccessNotification(true);
-      // Move approved IDs to approvedIds set for immediate removal from UI
-      setApprovedIds(prev => new Set([...prev, ...approvingIds]));
+      toast.success("Заявки одобрены");
+      setApprovedIds((prev) => new Set([...prev, ...approvingIds]));
       setApprovingIds(new Set());
       setIsApprovingAll(false);
     }
   }, [isRoomApproveSuccess, isEventApproveSuccess, isAllPendingApproveSuccess]);
 
-  // Handle error - clear approving state
   useEffect(() => {
     if (isRoomApproveError || isEventApproveError || isAllPendingApproveError) {
       setApprovingIds(new Set());
@@ -143,14 +150,14 @@ export default function ApplicationsPage() {
     }
   }, [isRoomApproveError, isEventApproveError, isAllPendingApproveError]);
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: TabType) => {
+  const handleTabChange = (newValue: TabType) => {
     setActiveTab(newValue);
-    setApprovedIds(new Set()); // Clear approved IDs when switching tabs
+    setApprovedIds(new Set());
   };
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
+  const handlePaginationPageChange = (page: number) => {
     setApprovedIds(new Set());
-    if (activeTab === 'room') {
+    if (activeTab === "room") {
       setRoomPage(page);
     } else {
       setEventPage(page);
@@ -173,67 +180,66 @@ export default function ApplicationsPage() {
   };
 
   const handleApplyFilters = () => {
-    setApprovedIds(new Set()); // Clear approved IDs when applying new filters
-    if (activeTab === 'room') {
+    setApprovedIds(new Set());
+    if (activeTab === "room") {
       setAppliedRoomStatus(roomStatus);
-      setRoomPage(1); // Reset to first page
-      refetchRoom();
+      setRoomPage(1);
+      void refetchRoom();
     } else {
       setAppliedEventStatus(eventStatus);
       setAppliedEventIds(selectedEventIds);
-      setEventPage(1); // Reset to first page
-      refetchEvent();
+      setEventPage(1);
+      void refetchEvent();
     }
   };
 
   const handleResetFilters = () => {
-    if (activeTab === 'room') {
-      setRoomStatus('pending');
-      setAppliedRoomStatus('pending');
+    if (activeTab === "room") {
+      setRoomStatus("pending");
+      setAppliedRoomStatus("pending");
     } else {
-      setEventStatus('pending');
+      setEventStatus("pending");
       setSelectedEventIds([]);
-      setAppliedEventStatus('pending');
+      setAppliedEventStatus("pending");
       setAppliedEventIds([]);
     }
   };
 
   const handleApprove = (id: string) => {
-    setApprovingIds(prev => new Set(prev).add(id));
-    if (activeTab === 'room') {
-      approveRoomApplications({ ids: [id], status: 'approved' });
+    setApprovingIds((prev) => new Set(prev).add(id));
+    if (activeTab === "room") {
+      approveRoomApplications({ ids: [id], status: "approved" });
     } else {
       approveEventApplications({ ids: [id] });
     }
   };
 
   const handleReject = (id: string) => {
-    setApprovingIds(prev => new Set(prev).add(id));
-    if (activeTab === 'room') {
-      approveRoomApplications({ ids: [id], status: 'rejected' });
+    setApprovingIds((prev) => new Set(prev).add(id));
+    if (activeTab === "room") {
+      approveRoomApplications({ ids: [id], status: "rejected" });
     }
   };
 
   const handleApproveAll = () => {
-    const ids = applications.map(app => app.id);
+    const ids = applications.map((app) => app.id);
     if (ids.length === 0 || !slug) return;
 
     setIsApprovingAll(true);
     setApprovingIds(new Set(ids));
-    approveAllPendingRoomApplications({roomId: slug})
+    approveAllPendingRoomApplications({ roomId: slug });
   };
 
-  const isLoading = isLoadingRoomData || (activeTab === 'room' ? isLoadingRoom : isLoadingEvent);
-  const rawApplications = activeTab === 'room' ? roomApplications : eventApplications;
+  const isLoading = isLoadingRoomData || (activeTab === "room" ? isLoadingRoom : isLoadingEvent);
+  const rawApplications = activeTab === "room" ? roomApplications : eventApplications;
 
-  // Filter out already approved applications
-  const applications = rawApplications.filter(app => !approvedIds.has(app.id));
-  const approveError = activeTab === 'room' ? roomApproveError : eventApproveError;
-  const currentStatus = activeTab === 'room' ? roomStatus : eventStatus;
-  const appliedStatus = activeTab === 'room' ? appliedRoomStatus : appliedEventStatus;
-  const handleStatusChange = activeTab === 'room' ? handleRoomStatusChange : handleEventStatusChange;
-  const currentPage = activeTab === 'room' ? roomPage : eventPage;
-  const pagination = activeTab === 'room' ? roomPagination : eventPagination;
+  const applications = rawApplications.filter((app) => !approvedIds.has(app.id));
+  const activeApproveError = activeTab === "room" ? roomApproveError : eventApproveError;
+  const currentStatus = activeTab === "room" ? roomStatus : eventStatus;
+  const appliedStatus = activeTab === "room" ? appliedRoomStatus : appliedEventStatus;
+  const currentPage = activeTab === "room" ? roomPage : eventPage;
+  const pagination = activeTab === "room" ? roomPagination : eventPagination;
+  const totalPages = pagination?.totalPages ?? 0;
 
   if (isLoadingRoomData) {
     return <SettingsLoadingState />;
@@ -244,191 +250,180 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={handleTabChange}
-          sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontWeight: 400,
-              fontSize: '0.9rem',
-            },
-            '& .Mui-selected': {
-              color: PRIMARY_COLOR,
-              fontWeight: 500,
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: PRIMARY_COLOR,
-            },
-          }}
-        >
-          <Tab label="Заявки по комнате" value="room" />
-          <Tab label="Заявки по событиям" value="event" />
-        </Tabs>
-      </Box>
+    <div className="w-full px-2 pb-6">
+      <div className="mb-4 border-b border-border">
+        <div className="flex flex-wrap gap-6" role="tablist" aria-label="Тип заявок">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "room"}
+            className={activeTab === "room" ? tabActive : tabInactive}
+            onClick={() => handleTabChange("room")}
+          >
+            Заявки по комнате
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "event"}
+            className={activeTab === "event" ? tabActive : tabInactive}
+            onClick={() => handleTabChange("event")}
+          >
+            Заявки по событиям
+          </button>
+        </div>
+      </div>
 
-      {/* Filters */}
-      <Stack spacing={2} sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Статус</InputLabel>
+      <div className="mb-4 grid gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+          <div className="w-full min-w-0 sm:w-56">
+            <p className="mb-1.5 text-sm font-medium text-foreground">Статус</p>
             <Select
               value={currentStatus}
-              label="Статус"
-              onChange={(e) => handleStatusChange(e.target.value as StatusType)}
+              onValueChange={(v) => {
+                const s = v as StatusType;
+                if (activeTab === "room") handleRoomStatusChange(s);
+                else handleEventStatusChange(s);
+              }}
             >
-              <MenuItem value="pending">Ожидает рассмотрения</MenuItem>
-              <MenuItem value="approved">Одобрено</MenuItem>
-              <MenuItem value="rejected">Отклонено</MenuItem>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-          </FormControl>
-        </Box>
+          </div>
+        </div>
 
-        {activeTab === 'event' && (
+        {activeTab === "event" ? (
           <EventAutocomplete
             selectedIds={selectedEventIds}
             onChange={setSelectedEventIds}
-            roomId={slug || ''}
+            roomId={slug || ""}
           />
-        )}
+        ) : null}
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="contained"
-            onClick={handleApplyFilters}
-            sx={{
-              backgroundColor: PRIMARY_COLOR,
-              "&:hover": {
-                backgroundColor: PRIMARY_COLOR,
-                opacity: 0.9
-              }
-            }}
-          >
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" onClick={handleApplyFilters}>
             Применить
           </Button>
-          <Button
-            variant="outlined"
-            onClick={handleResetFilters}
-            sx={{
-              borderColor: "#e0e0e0",
-              color: "text.secondary",
-              "&:hover": {
-                borderColor: "#bdbdbd",
-                backgroundColor: "#f5f5f5"
-              }
-            }}
-          >
+          <Button type="button" variant="outline" onClick={handleResetFilters}>
             Сбросить
           </Button>
-        </Box>
-      </Stack>
+        </div>
+      </div>
 
-      {isLoading && !isLoadingRoomData && <SettingsLoadingState />}
+      {isLoading && !isLoadingRoomData ? (
+        <div className="flex min-h-[200px] w-full items-center justify-center">
+          <PageLoader label="Загрузка…" />
+        </div>
+      ) : null}
 
-      {approveError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {approveError}
+      {activeApproveError ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{activeApproveError}</AlertDescription>
         </Alert>
-      )}
-      {approveError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {allPendingApproveError}
+      ) : null}
+      {allPendingApproveError ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{allPendingApproveError}</AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
-      {!isLoading && (
+      {!isLoading ? (
         <>
           {applications.length === 0 && !pagination?.total ? (
-            <Alert severity="info">
-              {appliedStatus === 'pending' && 'Нет заявок на рассмотрение'}
-              {appliedStatus === 'approved' && 'Нет одобренных заявок'}
-              {appliedStatus === 'rejected' && 'Нет отклонённых заявок'}
+            <Alert>
+              <AlertDescription>
+                {appliedStatus === "pending" && "Нет заявок на рассмотрение"}
+                {appliedStatus === "approved" && "Нет одобренных заявок"}
+                {appliedStatus === "rejected" && "Нет отклонённых заявок"}
+              </AlertDescription>
             </Alert>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {/* Header with total and page size */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                <Typography variant="body2" color="text.secondary">
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <p className="text-sm text-muted-foreground">
                   Всего: {pagination?.total ?? 0}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  {appliedStatus === 'pending' && applications.length > 0 && (
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                  {appliedStatus === "pending" && applications.length > 0 && activeTab === "room" ? (
                     <Button
-                      variant="contained"
-                      size="small"
+                      type="button"
+                      size="sm"
                       onClick={handleApproveAll}
                       disabled={isApprovingAll || approvingIds.size > 0}
-                      sx={{
-                        backgroundColor: PRIMARY_COLOR,
-                        "&:hover": {
-                          backgroundColor: PRIMARY_COLOR,
-                          opacity: 0.9
-                        }
-                      }}
                     >
-                      {isApprovingAll ? 'Одобрение...' : `Одобрить всех на странице (${applications.length})`}
+                      {isApprovingAll
+                        ? "Одобрение…"
+                        : `Одобрить всех на странице (${applications.length})`}
                     </Button>
-                  )}
-                  <FormControl size="small" sx={{ minWidth: 100 }}>
-                    <InputLabel>На странице</InputLabel>
+                  ) : null}
+                  <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
+                    <span className="shrink-0 text-sm text-muted-foreground">На странице</span>
                     <Select
-                      value={pageSize}
-                      label="На странице"
-                      onChange={(e) => handlePageSizeChange(e.target.value as number)}
+                      value={String(pageSize)}
+                      onValueChange={(v) => handlePageSizeChange(Number(v))}
                     >
-                      <MenuItem value={10}>10</MenuItem>
-                      <MenuItem value={25}>25</MenuItem>
-                      <MenuItem value={50}>50</MenuItem>
-                      <MenuItem value={100}>100</MenuItem>
+                      <SelectTrigger className="w-full sm:w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZES.map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
-                  </FormControl>
-                </Box>
-              </Box>
+                  </div>
+                </div>
+              </div>
 
-              {/* Applications list */}
-              {applications.map((application) => (
-                <ApplicationCard
-                  key={application.id}
-                  application={application}
-                  type={activeTab}
-                  onApprove={handleApprove}
-                  onReject={activeTab == 'room' ? handleReject : () => {}}
-                  isProcessedThis={approvingIds.has(application.id)}
-                  showActions={appliedStatus === 'pending'}
-                  eventName={activeTab === 'event' ? eventNameMap.get((application as { eventId: string }).eventId) : undefined}
-                  ambassadorName={activeTab === 'event' ? ambassadorNameMap.get(application.ambassadorId) : undefined}
-                />
-              ))}
-
-              {/* Pagination */}
-              {pagination && pagination.totalPages > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                  <Pagination
-                    count={pagination.totalPages}
-                    page={currentPage}
-                    onChange={handlePageChange}
-                    color="primary"
-                    sx={{
-                      '& .MuiPaginationItem-root.Mui-selected': {
-                        backgroundColor: PRIMARY_COLOR,
+              <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                {applications.map((application) => (
+                  <li key={application.id}>
+                    <ApplicationCard
+                      application={application}
+                      type={activeTab}
+                      onApprove={handleApprove}
+                      onReject={activeTab === "room" ? handleReject : () => {}}
+                      isProcessedThis={approvingIds.has(application.id)}
+                      showActions={appliedStatus === "pending"}
+                      eventName={
+                        activeTab === "event"
+                          ? eventNameMap.get(
+                              (application as { eventId: string }).eventId
+                            )
+                          : undefined
                       }
-                    }}
-                  />
-                </Box>
-              )}
-            </Box>
+                      ambassadorName={
+                        activeTab === "event"
+                          ? ambassadorNameMap.get(application.ambassadorId)
+                          : undefined
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+
+              {totalPages > 1 ? (
+                <CreativesPaginationControls
+                  className="mt-2"
+                  page={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePaginationPageChange}
+                />
+              ) : null}
+            </div>
           )}
         </>
-      )}
-
-      <Snackbar
-        open={showSuccessNotification}
-        autoHideDuration={3000}
-        onClose={() => setShowSuccessNotification(false)}
-        message="Заявки одобрены"
-      />
-    </Box>
+      ) : null}
+    </div>
   );
 }

@@ -1,12 +1,11 @@
-import { Box, Alert } from "@mui/material";
+import { Alert, AlertDescription } from "@senler/ui";
 
 export const EventNotFoundState = () => {
   return (
-    <Box sx={{ width: "100%", px: 2, py: 3 }}>
-      <Alert severity="warning" sx={{ mb: 3 }}>
-        Событие не найдено
+    <div className="w-full px-4 py-6">
+      <Alert>
+        <AlertDescription>Событие не найдено</AlertDescription>
       </Alert>
-    </Box>
+    </div>
   );
 };
-

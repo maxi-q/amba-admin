@@ -1,40 +1,28 @@
-import { Box, Breadcrumbs, Link as MuiLink, Typography } from "@mui/material";
-import { Link, useParams } from "react-router-dom";
+import { Button } from "@senler/ui";
+import { useParams } from "react-router-dom";
 
 interface EventPageHeaderProps {
-  eventName?: string;
   onCopyEventId: () => void;
 }
 
-export const EventPageHeader = ({ eventName, onCopyEventId }: EventPageHeaderProps) => {
-  const { eventId, slug } = useParams();
-  const isNewEvent = eventId === 'new';
+export const EventPageHeader = ({ onCopyEventId }: EventPageHeaderProps) => {
+  const { eventId } = useParams();
+  const isNewEvent = eventId === "new";
+
+  if (isNewEvent) {
+    return null;
+  }
 
   return (
-    <Box mb={3} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <Breadcrumbs separator=">" sx={{ fontSize: "0.875rem" }}>
-        <MuiLink component={Link} to={`/rooms/${slug}/events`} underline="hover" color="inherit">
-          Список событий
-        </MuiLink>
-        <Typography variant="body2" color="text.primary">
-          {isNewEvent ? 'Новое событие' : eventName}
-        </Typography>
-      </Breadcrumbs>
-      {!isNewEvent && (
-        <MuiLink
-          variant="body2"
-          underline="always"
-          color="inherit"
-          sx={{
-            userSelect: "none",
-            cursor: "pointer"
-          }}
-          onClick={onCopyEventId}
-        >
-          Скопировать ID события
-        </MuiLink>
-      )}
-    </Box>
+    <div className="mb-4 flex items-center justify-end">
+      <Button
+        type="button"
+        variant="link"
+        className="h-auto px-0 text-[13px] font-normal"
+        onClick={onCopyEventId}
+      >
+        Скопировать ID события
+      </Button>
+    </div>
   );
 };
-
