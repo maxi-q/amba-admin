@@ -1,48 +1,27 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil } from "lucide-react";
-import { useCreativeTask } from "@/hooks/creativetasks/useCreativeTask";
-import { TaskDetailSubmissionsList } from "./components/TaskDetailSubmissionsList";
-import { CreativeTaskWhitelistSection } from "./components/CreativeTaskWhitelistSection";
+import { useOutletContext } from "react-router-dom";
+import { Pencil } from "lucide-react";
+import { Badge, Button, Card, CardContent } from "@senler/ui";
+import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
-import { CreativeTasksErrorState } from "./components/CreativeTasksErrorState";
 import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
-import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
 
-export default function CreativeTaskDetailPage() {
-  const { slug, taskId } = useParams<{ slug: string; taskId: string }>();
-  const { task, isLoading, isError, error, refetch } = useCreativeTask(taskId ?? "");
+interface OutletCtx {
+  task: ICreativeTask;
+}
+
+/**
+ * Подпункт «Описание» задачи: заголовок, описание, диапазон дат, статус и редактирование.
+ */
+export default function CreativeTaskDescriptionPage() {
+  const { task } = useOutletContext<OutletCtx>();
   const [editOpen, setEditOpen] = useState(false);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-dvh w-full items-center justify-center px-2 py-6">
-        <PageLoader label="Загрузка…" />
-      </div>
-    );
-  }
-
-  if (isError || !task) {
-    return (
-      <CreativeTasksErrorState
-        errorMessage={(error as Error)?.message ?? "Задача не найдена"}
-      />
-    );
-  }
 
   const dateRange = formatDateRange(task.startsAt, task.endsAt);
   const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt);
 
   return (
-    <div className="w-full px-2 py-3">
-      <Link
-        to={`/rooms/${slug ?? ""}/creativetasks`}
-        className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        К списку креативных задач
-      </Link>
-
+    <>
       <Card
         className={`mb-4 border border-border ${task.isDeleted ? "opacity-70" : ""}`}
       >
@@ -92,14 +71,7 @@ export default function CreativeTaskDetailPage() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         task={task}
-        onSuccess={() => {
-          void refetch();
-        }}
       />
-
-      <TaskDetailSubmissionsList taskId={task.id} />
-
-      <CreativeTaskWhitelistSection task={task} />
-    </div>
+    </>
   );
 }

@@ -5,19 +5,21 @@ import { useEvents } from "@/hooks/events/useEvents";
 import { useCreateEvent } from "@/hooks/events/useCreateEvent";
 import { usePatchEvent } from "@/hooks/events/usePatchEvent";
 import { useCheckPromoCodesPrefixAvailable } from "@/hooks/events/useCheckPromoCodesPrefixAvailable";
-import { useGetProject } from "@/hooks/projects/useGetProject";
 import { Alert, AlertDescription, PageLoader } from "@senler/ui";
 import type { IEvent, IPatchEventsRequest } from "@services/events/events.types";
 import { dateToInput } from "./helpers";
 import { EventPageHeader } from "./components/EventPageHeader";
 import { EventSettingsSection } from "./components/EventSettingsSection";
 import { PromoCodesSection } from "./components/PromoCodesSection";
-import { SubscriberGroupsSection } from "./components/SubscriberGroupsSection";
 import { EventActionButtons } from "./components/EventActionButtons";
 import { DeleteEventDialog } from "./components/DeleteEventDialog";
 import { EventErrorState } from "./components/EventErrorState";
 import { EventNotFoundState } from "./components/EventNotFoundState";
 
+/**
+ * Подпункт «Описание» события: настройки и промокоды.
+ * Также используется как форма создания нового события (eventId === "new").
+ */
 const EventsSetting = () => {
   const { eventId, slug } = useParams();
   const navigate = useNavigate();
@@ -32,13 +34,6 @@ const EventsSetting = () => {
     { page: 1, size: 100 },
     slug || ""
   );
-
-  const {
-    project,
-    isLoading: isLoadingProject,
-    isError: isProjectError,
-    error: projectError
-  } = useGetProject();
 
   const {
     mutate: createEvent,
@@ -234,7 +229,7 @@ const EventsSetting = () => {
     });
   };
 
-  if (isLoadingEvents || isLoadingProject) {
+  if (isLoadingEvents) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center">
         <PageLoader label="Загрузка…" />
@@ -242,11 +237,10 @@ const EventsSetting = () => {
     );
   }
 
-  if (isEventsError || isProjectError) {
+  if (isEventsError) {
     return (
       <EventErrorState
         eventsError={eventsError?.message}
-        projectError={projectError?.message}
       />
     );
   }
@@ -303,13 +297,6 @@ const EventsSetting = () => {
           isCheckingPrefix={isCheckingPrefix}
         />
       </div>
-
-      {!isNewEvent && event ? (
-        <SubscriberGroupsSection
-          event={event}
-          channelExternalId={project?.channelExternalId}
-        />
-      ) : null}
 
       <DeleteEventDialog
         open={showDeleteDialog}

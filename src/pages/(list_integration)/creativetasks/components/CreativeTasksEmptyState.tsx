@@ -8,7 +8,7 @@ export function CreativeTasksEmptyState({ onCreateClick }: CreativeTasksEmptySta
   return (
     <Alert className="mb-3">
       <AlertDescription>
-        Креативных задач пока нет.{" "}
+        Задач пока нет.{" "}
         <button
           type="button"
           onClick={onCreateClick}

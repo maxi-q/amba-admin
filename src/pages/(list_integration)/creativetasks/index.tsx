@@ -23,7 +23,7 @@ import type { ICreativeTask } from "@services/creativetasks/creativetasks.types"
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 /**
- * Страница «Креативные задачи» комнаты.
+ * Страница «Задачи» комнаты.
  * Список задач с пагинацией, создание и редактирование, раскрытие заявок по задаче.
  */
 export default function CreativeTasksPage() {

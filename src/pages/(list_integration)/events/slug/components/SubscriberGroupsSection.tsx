@@ -10,7 +10,7 @@ export const SubscriberGroupsSection = ({ event, channelExternalId }: Subscriber
   const baseUrl = `https://vk.com/app5898182_-${channelExternalId}`;
 
   return (
-    <div className="space-y-4 border-t border-border pt-6">
+    <div className="space-y-4">
       <h3 className="text-xl font-bold tracking-tight">Группы подписчиков</h3>
 
       <div className="flex items-center gap-3">

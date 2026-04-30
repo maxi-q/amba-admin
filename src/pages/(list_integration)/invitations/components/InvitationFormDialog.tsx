@@ -35,6 +35,20 @@ interface InvitationFormDialogProps {
   roomId: string;
   slug: string;
   invitation: IInvitation | null;
+  /**
+   * Если задано — селектор задач скрывается, а указанные taskIds
+   * автоматически подставляются в новое приглашение.
+   * При редактировании существующие taskIds сохраняются как есть.
+   */
+  lockedTaskIds?: string[];
+  /**
+   * Если задано — селектор событий скрывается, а указанные eventIds
+   * автоматически подставляются в новое приглашение.
+   * При редактировании существующие eventIds сохраняются как есть.
+   */
+  lockedEventIds?: string[];
+  /** Заголовок диалога. По умолчанию используется стандартный. */
+  titleOverride?: { create?: string; edit?: string };
 }
 
 export function InvitationFormDialog({
@@ -44,12 +58,18 @@ export function InvitationFormDialog({
   roomId,
   slug,
   invitation,
+  lockedTaskIds,
+  lockedEventIds,
+  titleOverride,
 }: InvitationFormDialogProps) {
   const [subscriberInput, setSubscriberInput] = useState("");
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
   const [taskSearch, setTaskSearch] = useState("");
   const [eventSearch, setEventSearch] = useState("");
+
+  const isTaskPickerHidden = !!lockedTaskIds;
+  const isEventPickerHidden = !!lockedEventIds;
 
   const { tasks } = useRoomCreativeTasks(roomId, { page: 1, size: 100 });
   const { events } = useEvents({ page: 1, size: 100 }, slug);
@@ -81,12 +101,12 @@ export function InvitationFormDialog({
     if (!open) return;
     if (mode === "create") {
       setSubscriberInput("");
-      setSelectedTaskIds([]);
-      setSelectedEventIds([]);
+      setSelectedTaskIds(lockedTaskIds ?? []);
+      setSelectedEventIds(lockedEventIds ?? []);
       setTaskSearch("");
       setEventSearch("");
     }
-  }, [open, mode]);
+  }, [open, mode, lockedTaskIds, lockedEventIds]);
 
   useEffect(() => {
     if (!open || mode !== "edit" || !invitation) return;
@@ -187,7 +207,10 @@ export function InvitationFormDialog({
     }
   };
 
-  const title = mode === "create" ? "Создать приглашение" : "Изменить приглашение";
+  const title =
+    mode === "create"
+      ? titleOverride?.create ?? "Создать приглашение"
+      : titleOverride?.edit ?? "Изменить приглашение";
 
   return (
     <Sheet
@@ -241,65 +264,69 @@ export function InvitationFormDialog({
             )}
           </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Креативные задачи</p>
-            <InputField
-              value={taskSearch}
-              onChange={(e) => setTaskSearch(e.target.value)}
-              placeholder="Поиск по названию"
-              aria-label="Поиск креативных задач"
-            />
-            <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border p-2">
-              {filteredTasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Нет задач</p>
-              ) : (
-                filteredTasks.map((task) => (
-                  <label
-                    key={task.id}
-                    className="flex cursor-pointer items-start gap-2 rounded px-1 py-1.5 text-sm hover:bg-muted/60"
-                  >
-                    <input
-                      type="checkbox"
-                      className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                      checked={selectedTaskIds.includes(task.id)}
-                      onChange={() => toggleTaskId(task.id)}
-                    />
-                    <span className="min-w-0 leading-snug">{task.title}</span>
-                  </label>
-                ))
-              )}
+          {isTaskPickerHidden ? null : (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Креативные задачи</p>
+              <InputField
+                value={taskSearch}
+                onChange={(e) => setTaskSearch(e.target.value)}
+                placeholder="Поиск по названию"
+                aria-label="Поиск креативных задач"
+              />
+              <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                {filteredTasks.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Нет задач</p>
+                ) : (
+                  filteredTasks.map((task) => (
+                    <label
+                      key={task.id}
+                      className="flex cursor-pointer items-start gap-2 rounded px-1 py-1.5 text-sm hover:bg-muted/60"
+                    >
+                      <input
+                        type="checkbox"
+                        className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                        checked={selectedTaskIds.includes(task.id)}
+                        onChange={() => toggleTaskId(task.id)}
+                      />
+                      <span className="min-w-0 leading-snug">{task.title}</span>
+                    </label>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">События</p>
-            <InputField
-              value={eventSearch}
-              onChange={(e) => setEventSearch(e.target.value)}
-              placeholder="Поиск по названию"
-              aria-label="Поиск событий"
-            />
-            <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border p-2">
-              {filteredEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Нет событий</p>
-              ) : (
-                filteredEvents.map((ev) => (
-                  <label
-                    key={ev.id}
-                    className="flex cursor-pointer items-start gap-2 rounded px-1 py-1.5 text-sm hover:bg-muted/60"
-                  >
-                    <input
-                      type="checkbox"
-                      className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                      checked={selectedEventIds.includes(ev.id)}
-                      onChange={() => toggleEventId(ev.id)}
-                    />
-                    <span className="min-w-0 leading-snug">{ev.name}</span>
-                  </label>
-                ))
-              )}
+          {isEventPickerHidden ? null : (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">События</p>
+              <InputField
+                value={eventSearch}
+                onChange={(e) => setEventSearch(e.target.value)}
+                placeholder="Поиск по названию"
+                aria-label="Поиск событий"
+              />
+              <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border p-2">
+                {filteredEvents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Нет событий</p>
+                ) : (
+                  filteredEvents.map((ev) => (
+                    <label
+                      key={ev.id}
+                      className="flex cursor-pointer items-start gap-2 rounded px-1 py-1.5 text-sm hover:bg-muted/60"
+                    >
+                      <input
+                        type="checkbox"
+                        className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                        checked={selectedEventIds.includes(ev.id)}
+                        onChange={() => toggleEventId(ev.id)}
+                      />
+                      <span className="min-w-0 leading-snug">{ev.name}</span>
+                    </label>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">

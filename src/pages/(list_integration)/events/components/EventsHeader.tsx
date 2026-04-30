@@ -5,44 +5,63 @@ const tabInactive =
 const tabActive =
   "relative pb-3 pt-0 text-[15px] font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary";
 
+/**
+ * Горизонтальная навигация на странице выбранного события:
+ * Описание, группы подписчиков, приглашения.
+ * (Список / Событие / Справка — в сайдбаре RoomBox.)
+ */
 export const EventsHeader = () => {
   const { slug, eventId } = useParams<{
     slug: string;
     eventId?: string;
   }>();
 
-  const listPath = slug ? `/rooms/${slug}/events` : "";
-  const infoPath = slug ? `/rooms/${slug}/events/info` : "";
-  const eventPath =
-    slug && eventId ? `/rooms/${slug}/events/${eventId}` : "";
-
-  if (!slug) {
+  if (!slug || !eventId) {
     return null;
+  }
+
+  const base = `/rooms/${slug}/events/${eventId}`;
+
+  if (eventId === "new") {
+    return (
+      <div className="mb-2 border-b border-border">
+        <nav
+          className="flex flex-wrap gap-6"
+          aria-label="Разделы события"
+        >
+          <NavLink
+            to={base}
+            end
+            className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+          >
+            Описание
+          </NavLink>
+        </nav>
+      </div>
+    );
   }
 
   return (
     <div className="mb-2 border-b border-border">
-      <nav className="flex flex-wrap gap-6" aria-label="Раздел событий">
+      <nav className="flex flex-wrap gap-6" aria-label="Разделы события">
         <NavLink
-          to={listPath}
+          to={base}
           end
           className={({ isActive }) => (isActive ? tabActive : tabInactive)}
         >
-          Список
+          Описание
         </NavLink>
-        {eventId ? (
-          <NavLink
-            to={eventPath}
-            className={({ isActive }) => (isActive ? tabActive : tabInactive)}
-          >
-            Событие
-          </NavLink>
-        ) : null}
         <NavLink
-          to={infoPath}
+          to={`${base}/subscribers`}
           className={({ isActive }) => (isActive ? tabActive : tabInactive)}
         >
-          Справка
+          Группы подписчиков
+        </NavLink>
+        <NavLink
+          to={`${base}/invitations`}
+          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+        >
+          Приглашения в событие
         </NavLink>
       </nav>
     </div>

@@ -19,37 +19,69 @@ import {
 import { useCreativeTaskWhitelist } from "@/hooks/creativetasks/useCreativeTaskWhitelist";
 import { useAddToCreativeTaskWhitelist } from "@/hooks/creativetasks/useAddToCreativeTaskWhitelist";
 import { useRemoveFromCreativeTaskWhitelist } from "@/hooks/creativetasks/useRemoveFromCreativeTaskWhitelist";
+import { useUpdateCreativeTask } from "@/hooks/creativetasks/useUpdateCreativeTask";
 import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
+import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
+import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
+import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
+import { getFirstFieldError } from "@services/config/axios.helper";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
 import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
 import type { IAmbassador } from "@services/ambassador/ambassador.types";
+import {
+  INVITATION_CHANNEL_TYPE_VK,
+  type IInvitation,
+} from "@services/invitations/invitations.types";
+import { resolveVkProfileId } from "@/utils/vkProfile";
 
 const NONE = "__none__";
+
+type TaskInvitationRow =
+  | {
+      type: "whitelist";
+      key: string;
+      ambassadorId: string;
+      promoCode: string;
+    }
+  | {
+      type: "registration";
+      key: string;
+      invitation: IInvitation;
+      subscriberIds: string[];
+    };
 
 interface CreativeTaskWhitelistSectionProps {
   task: ICreativeTask;
 }
 
 function getOptionLabel(a: IAmbassador) {
-  if (a.promoCode) return `${a.promoCode} (${a.id.slice(0, 8)}…)`;
-  return a.id;
+  return a.promoCode || "Без промокода";
 }
 
 export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSectionProps) {
   const { slug } = useParams<{ slug: string }>();
   const [page, setPage] = useState(1);
   const pageSize = 20;
-  const [ambassadorIdInput, setAmbassadorIdInput] = useState("");
   const [selectedAmbassadorId, setSelectedAmbassadorId] = useState(NONE);
   const [searchQuery, setSearchQuery] = useState("");
+  const [vkProfileUrl, setVkProfileUrl] = useState("");
+  const [vkInvitationError, setVkInvitationError] = useState("");
+  const [isResolvingVk, setIsResolvingVk] = useState(false);
 
   const { room } = useGetRoomById(slug ?? "");
+  const roomId = room?.id ?? "";
 
   const { items, isLoading, pagination } = useCreativeTaskWhitelist(task.id, {
     page,
     size: pageSize,
   });
+  const {
+    invitations,
+    isLoading: isLoadingInvitations,
+    isError: isInvitationsError,
+    error: invitationsError,
+  } = useRoomInvitations(roomId);
 
   const {
     addToWhitelist,
@@ -65,6 +97,27 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
   } = useRemoveFromCreativeTaskWhitelist();
 
   const {
+    deleteInvitation,
+    isPending: isDeletingInvitation,
+    generalError: deleteInvitationError,
+    reset: resetDeleteInvitation,
+  } = useDeleteInvitation();
+
+  const {
+    updateCreativeTask,
+    isPending: isUpdatingTask,
+    generalError: updateTaskError,
+  } = useUpdateCreativeTask();
+
+  const {
+    createInvitation,
+    isPending: isCreatingInvitation,
+    generalError: createInvitationError,
+    validationErrors: createInvitationValidationErrors,
+    reset: resetCreateInvitation,
+  } = useCreateInvitation();
+
+  const {
     ambassadors,
     isLoading: isLoadingAmbassadors,
   } = useAmbassadors({
@@ -73,15 +126,15 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
     roomIds: room?.id ? ([room.id] as unknown as number[]) : undefined,
   });
 
-  const ambassadorOptions = useMemo(() => ambassadors ?? [], [ambassadors]);
+  const ambassadorOptions = useMemo(
+    () => (ambassadors ?? []).filter((a) => !!a.promoCode?.trim()),
+    [ambassadors]
+  );
 
   const filteredBySearch = useMemo(() => {
     if (!searchQuery.trim()) return ambassadorOptions;
     const q = searchQuery.toLowerCase().trim();
-    return ambassadorOptions.filter(
-      (a) =>
-        a.promoCode?.toLowerCase().includes(q) || a.id.toLowerCase().includes(q)
-    );
+    return ambassadorOptions.filter((a) => a.promoCode?.toLowerCase().includes(q));
   }, [ambassadorOptions, searchQuery]);
 
   const promoByAmbassadorId = useMemo(() => {
@@ -92,12 +145,36 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
     return m;
   }, [ambassadorOptions]);
 
-  const handleAddById = () => {
-    const id = ambassadorIdInput.trim();
-    if (!id) return;
-    addToWhitelist({ taskId: task.id, data: { ambassadorId: id } });
-    setAmbassadorIdInput("");
-  };
+  const taskInvitations = useMemo(() => {
+    return invitations
+      .filter((inv) => inv.taskIds?.includes(task.id))
+      .sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  }, [invitations, task.id]);
+
+  const combinedRows = useMemo<TaskInvitationRow[]>(() => {
+    const whitelistRows: TaskInvitationRow[] = items.map((row) => ({
+      type: "whitelist",
+      key: `whitelist-${row.ambassadorId}`,
+      ambassadorId: row.ambassadorId,
+      promoCode:
+        row.promoCode?.trim() ||
+        promoByAmbassadorId.get(row.ambassadorId) ||
+        "—",
+    }));
+
+    const registrationRows: TaskInvitationRow[] = taskInvitations.map((inv) => ({
+      type: "registration",
+      key: `invitation-${inv.id}`,
+      invitation: inv,
+      subscriberIds: (inv.targets ?? [])
+        .map((target) => target.subscriberId)
+        .filter(Boolean),
+    }));
+
+    return [...whitelistRows, ...registrationRows];
+  }, [items, promoByAmbassadorId, taskInvitations]);
 
   const handleAddSelected = () => {
     if (selectedAmbassadorId === NONE) return;
@@ -106,70 +183,151 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
       data: { ambassadorId: selectedAmbassadorId },
     });
     setSelectedAmbassadorId(NONE);
+    setSearchQuery("");
   };
 
   const handleRemove = (ambassadorId: string) => {
     removeFromWhitelist({ taskId: task.id, ambassadorId });
   };
 
+  const handleDeleteRegistrationInvitation = (invitation: IInvitation) => {
+    if (!roomId) return;
+
+    deleteInvitation(
+      { id: invitation.id, roomId },
+      {
+        onSuccess: () => {
+          resetDeleteInvitation();
+        },
+      }
+    );
+  };
+
   const whitelistDisabled = task.isWhitelistEnabled === false;
+  const invitationTargetError =
+    getFirstFieldError(createInvitationValidationErrors, "targets") ||
+    getFirstFieldError(createInvitationValidationErrors, "subscriberId");
+  const invitationError =
+    vkInvitationError || createInvitationError || invitationTargetError;
+  const isInvitationPending = isResolvingVk || isCreatingInvitation;
+
+  const handleWhitelistEnabledChange = (enabled: boolean) => {
+    updateCreativeTask({
+      id: task.id,
+      data: {
+        title: task.title,
+        description: task.description,
+        startsAt: task.startsAt,
+        endsAt: task.endsAt,
+        isDeleted: task.isDeleted,
+        isWhitelistEnabled: enabled,
+      },
+    });
+  };
+
+  const handleCreateInvitation = async () => {
+    if (!room?.id || !vkProfileUrl.trim()) return;
+
+    setVkInvitationError("");
+    setIsResolvingVk(true);
+
+    try {
+      const subscriberId = await resolveVkProfileId(vkProfileUrl);
+
+      createInvitation(
+        {
+          roomId: room.id,
+          targets: [
+            {
+              channelTypeId: INVITATION_CHANNEL_TYPE_VK,
+              subscriberId,
+            },
+          ],
+          taskIds: [task.id],
+          eventIds: [],
+        },
+        {
+          onSuccess: () => {
+            setVkProfileUrl("");
+            resetCreateInvitation();
+          },
+        }
+      );
+    } catch (error) {
+      setVkInvitationError(
+        error instanceof Error
+          ? error.message
+          : "Не удалось получить id профиля VK."
+      );
+    } finally {
+      setIsResolvingVk(false);
+    }
+  };
 
   return (
     <Card className="mt-6 border border-border bg-card shadow-sm">
       <CardContent className="space-y-3 p-4 sm:p-6">
-        <h2 className="text-lg font-semibold">Вайтлист</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Приглашения в задачу</h2>
+            <p className="text-sm text-muted-foreground">
+              Вайтлист ограничивает участие уже зарегистрированных амбассадоров, а
+              приглашение по VK-ссылке добавляет задачу пользователю после регистрации.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant={whitelistDisabled ? "default" : "outline"}
+            size="lg"
+            className="shrink-0"
+            onClick={() => handleWhitelistEnabledChange(whitelistDisabled)}
+            disabled={isUpdatingTask}
+          >
+            {isUpdatingTask
+              ? "Сохранение…"
+              : whitelistDisabled
+                ? "Активировать вайтлист"
+                : "Деактивировать вайтлист"}
+          </Button>
+        </div>
         <p className="text-sm text-muted-foreground">
-          Только амбассадоры из списка могут участвовать в задании, если включён вайтлист в
-          настройках задачи.
+          Только приглашённые амбассадоры могут участвовать в задаче, если включены
+          приглашения в настройках задачи.
         </p>
 
         {whitelistDisabled ? (
           <Alert className="border-amber-500/30 bg-amber-500/5">
             <AlertDescription>
-              Вайтлист для этой задачи отключён. Включите «Вайтлист» в настройках задачи при
-              редактировании.
+              Приглашения для этой задачи отключены. Включите «Приглашения в задачу» в настройках
+              задачи при редактировании.
             </AlertDescription>
           </Alert>
         ) : null}
 
-        {(addGeneralError || removeGeneralError) && (
+        {(addGeneralError || removeGeneralError || updateTaskError || deleteInvitationError) && (
           <Alert variant="destructive">
             <AlertDescription>
-              {addGeneralError || removeGeneralError}
+              {addGeneralError || removeGeneralError || updateTaskError || deleteInvitationError}
             </AlertDescription>
           </Alert>
         )}
 
-        <div className="space-y-6">
-          <div className="grid w-full max-w-md gap-2">
-            <p className="text-sm font-medium text-foreground">
-              Добавить по ID амбассадора (UUID)
-            </p>
-            <InputField
-              className="w-full min-w-0"
-              value={ambassadorIdInput}
-              onChange={(e) => setAmbassadorIdInput(e.target.value)}
-              error={!!addValidationErrors?.ambassadorId?.length}
-              helperText={addValidationErrors?.ambassadorId?.[0]}
-              disabled={whitelistDisabled}
-              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              aria-label="UUID амбассадора"
-            />
-            <Button
-              type="button"
-              size="lg"
-              className="h-10 w-full"
-              onClick={handleAddById}
-              disabled={whitelistDisabled || isAdding || !ambassadorIdInput.trim()}
-            >
-              {isAdding ? "…" : "Добавить"}
-            </Button>
-          </div>
+        {isInvitationsError ? (
+          <Alert variant="destructive">
+            <AlertDescription>
+              {(invitationsError as Error)?.message ?? "Не удалось загрузить приглашения после регистрации"}
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
+        <div className="grid gap-4 lg:grid-cols-2">
           {room?.id ? (
-            <div className="grid w-full max-w-md gap-2">
+            <div className="grid gap-2 rounded-md border border-border p-3">
               <p className="text-sm font-medium text-foreground">
-                Или выберите амбассадора комнаты
+                1. Добавить существующего амбассадора в вайтлист
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Используется роут /creative-tasks/{task.id}/whitelist. Поиск только по промокоду.
               </p>
               {isLoadingAmbassadors ? (
                 <p className="text-sm text-muted-foreground">Загрузка списка…</p>
@@ -177,18 +335,21 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
               <InputField
                 className="w-full min-w-0"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSelectedAmbassadorId(NONE);
+                }}
                 disabled={whitelistDisabled || isLoadingAmbassadors}
-                placeholder="Поиск по промокоду / id"
-                aria-label="Поиск амбассадора"
+                placeholder="Промокод"
+                aria-label="Поиск амбассадора по промокоду"
               />
               <Select
                 value={selectedAmbassadorId}
                 onValueChange={setSelectedAmbassadorId}
                 disabled={whitelistDisabled || isLoadingAmbassadors}
               >
-                <SelectTrigger className="h-10 w-full" aria-label="Амбассадор из списка">
-                  <SelectValue placeholder="Выберите" />
+                <SelectTrigger className="h-10 w-full" aria-label="Амбассадор по промокоду">
+                  <SelectValue placeholder="Выберите промокод" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>—</SelectItem>
@@ -209,36 +370,116 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
                   whitelistDisabled || isLoadingAmbassadors || isAdding || selectedAmbassadorId === NONE
                 }
               >
-                Добавить
+                Добавить в вайтлист
               </Button>
+              {addValidationErrors?.ambassadorId?.[0] ? (
+                <p className="text-sm text-destructive">
+                  {addValidationErrors.ambassadorId[0]}
+                </p>
+              ) : null}
             </div>
           ) : null}
+
+          <div className="grid gap-2 rounded-md border border-border p-3">
+            <p className="text-sm font-medium text-foreground">
+              2. Создать приглашение после регистрации
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Используется роут /invitations. Вставьте ссылку на профиль VK, задача подставится
+              автоматически.
+            </p>
+            <InputField
+              className="w-full min-w-0"
+              value={vkProfileUrl}
+              onChange={(e) => {
+                setVkProfileUrl(e.target.value);
+                setVkInvitationError("");
+              }}
+              error={!!invitationError}
+              helperText={
+                invitationError ||
+                "Например: https://vk.com/username"
+              }
+              placeholder="https://vk.com/username"
+              aria-label="Ссылка на профиль VK"
+            />
+            <Button
+              type="button"
+              size="lg"
+              className="h-10 w-full"
+              onClick={() => void handleCreateInvitation()}
+              disabled={isInvitationPending || !vkProfileUrl.trim() || !room?.id}
+            >
+              {isInvitationPending ? "Создание…" : "Создать приглашение"}
+            </Button>
+          </div>
         </div>
 
-        {isLoading ? (
+        {isLoading || isLoadingInvitations ? (
           <div className="flex justify-center py-8">
             <PageLoader label="Загрузка…" />
           </div>
-        ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">В вайтлисте пока никого нет.</p>
+        ) : combinedRows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Приглашённых пока нет.</p>
         ) : (
           <>
-            <ul className="space-y-2" aria-label="Вайтлист">
-              {items.map((row) => {
-                const promo =
-                  row.promoCode?.trim() ||
-                  promoByAmbassadorId.get(row.ambassadorId) ||
-                  "—";
+            <ul className="space-y-2" aria-label="Приглашения в задачу">
+              {combinedRows.map((row) => {
+                if (row.type === "registration") {
+                  const subscriberLabel = row.subscriberIds.length
+                    ? row.subscriberIds.join(", ")
+                    : "—";
+
+                  return (
+                    <li
+                      key={row.key}
+                      className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 py-2 pl-3 pr-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline gap-2">
+                          <span className="text-sm text-muted-foreground">Источник:</span>
+                          <Badge variant="outline" className="text-xs sm:text-sm">
+                            После регистрации
+                          </Badge>
+                        </div>
+                        <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+                          VK ID: {subscriberLabel}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Создано: {new Date(row.invitation.createdAt).toLocaleString("ru-RU")}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-9 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteRegistrationInvitation(row.invitation)}
+                        disabled={isDeletingInvitation}
+                        aria-label="Удалить приглашение после регистрации"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </li>
+                  );
+                }
+
                 return (
                   <li
-                    key={row.ambassadorId}
+                    key={row.key}
                     className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 py-2 pl-3 pr-2"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-2">
+                        <span className="text-sm text-muted-foreground">Источник:</span>
+                        <Badge variant="secondary" className="text-xs sm:text-sm">
+                          Вайтлист
+                        </Badge>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-baseline gap-2">
                         <span className="text-sm text-muted-foreground">Промокод:</span>
                         <Badge variant="secondary" className="font-mono text-xs sm:text-sm">
-                          {promo}
+                          {row.promoCode}
                         </Badge>
                       </div>
                       <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
@@ -252,7 +493,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
                       className="size-9 text-destructive hover:bg-destructive/10"
                       onClick={() => handleRemove(row.ambassadorId)}
                       disabled={whitelistDisabled || isRemoving}
-                      aria-label="Убрать из вайтлиста"
+                      aria-label="Удалить приглашение"
                     >
                       <Trash2 className="size-4" />
                     </Button>

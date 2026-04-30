@@ -12,12 +12,17 @@ import {
   EventsInfo,
   EventsSetting,
   EventsLayout,
+  EventSubscribersPage,
+  EventInvitationsPage,
   StatisticsPage,
   SprintsLayout,
   CodePage,
   ApplicationsPage,
   CreativeTasksPage,
-  CreativeTaskDetailPage,
+  CreativeTaskDetailLayout,
+  CreativeTaskDescriptionPage,
+  CreativeTaskAnswersPage,
+  CreativeTaskInvitationsPage,
   InvitationsPage,
   OrdLayout,
   OrdContractsPage,
@@ -105,6 +110,8 @@ export const Navigation = () => {
           <Route index element={<EventsPage />} />
           <Route path="info" element={<EventsInfo />} />
           <Route path=":eventId" element={<EventsSetting />} />
+          <Route path=":eventId/subscribers" element={<EventSubscribersPage />} />
+          <Route path=":eventId/invitations" element={<EventInvitationsPage />} />
         </Route>
 
         <Route path="statistics" element={<StatisticsPage />} />
@@ -115,8 +122,12 @@ export const Navigation = () => {
           <Route path="profile" element={<OrdProfilePage />} />
           <Route path=":contractId" element={<OrdContractDetailPage />} />
         </Route>
-        <Route path="creativetasks/:taskId" element={<CreativeTaskDetailPage />} />
         <Route path="creativetasks" element={<CreativeTasksPage />} />
+        <Route path="creativetasks/:taskId" element={<CreativeTaskDetailLayout />}>
+          <Route index element={<CreativeTaskDescriptionPage />} />
+          <Route path="answers" element={<CreativeTaskAnswersPage />} />
+          <Route path="invitations" element={<CreativeTaskInvitationsPage />} />
+        </Route>
 
         <Route path="*" element={<RoomRedirect />} />
       </Route>

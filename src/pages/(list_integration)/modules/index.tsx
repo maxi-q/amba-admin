@@ -19,10 +19,11 @@ interface RoomBoxProps {
 }
 
 const RoomBox = ({ children }: RoomBoxProps) => {
-  const { slug } = useParams();
+  const { slug, eventId } = useParams<{
+    slug: string;
+    eventId?: string;
+  }>();
   const location = useLocation();
-  const creativeTaskId =
-    location.pathname.match(/\/creativetasks\/([^/]+)/)?.[1] ?? null;
 
   const {
     room: roomData,
@@ -70,30 +71,54 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         id: "events",
         label: "События",
         href: `${roomBase}/events`,
+        match: (p) => {
+          const pt = p.split("#")[0];
+          return (
+            pt === `${roomBase}/events` ||
+            pt.startsWith(`${roomBase}/events/`)
+          );
+        },
+        defaultOpen: true,
+        items: [
+          {
+            id: "events-list",
+            label: "Список",
+            href: `${roomBase}/events`,
+            match: (p) => p.split("#")[0] === `${roomBase}/events`,
+          },
+          ...(eventId
+            ? [
+                {
+                  id: "events-event",
+                  label: "Событие",
+                  href: `${roomBase}/events/${eventId}`,
+                  match: (p: string) =>
+                    p.split("#")[0].startsWith(
+                      `${roomBase}/events/${eventId}`
+                    ),
+                },
+              ]
+            : []),
+          {
+            id: "events-info",
+            label: "Справка",
+            href: `${roomBase}/events/info`,
+            match: (p) =>
+              p.split("#")[0] === `${roomBase}/events/info`,
+          },
+        ],
       },
       {
         id: "creativetasks",
-        label: "Креативы",
+        label: "Задачи",
         href: `${roomBase}/creativetasks`,
         match: (p) => {
           const pt = p.split("#")[0];
-          return pt === `${roomBase}/creativetasks`;
+          return (
+            pt === `${roomBase}/creativetasks` ||
+            pt.startsWith(`${roomBase}/creativetasks/`)
+          );
         },
-        defaultOpen: true,
-        ...(creativeTaskId
-          ? {
-            items: [
-              {
-                id: "creative-answers",
-                label: "Ответы",
-                href: `${roomBase}/creativetasks/${creativeTaskId}`,
-                match: (p) =>
-                  p.split("#")[0] ===
-                  `${roomBase}/creativetasks/${creativeTaskId}`,
-              },
-            ],
-          }
-          : {}),
       },
       {
         id: "invitations",
@@ -123,7 +148,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
     ];
 
     return [{ id: "room-nav", items }];
-  }, [roomBase, creativeTaskId]);
+  }, [roomBase, eventId]);
 
   const headerBreadcrumbs: AppShellBreadcrumb[] = useMemo(
     () => [

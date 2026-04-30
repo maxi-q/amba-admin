@@ -8,9 +8,6 @@ interface CreativesPaginationControlsProps {
   className?: string;
 }
 
-/**
- * Кнопки «Назад / Вперёд» + номер страницы (вместо MUI Pagination).
- */
 export function CreativesPaginationControls({
   page,
   totalPages,

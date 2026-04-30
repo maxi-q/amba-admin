@@ -194,12 +194,12 @@ export function EditCreativeTaskDialog({
             </div>
             <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
               <p className="text-sm text-foreground">
-                Вайтлист: только выбранные амбассадоры могут участвовать
+                Приглашения в задачу: только приглашённые амбассадоры могут участвовать
               </p>
               <Switch
                 checked={isWhitelistEnabled}
                 onCheckedChange={setIsWhitelistEnabled}
-                aria-label="Вайтлист"
+                aria-label="Приглашения в задачу"
               />
             </div>
             <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">

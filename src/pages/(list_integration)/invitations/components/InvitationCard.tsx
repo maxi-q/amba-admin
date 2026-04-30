@@ -6,7 +6,7 @@ interface InvitationCardProps {
   invitation: IInvitation;
   resolveTaskLabel: (id: string) => string;
   resolveEventLabel: (id: string) => string;
-  onEdit: (invitation: IInvitation) => void;
+  onEdit?: (invitation: IInvitation) => void;
   onDelete: (invitation: IInvitation) => void;
 }
 
@@ -80,16 +80,18 @@ export function InvitationCard({
             </div>
           </div>
           <div className="flex shrink-0 gap-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-9 text-primary"
-              aria-label="Редактировать"
-              onClick={() => onEdit(invitation)}
-            >
-              <Pencil className="size-4" />
-            </Button>
+            {onEdit ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-9 text-primary"
+                aria-label="Редактировать"
+                onClick={() => onEdit(invitation)}
+              >
+                <Pencil className="size-4" />
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="ghost"
