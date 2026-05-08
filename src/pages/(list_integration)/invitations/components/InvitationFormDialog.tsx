@@ -17,6 +17,7 @@ import { useEvents } from "@/hooks/events/useEvents";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
 import { useUpdateInvitation } from "@/hooks/invitations/useUpdateInvitation";
 import { INVITATION_CHANNEL_TYPE_VK, type IInvitation } from "@services/invitations/invitations.types";
+import { resolveVkProfileId } from "@/utils/vkProfile";
 
 const SUBSCRIBER_TEXTAREA_CLASS =
   "min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
@@ -49,6 +50,10 @@ interface InvitationFormDialogProps {
   lockedEventIds?: string[];
   /** Заголовок диалога. По умолчанию используется стандартный. */
   titleOverride?: { create?: string; edit?: string };
+  /** Если true — вместо ручного ввода subscriberId используется ссылка на профиль VK. */
+  useVkProfileLink?: boolean;
+  submitLabel?: string;
+  onInvitationSuccess?: () => void;
 }
 
 export function InvitationFormDialog({
@@ -61,8 +66,14 @@ export function InvitationFormDialog({
   lockedTaskIds,
   lockedEventIds,
   titleOverride,
+  useVkProfileLink = false,
+  submitLabel,
+  onInvitationSuccess,
 }: InvitationFormDialogProps) {
   const [subscriberInput, setSubscriberInput] = useState("");
+  const [vkProfileUrl, setVkProfileUrl] = useState("");
+  const [vkProfileError, setVkProfileError] = useState("");
+  const [isResolvingVk, setIsResolvingVk] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
   const [taskSearch, setTaskSearch] = useState("");
@@ -101,6 +112,8 @@ export function InvitationFormDialog({
     if (!open) return;
     if (mode === "create") {
       setSubscriberInput("");
+      setVkProfileUrl("");
+      setVkProfileError("");
       setSelectedTaskIds(lockedTaskIds ?? []);
       setSelectedEventIds(lockedEventIds ?? []);
       setTaskSearch("");
@@ -112,13 +125,15 @@ export function InvitationFormDialog({
     if (!open || mode !== "edit" || !invitation) return;
     const subs = (invitation.targets ?? []).map((t) => t.subscriberId).filter(Boolean);
     setSubscriberInput(subs.join("\n"));
+    setVkProfileUrl(subs[0] ? `https://vk.com/id${subs[0]}` : "");
+    setVkProfileError("");
     setSelectedTaskIds([...(invitation.taskIds ?? [])]);
     setSelectedEventIds([...(invitation.eventIds ?? [])]);
     setTaskSearch("");
     setEventSearch("");
   }, [open, mode, invitation]);
 
-  const isPending = mode === "create" ? isCreatePending : isUpdatePending;
+  const isPending = (mode === "create" ? isCreatePending : isUpdatePending) || isResolvingVk;
   const generalError = mode === "create" ? createGeneralError : updateGeneralError;
   const validationErrors =
     mode === "create" ? createValidationErrors : updateValidationErrors;
@@ -137,7 +152,7 @@ export function InvitationFormDialog({
     [subscriberLines]
   );
 
-  const canSubmit = targetsPayload.length > 0;
+  const canSubmit = useVkProfileLink ? !!vkProfileUrl.trim() : targetsPayload.length > 0;
 
   const filteredTasks = useMemo(() => {
     const q = taskSearch.toLowerCase().trim();
@@ -166,18 +181,45 @@ export function InvitationFormDialog({
   const targetErrMsg =
     getFirstFieldError(validationErrors, "targets") ||
     getFirstFieldError(validationErrors, "subscriberId");
+  const vkProfileInputError = vkProfileError || targetErrMsg;
   const targetHint =
     "По одному ID на строку; можно вставить список из нескольких строк.";
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const taskIds = selectedTaskIds;
     const eventIds = selectedEventIds;
+    let submitTargets = targetsPayload;
+
+    if (useVkProfileLink) {
+      setVkProfileError("");
+      setIsResolvingVk(true);
+
+      try {
+        const subscriberId = await resolveVkProfileId(vkProfileUrl);
+        submitTargets = [
+          {
+            channelTypeId: INVITATION_CHANNEL_TYPE_VK,
+            subscriberId,
+          },
+        ];
+      } catch (error) {
+        setVkProfileError(
+          error instanceof Error
+            ? error.message
+            : "Не удалось получить id профиля VK."
+        );
+        setIsResolvingVk(false);
+        return;
+      }
+
+      setIsResolvingVk(false);
+    }
 
     if (mode === "create") {
       createInvitation(
         {
           roomId,
-          targets: targetsPayload,
+          targets: submitTargets,
           taskIds,
           eventIds,
         },
@@ -185,6 +227,7 @@ export function InvitationFormDialog({
           onSuccess: () => {
             onClose();
             resetCreate();
+            onInvitationSuccess?.();
           },
         }
       );
@@ -195,7 +238,7 @@ export function InvitationFormDialog({
         {
           id: invitation.id,
           roomId,
-          data: { targets: targetsPayload, taskIds, eventIds },
+          data: { targets: submitTargets, taskIds, eventIds },
         },
         {
           onSuccess: () => {
@@ -247,22 +290,39 @@ export function InvitationFormDialog({
             </Alert>
           ) : null}
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">ID подписчиков ВК *</p>
-            <textarea
-              className={SUBSCRIBER_TEXTAREA_CLASS}
-              value={subscriberInput}
-              onChange={(e) => setSubscriberInput(e.target.value)}
-              placeholder="Введите ID, по одному на строку"
-              aria-label="ID подписчиков ВК"
-              aria-invalid={!!targetErrMsg}
-            />
-            {targetErrMsg ? (
-              <p className="text-sm text-destructive">{targetErrMsg}</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">{targetHint}</p>
-            )}
-          </div>
+          {useVkProfileLink ? (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Ссылка на профиль VK *</p>
+              <InputField
+                value={vkProfileUrl}
+                onChange={(e) => {
+                  setVkProfileUrl(e.target.value);
+                  setVkProfileError("");
+                }}
+                error={!!vkProfileInputError}
+                helperText={vkProfileInputError || "Например: https://vk.com/username"}
+                placeholder="https://vk.com/username"
+                aria-label="Ссылка на профиль VK"
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">ID подписчиков ВК *</p>
+              <textarea
+                className={SUBSCRIBER_TEXTAREA_CLASS}
+                value={subscriberInput}
+                onChange={(e) => setSubscriberInput(e.target.value)}
+                placeholder="Введите ID, по одному на строку"
+                aria-label="ID подписчиков ВК"
+                aria-invalid={!!targetErrMsg}
+              />
+              {targetErrMsg ? (
+                <p className="text-sm text-destructive">{targetErrMsg}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">{targetHint}</p>
+              )}
+            </div>
+          )}
 
           {isTaskPickerHidden ? null : (
             <div className="space-y-2">
@@ -336,10 +396,10 @@ export function InvitationFormDialog({
           <Button
             type="button"
             size="lg"
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             disabled={isPending || !canSubmit}
           >
-            {isPending ? "Сохранение…" : "Сохранить"}
+            {isPending ? "Сохранение…" : submitLabel ?? "Сохранить"}
           </Button>
         </SheetFooter>
       </SheetContent>

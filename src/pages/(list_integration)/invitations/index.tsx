@@ -6,11 +6,15 @@ import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks
 import { useEvents } from "@/hooks/events/useEvents";
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
+import { useGetProject } from "@/hooks/projects/useGetProject";
 import { InvitationsHeader } from "./components/InvitationsHeader";
 import { InvitationCard } from "./components/InvitationCard";
 import { InvitationFormDialog } from "./components/InvitationFormDialog";
 import { DeleteInvitationDialog } from "./components/DeleteInvitationDialog";
+import { InvitationSuccessDialog } from "./components/InvitationSuccessDialog";
 import type { IInvitation } from "@services/invitations/invitations.types";
+
+const ROOM_INVITATION_LINK_IDS: string[] = [];
 
 export default function InvitationsPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -18,6 +22,7 @@ export default function InvitationsPage() {
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingInvitation, setEditingInvitation] = useState<IInvitation | null>(null);
   const [deletingInvitation, setDeletingInvitation] = useState<IInvitation | null>(null);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const {
     room,
@@ -32,6 +37,7 @@ export default function InvitationsPage() {
   const { events } = useEvents({ page: 1, size: 100 }, slug ?? "");
 
   const { invitations, isLoading, isError, error } = useRoomInvitations(roomId);
+  const { project } = useGetProject();
 
   const {
     deleteInvitation,
@@ -56,11 +62,17 @@ export default function InvitationsPage() {
     [events]
   );
 
-  const sortedInvitations = useMemo(() => {
-    return [...invitations].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const roomInvitations = useMemo(() => {
+    return invitations.filter(
+      (inv) => (inv.taskIds ?? []).length === 0 && (inv.eventIds ?? []).length === 0
     );
   }, [invitations]);
+
+  const sortedInvitations = useMemo(() => {
+    return [...roomInvitations].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [roomInvitations]);
 
   const openCreate = () => {
     setFormMode("create");
@@ -118,10 +130,10 @@ export default function InvitationsPage() {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Подписчики ВК (id в ВК), креативные задачи и события после регистрации.
+          Подписчики ВК (id в ВК), которые будут приглашены в комнату после регистрации.
         </p>
         <Button type="button" size="lg" className="shrink-0" onClick={openCreate} disabled={!roomId}>
-          Создать приглашение
+          Создать приглашение в комнату
         </Button>
       </div>
 
@@ -139,7 +151,7 @@ export default function InvitationsPage() {
         </div>
       ) : sortedInvitations.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Пока нет приглашений. Создайте запись с subscriberId ВК после регистрации.
+          Пока нет приглашений в эту комнату. Создайте запись с subscriberId ВК.
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -151,6 +163,7 @@ export default function InvitationsPage() {
               resolveEventLabel={resolveEventLabel}
               onEdit={openEdit}
               onDelete={setDeletingInvitation}
+              showLinkedEntities={false}
             />
           ))}
         </div>
@@ -163,6 +176,15 @@ export default function InvitationsPage() {
         roomId={roomId}
         slug={slug ?? ""}
         invitation={formMode === "edit" ? editingInvitation : null}
+        lockedTaskIds={ROOM_INVITATION_LINK_IDS}
+        lockedEventIds={ROOM_INVITATION_LINK_IDS}
+        titleOverride={{
+          create: "Создать приглашение в комнату",
+          edit: "Изменить приглашение в комнату",
+        }}
+        useVkProfileLink
+        submitLabel="Пригласить в комнату"
+        onInvitationSuccess={() => setSuccessDialogOpen(true)}
       />
 
       <DeleteInvitationDialog
@@ -175,6 +197,12 @@ export default function InvitationsPage() {
         onConfirm={handleConfirmDelete}
         isPending={isDeletePending}
         errorMessage={deleteError}
+      />
+
+      <InvitationSuccessDialog
+        open={successDialogOpen}
+        onClose={() => setSuccessDialogOpen(false)}
+        channelExternalId={project?.channelExternalId}
       />
     </div>
   );

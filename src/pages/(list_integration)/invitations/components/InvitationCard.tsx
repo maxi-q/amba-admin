@@ -8,6 +8,7 @@ interface InvitationCardProps {
   resolveEventLabel: (id: string) => string;
   onEdit?: (invitation: IInvitation) => void;
   onDelete: (invitation: IInvitation) => void;
+  showLinkedEntities?: boolean;
 }
 
 function IdLine({
@@ -43,6 +44,7 @@ export function InvitationCard({
   resolveEventLabel,
   onEdit,
   onDelete,
+  showLinkedEntities = true,
 }: InvitationCardProps) {
   const vkTargets = invitation.targets ?? [];
   const taskIds = invitation.taskIds ?? [];
@@ -71,13 +73,21 @@ export function InvitationCard({
                 ))}
               </div>
             )}
+            <div className="mt-2 flex flex-wrap items-baseline gap-2">
+              <span className="text-sm text-muted-foreground">Источник:</span>
+              <Badge variant="outline" className="text-xs sm:text-sm">
+                После регистрации
+              </Badge>
+            </div>
             <p className="mt-2 block text-xs text-muted-foreground">
               Создано: {new Date(invitation.createdAt).toLocaleString("ru-RU")}
             </p>
-            <div className="mt-3 flex flex-col gap-3">
-              <IdLine label="Креативные задачи" ids={taskIds} resolve={resolveTaskLabel} />
-              <IdLine label="События" ids={eventIds} resolve={resolveEventLabel} />
-            </div>
+            {showLinkedEntities ? (
+              <div className="mt-3 flex flex-col gap-3">
+                <IdLine label="Креативные задачи" ids={taskIds} resolve={resolveTaskLabel} />
+                <IdLine label="События" ids={eventIds} resolve={resolveEventLabel} />
+              </div>
+            ) : null}
           </div>
           <div className="flex shrink-0 gap-0.5">
             {onEdit ? (

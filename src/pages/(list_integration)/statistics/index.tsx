@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { subDays, format } from "date-fns";
 
@@ -12,6 +12,10 @@ import { useGetRoomPromoCodeUsages } from "@/hooks/rooms/useGetRoomPromoCodeUsag
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useEvents } from "@/hooks/events/useEvents";
 import type { EventData } from "./types";
+import {
+  exportPromoCodeUsagesCsv,
+  getPromoCodeUsageTargetName,
+} from "./helpers/promoCodeUsagesExport";
 
 export default function StatisticsPage() {
   const { slug } = useParams();
@@ -20,6 +24,8 @@ export default function StatisticsPage() {
   const [selectedAmbassadors, setSelectedAmbassadors] = useState<string[]>([]);
   const [selectedSprints, setSelectedSprints] = useState<string[]>([]);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
 
   const analyticsParams = useMemo(
     () => ({
@@ -56,18 +62,16 @@ export default function StatisticsPage() {
   const { sprints } = useSprints({ page: 1, size: 100 }, slug || "");
   const { events } = useEvents({ page: 1, size: 100 }, slug || "");
 
+  const isPromoCodeUsageFilterValid = useMemo(
+    () => !(analyticsParams.eventId && analyticsParams.sprintId),
+    [analyticsParams.eventId, analyticsParams.sprintId]
+  );
+
   const filteredEvents = useMemo<EventData[]>(() => {
     if (!promoCodeUsages || promoCodeUsages.length === 0) return [];
 
     return promoCodeUsages.map((usage) => {
-      let eventName = "Не указано";
-      if (usage.sprintId) {
-        const sprint = sprints.find((s) => s.id === usage.sprintId);
-        eventName = sprint?.name || "Спринт";
-      } else if (usage.eventId) {
-        const event = events.find((e) => e.id === usage.eventId);
-        eventName = event?.name || "Событие";
-      }
+      const eventName = getPromoCodeUsageTargetName(usage, sprints, events);
 
       const date = usage.createdAt
         ? format(new Date(usage.createdAt), "dd.MM.yyyy")
@@ -80,7 +84,7 @@ export default function StatisticsPage() {
         date,
       };
     });
-  }, [promoCodeUsages, sprints, events]);
+  }, [events, promoCodeUsages, sprints]);
 
   const handleStartDateChange = (date: Date | null) => {
     if (date) setStartDate(date);
@@ -88,6 +92,35 @@ export default function StatisticsPage() {
 
   const handleEndDateChange = (date: Date | null) => {
     if (date) setEndDate(date);
+  };
+
+  const handleExportPromoCodes = async () => {
+    if (!slug) return;
+
+    if (!isPromoCodeUsageFilterValid) {
+      setExportError("Для выгрузки выберите либо события, либо спринты, но не оба фильтра одновременно.");
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError("");
+
+    try {
+      await exportPromoCodeUsagesCsv({
+        roomId: slug,
+        filters: analyticsParams,
+        sprints,
+        events,
+      });
+    } catch (error) {
+      setExportError(
+        error instanceof Error
+          ? error.message
+          : "Не удалось выгрузить промокоды."
+      );
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -120,6 +153,10 @@ export default function StatisticsPage() {
         hasMore={hasNextPage || false}
         isLoadingMore={isFetchingNextPage}
         isLoading={isLoadingUsages}
+        onExport={() => void handleExportPromoCodes()}
+        isExporting={isExporting}
+        isExportDisabled={!slug || isLoadingUsages}
+        exportError={exportError}
       />
     </div>
   );

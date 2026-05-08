@@ -7,9 +7,11 @@ import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
+import { useGetProject } from "@/hooks/projects/useGetProject";
 import { getFirstFieldError } from "@services/config/axios.helper";
 import { InvitationCard } from "../../invitations/components/InvitationCard";
 import { DeleteInvitationDialog } from "../../invitations/components/DeleteInvitationDialog";
+import { InvitationSuccessDialog } from "../../invitations/components/InvitationSuccessDialog";
 import { EventNotFoundState } from "./components/EventNotFoundState";
 import {
   INVITATION_CHANNEL_TYPE_VK,
@@ -27,6 +29,7 @@ const EventInvitationsPage = () => {
   const [vkProfileUrl, setVkProfileUrl] = useState("");
   const [vkInvitationError, setVkInvitationError] = useState("");
   const [isResolvingVk, setIsResolvingVk] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const {
     room,
@@ -50,6 +53,7 @@ const EventInvitationsPage = () => {
   const { tasks } = useRoomCreativeTasks(roomId, { page: 1, size: 100 });
 
   const { invitations, isLoading, isError, error } = useRoomInvitations(roomId);
+  const { project } = useGetProject();
 
   const {
     deleteInvitation,
@@ -123,6 +127,7 @@ const EventInvitationsPage = () => {
           onSuccess: () => {
             setVkProfileUrl("");
             resetCreateInvitation();
+            setSuccessDialogOpen(true);
           },
         }
       );
@@ -259,6 +264,12 @@ const EventInvitationsPage = () => {
         onConfirm={handleConfirmDelete}
         isPending={isDeletePending}
         errorMessage={deleteError}
+      />
+
+      <InvitationSuccessDialog
+        open={successDialogOpen}
+        onClose={() => setSuccessDialogOpen(false)}
+        channelExternalId={project?.channelExternalId}
       />
     </div>
   );

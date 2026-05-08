@@ -25,8 +25,10 @@ import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
+import { useGetProject } from "@/hooks/projects/useGetProject";
 import { getFirstFieldError } from "@services/config/axios.helper";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
+import { InvitationSuccessDialog } from "../../invitations/components/InvitationSuccessDialog";
 import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
 import type { IAmbassador } from "@services/ambassador/ambassador.types";
 import {
@@ -68,9 +70,11 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
   const [vkProfileUrl, setVkProfileUrl] = useState("");
   const [vkInvitationError, setVkInvitationError] = useState("");
   const [isResolvingVk, setIsResolvingVk] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const { room } = useGetRoomById(slug ?? "");
   const roomId = room?.id ?? "";
+  const { project } = useGetProject();
 
   const { items, isLoading, pagination } = useCreativeTaskWhitelist(task.id, {
     page,
@@ -250,6 +254,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
           onSuccess: () => {
             setVkProfileUrl("");
             resetCreateInvitation();
+            setSuccessDialogOpen(true);
           },
         }
       );
@@ -327,7 +332,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
                 1. Добавить существующего амбассадора в вайтлист
               </p>
               <p className="text-sm text-muted-foreground">
-                Используется роут /creative-tasks/{task.id}/whitelist. Поиск только по промокоду.
+                Поиск только по промокоду.
               </p>
               {isLoadingAmbassadors ? (
                 <p className="text-sm text-muted-foreground">Загрузка списка…</p>
@@ -385,7 +390,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
               2. Создать приглашение после регистрации
             </p>
             <p className="text-sm text-muted-foreground">
-              Используется роут /invitations. Вставьте ссылку на профиль VK, задача подставится
+              Вставьте ссылку на профиль VK, задача подставится
               автоматически.
             </p>
             <InputField
@@ -513,6 +518,11 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
           </>
         )}
       </CardContent>
+      <InvitationSuccessDialog
+        open={successDialogOpen}
+        onClose={() => setSuccessDialogOpen(false)}
+        channelExternalId={project?.channelExternalId}
+      />
     </Card>
   );
 }

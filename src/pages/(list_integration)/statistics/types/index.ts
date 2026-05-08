@@ -33,9 +33,13 @@ export interface EventChartProps {
 export interface EventListProps {
   events: EventData[];
   onLoadMore?: () => void;
+  onExport?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  isExporting?: boolean;
+  isExportDisabled?: boolean;
   isLoading?: boolean;
+  exportError?: string;
   total?: number;
 }
 
