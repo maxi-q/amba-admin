@@ -1,0 +1,15 @@
+---
+description: How the agent should work with designer-led UI requests
+alwaysApply: true
+---
+
+# Designer Workflow
+
+The designer may not know the codebase or programming terms. Treat UI requests as product/design intent and translate them into safe implementation steps.
+
+- Before changing UI, briefly explain the visual area you will touch and what will stay unchanged.
+- Use simple product language in user-facing explanations; avoid requiring the designer to read code.
+- Ask a clarifying question when the request is visually ambiguous, affects several screens, or changes behavior.
+- After changes, summarize the result by screen/component and call out any non-visual change explicitly.
+- Do not assume permission to change data flow, routes, API calls, permissions, validation, or auth for a design-only request.
+- If the requested design needs new behavior or product logic, stop and explain what engineering decision is needed.

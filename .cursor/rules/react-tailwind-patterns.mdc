@@ -1,0 +1,20 @@
+---
+description: React and Tailwind patterns for UI changes
+globs: **/*.{tsx,jsx}
+alwaysApply: false
+---
+
+# React and Tailwind Patterns
+
+Keep UI edits small and local to the component or page being changed.
+
+- Preserve existing props, hook calls, state names, derived values, and event handlers unless the user requested behavior changes.
+- Do not rewrite a whole component only to adjust layout or visuals.
+- Keep accessibility attributes such as `aria-label`, `aria-invalid`, labels, disabled states, and visible helper/error text.
+- Maintain responsive behavior with existing Tailwind breakpoints like `sm:` and `lg:`.
+- Prefer existing class patterns: `flex`, `grid`, `gap-*`, `space-y-*`, `p-*`, `rounded-*`, `border`, `shadow-sm`, `min-w-0`, `shrink-0`.
+- Keep Russian UI copy consistent with the surrounding screen.
+- When adding a repeated visual pattern, first look for a nearby component with the same pattern and follow it.
+- Avoid inline `style` for normal visual changes; use `@senler/ui` variants and Tailwind utilities.
+
+For complex forms and dialogs, separate visual layout changes from submit, validation, and data mapping logic.

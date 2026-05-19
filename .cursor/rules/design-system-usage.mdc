@@ -1,0 +1,20 @@
+---
+description: Use Senler UI and existing Tailwind tokens as the design system
+globs: **/*.{tsx,jsx}
+alwaysApply: false
+---
+
+# Design System Usage
+
+Use `@senler/ui` as the primary UI foundation.
+
+- If `@senler/ui` has a suitable component, use it instead of creating a custom equivalent.
+- Prefer existing imports such as `Button`, `Card`, `CardContent`, `InputField`, `Alert`, `AlertDescription`, `Badge`, `Sheet`, `Select`, `Switch`, `Textarea`, and `PageLoader`.
+- Compose layout with Tailwind classes around `@senler/ui` components instead of replacing them.
+- Prefer semantic Tailwind tokens already used in the app: `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, `text-destructive`, `bg-primary`, `text-primary-foreground`, `bg-muted`, and `bg-accent`.
+- Use component variants and props before adding custom color or shape classes.
+- Do not add new UI libraries for design tasks.
+- Do not hardcode new hex, RGB, or arbitrary color values unless the project already defines the token and the user explicitly asks for that brand value.
+
+Good: adjust a `Button` variant, a `CardContent` layout, or Tailwind spacing around existing `@senler/ui` components.
+Bad: replace a `Button` with a raw `<button>` or add a new custom form control when `InputField`/`Textarea` fits.

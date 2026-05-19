@@ -1,0 +1,21 @@
+---
+description: Safe boundaries for visual-only changes
+globs: **/*.{tsx,jsx,css}
+alwaysApply: false
+---
+
+# UI Change Boundaries
+
+For designer-led tasks, prefer visual-only changes and keep behavior intact.
+
+Allowed without extra confirmation:
+- Layout, spacing, typography, visual hierarchy, copy, icons, colors through existing tokens, and responsive Tailwind classes.
+- Empty, loading, disabled, hover, focus, and error presentation when existing logic already exposes those states.
+- Component composition inside existing pages when props, state, submit handlers, and API contracts are preserved.
+
+Ask before changing:
+- API calls, service methods, React Query hooks, Zustand store, auth, permissions, routing, URL params, or persistence.
+- Form validation, submit payloads, event handlers that mutate data, IDs, analytics/export logic, or backend-facing types.
+- Existing business rules such as event status, invitation target mapping, promo code logic, or ORD fields.
+
+If a visual request appears to require behavior changes, explain the tradeoff and wait for explicit approval.
