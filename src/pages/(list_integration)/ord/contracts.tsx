@@ -21,6 +21,7 @@ import {
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomOrdContracts } from "@/hooks/rooms/useRoomOrdContracts";
 import { useCreateRoomOrdContract } from "@/hooks/rooms/useCreateRoomOrdContract";
+import { useRequestRoomOrdContractCid } from "@/hooks/rooms/useRequestRoomOrdContractCid";
 import { useRoomApplications } from "@/hooks/ambassador/useRoomApplications";
 import {
   ORD_CONTRACT_ACTION_OPTIONS,
@@ -29,7 +30,11 @@ import {
   ORD_COPY,
 } from "./ord.constants";
 import { formatOrdDate, ordContractTypeLabel } from "./ord.utils";
-import type { IOrdContractFlag, IOrdContractType } from "@services/rooms/rooms.types";
+import type {
+  IOrdContractCidStatus,
+  IOrdContractFlag,
+  IOrdContractType,
+} from "@services/rooms/rooms.types";
 
 const FLAG_OPTIONS: { value: IOrdContractFlag; label: string }[] = [
   { value: "vat_included", label: "НДС включён" },
@@ -39,6 +44,13 @@ const FLAG_OPTIONS: { value: IOrdContractFlag; label: string }[] = [
 ];
 
 const SELECT_EMPTY = "__empty__";
+
+const CID_STATUS_LABELS: Record<IOrdContractCidStatus, string> = {
+  none: "Не запрошен",
+  pending: "Ожидает отправки",
+  requested: "Запрошен",
+  issued: "Получен",
+};
 
 export default function OrdContractsPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -79,6 +91,11 @@ export default function OrdContractsPage() {
     generalError: createGeneralError,
     reset: resetCreate,
   } = useCreateRoomOrdContract();
+  const {
+    requestRoomOrdContractCid,
+    isPending: isRequestCidPending,
+    generalError: requestCidError,
+  } = useRequestRoomOrdContractCid();
 
   const resetForm = () => {
     setAmbassadorRoomId("");
@@ -138,6 +155,11 @@ export default function OrdContractsPage() {
     );
   };
 
+  const handleRequestCid = (contractId: string) => {
+    if (!roomId) return;
+    requestRoomOrdContractCid({ roomId, contractId });
+  };
+
   const hasOrdProfile = !!room?.ordPerson;
 
   if (isRoomLoading) {
@@ -189,6 +211,12 @@ export default function OrdContractsPage() {
         </Alert>
       ) : null}
 
+      {requestCidError ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{requestCidError}</AlertDescription>
+        </Alert>
+      ) : null}
+
       {isContractsLoading ? (
         <div className="flex justify-center py-10">
           <PageLoader label="Загрузка договоров…" />
@@ -205,6 +233,7 @@ export default function OrdContractsPage() {
                   <th className="px-3 py-2.5 text-left font-medium text-foreground">Дата</th>
                   <th className="px-3 py-2.5 text-left font-medium text-foreground">{ORD_COPY.client}</th>
                   <th className="px-3 py-2.5 text-left font-medium text-foreground">{ORD_COPY.contractor}</th>
+                  <th className="px-3 py-2.5 text-left font-medium text-foreground">CID</th>
                   <th className="px-3 py-2.5 text-right font-medium text-foreground">Сумма</th>
                   <th className="px-3 py-2.5 text-right font-medium text-foreground" />
                 </tr>
@@ -226,14 +255,35 @@ export default function OrdContractsPage() {
                         ИНН {c.contractorOrdPerson.inn}
                       </span>
                     </td>
+                    <td className="px-3 py-2.5 align-top">
+                      <span className="block text-foreground">{c.cid ?? "—"}</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {CID_STATUS_LABELS[c.cidStatus] ?? c.cidStatus}
+                      </span>
+                    </td>
                     <td className="px-3 py-2.5 text-right align-top text-foreground">{c.amount ?? "—"}</td>
                     <td className="px-3 py-2.5 text-right align-top">
-                      <RouterLink
-                        to={`/rooms/${slug}/ord/${c.id}`}
-                        className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground"
-                      >
-                        {ORD_COPY.openContract}
-                      </RouterLink>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRequestCid(c.id)}
+                          disabled={
+                            isRequestCidPending ||
+                            c.cidStatus === "requested" ||
+                            c.cidStatus === "issued"
+                          }
+                        >
+                          {c.cidStatus === "pending" ? "CID ожидает" : "Запросить CID"}
+                        </Button>
+                        <RouterLink
+                          to={`/rooms/${slug}/ord/${c.id}`}
+                          className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          {ORD_COPY.openContract}
+                        </RouterLink>
+                      </div>
                     </td>
                   </tr>
                 ))}

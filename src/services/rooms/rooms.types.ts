@@ -155,6 +155,8 @@ export interface IOrdContractPerson {
   name: string;
 }
 
+export type IOrdContractCidStatus = 'none' | 'pending' | 'requested' | 'issued';
+
 /** Элемент GET/POST rooms/:roomId/ord-contracts — RoomOrdContractItemDto */
 export interface IRoomOrdContractItem {
   id: string;
@@ -162,6 +164,9 @@ export interface IRoomOrdContractItem {
   updatedAt: string;
   syncedAt: string | null;
   lastSyncError: string | null;
+  cid: string | null;
+  cidStatus: IOrdContractCidStatus;
+  templateId?: string | null;
   type: IOrdContractType;
   date: string;
   dateEnd: string | null;

@@ -111,6 +111,16 @@ class RoomsService extends BaseService {
     );
   }
 
+  async requestRoomOrdContractCid(roomId: string, contractId: string): Promise<IRoomOrdContractItem> {
+    return this.handleApiCall(() =>
+      instance.post<IRoomOrdContractItem>(
+        `${this._BASE_URL}/${roomId}/ord-contracts/${contractId}/request-cid`,
+        undefined,
+        { headers: getContentType() }
+      )
+    );
+  }
+
   async deleteRoomOrdContract(roomId: string, contractId: string): Promise<void> {
     return this.handleApiCall(() =>
       instance.delete<void>(`${this._BASE_URL}/${roomId}/ord-contracts/${contractId}`, { headers: getContentType() })

@@ -8,6 +8,7 @@ export enum MutationKeys {
   UPDATE_ROOM_ORD_PROFILE = 'updateRoomOrdProfile',
 
   CREATE_ROOM_ORD_CONTRACT = 'createRoomOrdContract',
+  REQUEST_ROOM_ORD_CONTRACT_CID = 'requestRoomOrdContractCid',
   DELETE_ROOM_ORD_CONTRACT = 'deleteRoomOrdContract',
 
   CREATE_SPRINT = 'createSprint',
