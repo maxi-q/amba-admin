@@ -1,19 +1,19 @@
----
-description: Engineering zones that require explicit approval for design tasks
-globs: src/{services,hooks,store,pages/modules,pages/auth,pages/redirect_auth}/**/*
-alwaysApply: false
----
+  ---
+  description: Engineering zones that require explicit approval for design tasks
+  globs: src/{services,hooks,store,pages/modules,pages/auth,pages/redirect_auth}/**/*
+  alwaysApply: false
+  ---
 
-# Engineering Danger Zones
+  # Engineering Danger Zones
 
-These files are not normal targets for designer-led visual changes.
+  These files are not normal targets for designer-led visual changes.
 
-Treat matching files as engineering-owned unless the user explicitly asks to change behavior or architecture.
+  Treat matching files as engineering-owned unless the user explicitly asks to change behavior or architecture.
 
-- `src/services/**`: API clients, backend contracts, response mapping, and service types.
-- `src/hooks/**`: React Query mutations/queries, data loading, cache invalidation, and mutation side effects.
-- `src/store/**`: auth/session state and persistence.
-- `src/pages/modules/**`: routing, app layout, protected route composition, Senler host integration, and redirects.
-- `src/pages/auth/**` and `src/pages/redirect_auth/**`: login and authorization flows.
+  - `src/services/**`: API clients, backend contracts, response mapping, and service types.
+  - `src/hooks/**`: React Query mutations/queries, data loading, cache invalidation, and mutation side effects.
+  - `src/store/**`: auth/session state and persistence.
+  - `src/pages/modules/**`: routing, app layout, protected route composition, Senler host integration, and redirects.
+  - `src/pages/auth/**` and `src/pages/redirect_auth/**`: login and authorization flows.
 
-Do not change these areas for spacing, colors, typography, or component styling alone. If a visual request points here, explain why it is risky and ask for explicit approval before editing.
+  Do not change these areas for spacing, colors, typography, or component styling alone. If a visual request points here, explain why it is risky and ask for explicit approval before editing.

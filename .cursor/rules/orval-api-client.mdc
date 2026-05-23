@@ -1,0 +1,24 @@
+---
+description: Use Orval-generated clients and hooks for backend communication
+globs: **/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Orval API Client
+
+Use Orval-generated code as the only frontend boundary for backend communication.
+
+- Generated API code lives in `src/api/generated/**`.
+- The shared Orval axios mutator lives in `src/api/mutator/custom-instance.ts`.
+- Regenerate the client with `npm run api:generate`; it prepares Swagger from `https://api.ambassador.sen.collabox.dev/api/docs-json` before running Orval.
+- Do not add new handwritten `fetch`, raw `axios`, service methods, or custom React Query request functions for backend endpoints.
+- Before changing backend-facing code, first look for an existing Orval-generated function, type, query hook, or mutation hook.
+- If the needed endpoint, DTO, or hook is missing, update the OpenAPI/Swagger contract and regenerate the Orval client instead of writing a manual wrapper.
+- Pages and components should consume generated hooks/functions or small app-level adapters around generated code, not call backend URLs directly.
+- Keep generated files as generated output: do not manually edit them. Change the API schema or Orval config, then regenerate.
+- Existing handwritten services in `src/services/**` and hooks in `src/hooks/**` are legacy patterns. Do not extend them for new backend work unless the user explicitly asks for a migration bridge.
+- It is OK to keep UI-only hooks, local state hooks, formatting helpers, and pure client-side utilities handwritten when they do not call the backend.
+
+Good: use a generated `useGetRooms`, `useCreateRoom`, or generated endpoint function from the Orval output.
+
+Bad: add `instance.get('/rooms')`, `axios.post(...)`, or a new `useQuery({ queryFn: () => service.method() })` for a backend endpoint.

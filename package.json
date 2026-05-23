@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "api:prepare-schema": "node ./scripts/prepare-openapi.mjs",
+    "api:generate": "npm run api:prepare-schema && orval --config ./orval.config.ts",
     "preview": "vite preview",
-    "lint": "eslint --max-warnings=0 --cache --format friendly",
-    "lint:unix": "eslint --max-warnings=0 --cache --format=unix"
+    "lint": "eslint --max-warnings=0 --no-warn-ignored --cache --format friendly",
+    "lint:unix": "eslint --max-warnings=0 --no-warn-ignored --cache --format=unix"
   },
   "dependencies": {
     "@senler/ui": "https://github.com/SenlerBot/senler-ui/archive/refs/tags/v0.5.0.tar.gz",
@@ -41,6 +43,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
     "husky": "^9.1.7",
+    "orval": "^7.13.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^7.0.0"
