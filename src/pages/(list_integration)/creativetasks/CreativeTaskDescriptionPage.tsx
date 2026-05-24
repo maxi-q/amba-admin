@@ -5,6 +5,7 @@ import { Badge, Button, Card, CardContent } from "@senler/ui";
 import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
 import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
+import { OrdTemplateLinksSummaryCard } from "../ord/components/OrdTemplateLinksSummaryCard";
 
 interface OutletCtx {
   task: ICreativeTask;
@@ -71,6 +72,14 @@ export default function CreativeTaskDescriptionPage() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         task={task}
+      />
+
+      <OrdTemplateLinksSummaryCard
+        title="ORD-шаблоны задачи"
+        description="Управляйте несколькими шаблонами задачи на отдельной странице."
+        to={`/rooms/${task.roomId}/ord/template-links/creativeTask/${task.id}`}
+        disabled={task.isDeleted}
+        disabledText="Для удалённой задачи управление ORD-шаблонами недоступно."
       />
     </>
   );

@@ -15,6 +15,7 @@ import { EventActionButtons } from "./components/EventActionButtons";
 import { DeleteEventDialog } from "./components/DeleteEventDialog";
 import { EventErrorState } from "./components/EventErrorState";
 import { EventNotFoundState } from "./components/EventNotFoundState";
+import { OrdTemplateLinksSummaryCard } from "../../ord/components/OrdTemplateLinksSummaryCard";
 
 /**
  * Подпункт «Описание» события: настройки и промокоды.
@@ -286,6 +287,14 @@ const EventsSetting = () => {
             updateValidationErrors={updateValidationErrors}
             onIgnorePromoCodeUsageLimitChange={handleIgnorePromoCodeUsageLimitChange}
           />
+
+          {!isNewEvent && eventId ? (
+            <OrdTemplateLinksSummaryCard
+              title="ORD-шаблоны события"
+              description="Управляйте несколькими шаблонами события на отдельной странице."
+              to={`/rooms/${slug}/ord/template-links/event/${eventId}`}
+            />
+          ) : null}
         </div>
 
         <EventActionButtons

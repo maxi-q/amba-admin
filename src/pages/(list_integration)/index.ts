@@ -26,6 +26,8 @@ import OrdLayout from './ord/OrdLayout';
 import OrdContractsPage from './ord/contracts';
 import OrdProfilePage from './ord/profile';
 import OrdContractDetailPage from './ord/OrdContractDetailPage';
+import OrdTemplatesPage from './ord/templates';
+import OrdTemplateLinksPage from './ord/OrdTemplateLinksPage';
 
 export {
     SettingPage,
@@ -55,5 +57,7 @@ export {
     OrdContractsPage,
     OrdProfilePage,
     OrdContractDetailPage,
+    OrdTemplatesPage,
+    OrdTemplateLinksPage,
     EventsLayout
 };

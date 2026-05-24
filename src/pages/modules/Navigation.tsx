@@ -27,7 +27,9 @@ import {
   OrdLayout,
   OrdContractsPage,
   OrdProfilePage,
-  OrdContractDetailPage
+  OrdContractDetailPage,
+  OrdTemplatesPage,
+  OrdTemplateLinksPage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -119,6 +121,8 @@ export const Navigation = () => {
         <Route path="invitations" element={<InvitationsPage />} />
         <Route path="ord" element={<OrdLayout />}>
           <Route index element={<OrdContractsPage />} />
+          <Route path="templates" element={<OrdTemplatesPage />} />
+          <Route path="template-links/:entityType/:entityId" element={<OrdTemplateLinksPage />} />
           <Route path="profile" element={<OrdProfilePage />} />
           <Route path=":contractId" element={<OrdContractDetailPage />} />
         </Route>

@@ -14,13 +14,14 @@ export const OrdHeader = () => {
   const slug =
     params.slug || location.pathname.split("/rooms/")[1]?.split("/")[0] || "";
 
-  const { isContractsTab, isProfileTab } = useMemo(() => {
-    if (!slug) return { isContractsTab: false, isProfileTab: false };
+  const { isContractsTab, isProfileTab, isTemplatesTab } = useMemo(() => {
+    if (!slug) return { isContractsTab: false, isProfileTab: false, isTemplatesTab: false };
     const p = location.pathname;
     const base = `/rooms/${slug}/ord`;
     const isProfile = p.includes(`${base}/profile`);
-    const isContracts = p.includes(base) && !isProfile;
-    return { isContractsTab: isContracts, isProfileTab: isProfile };
+    const isTemplates = p.includes(`${base}/templates`) || p.includes(`${base}/template-links`);
+    const isContracts = p.includes(base) && !isProfile && !isTemplates;
+    return { isContractsTab: isContracts, isProfileTab: isProfile, isTemplatesTab: isTemplates };
   }, [location.pathname, slug]);
 
   if (!slug) return null;
@@ -33,6 +34,12 @@ export const OrdHeader = () => {
           className={isContractsTab ? tabActive : tabInactive}
         >
           {ORD_COPY.contractsTab}
+        </Link>
+        <Link
+          to={`/rooms/${slug}/ord/templates`}
+          className={isTemplatesTab ? tabActive : tabInactive}
+        >
+          {ORD_COPY.templatesTab}
         </Link>
         <Link
           to={`/rooms/${slug}/ord/profile`}

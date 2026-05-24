@@ -13,6 +13,7 @@ import { RoomActionButtons } from "./components/RoomActionButtons";
 import { DeleteRoomDialog } from "./components/DeleteRoomDialog";
 import { SettingsBotsSection } from "./components/SettingsBotsSection";
 import { SettingsWebhookSection } from "./components/SettingsWebhookSection";
+import { OrdTemplateLinksSummaryCard } from "../ord/components/OrdTemplateLinksSummaryCard";
 
 export default function SettingPage() {
   const { slug } = useParams();
@@ -174,6 +175,14 @@ export default function SettingPage() {
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         isUpdating={isDeleting}
+      />
+
+      <OrdTemplateLinksSummaryCard
+        title="ORD-шаблоны комнаты"
+        description="Привязки шаблонов вынесены на отдельную страницу, чтобы не перегружать настройки комнаты."
+        to={`/rooms/${slug}/ord/template-links/room/${room.id}`}
+        disabled={!room.ordPerson}
+        disabledText="Чтобы подключать ORD-шаблоны, сначала создайте профиль ОРД комнаты."
       />
 
       <div ref={botsSectionRef}>
