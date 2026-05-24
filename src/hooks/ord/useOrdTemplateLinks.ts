@@ -35,10 +35,10 @@ const isTemplateLinked = (
   entityId: string
 ) => {
   if (!template) return false;
-  if (entityType === "room") return template.roomLinks.some((link) => link.roomId === entityId);
-  if (entityType === "event") return template.eventLinks.some((link) => link.eventId === entityId);
+  if (entityType === "room") return (template.roomLinks ?? []).some((link) => link.roomId === entityId);
+  if (entityType === "event") return (template.eventLinks ?? []).some((link) => link.eventId === entityId);
 
-  return template.creativeTaskLinks.some((link) => link.creativeTaskId === entityId);
+  return (template.creativeTaskLinks ?? []).some((link) => link.creativeTaskId === entityId);
 };
 
 export function useOrdTemplateLinks({
