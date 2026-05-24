@@ -6,11 +6,11 @@
  * OpenAPI spec version: 1.0
  */
 
-export type OrdContractTemplateWithLinksDtoFlagsItem = typeof OrdContractTemplateWithLinksDtoFlagsItem[keyof typeof OrdContractTemplateWithLinksDtoFlagsItem];
+export type OrdContractTemplateWithRulesDtoFlagsItem = typeof OrdContractTemplateWithRulesDtoFlagsItem[keyof typeof OrdContractTemplateWithRulesDtoFlagsItem];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrdContractTemplateWithLinksDtoFlagsItem = {
+export const OrdContractTemplateWithRulesDtoFlagsItem = {
   vat_included: 'vat_included',
   contractor_is_creatives_reporter: 'contractor_is_creatives_reporter',
   agent_acting_for_publisher: 'agent_acting_for_publisher',

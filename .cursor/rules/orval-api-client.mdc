@@ -11,14 +11,48 @@ Use Orval-generated code as the only frontend boundary for backend communication
 - Generated API code lives in `src/api/generated/**`.
 - The shared Orval axios mutator lives in `src/api/mutator/custom-instance.ts`.
 - Regenerate the client with `npm run api:generate`; it prepares Swagger from `https://api.ambassador.sen.collabox.dev/api/docs-json` before running Orval.
-- Do not add new handwritten `fetch`, raw `axios`, service methods, or custom React Query request functions for backend endpoints.
-- Before changing backend-facing code, first look for an existing Orval-generated function, type, query hook, or mutation hook.
+- Do not add new handwritten `fetch`, raw `axios`, service methods, or custom request functions for backend endpoints.
+- Do not import or call Orval-generated hooks/functions directly from pages or UI components.
+- Wrap Orval-generated code in app-level hooks under `src/hooks/**`; pages and components should consume only these app hooks.
+- App hooks must use TanStack React Query through Orval-generated hooks/functions. Do not bypass `@tanstack/react-query`.
+- Do not combine a query and a mutation in the same app hook. Create separate hooks for reads and writes.
+- Before changing backend-facing code, first look for an existing app hook. If it is missing, create one around the Orval-generated endpoint.
 - If the needed endpoint, DTO, or hook is missing, update the OpenAPI/Swagger contract and regenerate the Orval client instead of writing a manual wrapper.
-- Pages and components should consume generated hooks/functions or small app-level adapters around generated code, not call backend URLs directly.
 - Keep generated files as generated output: do not manually edit them. Change the API schema or Orval config, then regenerate.
 - Existing handwritten services in `src/services/**` and hooks in `src/hooks/**` are legacy patterns. Do not extend them for new backend work unless the user explicitly asks for a migration bridge.
 - It is OK to keep UI-only hooks, local state hooks, formatting helpers, and pure client-side utilities handwritten when they do not call the backend.
 
-Good: use a generated `useGetRooms`, `useCreateRoom`, or generated endpoint function from the Orval output.
+Query app hooks should return a stable shape like:
 
-Bad: add `instance.get('/rooms')`, `axios.post(...)`, or a new `useQuery({ queryFn: () => service.method() })` for a backend endpoint.
+```ts
+return {
+  isLoading,
+  isError,
+  error,
+  items: data?.items ?? [],
+  pagination: data
+    ? { page: data.page, size: data.size, total: data.total, totalPages: data.totalPages }
+    : null,
+};
+```
+
+Use a domain name instead of `items` when the hook has a clear entity, for example `events`, `rooms`, `templates`, or `contracts`.
+
+Mutation app hooks should return a stable shape like:
+
+```ts
+return {
+  mutate,
+  isPending,
+  error,
+  isSuccess,
+  isError,
+  isValidationError,
+  validationErrors,
+  generalError,
+};
+```
+
+Good: page imports `useEvents`, `useCreateEvent`, or `useOrdTemplateLinks` from `src/hooks/**`; those hooks internally use Orval and TanStack Query.
+
+Bad: page imports from `src/api/generated/**`, calls `instance.get('/rooms')`, adds `axios.post(...)`, or creates one hook that returns both list query data and create/update mutation methods.

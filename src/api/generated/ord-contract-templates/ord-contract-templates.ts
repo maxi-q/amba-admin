@@ -25,13 +25,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CreateOrdContractIssuanceRuleRequestDto,
   CreateOrdContractTemplateRequestDto,
-  CreativeTaskOrdContractTemplateLinkDto,
-  EventOrdContractTemplateLinkDto,
   GetOrdContractTemplatesResponseDto,
-  OrdContractTemplateWithLinksDto,
+  OrdContractIssuanceRuleDto,
+  OrdContractTemplateWithRulesDto,
   OrdContractTemplatesControllerGetTemplatesParams,
-  RoomOrdContractTemplateLinkDto,
   UpdateOrdContractTemplateRequestDto
 } from '.././model';
 
@@ -43,7 +42,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Создаёт шаблон, принадлежащий указанной комнате. Шаблон описывает, какие договоры должны автоматически выпускаться для участников (комнат/событий/задач), привязанных к нему.
+ * Создаёт шаблон, принадлежащий указанной комнате. Шаблон описывает, какие договоры должны автоматически выпускаться, а правила выпуска задают аудиторию.
  * @summary Создать шаблон ORD-договора
  */
 export const ordContractTemplatesControllerCreateTemplate = (
@@ -53,7 +52,7 @@ export const ordContractTemplatesControllerCreateTemplate = (
 ) => {
       
       
-      return customInstance<OrdContractTemplateWithLinksDto>(
+      return customInstance<OrdContractTemplateWithRulesDto>(
       {url: `/api/rooms/${roomId}/ord-contract-templates`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createOrdContractTemplateRequestDto, signal
@@ -208,7 +207,7 @@ export function useOrdContractTemplatesControllerGetTemplates<TData = Awaited<Re
 
 
 /**
- * @summary Получить шаблон ORD-договора по ID (вместе со всеми привязками)
+ * @summary Получить шаблон ORD-договора по ID (вместе с правилами выпуска)
  */
 export const ordContractTemplatesControllerGetTemplateById = (
     roomId: string,
@@ -217,7 +216,7 @@ export const ordContractTemplatesControllerGetTemplateById = (
 ) => {
       
       
-      return customInstance<OrdContractTemplateWithLinksDto>(
+      return customInstance<OrdContractTemplateWithRulesDto>(
       {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}`, method: 'GET', signal
     },
       options);
@@ -285,7 +284,7 @@ export function useOrdContractTemplatesControllerGetTemplateById<TData = Awaited
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Получить шаблон ORD-договора по ID (вместе со всеми привязками)
+ * @summary Получить шаблон ORD-договора по ID (вместе с правилами выпуска)
  */
 
 export function useOrdContractTemplatesControllerGetTemplateById<TData = Awaited<ReturnType<typeof ordContractTemplatesControllerGetTemplateById>>, TError = unknown>(
@@ -316,7 +315,7 @@ export const ordContractTemplatesControllerUpdateTemplate = (
  options?: SecondParameter<typeof customInstance>,) => {
       
       
-      return customInstance<OrdContractTemplateWithLinksDto>(
+      return customInstance<OrdContractTemplateWithRulesDto>(
       {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: updateOrdContractTemplateRequestDto
@@ -372,157 +371,129 @@ export const useOrdContractTemplatesControllerUpdateTemplate = <TError = unknown
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * После привязки фоновый процесс начнёт автоматически выпускать договоры для всех одобренных участников комнаты. На данный момент разрешено привязывать только мастер-комнату.
- * @summary Привязать шаблон к комнате
+ * @summary Список правил выпуска ORD-договоров для шаблона
  */
-export const ordContractTemplatesControllerAttachRoom = (
+export const ordContractTemplatesControllerGetIssuanceRules = (
     roomId: string,
     templateId: string,
-    targetRoomId: string,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<RoomOrdContractTemplateLinkDto>(
-      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/rooms/${targetRoomId}`, method: 'POST', signal
+      return customInstance<OrdContractIssuanceRuleDto[]>(
+      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/issuance-rules`, method: 'GET', signal
     },
       options);
     }
   
 
 
-export const getOrdContractTemplatesControllerAttachRoomMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachRoom>>, TError,{roomId: string;templateId: string;targetRoomId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachRoom>>, TError,{roomId: string;templateId: string;targetRoomId: string}, TContext> => {
 
-const mutationKey = ['ordContractTemplatesControllerAttachRoom'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getOrdContractTemplatesControllerGetIssuanceRulesQueryKey = (roomId?: string,
+    templateId?: string,) => {
+    return [
+    `/api/rooms/${roomId}/ord-contract-templates/${templateId}/issuance-rules`
+    ] as const;
+    }
 
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachRoom>>, {roomId: string;templateId: string;targetRoomId: string}> = (props) => {
-          const {roomId,templateId,targetRoomId} = props ?? {};
-
-          return  ordContractTemplatesControllerAttachRoom(roomId,templateId,targetRoomId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type OrdContractTemplatesControllerAttachRoomMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachRoom>>>
     
-    export type OrdContractTemplatesControllerAttachRoomMutationError = unknown
+export const getOrdContractTemplatesControllerGetIssuanceRulesQueryOptions = <TData = Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError = unknown>(roomId: string,
+    templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
 
-    /**
- * @summary Привязать шаблон к комнате
- */
-export const useOrdContractTemplatesControllerAttachRoom = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachRoom>>, TError,{roomId: string;templateId: string;targetRoomId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ordContractTemplatesControllerAttachRoom>>,
-        TError,
-        {roomId: string;templateId: string;targetRoomId: string},
-        TContext
-      > => {
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-      const mutationOptions = getOrdContractTemplatesControllerAttachRoomMutationOptions(options);
+  const queryKey =  queryOptions?.queryKey ?? getOrdContractTemplatesControllerGetIssuanceRulesQueryKey(roomId,templateId);
 
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * @summary Отвязать шаблон от комнаты
- */
-export const ordContractTemplatesControllerDetachRoom = (
-    roomId: string,
-    templateId: string,
-    targetRoomId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      
-      
-      return customInstance<void>(
-      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/rooms/${targetRoomId}`, method: 'DELETE'
-    },
-      options);
-    }
   
 
-
-export const getOrdContractTemplatesControllerDetachRoomMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachRoom>>, TError,{roomId: string;templateId: string;targetRoomId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachRoom>>, TError,{roomId: string;templateId: string;targetRoomId: string}, TContext> => {
-
-const mutationKey = ['ordContractTemplatesControllerDetachRoom'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>> = ({ signal }) => ordContractTemplatesControllerGetIssuanceRules(roomId,templateId, requestOptions, signal);
 
       
 
+      
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachRoom>>, {roomId: string;templateId: string;targetRoomId: string}> = (props) => {
-          const {roomId,templateId,targetRoomId} = props ?? {};
+   return  { queryKey, queryFn, enabled: !!(roomId && templateId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-          return  ordContractTemplatesControllerDetachRoom(roomId,templateId,targetRoomId,requestOptions)
-        }
-
-        
+export type OrdContractTemplatesControllerGetIssuanceRulesQueryResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>>
+export type OrdContractTemplatesControllerGetIssuanceRulesQueryError = unknown
 
 
-  return  { mutationFn, ...mutationOptions }}
-
-    export type OrdContractTemplatesControllerDetachRoomMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachRoom>>>
-    
-    export type OrdContractTemplatesControllerDetachRoomMutationError = unknown
-
-    /**
- * @summary Отвязать шаблон от комнаты
+export function useOrdContractTemplatesControllerGetIssuanceRules<TData = Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError = unknown>(
+ roomId: string,
+    templateId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>,
+          TError,
+          Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOrdContractTemplatesControllerGetIssuanceRules<TData = Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError = unknown>(
+ roomId: string,
+    templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>,
+          TError,
+          Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useOrdContractTemplatesControllerGetIssuanceRules<TData = Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError = unknown>(
+ roomId: string,
+    templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Список правил выпуска ORD-договоров для шаблона
  */
-export const useOrdContractTemplatesControllerDetachRoom = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachRoom>>, TError,{roomId: string;templateId: string;targetRoomId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ordContractTemplatesControllerDetachRoom>>,
-        TError,
-        {roomId: string;templateId: string;targetRoomId: string},
-        TContext
-      > => {
 
-      const mutationOptions = getOrdContractTemplatesControllerDetachRoomMutationOptions(options);
+export function useOrdContractTemplatesControllerGetIssuanceRules<TData = Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError = unknown>(
+ roomId: string,
+    templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerGetIssuanceRules>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * @summary Привязать шаблон к событию (событие должно принадлежать мастер-комнате)
+  const queryOptions = getOrdContractTemplatesControllerGetIssuanceRulesQueryOptions(roomId,templateId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Создать или повторно активировать правило выпуска ORD-договоров
  */
-export const ordContractTemplatesControllerAttachEvent = (
+export const ordContractTemplatesControllerCreateIssuanceRule = (
     roomId: string,
     templateId: string,
-    eventId: string,
+    createOrdContractIssuanceRuleRequestDto: CreateOrdContractIssuanceRuleRequestDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
-      return customInstance<EventOrdContractTemplateLinkDto>(
-      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/events/${eventId}`, method: 'POST', signal
+      return customInstance<OrdContractIssuanceRuleDto>(
+      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/issuance-rules`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createOrdContractIssuanceRuleRequestDto, signal
     },
       options);
     }
   
 
 
-export const getOrdContractTemplatesControllerAttachEventMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachEvent>>, TError,{roomId: string;templateId: string;eventId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachEvent>>, TError,{roomId: string;templateId: string;eventId: string}, TContext> => {
+export const getOrdContractTemplatesControllerCreateIssuanceRuleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerCreateIssuanceRule>>, TError,{roomId: string;templateId: string;data: CreateOrdContractIssuanceRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerCreateIssuanceRule>>, TError,{roomId: string;templateId: string;data: CreateOrdContractIssuanceRuleRequestDto}, TContext> => {
 
-const mutationKey = ['ordContractTemplatesControllerAttachEvent'];
+const mutationKey = ['ordContractTemplatesControllerCreateIssuanceRule'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -532,10 +503,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachEvent>>, {roomId: string;templateId: string;eventId: string}> = (props) => {
-          const {roomId,templateId,eventId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerCreateIssuanceRule>>, {roomId: string;templateId: string;data: CreateOrdContractIssuanceRuleRequestDto}> = (props) => {
+          const {roomId,templateId,data} = props ?? {};
 
-          return  ordContractTemplatesControllerAttachEvent(roomId,templateId,eventId,requestOptions)
+          return  ordContractTemplatesControllerCreateIssuanceRule(roomId,templateId,data,requestOptions)
         }
 
         
@@ -543,49 +514,49 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type OrdContractTemplatesControllerAttachEventMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachEvent>>>
-    
-    export type OrdContractTemplatesControllerAttachEventMutationError = unknown
+    export type OrdContractTemplatesControllerCreateIssuanceRuleMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerCreateIssuanceRule>>>
+    export type OrdContractTemplatesControllerCreateIssuanceRuleMutationBody = CreateOrdContractIssuanceRuleRequestDto
+    export type OrdContractTemplatesControllerCreateIssuanceRuleMutationError = unknown
 
     /**
- * @summary Привязать шаблон к событию (событие должно принадлежать мастер-комнате)
+ * @summary Создать или повторно активировать правило выпуска ORD-договоров
  */
-export const useOrdContractTemplatesControllerAttachEvent = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachEvent>>, TError,{roomId: string;templateId: string;eventId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const useOrdContractTemplatesControllerCreateIssuanceRule = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerCreateIssuanceRule>>, TError,{roomId: string;templateId: string;data: CreateOrdContractIssuanceRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ordContractTemplatesControllerAttachEvent>>,
+        Awaited<ReturnType<typeof ordContractTemplatesControllerCreateIssuanceRule>>,
         TError,
-        {roomId: string;templateId: string;eventId: string},
+        {roomId: string;templateId: string;data: CreateOrdContractIssuanceRuleRequestDto},
         TContext
       > => {
 
-      const mutationOptions = getOrdContractTemplatesControllerAttachEventMutationOptions(options);
+      const mutationOptions = getOrdContractTemplatesControllerCreateIssuanceRuleMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Отвязать шаблон от события
+ * @summary Деактивировать правило выпуска ORD-договоров
  */
-export const ordContractTemplatesControllerDetachEvent = (
+export const ordContractTemplatesControllerDeactivateIssuanceRule = (
     roomId: string,
     templateId: string,
-    eventId: string,
+    ruleId: string,
  options?: SecondParameter<typeof customInstance>,) => {
       
       
       return customInstance<void>(
-      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/events/${eventId}`, method: 'DELETE'
+      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/issuance-rules/${ruleId}`, method: 'DELETE'
     },
       options);
     }
   
 
 
-export const getOrdContractTemplatesControllerDetachEventMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachEvent>>, TError,{roomId: string;templateId: string;eventId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachEvent>>, TError,{roomId: string;templateId: string;eventId: string}, TContext> => {
+export const getOrdContractTemplatesControllerDeactivateIssuanceRuleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDeactivateIssuanceRule>>, TError,{roomId: string;templateId: string;ruleId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDeactivateIssuanceRule>>, TError,{roomId: string;templateId: string;ruleId: string}, TContext> => {
 
-const mutationKey = ['ordContractTemplatesControllerDetachEvent'];
+const mutationKey = ['ordContractTemplatesControllerDeactivateIssuanceRule'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -595,10 +566,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachEvent>>, {roomId: string;templateId: string;eventId: string}> = (props) => {
-          const {roomId,templateId,eventId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerDeactivateIssuanceRule>>, {roomId: string;templateId: string;ruleId: string}> = (props) => {
+          const {roomId,templateId,ruleId} = props ?? {};
 
-          return  ordContractTemplatesControllerDetachEvent(roomId,templateId,eventId,requestOptions)
+          return  ordContractTemplatesControllerDeactivateIssuanceRule(roomId,templateId,ruleId,requestOptions)
         }
 
         
@@ -606,150 +577,23 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type OrdContractTemplatesControllerDetachEventMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachEvent>>>
+    export type OrdContractTemplatesControllerDeactivateIssuanceRuleMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerDeactivateIssuanceRule>>>
     
-    export type OrdContractTemplatesControllerDetachEventMutationError = unknown
+    export type OrdContractTemplatesControllerDeactivateIssuanceRuleMutationError = unknown
 
     /**
- * @summary Отвязать шаблон от события
+ * @summary Деактивировать правило выпуска ORD-договоров
  */
-export const useOrdContractTemplatesControllerDetachEvent = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachEvent>>, TError,{roomId: string;templateId: string;eventId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+export const useOrdContractTemplatesControllerDeactivateIssuanceRule = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDeactivateIssuanceRule>>, TError,{roomId: string;templateId: string;ruleId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ordContractTemplatesControllerDetachEvent>>,
+        Awaited<ReturnType<typeof ordContractTemplatesControllerDeactivateIssuanceRule>>,
         TError,
-        {roomId: string;templateId: string;eventId: string},
+        {roomId: string;templateId: string;ruleId: string},
         TContext
       > => {
 
-      const mutationOptions = getOrdContractTemplatesControllerDetachEventMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * @summary Привязать шаблон к творческой задаче (задача должна принадлежать мастер-комнате)
- */
-export const ordContractTemplatesControllerAttachCreativeTask = (
-    roomId: string,
-    templateId: string,
-    creativeTaskId: string,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<CreativeTaskOrdContractTemplateLinkDto>(
-      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/creative-tasks/${creativeTaskId}`, method: 'POST', signal
-    },
-      options);
-    }
-  
-
-
-export const getOrdContractTemplatesControllerAttachCreativeTaskMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachCreativeTask>>, TError,{roomId: string;templateId: string;creativeTaskId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachCreativeTask>>, TError,{roomId: string;templateId: string;creativeTaskId: string}, TContext> => {
-
-const mutationKey = ['ordContractTemplatesControllerAttachCreativeTask'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachCreativeTask>>, {roomId: string;templateId: string;creativeTaskId: string}> = (props) => {
-          const {roomId,templateId,creativeTaskId} = props ?? {};
-
-          return  ordContractTemplatesControllerAttachCreativeTask(roomId,templateId,creativeTaskId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type OrdContractTemplatesControllerAttachCreativeTaskMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachCreativeTask>>>
-    
-    export type OrdContractTemplatesControllerAttachCreativeTaskMutationError = unknown
-
-    /**
- * @summary Привязать шаблон к творческой задаче (задача должна принадлежать мастер-комнате)
- */
-export const useOrdContractTemplatesControllerAttachCreativeTask = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerAttachCreativeTask>>, TError,{roomId: string;templateId: string;creativeTaskId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ordContractTemplatesControllerAttachCreativeTask>>,
-        TError,
-        {roomId: string;templateId: string;creativeTaskId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getOrdContractTemplatesControllerAttachCreativeTaskMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * @summary Отвязать шаблон от творческой задачи
- */
-export const ordContractTemplatesControllerDetachCreativeTask = (
-    roomId: string,
-    templateId: string,
-    creativeTaskId: string,
- options?: SecondParameter<typeof customInstance>,) => {
-      
-      
-      return customInstance<void>(
-      {url: `/api/rooms/${roomId}/ord-contract-templates/${templateId}/creative-tasks/${creativeTaskId}`, method: 'DELETE'
-    },
-      options);
-    }
-  
-
-
-export const getOrdContractTemplatesControllerDetachCreativeTaskMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachCreativeTask>>, TError,{roomId: string;templateId: string;creativeTaskId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachCreativeTask>>, TError,{roomId: string;templateId: string;creativeTaskId: string}, TContext> => {
-
-const mutationKey = ['ordContractTemplatesControllerDetachCreativeTask'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachCreativeTask>>, {roomId: string;templateId: string;creativeTaskId: string}> = (props) => {
-          const {roomId,templateId,creativeTaskId} = props ?? {};
-
-          return  ordContractTemplatesControllerDetachCreativeTask(roomId,templateId,creativeTaskId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type OrdContractTemplatesControllerDetachCreativeTaskMutationResult = NonNullable<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachCreativeTask>>>
-    
-    export type OrdContractTemplatesControllerDetachCreativeTaskMutationError = unknown
-
-    /**
- * @summary Отвязать шаблон от творческой задачи
- */
-export const useOrdContractTemplatesControllerDetachCreativeTask = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordContractTemplatesControllerDetachCreativeTask>>, TError,{roomId: string;templateId: string;creativeTaskId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof ordContractTemplatesControllerDetachCreativeTask>>,
-        TError,
-        {roomId: string;templateId: string;creativeTaskId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getOrdContractTemplatesControllerDetachCreativeTaskMutationOptions(options);
+      const mutationOptions = getOrdContractTemplatesControllerDeactivateIssuanceRuleMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

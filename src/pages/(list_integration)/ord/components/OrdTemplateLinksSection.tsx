@@ -11,7 +11,13 @@ import {
   InputField,
   PageLoader,
 } from "@senler/ui";
-import { useOrdTemplateLinks, type OrdTemplateLinkEntityType } from "@/hooks/ord/useOrdTemplateLinks";
+import {
+  useCreateOrdTemplateLink,
+  useDeactivateOrdTemplateLink,
+  useOrdTemplateLinks,
+  type OrdTemplateLinkEntityType,
+  type OrdTemplateLinkItem,
+} from "@/hooks/ord/useOrdTemplateLinks";
 import { ordContractTypeLabel } from "../ord.utils";
 
 interface OrdTemplateLinksSectionProps {
@@ -38,15 +44,13 @@ export function OrdTemplateLinksSection({
     templates,
     isLoading,
     queryError,
-    mutationError,
-    isPending,
-    pendingTemplateId,
-    mutate,
   } = useOrdTemplateLinks({
     roomId,
     entityId,
     entityType,
   });
+  const createTemplateLink = useCreateOrdTemplateLink({ roomId, entityId, entityType });
+  const deactivateTemplateLink = useDeactivateOrdTemplateLink({ roomId });
   const [search, setSearch] = useState("");
   const visibleTemplates = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -60,6 +64,23 @@ export function OrdTemplateLinksSection({
       });
   }, [search, templates]);
   const linkedCount = templates.filter((template) => template.linked).length;
+  const mutationError = createTemplateLink.error ?? deactivateTemplateLink.error;
+  const isPending = createTemplateLink.isPending || deactivateTemplateLink.isPending;
+  const pendingTemplateId = createTemplateLink.pendingTemplateId ?? deactivateTemplateLink.pendingTemplateId;
+
+  const handleTemplateLinkChange = (template: OrdTemplateLinkItem) => {
+    if (template.linked) {
+      if (!template.ruleId) return;
+
+      deactivateTemplateLink.mutate({
+        templateId: template.id,
+        ruleId: template.ruleId,
+      });
+      return;
+    }
+
+    createTemplateLink.mutate(template.id);
+  };
 
   return (
     <Card>
@@ -120,7 +141,7 @@ export function OrdTemplateLinksSection({
                       className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                       checked={template.linked}
                       disabled={disabled || isPending || !template.isDetailLoaded}
-                      onChange={() => mutate(template.id, template.linked)}
+                      onChange={() => handleTemplateLinkChange(template)}
                     />
                     <span className="min-w-0">
                       <span className="block font-medium text-foreground">{template.name}</span>

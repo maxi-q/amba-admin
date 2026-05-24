@@ -10,11 +10,11 @@
  * Тип предмета договора
  * @nullable
  */
-export type OrdContractTemplateWithLinksDtoSubjectType = typeof OrdContractTemplateWithLinksDtoSubjectType[keyof typeof OrdContractTemplateWithLinksDtoSubjectType] | null;
+export type OrdContractTemplateWithRulesDtoSubjectType = typeof OrdContractTemplateWithRulesDtoSubjectType[keyof typeof OrdContractTemplateWithRulesDtoSubjectType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrdContractTemplateWithLinksDtoSubjectType = {
+export const OrdContractTemplateWithRulesDtoSubjectType = {
   representation: 'representation',
   org_distribution: 'org_distribution',
   mediation: 'mediation',

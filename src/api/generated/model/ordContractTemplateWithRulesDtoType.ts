@@ -9,11 +9,11 @@
 /**
  * Тип договора
  */
-export type OrdContractTemplateWithLinksDtoType = typeof OrdContractTemplateWithLinksDtoType[keyof typeof OrdContractTemplateWithLinksDtoType];
+export type OrdContractTemplateWithRulesDtoType = typeof OrdContractTemplateWithRulesDtoType[keyof typeof OrdContractTemplateWithRulesDtoType];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrdContractTemplateWithLinksDtoType = {
+export const OrdContractTemplateWithRulesDtoType = {
   service: 'service',
   mediation: 'mediation',
   additional: 'additional',

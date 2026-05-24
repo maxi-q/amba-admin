@@ -29,6 +29,7 @@ import {
   OrdProfilePage,
   OrdContractDetailPage,
   OrdTemplatesPage,
+  OrdTemplateRulesPage,
   OrdTemplateLinksPage
 } from "../(list_integration)";
 
@@ -122,6 +123,7 @@ export const Navigation = () => {
         <Route path="ord" element={<OrdLayout />}>
           <Route index element={<OrdContractsPage />} />
           <Route path="templates" element={<OrdTemplatesPage />} />
+          <Route path="template-rules" element={<OrdTemplateRulesPage />} />
           <Route path="template-links/:entityType/:entityId" element={<OrdTemplateLinksPage />} />
           <Route path="profile" element={<OrdProfilePage />} />
           <Route path=":contractId" element={<OrdContractDetailPage />} />

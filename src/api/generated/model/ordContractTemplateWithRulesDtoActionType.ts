@@ -10,11 +10,11 @@
  * Тип действия
  * @nullable
  */
-export type OrdContractTemplateWithLinksDtoActionType = typeof OrdContractTemplateWithLinksDtoActionType[keyof typeof OrdContractTemplateWithLinksDtoActionType] | null;
+export type OrdContractTemplateWithRulesDtoActionType = typeof OrdContractTemplateWithRulesDtoActionType[keyof typeof OrdContractTemplateWithRulesDtoActionType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrdContractTemplateWithLinksDtoActionType = {
+export const OrdContractTemplateWithRulesDtoActionType = {
   distribution: 'distribution',
   conclude: 'conclude',
   commercial: 'commercial',

@@ -9,11 +9,11 @@
 /**
  * Стратегия даты заключения
  */
-export type OrdContractTemplateWithLinksDtoDateStrategy = typeof OrdContractTemplateWithLinksDtoDateStrategy[keyof typeof OrdContractTemplateWithLinksDtoDateStrategy];
+export type OrdContractTemplateWithRulesDtoDateStrategy = typeof OrdContractTemplateWithRulesDtoDateStrategy[keyof typeof OrdContractTemplateWithRulesDtoDateStrategy];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrdContractTemplateWithLinksDtoDateStrategy = {
+export const OrdContractTemplateWithRulesDtoDateStrategy = {
   today: 'today',
   fixed: 'fixed',
 } as const;

@@ -9,11 +9,11 @@
 /**
  * Стратегия даты окончания
  */
-export type OrdContractTemplateWithLinksDtoDateEndStrategy = typeof OrdContractTemplateWithLinksDtoDateEndStrategy[keyof typeof OrdContractTemplateWithLinksDtoDateEndStrategy];
+export type OrdContractTemplateWithRulesDtoDateEndStrategy = typeof OrdContractTemplateWithRulesDtoDateEndStrategy[keyof typeof OrdContractTemplateWithRulesDtoDateEndStrategy];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const OrdContractTemplateWithLinksDtoDateEndStrategy = {
+export const OrdContractTemplateWithRulesDtoDateEndStrategy = {
   none: 'none',
   fixed: 'fixed',
   offsetDays: 'offsetDays',

@@ -27,6 +27,7 @@ import OrdContractsPage from './ord/contracts';
 import OrdProfilePage from './ord/profile';
 import OrdContractDetailPage from './ord/OrdContractDetailPage';
 import OrdTemplatesPage from './ord/templates';
+import OrdTemplateRulesPage from './ord/template-rules';
 import OrdTemplateLinksPage from './ord/OrdTemplateLinksPage';
 
 export {
@@ -58,6 +59,7 @@ export {
     OrdProfilePage,
     OrdContractDetailPage,
     OrdTemplatesPage,
+    OrdTemplateRulesPage,
     OrdTemplateLinksPage,
     EventsLayout
 };
