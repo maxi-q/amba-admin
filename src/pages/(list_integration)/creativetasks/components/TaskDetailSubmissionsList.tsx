@@ -4,17 +4,17 @@ import { useUpdateSubmissionStatus } from "@/hooks/creativetasks/useUpdateSubmis
 import { SubmissionApproveDialog } from "./SubmissionApproveDialog";
 import { SubmissionRejectDialog } from "./SubmissionRejectDialog";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
-import type { ISubmission } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
 
-const statusLabels: Record<ISubmission["status"], string> = {
+const statusLabels: Record<BaseCreativeTaskSubmissionDto["status"], string> = {
   pending: "На рассмотрении",
   approved: "Одобрено",
   rejected: "Отклонено",
 };
 
 const statusVariant: Record<
-  ISubmission["status"],
+  BaseCreativeTaskSubmissionDto["status"],
   "success" | "destructive" | "secondary"
 > = {
   pending: "secondary",
@@ -27,7 +27,7 @@ const tabInactive =
 const tabActive =
   "relative border-0 border-b-2 border-primary bg-transparent pb-2 pt-0.5 text-[15px] font-semibold text-foreground";
 
-type StatusTab = ISubmission["status"];
+type StatusTab = BaseCreativeTaskSubmissionDto["status"];
 
 const TABS: { value: StatusTab; label: string }[] = [
   { value: "pending", label: "На рассмотрении" },
@@ -43,8 +43,8 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
   const [statusTab, setStatusTab] = useState<StatusTab>("pending");
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const [approveSubmission, setApproveSubmission] = useState<ISubmission | null>(null);
-  const [rejectSubmission, setRejectSubmission] = useState<ISubmission | null>(null);
+  const [approveSubmission, setApproveSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
+  const [rejectSubmission, setRejectSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
 
   const { submissions, isLoading, pagination } = useSubmissions(taskId, {
     page,

@@ -12,16 +12,14 @@ import { InvitationCard } from "./components/InvitationCard";
 import { InvitationFormDialog } from "./components/InvitationFormDialog";
 import { DeleteInvitationDialog } from "./components/DeleteInvitationDialog";
 import { InvitationSuccessDialog } from "./components/InvitationSuccessDialog";
-import type { IInvitation } from "@services/invitations/invitations.types";
+import type { BaseAfterRegistrationInvitationDto } from "@/api/generated/model";
 
 const ROOM_INVITATION_LINK_IDS: string[] = [];
 
 export default function InvitationsPage() {
   const { slug } = useParams<{ slug: string }>();
   const [formOpen, setFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [editingInvitation, setEditingInvitation] = useState<IInvitation | null>(null);
-  const [deletingInvitation, setDeletingInvitation] = useState<IInvitation | null>(null);
+  const [deletingInvitation, setDeletingInvitation] = useState<BaseAfterRegistrationInvitationDto | null>(null);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const {
@@ -75,20 +73,11 @@ export default function InvitationsPage() {
   }, [roomInvitations]);
 
   const openCreate = () => {
-    setFormMode("create");
-    setEditingInvitation(null);
-    setFormOpen(true);
-  };
-
-  const openEdit = (inv: IInvitation) => {
-    setFormMode("edit");
-    setEditingInvitation(inv);
     setFormOpen(true);
   };
 
   const handleCloseForm = () => {
     setFormOpen(false);
-    setEditingInvitation(null);
   };
 
   const handleConfirmDelete = () => {
@@ -161,7 +150,6 @@ export default function InvitationsPage() {
               invitation={inv}
               resolveTaskLabel={resolveTaskLabel}
               resolveEventLabel={resolveEventLabel}
-              onEdit={openEdit}
               onDelete={setDeletingInvitation}
               showLinkedEntities={false}
             />
@@ -172,15 +160,12 @@ export default function InvitationsPage() {
       <InvitationFormDialog
         open={formOpen}
         onClose={handleCloseForm}
-        mode={formMode}
         roomId={roomId}
         slug={slug ?? ""}
-        invitation={formMode === "edit" ? editingInvitation : null}
         lockedTaskIds={ROOM_INVITATION_LINK_IDS}
         lockedEventIds={ROOM_INVITATION_LINK_IDS}
         titleOverride={{
           create: "Создать приглашение в комнату",
-          edit: "Изменить приглашение в комнату",
         }}
         useVkProfileLink
         submitLabel="Пригласить в комнату"

@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
-import roomsService from "@services/rooms/rooms.service";
-import type { ICreateRoomRequest, IRoomData } from "@services/rooms/rooms.types";
+import { roomsControllerCreateRoom } from "@/api/generated/rooms/rooms";
+import type { CreateRoomRequestDto, GetMyRoomsResponseItemDto } from "@/api/generated/model";
 import { ApiError } from "@/types";
 
 export function useCreateRoom() {
@@ -15,13 +15,13 @@ export function useCreateRoom() {
 
   const { mutate: createRoom, isPending, error, isSuccess } = useMutation({
     mutationKey: [MutationKeys.CREATE_ROOM],
-    mutationFn: (data_create: ICreateRoomRequest) => roomsService.createRooms({
+    mutationFn: (data_create: CreateRoomRequestDto) => roomsControllerCreateRoom({
       name: data_create.name,
       webhookUrl: data_create.webhookUrl || null,
     }),
     onSuccess: (createdRoom) => {
       if (createdRoom) {
-        queryClient.setQueryData([QueryKeys.ROOMS], (old: Array<IRoomData>) => {
+        queryClient.setQueryData([QueryKeys.ROOMS], (old: Array<GetMyRoomsResponseItemDto>) => {
           return Array.isArray(old) ? [...old, createdRoom] : [createdRoom];
         });
         navigate(`/rooms/${createdRoom.id}`);

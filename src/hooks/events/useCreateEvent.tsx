@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import eventsService from '@/services/events/events.service';
-import type { ICreateEventRequest } from '@/services/events/events.types';
+import { eventsControllerCreate } from '@/api/generated/events/events';
+import type { CreateEventRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function useCreateEvent() {
@@ -12,12 +12,12 @@ export function useCreateEvent() {
   const navigate = useNavigate();
 
   const { mutate, isPending, error, isSuccess, isError } = useMutation<
-    Awaited<ReturnType<typeof eventsService.createEvent>>,
+    Awaited<ReturnType<typeof eventsControllerCreate>>,
     ApiError,
-    ICreateEventRequest
+    CreateEventRequestDto
   >({
     mutationKey: [MutationKeys.CREATE_EVENT],
-    mutationFn: (data: ICreateEventRequest) => eventsService.createEvent(data),
+    mutationFn: (data: CreateEventRequestDto) => eventsControllerCreate(data),
     onSuccess: (createdEvent) => {
       if (createdEvent) {
         queryClient.invalidateQueries({

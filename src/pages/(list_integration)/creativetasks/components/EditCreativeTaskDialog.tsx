@@ -13,13 +13,16 @@ import {
   SheetTitle,
   Switch,
 } from "@senler/ui";
-import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 import { useUpdateCreativeTask } from "@/hooks/creativetasks/useUpdateCreativeTask";
 import { useCreativeTask } from "@/hooks/creativetasks/useCreativeTask";
-import type { ICreativeTask, IUpdateCreativeTaskRequest } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskDto, UpdateCreativeTaskRequestDto } from "@/api/generated/model";
 
 const DESC_CLASS =
   "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  fieldErrors[fieldName]?.[0] || "";
+const hasFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  Boolean(fieldErrors[fieldName]?.length);
 
 /** ISO datetime в значение для input datetime-local */
 function toLocalDateTime(iso: string | null | undefined): string {
@@ -43,7 +46,7 @@ function toISOString(localDateTime: string): string {
 interface EditCreativeTaskDialogProps {
   open: boolean;
   onClose: () => void;
-  task: ICreativeTask | null;
+  task: BaseCreativeTaskDto | null;
   onSuccess?: () => void;
 }
 
@@ -75,7 +78,7 @@ export function EditCreativeTaskDialog({
   useEffect(() => {
     if (data) {
       setTitle(data.title);
-      setDescription(data.description);
+      setDescription(data.description ?? "");
       setStartsAt(toLocalDateTime(data.startsAt));
       setEndsAt(toLocalDateTime(data.endsAt));
       setIsDeleted(data.isDeleted);
@@ -85,7 +88,7 @@ export function EditCreativeTaskDialog({
 
   const handleSubmit = () => {
     if (!task?.id) return;
-    const payload: IUpdateCreativeTaskRequest = {
+    const payload: UpdateCreativeTaskRequestDto = {
       title: title.trim(),
       description: description.trim(),
       startsAt: toISOString(startsAt),

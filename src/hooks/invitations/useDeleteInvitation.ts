@@ -2,19 +2,19 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import invitationsService from '@services/invitations/invitations.service';
+import { afterRegistrationInvitationsControllerDeleteInvitation } from '@/api/generated/after-registration-invitations/after-registration-invitations';
 import { ApiError } from '@/types';
 
 export function useDeleteInvitation() {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isSuccess, isError, reset } = useMutation<
-    Awaited<ReturnType<typeof invitationsService.deleteInvitation>>,
+    Awaited<ReturnType<typeof afterRegistrationInvitationsControllerDeleteInvitation>>,
     ApiError,
     { id: string; roomId: string }
   >({
     mutationKey: [MutationKeys.DELETE_INVITATION],
-    mutationFn: ({ id }) => invitationsService.deleteInvitation(id),
+    mutationFn: ({ id }) => afterRegistrationInvitationsControllerDeleteInvitation(id),
     onSuccess: (_res, { roomId }) => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.INVITATIONS, roomId],

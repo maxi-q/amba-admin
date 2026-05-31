@@ -2,22 +2,23 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import invitationsService from '@services/invitations/invitations.service';
-import type { ICreateInvitationRequest } from '@services/invitations/invitations.types';
+import { afterRegistrationInvitationsControllerCreateInvitation } from '@/api/generated/after-registration-invitations/after-registration-invitations';
+import type { CreateInvitationRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function useCreateInvitation() {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isSuccess, isError, reset } = useMutation<
-    Awaited<ReturnType<typeof invitationsService.createInvitation>>,
+    Awaited<ReturnType<typeof afterRegistrationInvitationsControllerCreateInvitation>>,
     ApiError,
-    ICreateInvitationRequest
+    CreateInvitationRequestDto
   >({
     mutationKey: [MutationKeys.CREATE_INVITATION],
-    mutationFn: (data: ICreateInvitationRequest) => invitationsService.createInvitation(data),
+    mutationFn: (data: CreateInvitationRequestDto) =>
+      afterRegistrationInvitationsControllerCreateInvitation(data),
     onSuccess: (response) => {
-      const roomId = response?.data?.roomId;
+      const roomId = response?.roomId;
       if (roomId) {
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.INVITATIONS, roomId],

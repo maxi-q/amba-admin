@@ -1,9 +1,9 @@
 import { useOutletContext } from "react-router-dom";
-import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskDto } from "@/api/generated/model";
 import { CreativeTaskWhitelistSection } from "./components/CreativeTaskWhitelistSection";
 
 interface OutletCtx {
-  task: ICreativeTask;
+  task: BaseCreativeTaskDto;
 }
 
 /**

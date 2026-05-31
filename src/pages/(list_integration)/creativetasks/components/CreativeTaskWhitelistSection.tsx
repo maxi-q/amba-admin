@@ -26,18 +26,15 @@ import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useGetProject } from "@/hooks/projects/useGetProject";
-import { getFirstFieldError } from "@services/config/axios.helper";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
 import { InvitationSuccessDialog } from "../../invitations/components/InvitationSuccessDialog";
-import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
-import type { IAmbassador } from "@services/ambassador/ambassador.types";
-import {
-  INVITATION_CHANNEL_TYPE_VK,
-  type IInvitation,
-} from "@services/invitations/invitations.types";
+import type { BaseAfterRegistrationInvitationDto, BaseAmbassadorDto, BaseCreativeTaskDto } from "@/api/generated/model";
 import { resolveVkProfileId } from "@/utils/vkProfile";
 
+const INVITATION_CHANNEL_TYPE_VK = 0;
 const NONE = "__none__";
+const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  fieldErrors[fieldName]?.[0] || "";
 
 type TaskInvitationRow =
   | {
@@ -49,15 +46,15 @@ type TaskInvitationRow =
   | {
       type: "registration";
       key: string;
-      invitation: IInvitation;
+      invitation: BaseAfterRegistrationInvitationDto;
       subscriberIds: string[];
     };
 
 interface CreativeTaskWhitelistSectionProps {
-  task: ICreativeTask;
+  task: BaseCreativeTaskDto;
 }
 
-function getOptionLabel(a: IAmbassador) {
+function getOptionLabel(a: BaseAmbassadorDto) {
   return a.promoCode || "Без промокода";
 }
 
@@ -127,7 +124,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
   } = useAmbassadors({
     page: 1,
     size: 100,
-    roomIds: room?.id ? ([room.id] as unknown as number[]) : undefined,
+    roomIds: room?.id ? [room.id] : undefined,
   });
 
   const ambassadorOptions = useMemo(
@@ -144,7 +141,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
   const promoByAmbassadorId = useMemo(() => {
     const m = new Map<string, string>();
     for (const a of ambassadorOptions) {
-      if (a.id) m.set(a.id, a.promoCode);
+      if (a.id && a.promoCode) m.set(a.id, a.promoCode);
     }
     return m;
   }, [ambassadorOptions]);
@@ -194,7 +191,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
     removeFromWhitelist({ taskId: task.id, ambassadorId });
   };
 
-  const handleDeleteRegistrationInvitation = (invitation: IInvitation) => {
+  const handleDeleteRegistrationInvitation = (invitation: BaseAfterRegistrationInvitationDto) => {
     if (!roomId) return;
 
     deleteInvitation(

@@ -1,9 +1,9 @@
 import { Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { IRoomData } from "@services/rooms/rooms.types";
+import type { BaseRoomDto } from "@/api/generated/model";
 
 interface RoomCardProps {
-  room: IRoomData;
+  room: BaseRoomDto;
 }
 
 export const RoomCard = ({ room }: RoomCardProps) => {

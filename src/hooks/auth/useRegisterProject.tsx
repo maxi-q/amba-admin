@@ -1,9 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
-import authService from '@/services/auth/auth.service';
-import type { IRegisterProjectRequest } from '@/services/auth/user.types';
+import { authControllerCreateProject } from '@/api/generated/auth/auth';
+import type { RegisterProjectByAuthorizationCodeRequestDto } from '@/api/generated/model';
 
 export function useRegisterProject() {
   return useMutation({
-    mutationFn: (data: IRegisterProjectRequest) => authService.registerProject(data),
+    mutationFn: (data: RegisterProjectByAuthorizationCodeRequestDto) => authControllerCreateProject(data),
   });
 }

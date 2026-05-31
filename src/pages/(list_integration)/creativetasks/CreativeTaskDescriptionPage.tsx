@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
-import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskDto } from "@/api/generated/model";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
 import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
 import { OrdTemplateLinksSummaryCard } from "../ord/components/OrdTemplateLinksSummaryCard";
 
 interface OutletCtx {
-  task: ICreativeTask;
+  task: BaseCreativeTaskDto;
 }
 
 /**
@@ -18,8 +18,8 @@ export default function CreativeTaskDescriptionPage() {
   const { task } = useOutletContext<OutletCtx>();
   const [editOpen, setEditOpen] = useState(false);
 
-  const dateRange = formatDateRange(task.startsAt, task.endsAt);
-  const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt);
+  const dateRange = formatDateRange(task.startsAt, task.endsAt ?? null);
+  const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt ?? null);
 
   return (
     <>

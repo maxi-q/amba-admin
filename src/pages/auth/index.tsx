@@ -6,8 +6,8 @@ import { useMessage } from "@/messages/messageProvider";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useRegisterProjectWithAuth } from "@/hooks/auth/useRegisterProjectWithAuth";
 import { useAuthStore } from "@store/index";
-import authService from "@services/auth/auth.service";
 import { MessageTypes } from "@/messages/types/messages.enum";
+import { API_URL } from "@/constants";
 
 export const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
@@ -110,7 +110,7 @@ export const AuthPage = () => {
     setError(null);
 
     try {
-      const url = authService.start(Number(senlerGroupId))
+      const url = `${API_URL}auth/start?groupId=${Number(senlerGroupId)}`;
       window.open(url, '_blank', 'width=600,height=700');
     } catch {
       setError("Ошибка открытия popup");

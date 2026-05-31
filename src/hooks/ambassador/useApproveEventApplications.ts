@@ -2,20 +2,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import ambassadorService from '@services/ambassador/ambassador.service';
-import type { IApproveEventApplicationsRequest } from '@services/ambassador/ambassador.types';
+import { ambassadorControllerApproveEventApplications } from '@/api/generated/ambassador/ambassador';
+import type { ApproveEventApplicationsRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function useApproveEventApplications() {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isSuccess, isError } = useMutation<
-    Awaited<ReturnType<typeof ambassadorService.approveEventApplications>>,
+    Awaited<ReturnType<typeof ambassadorControllerApproveEventApplications>>,
     ApiError,
-    IApproveEventApplicationsRequest
+    ApproveEventApplicationsRequestDto
   >({
     mutationKey: [MutationKeys.APPROVE_EVENT_APPLICATIONS],
-    mutationFn: (data: IApproveEventApplicationsRequest) => ambassadorService.approveEventApplications(data),
+    mutationFn: (data: ApproveEventApplicationsRequestDto) =>
+      ambassadorControllerApproveEventApplications(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.EVENT_APPLICATIONS]

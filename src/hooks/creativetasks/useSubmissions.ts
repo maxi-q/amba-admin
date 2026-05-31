@@ -1,12 +1,12 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import creativeTaskService from '@services/creativetasks/creativetasks.service';
-import type { IGetSubmissionsRequest } from '@services/creativetasks/creativetasks.types';
+import { creativeTasksControllerGetSubmissions } from '@/api/generated/creative-tasks/creative-tasks';
+import type { CreativeTasksControllerGetSubmissionsParams } from '@/api/generated/model';
 import { useQuery } from '@tanstack/react-query';
 
-export function useSubmissions(taskId: string, data: IGetSubmissionsRequest) {
+export function useSubmissions(taskId: string, data: CreativeTasksControllerGetSubmissionsParams) {
   const { data: submissionsData, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.SUBMISSIONS, taskId, data.page, data.size, data.status],
-    queryFn: () => creativeTaskService.getSubmissions(taskId, data),
+    queryFn: () => creativeTasksControllerGetSubmissions(taskId, data),
     enabled: !!taskId,
     staleTime: 0,
     retry: 2,
@@ -17,12 +17,12 @@ export function useSubmissions(taskId: string, data: IGetSubmissionsRequest) {
     isError,
     error,
     refetch,
-    submissions: submissionsData?.data?.items ?? [],
-    pagination: submissionsData?.data ? {
-      page: submissionsData.data.page,
-      size: submissionsData.data.size,
-      total: submissionsData.data.total,
-      totalPages: submissionsData.data.totalPages
+    submissions: submissionsData?.items ?? [],
+    pagination: submissionsData ? {
+      page: submissionsData.page,
+      size: submissionsData.size,
+      total: submissionsData.total,
+      totalPages: submissionsData.totalPages
     } : null,
   };
 }

@@ -1,13 +1,13 @@
 import { Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge, Card, CardContent } from "@senler/ui";
-import type { IEvent } from "@services/events/events.types";
+import type { GetMyEventsResponseItemDto } from "@/api/generated/model";
 import { formatDateRange, isEventActive } from "../utils/eventUtils";
 import { checkEventStatus } from "../constants/eventStatus";
 
 interface EventCardProps {
   /** Данные события */
-  event: IEvent;
+  event: GetMyEventsResponseItemDto;
   /** Slug комнаты для формирования ссылки */
   roomSlug: string;
 }

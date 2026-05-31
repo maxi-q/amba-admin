@@ -1,13 +1,12 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
-import type { IInvitation } from "@services/invitations/invitations.types";
+import type { BaseAfterRegistrationInvitationDto } from "@/api/generated/model";
 
 interface InvitationCardProps {
-  invitation: IInvitation;
+  invitation: BaseAfterRegistrationInvitationDto;
   resolveTaskLabel: (id: string) => string;
   resolveEventLabel: (id: string) => string;
-  onEdit?: (invitation: IInvitation) => void;
-  onDelete: (invitation: IInvitation) => void;
+  onDelete: (invitation: BaseAfterRegistrationInvitationDto) => void;
   showLinkedEntities?: boolean;
 }
 
@@ -42,7 +41,6 @@ export function InvitationCard({
   invitation,
   resolveTaskLabel,
   resolveEventLabel,
-  onEdit,
   onDelete,
   showLinkedEntities = true,
 }: InvitationCardProps) {
@@ -90,18 +88,6 @@ export function InvitationCard({
             ) : null}
           </div>
           <div className="flex shrink-0 gap-0.5">
-            {onEdit ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-9 text-primary"
-                aria-label="Редактировать"
-                onClick={() => onEdit(invitation)}
-              >
-                <Pencil className="size-4" />
-              </Button>
-            ) : null}
             <Button
               type="button"
               variant="ghost"

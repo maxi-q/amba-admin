@@ -1,12 +1,12 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import ambassadorService from '@services/ambassador/ambassador.service';
-import type { IGetAmbassadorsRequest } from '@services/ambassador/ambassador.types';
+import { ambassadorControllerGetAmbassadors } from '@/api/generated/ambassador/ambassador';
+import type { AmbassadorControllerGetAmbassadorsParams } from '@/api/generated/model';
 import { useQuery } from '@tanstack/react-query';
 
-export function useAmbassadors(data: IGetAmbassadorsRequest) {
+export function useAmbassadors(data: AmbassadorControllerGetAmbassadorsParams) {
   const { data: ambassadorsData, isLoading, isError, error } = useQuery({
     queryKey: [QueryKeys.AMBASSADORS, data.page, data.size, data.ambassadorIds, data.roomIds, data.nameContains, data.phoneContains, data.innContains],
-    queryFn: () => ambassadorService.getAmbassadors(data),
+    queryFn: () => ambassadorControllerGetAmbassadors(data),
     staleTime: 30 * 60 * 1000,
     retry: 2,
   });
@@ -15,12 +15,12 @@ export function useAmbassadors(data: IGetAmbassadorsRequest) {
     isLoading,
     isError,
     error,
-    ambassadors: ambassadorsData?.data?.items ?? [],
+    ambassadors: ambassadorsData?.items ?? [],
     pagination: ambassadorsData ? {
-      page: ambassadorsData.data.page,
-      size: ambassadorsData.data.size,
-      total: ambassadorsData.data.total,
-      totalPages: ambassadorsData.data.totalPages
+      page: ambassadorsData.page,
+      size: ambassadorsData.size,
+      total: ambassadorsData.total,
+      totalPages: ambassadorsData.totalPages
     } : null,
   };
 }

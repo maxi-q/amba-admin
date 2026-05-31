@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button, Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@senler/ui";
-import type { ISubmission } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 
 const TEXTAREA_CLASS =
   "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 interface SubmissionRejectDialogProps {
   open: boolean;
-  submission: ISubmission | null;
+  submission: BaseCreativeTaskSubmissionDto | null;
   onClose: () => void;
   onConfirm: (params: { reviewComment: string }) => void;
   isPending: boolean;

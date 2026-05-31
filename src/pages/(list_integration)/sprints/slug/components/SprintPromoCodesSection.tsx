@@ -7,16 +7,16 @@ import {
   SelectValue,
   Switch,
 } from "@senler/ui";
-import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
+import type { UpdateSprintRequestDto } from "@/api/generated/model";
 import { rewardUnits, getRewardUnitShortName } from "../constants/rewardUnits";
 
 interface SprintPromoCodesSectionProps {
-  formData: IPatchSprintsRequest;
+  formData: UpdateSprintRequestDto;
   onInputChange: (
-    field: keyof IPatchSprintsRequest
+    field: keyof UpdateSprintRequestDto
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectChange: (
-    field: keyof IPatchSprintsRequest
+    field: keyof UpdateSprintRequestDto
   ) => (event: { target: { value: string } }) => void;
   fieldErrors?: Record<string, string[]>;
   onIgnorePromoCodeUsageLimitChange: (value: boolean) => void;

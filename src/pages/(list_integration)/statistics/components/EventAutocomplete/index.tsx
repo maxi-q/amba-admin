@@ -4,7 +4,7 @@ import { useDebounce } from "use-debounce";
 import { Badge, Button, InputField, PageLoader } from "@senler/ui";
 import type { EventAutocompleteProps, AutocompleteOption } from "../../types";
 import { useEvents } from "@/hooks/events/useEvents";
-import type { IEvent } from "@services/events/events.types";
+import type { GetMyEventsResponseItemDto } from "@/api/generated/model";
 
 export const EventAutocomplete = ({ selectedIds, onChange, roomId }: EventAutocompleteProps) => {
   const [search, setSearch] = useState("");
@@ -13,7 +13,7 @@ export const EventAutocomplete = ({ selectedIds, onChange, roomId }: EventAutoco
   const { events, isLoading } = useEvents({ page: 1, size: 100 }, roomId);
 
   const allOptions = useMemo<AutocompleteOption[]>(
-    () => events.map((e: IEvent) => ({ id: e.id, label: e.name })),
+    () => events.map((e: GetMyEventsResponseItemDto) => ({ id: e.id, label: e.name })),
     [events]
   );
 

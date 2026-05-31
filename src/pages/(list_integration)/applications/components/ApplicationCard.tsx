@@ -1,9 +1,9 @@
 import { Check, X } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
-import type { IRoomApplication, IEventApplication } from "@services/ambassador/ambassador.types";
+import type { BaseAmbassadorEventApplicationDto, BaseAmbassadorRoomApplicationDto } from "@/api/generated/model";
 
 interface ApplicationCardProps {
-  application: IRoomApplication | IEventApplication;
+  application: BaseAmbassadorRoomApplicationDto | BaseAmbassadorEventApplicationDto;
   type: "room" | "event";
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
@@ -21,19 +21,6 @@ const formatDate = (dateString: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
-};
-
-const getJuridicalTypeLabel = (type: string) => {
-  switch (type) {
-    case "physical":
-      return "Физ. лицо";
-    case "ip":
-      return "ИП";
-    case "juridical":
-      return "Юр. лицо";
-    default:
-      return type;
-  }
 };
 
 const getStatusLabel = (status: string) => {
@@ -76,7 +63,7 @@ export const ApplicationCard = ({
 }: ApplicationCardProps) => {
   const isRoomApplication = type === "room";
   const isEventApplication = type === "event";
-  const roomApp = application as IRoomApplication;
+  const roomApp = application as BaseAmbassadorRoomApplicationDto;
 
   return (
     <Card className="border-border">
@@ -88,11 +75,6 @@ export const ApplicationCard = ({
             ) : null}
             {isEventApplication && eventName ? (
               <p className="text-sm font-medium text-foreground">{eventName}</p>
-            ) : null}
-            {isRoomApplication && roomApp.juridicalType ? (
-              <Badge variant="outline" className="text-xs font-normal">
-                {getJuridicalTypeLabel(roomApp.juridicalType)}
-              </Badge>
             ) : null}
             <Badge
               variant={getStatusBadgeVariant(application.status)}

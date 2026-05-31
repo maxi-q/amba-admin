@@ -2,21 +2,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import eventsService from '@/services/events/events.service';
-import type { IPatchEventsRequest } from '@/services/events/events.types';
+import { eventsControllerUpdate } from '@/api/generated/events/events';
+import type { UpdateEventRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function usePatchEvent() {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isSuccess, isError } = useMutation<
-    Awaited<ReturnType<typeof eventsService.patchEvents>>,
+    Awaited<ReturnType<typeof eventsControllerUpdate>>,
     ApiError,
-    { data: IPatchEventsRequest; eventId: string }
+    { data: UpdateEventRequestDto; eventId: string }
   >({
     mutationKey: [MutationKeys.PATCH_EVENT],
-    mutationFn: ({ data, eventId }: { data: IPatchEventsRequest; eventId: string }) =>
-      eventsService.patchEvents(data, eventId),
+    mutationFn: ({ data, eventId }: { data: UpdateEventRequestDto; eventId: string }) =>
+      eventsControllerUpdate(eventId, data),
     onSuccess: (updatedEvent, { eventId }) => {
       if (updatedEvent) {
         queryClient.invalidateQueries({

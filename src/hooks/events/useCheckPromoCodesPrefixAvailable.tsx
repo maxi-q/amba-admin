@@ -1,15 +1,16 @@
 import { useMutation } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import eventsService from '@/services/events/events.service';
+import { eventsControllerCheckPromoCodesPrefixAvailable } from '@/api/generated/events/events';
 import { ApiError } from '@/types';
 
 export function useCheckPromoCodesPrefixAvailable() {
   const { mutate, isPending, error, isSuccess, isError } = useMutation<
-    Awaited<ReturnType<typeof eventsService.checkPromoCodesPrefixAvailable>>,
+    Awaited<ReturnType<typeof eventsControllerCheckPromoCodesPrefixAvailable>>,
     ApiError,
     string
   >({
-    mutationFn: (prefix: string) => eventsService.checkPromoCodesPrefixAvailable(prefix),
+    mutationFn: (prefix: string) =>
+      eventsControllerCheckPromoCodesPrefixAvailable({ promoCodesPrefix: prefix }),
   });
 
   const isValidationError = useMemo(() =>

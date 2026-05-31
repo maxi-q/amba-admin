@@ -1,30 +1,35 @@
 import type {
-  IOrdContractActionType,
-  IOrdContractSubjectType,
-  IOrdContractType,
-  IOrdJuridicalType,
-} from "@services/rooms/rooms.types";
+  CreateRoomOrdContractRequestDtoActionType,
+  CreateRoomOrdContractRequestDtoSubjectType,
+  CreateRoomOrdContractRequestDtoType,
+  CreateRoomOrdProfileRequestDtoJuridicalType,
+} from "@/api/generated/model";
 
-export const ORD_JURIDICAL_OPTIONS: { value: IOrdJuridicalType; label: string }[] = [
+export type OrdJuridicalType = CreateRoomOrdProfileRequestDtoJuridicalType;
+export type OrdContractType = CreateRoomOrdContractRequestDtoType;
+export type OrdContractActionType = CreateRoomOrdContractRequestDtoActionType;
+export type OrdContractSubjectType = CreateRoomOrdContractRequestDtoSubjectType;
+
+export const ORD_JURIDICAL_OPTIONS: { value: OrdJuridicalType; label: string }[] = [
   { value: "physical", label: "Физ. лицо" },
   { value: "ip", label: "ИП" },
   { value: "juridical", label: "Юр. лицо" },
 ];
 
-export const ORD_CONTRACT_TYPE_OPTIONS: { value: IOrdContractType; label: string }[] = [
+export const ORD_CONTRACT_TYPE_OPTIONS: { value: OrdContractType; label: string }[] = [
   { value: "service", label: "Оказание услуг" },
   { value: "mediation", label: "Посредничество" },
   { value: "additional", label: "Дополнительный" },
 ];
 
-export const ORD_CONTRACT_ACTION_OPTIONS: { value: IOrdContractActionType; label: string }[] = [
+export const ORD_CONTRACT_ACTION_OPTIONS: { value: OrdContractActionType; label: string }[] = [
   { value: "distribution", label: "Распространение" },
   { value: "conclude", label: "Заключение" },
   { value: "commercial", label: "Коммерческая" },
   { value: "other", label: "Иное" },
 ];
 
-export const ORD_CONTRACT_SUBJECT_OPTIONS: { value: IOrdContractSubjectType; label: string }[] = [
+export const ORD_CONTRACT_SUBJECT_OPTIONS: { value: OrdContractSubjectType; label: string }[] = [
   { value: "representation", label: "Представительство" },
   { value: "org_distribution", label: "Орг. распространение" },
   { value: "mediation", label: "Посредничество" },

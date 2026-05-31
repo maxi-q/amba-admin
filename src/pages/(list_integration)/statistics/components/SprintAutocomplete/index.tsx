@@ -4,7 +4,7 @@ import { useDebounce } from "use-debounce";
 import { Badge, Button, InputField, PageLoader } from "@senler/ui";
 import type { SprintAutocompleteProps, AutocompleteOption } from "../../types";
 import { useSprints } from "@/hooks/sprints/useSprints";
-import type { ISprint } from "@services/sprints/sprints.types";
+import type { BaseSprintDto } from "@/api/generated/model";
 
 export const SprintAutocomplete = ({ selectedIds, onChange, roomId }: SprintAutocompleteProps) => {
   const [search, setSearch] = useState("");
@@ -13,7 +13,7 @@ export const SprintAutocomplete = ({ selectedIds, onChange, roomId }: SprintAuto
   const { sprints, isLoading } = useSprints({ page: 1, size: 100 }, roomId);
 
   const allOptions = useMemo<AutocompleteOption[]>(
-    () => sprints.map((s: ISprint) => ({ id: s.id, label: s.name })),
+    () => sprints.map((s: BaseSprintDto) => ({ id: s.id, label: s.name })),
     [sprints]
   );
 

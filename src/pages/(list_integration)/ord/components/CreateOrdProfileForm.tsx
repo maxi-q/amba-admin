@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Alert, AlertDescription, Button, Card, CardContent, InputField, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@senler/ui";
-import type { IOrdJuridicalType } from "@services/rooms/rooms.types";
+import type { OrdJuridicalType } from "../ord.constants";
 import type { FioParts } from "@/utils/fio";
 import { isCompleteRuMobile } from "@/utils/ruPhone";
 import { validateInn } from "@/utils/validateInn";
@@ -17,8 +17,8 @@ type Props = {
   onFioChange: (patch: Partial<FioParts>) => void;
   phone: string;
   setPhone: Dispatch<SetStateAction<string>>;
-  juridicalType: IOrdJuridicalType;
-  onJuridicalChange: (value: IOrdJuridicalType) => void;
+  juridicalType: OrdJuridicalType;
+  onJuridicalChange: (value: OrdJuridicalType) => void;
   submitAttempted: boolean;
   onSubmit: () => void;
   isPending: boolean;
@@ -105,7 +105,7 @@ export function CreateOrdProfileForm({
             <p className="text-sm font-medium text-foreground">Юридический тип</p>
             <Select
               value={juridicalType}
-              onValueChange={(v) => onJuridicalChange(v as IOrdJuridicalType)}
+              onValueChange={(v) => onJuridicalChange(v as OrdJuridicalType)}
             >
               <SelectTrigger className="h-10 w-full" aria-label="Юридический тип">
                 <SelectValue />

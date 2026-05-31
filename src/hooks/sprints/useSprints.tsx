@@ -1,12 +1,12 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import sprintsService from '@/services/sprints/sprints.service';
+import { sprintsControllerGetMySprints } from '@/api/generated/sprints/sprints';
 import { useQuery } from '@tanstack/react-query';
-import type { IGetSprintsRequest } from '@/services/sprints/sprints.types';
+import type { SprintsControllerGetMySprintsParams } from '@/api/generated/model';
 
-export function useSprints(data: IGetSprintsRequest, roomId: string) {
+export function useSprints(data: SprintsControllerGetMySprintsParams, roomId: string) {
   const { data: sprintsData, isLoading, isError, error } = useQuery({
     queryKey: [QueryKeys.SPRINTS, roomId, data.page, data.size],
-    queryFn: () => sprintsService.getSprints(data, roomId),
+    queryFn: () => sprintsControllerGetMySprints(roomId, data),
     enabled: !!roomId, // Only run query if roomId is provided
     staleTime: 30 * 60 * 1000,
     retry: 2,

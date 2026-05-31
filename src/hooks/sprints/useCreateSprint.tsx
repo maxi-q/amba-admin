@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
-import sprintsService from "@services/sprints/sprints.service";
-import type { ICreateSprintRequest } from "@services/sprints/sprints.types";
+import { sprintsControllerCreate } from "@/api/generated/sprints/sprints";
+import type { CreateSprintRequestDto } from "@/api/generated/model";
 import { ApiError } from "@/types";
 
 export function useCreateSprint() {
@@ -15,7 +15,7 @@ export function useCreateSprint() {
 
   const { mutate: createSprint, isPending, error, isSuccess } = useMutation({
     mutationKey: [MutationKeys.CREATE_SPRINT],
-    mutationFn: (data: ICreateSprintRequest) => sprintsService.createSprint(data),
+    mutationFn: (data: CreateSprintRequestDto) => sprintsControllerCreate(data),
     onSuccess: (createdSprint) => {
       if (createdSprint) {
         queryClient.invalidateQueries({

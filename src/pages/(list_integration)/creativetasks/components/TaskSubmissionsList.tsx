@@ -1,15 +1,15 @@
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
 import { Badge, Card, CardContent } from "@senler/ui";
-import type { ISubmission } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 
-const statusLabels: Record<ISubmission["status"], string> = {
+const statusLabels: Record<BaseCreativeTaskSubmissionDto["status"], string> = {
   pending: "На рассмотрении",
   approved: "Одобрено",
   rejected: "Отклонено",
 };
 
 const statusVariant: Record<
-  ISubmission["status"],
+  BaseCreativeTaskSubmissionDto["status"],
   "success" | "destructive" | "secondary"
 > = {
   pending: "secondary",
@@ -21,7 +21,7 @@ interface TaskSubmissionsListProps {
   taskId: string;
   page?: number;
   size?: number;
-  status?: ISubmission["status"];
+  status?: BaseCreativeTaskSubmissionDto["status"];
 }
 
 /**

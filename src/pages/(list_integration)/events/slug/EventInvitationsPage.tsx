@@ -8,16 +8,16 @@ import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
 import { useGetProject } from "@/hooks/projects/useGetProject";
-import { getFirstFieldError } from "@services/config/axios.helper";
 import { InvitationCard } from "../../invitations/components/InvitationCard";
 import { DeleteInvitationDialog } from "../../invitations/components/DeleteInvitationDialog";
 import { InvitationSuccessDialog } from "../../invitations/components/InvitationSuccessDialog";
 import { EventNotFoundState } from "./components/EventNotFoundState";
-import {
-  INVITATION_CHANNEL_TYPE_VK,
-  type IInvitation,
-} from "@services/invitations/invitations.types";
+import type { BaseAfterRegistrationInvitationDto } from "@/api/generated/model";
 import { resolveVkProfileId } from "@/utils/vkProfile";
+
+const INVITATION_CHANNEL_TYPE_VK = 0;
+const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  fieldErrors[fieldName]?.[0] || "";
 
 /**
  * Подпункт «Приглашения в событие»: отфильтрованный по текущему событию список
@@ -25,7 +25,7 @@ import { resolveVkProfileId } from "@/utils/vkProfile";
  */
 const EventInvitationsPage = () => {
   const { slug, eventId } = useParams<{ slug: string; eventId: string }>();
-  const [deletingInvitation, setDeletingInvitation] = useState<IInvitation | null>(null);
+  const [deletingInvitation, setDeletingInvitation] = useState<BaseAfterRegistrationInvitationDto | null>(null);
   const [vkProfileUrl, setVkProfileUrl] = useState("");
   const [vkInvitationError, setVkInvitationError] = useState("");
   const [isResolvingVk, setIsResolvingVk] = useState(false);

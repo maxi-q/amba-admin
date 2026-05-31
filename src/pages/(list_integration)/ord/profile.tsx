@@ -6,13 +6,13 @@ import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useCreateRoomOrdProfile } from "@/hooks/rooms/useCreateRoomOrdProfile";
 import { useUpdateRoomOrdProfile } from "@/hooks/rooms/useUpdateRoomOrdProfile";
 import { QueryKeys } from "@/config/tanstack/queryKeys";
-import type { IOrdJuridicalType } from "@services/rooms/rooms.types";
 import { EMPTY_FIO, isFioComplete, joinFio, parseFioFromApi } from "@/utils/fio";
 import { formatRuMobileInput, INITIAL_RU_PHONE_DISPLAY, isCompleteRuMobile, ruPhoneToE164 } from "@/utils/ruPhone";
 import { validateInn } from "@/utils/validateInn";
 import { CreateOrdProfileForm } from "./components/CreateOrdProfileForm";
 import { OrdProfileCard } from "./components/OrdProfileCard";
 import { ORD_COPY } from "./ord.constants";
+import type { OrdJuridicalType } from "./ord.constants";
 
 /**
  * ОРД: POST и PUT профиля комнаты (`rooms/:id/ord-profile`).
@@ -26,7 +26,7 @@ export default function OrdProfilePage() {
   const [createInn, setCreateInn] = useState("");
   const [createFio, setCreateFio] = useState(EMPTY_FIO);
   const [createPhone, setCreatePhone] = useState(INITIAL_RU_PHONE_DISPLAY);
-  const [createJuridical, setCreateJuridical] = useState<IOrdJuridicalType>("physical");
+  const [createJuridical, setCreateJuridical] = useState<OrdJuridicalType>("physical");
   const [createAttempted, setCreateAttempted] = useState(false);
 
   const [isEditingOrd, setIsEditingOrd] = useState(false);

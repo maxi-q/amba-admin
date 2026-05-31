@@ -2,20 +2,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import ambassadorService from '@services/ambassador/ambassador.service';
-import type { IApproveRoomApplicationsRequest } from '@services/ambassador/ambassador.types';
+import { ambassadorControllerUpdateRoomApplicationsStatus } from '@/api/generated/ambassador/ambassador';
+import type { UpdateRoomApplicationsStatusRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function useApproveRoomApplications() {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isSuccess, isError } = useMutation<
-    Awaited<ReturnType<typeof ambassadorService.approveRoomApplications>>,
+    Awaited<ReturnType<typeof ambassadorControllerUpdateRoomApplicationsStatus>>,
     ApiError,
-    IApproveRoomApplicationsRequest
+    UpdateRoomApplicationsStatusRequestDto
   >({
     mutationKey: [MutationKeys.APPROVE_ROOM_APPLICATIONS],
-    mutationFn: (data: IApproveRoomApplicationsRequest) => ambassadorService.approveRoomApplications(data),
+    mutationFn: (data: UpdateRoomApplicationsStatusRequestDto) =>
+      ambassadorControllerUpdateRoomApplicationsStatus(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.ROOM_APPLICATIONS]

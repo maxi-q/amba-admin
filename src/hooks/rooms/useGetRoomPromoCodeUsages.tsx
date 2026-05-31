@@ -1,12 +1,15 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import roomsService from '@/services/rooms/rooms.service';
+import { roomsControllerGetRoomPromoCodeUsages } from '@/api/generated/rooms/rooms';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import type { IGetRoomPromoCodeUsagesRequest, IGetRoomPromoCodeUsagesResponse } from '@/services/rooms/rooms.types';
+import type {
+  GetRoomPromoCodeUsagesResponseDto,
+  RoomsControllerGetRoomPromoCodeUsagesParams,
+} from '@/api/generated/model';
 
 export function useGetRoomPromoCodeUsages(
   id: string,
-  data: Omit<IGetRoomPromoCodeUsagesRequest, 'page'>
+  data: Omit<RoomsControllerGetRoomPromoCodeUsagesParams, 'page'>
 ) {
   const pageSize = data.size || 5; // Размер страницы по умолчанию
 
@@ -26,7 +29,7 @@ export function useGetRoomPromoCodeUsages(
     isLoading,
     isError,
     error,
-  } = useInfiniteQuery<IGetRoomPromoCodeUsagesResponse>({
+  } = useInfiniteQuery<GetRoomPromoCodeUsagesResponseDto>({
     queryKey: [
       QueryKeys.ROOMS,
       id,
@@ -39,7 +42,7 @@ export function useGetRoomPromoCodeUsages(
       pageSize,
     ],
     queryFn: ({ pageParam = 1 }) =>
-      roomsService.getRoomPromoCodeUsages(id, {
+      roomsControllerGetRoomPromoCodeUsages(id, {
         ...data,
         page: pageParam as number,
         size: pageSize,

@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
-import roomsService from "@services/rooms/rooms.service";
-import type { IUpdateRoomsRequest } from "@services/rooms/rooms.types";
+import { roomsControllerUpdateRoom } from "@/api/generated/rooms/rooms";
+import type { GetMyRoomsResponseItemDto, UpdateRoomRequestDto } from "@/api/generated/model";
 import { ApiError } from "@/types";
 
 export function useUpdateRoom() {
@@ -13,11 +13,11 @@ export function useUpdateRoom() {
 
   const { mutate: updateRoom, isPending, error, isSuccess } = useMutation({
     mutationKey: [MutationKeys.UPDATE_ROOM],
-    mutationFn: ({ data, id }: { data: IUpdateRoomsRequest; id: string }) => roomsService.updateRooms(data, id),
+    mutationFn: ({ data, id }: { data: UpdateRoomRequestDto; id: string }) => roomsControllerUpdateRoom(id, data),
     onSuccess: (updatedRoom, variables) => {
       if (updatedRoom) {
         // Update the specific room in the rooms list
-        queryClient.setQueryData([QueryKeys.ROOMS], (old: any) => {
+        queryClient.setQueryData([QueryKeys.ROOMS], (old: GetMyRoomsResponseItemDto[] | undefined) => {
           if (Array.isArray(old)) {
             return old.map(room =>
               room.id === variables.id ? updatedRoom : room

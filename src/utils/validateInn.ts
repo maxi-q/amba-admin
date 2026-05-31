@@ -1,11 +1,11 @@
-import type { IOrdJuridicalType } from "@services/rooms/rooms.types";
+import type { OrdJuridicalType } from "@/pages/(list_integration)/ord/ord.constants";
 
 const INN_COEFFICIENTS_10 = [2, 4, 10, 3, 5, 9, 4, 6, 8];
 const INN_COEFFICIENTS_12_1 = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
 const INN_COEFFICIENTS_12_2 = [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
 
 /** Как на бекенде: `backend/src/utils/validators/inn.ts` — validateInn */
-export function validateInn(inn: string, juridicalType: IOrdJuridicalType): { normalized: string; error: string | null } {
+export function validateInn(inn: string, juridicalType: OrdJuridicalType): { normalized: string; error: string | null } {
   const normalized = inn.replace(/\D/g, "");
 
   if (normalized.length !== 10 && normalized.length !== 12) {

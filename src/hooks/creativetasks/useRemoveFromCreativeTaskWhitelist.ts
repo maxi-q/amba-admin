@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import creativeTaskService from '@services/creativetasks/creativetasks.service';
+import { creativeTasksControllerRemoveFromWhitelist } from '@/api/generated/creative-tasks/creative-tasks';
 import { ApiError } from '@/types';
 
 export function useRemoveFromCreativeTaskWhitelist() {
@@ -17,7 +17,7 @@ export function useRemoveFromCreativeTaskWhitelist() {
       taskId: string;
       ambassadorId: string;
     }) =>
-      creativeTaskService.removeFromCreativeTaskWhitelist(taskId, ambassadorId),
+      creativeTasksControllerRemoveFromWhitelist(taskId, ambassadorId),
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.CREATIVE_TASK_WHITELIST, taskId],

@@ -1,12 +1,12 @@
 import { Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge, Card, CardContent } from "@senler/ui";
-import type { ISprint } from "@services/sprints/sprints.types";
+import type { BaseSprintDto } from "@/api/generated/model";
 import { formatDateRange, isSprintActive } from "../utils/sprintUtils";
 import { checkSprintStatus } from "../constants/sprintStatus";
 
 interface SprintCardProps {
-  sprint: ISprint;
+  sprint: BaseSprintDto;
 }
 
 export const SprintCard = ({ sprint }: SprintCardProps) => {

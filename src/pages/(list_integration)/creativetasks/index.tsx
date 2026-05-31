@@ -18,7 +18,7 @@ import { CreativeTaskCard } from "./components/CreativeTaskCard";
 import { CreateCreativeTaskDialog } from "./components/CreateCreativeTaskDialog";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
 import { CreativesPaginationControls } from "./components/CreativesPaginationControls";
-import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskDto } from "@/api/generated/model";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -31,7 +31,7 @@ export default function CreativeTasksPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editTask, setEditTask] = useState<ICreativeTask | null>(null);
+  const [editTask, setEditTask] = useState<BaseCreativeTaskDto | null>(null);
 
   const {
     room,

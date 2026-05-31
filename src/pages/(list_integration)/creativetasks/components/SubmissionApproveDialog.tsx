@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button, InputField, Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@senler/ui";
-import type { ISubmission } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 
 interface SubmissionApproveDialogProps {
   open: boolean;
-  submission: ISubmission | null;
+  submission: BaseCreativeTaskSubmissionDto | null;
   onClose: () => void;
   onConfirm: (params: { rewardValue: number }) => void;
   isPending: boolean;

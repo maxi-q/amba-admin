@@ -29,14 +29,14 @@ import {
   ORD_CONTRACT_TYPE_OPTIONS,
   ORD_COPY,
 } from "./ord.constants";
+import type { OrdContractType } from "./ord.constants";
 import { formatOrdDate, ordContractTypeLabel } from "./ord.utils";
 import type {
-  IOrdContractCidStatus,
-  IOrdContractFlag,
-  IOrdContractType,
-} from "@services/rooms/rooms.types";
+  CreateRoomOrdContractRequestDtoFlagsItem,
+  RoomOrdContractItemDtoCidStatus,
+} from "@/api/generated/model";
 
-const FLAG_OPTIONS: { value: IOrdContractFlag; label: string }[] = [
+const FLAG_OPTIONS: { value: CreateRoomOrdContractRequestDtoFlagsItem; label: string }[] = [
   { value: "vat_included", label: "НДС включён" },
   { value: "contractor_is_creatives_reporter", label: "Исполнитель — репортёр креативов" },
   { value: "agent_acting_for_publisher", label: "Агент действует для издателя" },
@@ -45,7 +45,7 @@ const FLAG_OPTIONS: { value: IOrdContractFlag; label: string }[] = [
 
 const SELECT_EMPTY = "__empty__";
 
-const CID_STATUS_LABELS: Record<IOrdContractCidStatus, string> = {
+const CID_STATUS_LABELS: Record<RoomOrdContractItemDtoCidStatus, string> = {
   none: "Не запрошен",
   pending: "Ожидает отправки",
   requested: "Запрошен",
@@ -77,13 +77,13 @@ export default function OrdContractsPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [ambassadorRoomId, setAmbassadorRoomId] = useState("");
-  const [contractType, setContractType] = useState<IOrdContractType>("service");
+  const [contractType, setContractType] = useState<OrdContractType>("service");
   const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
   const [dateEndStr, setDateEndStr] = useState("");
   const [amount, setAmount] = useState("");
   const [actionType, setActionType] = useState<string>("");
   const [subjectType, setSubjectType] = useState<string>("");
-  const [flags, setFlags] = useState<IOrdContractFlag[]>([]);
+  const [flags, setFlags] = useState<CreateRoomOrdContractRequestDtoFlagsItem[]>([]);
 
   const {
     createRoomOrdContract,
@@ -114,7 +114,7 @@ export default function OrdContractsPage() {
     setDialogOpen(true);
   };
 
-  const toggleFlag = (value: IOrdContractFlag) => {
+  const toggleFlag = (value: CreateRoomOrdContractRequestDtoFlagsItem) => {
     setFlags((prev) => (prev.includes(value) ? prev.filter((f) => f !== value) : [...prev, value]));
   };
 
@@ -380,7 +380,7 @@ export default function OrdContractsPage() {
 
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Тип договора</p>
-              <Select value={contractType} onValueChange={(v) => setContractType(v as IOrdContractType)}>
+              <Select value={contractType} onValueChange={(v) => setContractType(v as OrdContractType)}>
                 <SelectTrigger className="h-10 w-full">
                   <SelectValue />
                 </SelectTrigger>

@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Alert, AlertDescription, Badge, Button, Card, CardContent } from "@senler/ui";
-import type { IRoomOrdProfile } from "@services/rooms/rooms.types";
+import type { RoomOrdProfileResponseDto } from "@/api/generated/model";
 import type { FioParts } from "@/utils/fio";
 import { joinFio } from "@/utils/fio";
 import { isCompleteRuMobile, ruPhoneToE164 } from "@/utils/ruPhone";
@@ -12,7 +12,7 @@ import { RuPhoneTextField } from "./RuPhoneTextField";
 type ApiFieldErrors = Record<string, string[] | undefined>;
 
 type Props = {
-  profile: IRoomOrdProfile;
+  profile: RoomOrdProfileResponseDto;
   roomId: string;
   isEditing: boolean;
   onStartEdit: () => void;

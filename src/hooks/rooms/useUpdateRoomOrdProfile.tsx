@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { MutationKeys } from "@/config/tanstack/mutationKeys";
-import roomsService from "@services/rooms/rooms.service";
-import type { IUpdateRoomOrdProfileRequest } from "@services/rooms/rooms.types";
+import { roomsControllerUpdateRoomOrdProfile } from "@/api/generated/rooms/rooms";
+import type { UpdateRoomOrdProfileRequestDto } from "@/api/generated/model";
 import { ApiError } from "@/types";
 
 export function useUpdateRoomOrdProfile() {
@@ -13,8 +13,8 @@ export function useUpdateRoomOrdProfile() {
       data,
     }: {
       roomId: string;
-      data: IUpdateRoomOrdProfileRequest;
-    }) => roomsService.updateRoomOrdProfile(roomId, data),
+      data: UpdateRoomOrdProfileRequestDto;
+    }) => roomsControllerUpdateRoomOrdProfile(roomId, data),
   });
 
   const isValidationError = useMemo(

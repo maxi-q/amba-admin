@@ -2,22 +2,22 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import creativeTaskService from '@services/creativetasks/creativetasks.service';
-import type { ICreateCreativeTaskRequest } from '@services/creativetasks/creativetasks.types';
+import { creativeTasksControllerCreateCreativeTask } from '@/api/generated/creative-tasks/creative-tasks';
+import type { CreateCreativeTaskRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function useCreateCreativeTask() {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isSuccess, isError } = useMutation<
-    Awaited<ReturnType<typeof creativeTaskService.createCreativeTask>>,
+    Awaited<ReturnType<typeof creativeTasksControllerCreateCreativeTask>>,
     ApiError,
-    ICreateCreativeTaskRequest
+    CreateCreativeTaskRequestDto
   >({
     mutationKey: [MutationKeys.CREATE_CREATIVE_TASK],
-    mutationFn: (data: ICreateCreativeTaskRequest) => creativeTaskService.createCreativeTask(data),
+    mutationFn: (data: CreateCreativeTaskRequestDto) => creativeTasksControllerCreateCreativeTask(data),
     onSuccess: (response) => {
-      const roomId = response?.data?.roomId;
+      const roomId = response?.roomId;
       if (roomId) {
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.CREATIVE_TASKS, roomId],

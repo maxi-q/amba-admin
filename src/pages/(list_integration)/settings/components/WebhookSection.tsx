@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
 import { Copy, RefreshCw } from "lucide-react";
 import { Button, InputField } from "@senler/ui";
-import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
+
+const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  fieldErrors[fieldName]?.[0] || "";
+const hasFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  Boolean(fieldErrors[fieldName]?.length);
 
 interface WebhookSectionProps {
   webhookUrl: string;

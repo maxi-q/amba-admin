@@ -1,14 +1,25 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import creativeTaskService from '@services/creativetasks/creativetasks.service';
-import type { IGetCreativeTaskWhitelistRequest } from '@services/creativetasks/creativetasks.types';
+import { creativeTasksControllerGetWhitelist } from '@/api/generated/creative-tasks/creative-tasks';
+import type { CreativeTasksControllerGetWhitelistParams } from '@/api/generated/model';
 import { useQuery } from '@tanstack/react-query';
+
+type CreativeTaskWhitelistResponse = {
+  items: Array<{
+    ambassadorId: string;
+    promoCode?: string;
+  }>;
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+};
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_SIZE = 50;
 
 export function useCreativeTaskWhitelist(
   taskId: string,
-  params: IGetCreativeTaskWhitelistRequest = {}
+  params: CreativeTasksControllerGetWhitelistParams = {}
 ) {
   const page = params.page ?? DEFAULT_PAGE;
   const size = params.size ?? DEFAULT_SIZE;
@@ -16,13 +27,13 @@ export function useCreativeTaskWhitelist(
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.CREATIVE_TASK_WHITELIST, taskId, page, size],
     queryFn: () =>
-      creativeTaskService.getCreativeTaskWhitelist(taskId, { page, size }),
+      creativeTasksControllerGetWhitelist(taskId, { page, size }) as unknown as Promise<CreativeTaskWhitelistResponse>,
     enabled: !!taskId,
     staleTime: 30 * 1000,
     retry: 2,
   });
 
-  const payload = data?.data;
+  const payload = data;
 
   return {
     isLoading,

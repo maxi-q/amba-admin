@@ -1,10 +1,10 @@
 import { InputField, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from "@senler/ui";
-import type { IPatchEventsRequest } from "@services/events/events.types";
+import type { UpdateEventRequestDto } from "@/api/generated/model";
 import { rewardUnits, getRewardUnitShortName } from "../constants/rewardUnits";
 
 interface PromoCodesSectionProps {
-  formData: IPatchEventsRequest;
-  onInputChange: (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  formData: UpdateEventRequestDto;
+  onInputChange: (field: keyof UpdateEventRequestDto) => (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRewardUnitsChange: (value: string) => void;
   createValidationErrors?: Record<string, string[]>;
   updateValidationErrors?: Record<string, string[]>;

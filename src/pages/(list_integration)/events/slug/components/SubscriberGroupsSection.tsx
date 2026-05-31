@@ -1,8 +1,14 @@
 import { InputField } from "@senler/ui";
-import type { IEvent } from "@services/events/events.types";
+import type { GetMyEventsResponseItemDto } from "@/api/generated/model";
+
+type EventWithSubscriptionGroups = GetMyEventsResponseItemDto & {
+  pendingSubscriptionId?: number;
+  approvedSubscriptionId?: number;
+  rejectedSubscriptionId?: number;
+};
 
 interface SubscriberGroupsSectionProps {
-  event: IEvent;
+  event: EventWithSubscriptionGroups;
   channelExternalId?: string;
 }
 

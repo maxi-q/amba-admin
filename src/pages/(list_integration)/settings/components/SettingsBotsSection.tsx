@@ -18,12 +18,20 @@ import {
 } from "@senler/ui";
 import { useGetBots } from "@/hooks/projects/useGetBots";
 import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
-import type { IBotItem } from "@services/projects/projects.types";
-import type { IGetRoomByIdResponse } from "@services/rooms/rooms.types";
+import type { GetRoomByIdResponseDto } from "@/api/generated/model";
+
+type BotItem = {
+  bot_id: string;
+  title: string;
+  date: string;
+  active: string;
+  published: string;
+  tags: string[];
+};
 
 const NONE_VALUE = "__none__";
 
-function filterBots(bots: IBotItem[], input: string): IBotItem[] {
+function filterBots(bots: BotItem[], input: string): BotItem[] {
   if (!input.trim()) return bots.slice(0, 40);
   const lower = input.toLowerCase().trim();
   return bots.filter(
@@ -33,15 +41,15 @@ function filterBots(bots: IBotItem[], input: string): IBotItem[] {
   );
 }
 
-function getOptionLabel(bot: IBotItem) {
+function getOptionLabel(bot: BotItem) {
   return `${bot.title} (${bot.bot_id})`;
 }
 
 interface BotPickerProps {
   legend: string;
-  bots: IBotItem[];
-  value: IBotItem | null;
-  onChange: (next: IBotItem | null) => void;
+  bots: BotItem[];
+  value: BotItem | null;
+  onChange: (next: BotItem | null) => void;
   isLoading: boolean;
 }
 
@@ -90,7 +98,7 @@ function BotPicker({ legend, bots, value, onChange, isLoading }: BotPickerProps)
 
 interface SettingsBotsSectionProps {
   slug: string;
-  room: IGetRoomByIdResponse | undefined;
+  room: GetRoomByIdResponseDto | undefined;
   onSaveSuccess?: () => void;
 }
 
@@ -102,8 +110,8 @@ export function SettingsBotsSection({
   const { bots, isLoading: isLoadingBots } = useGetBots();
   const { updateRoom, isPending: isUpdating, generalError } = useUpdateRoom();
 
-  const [approvedBot, setApprovedBot] = useState<IBotItem | null>(null);
-  const [rejectedBot, setRejectedBot] = useState<IBotItem | null>(null);
+  const [approvedBot, setApprovedBot] = useState<BotItem | null>(null);
+  const [rejectedBot, setRejectedBot] = useState<BotItem | null>(null);
 
   useEffect(() => {
     if (!room || !bots.length) return;

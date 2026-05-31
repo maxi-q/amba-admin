@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
-import sprintsService from "@services/sprints/sprints.service";
-import type { IPatchSprintsRequest } from "@services/sprints/sprints.types";
+import { sprintsControllerUpdate } from "@/api/generated/sprints/sprints";
+import type { UpdateSprintRequestDto } from "@/api/generated/model";
 import { ApiError } from "@/types";
 
 export function usePatchSprint() {
@@ -13,8 +13,8 @@ export function usePatchSprint() {
 
   const { mutate: patchSprint, isPending, error, isSuccess } = useMutation({
     mutationKey: [MutationKeys.PATCH_SPRINT],
-    mutationFn: ({ data, sprintId }: { data: IPatchSprintsRequest; sprintId: string }) => 
-      sprintsService.patchSprints(data, sprintId),
+    mutationFn: ({ data, sprintId }: { data: UpdateSprintRequestDto; sprintId: string }) => 
+      sprintsControllerUpdate(sprintId, data),
     onSuccess: (updatedSprint) => {
       if (updatedSprint) {
         queryClient.invalidateQueries({

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
 
-import roomsService from "@services/rooms/rooms.service";
+import { roomsControllerDeleteRoom } from "@/api/generated/rooms/rooms";
 import { ApiError } from "@/types";
 
 export function useDeleteRoom() {
@@ -14,7 +14,7 @@ export function useDeleteRoom() {
 
   const { mutate: deleteRoom, isPending, error, isSuccess } = useMutation({
     mutationKey: [MutationKeys.DELETE_ROOM],
-    mutationFn: (id: string) => roomsService.deleteRoomById(id),
+    mutationFn: (id: string) => roomsControllerDeleteRoom(id),
     onSuccess: (_, roomId) => {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.ROOMS],

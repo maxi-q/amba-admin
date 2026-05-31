@@ -1,11 +1,11 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import creativeTaskService from '@services/creativetasks/creativetasks.service';
+import { creativeTasksControllerGetCreativeTaskById } from '@/api/generated/creative-tasks/creative-tasks';
 import { useQuery } from '@tanstack/react-query';
 
 export function useCreativeTask(id: string) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.CREATIVE_TASK, id],
-    queryFn: () => creativeTaskService.getCreativeTask(id),
+    queryFn: () => creativeTasksControllerGetCreativeTaskById(id),
     enabled: !!id,
     staleTime: 30 * 60 * 1000,
     retry: 2,
@@ -16,6 +16,6 @@ export function useCreativeTask(id: string) {
     isError,
     error,
     refetch,
-    task: data?.data ?? null,
+    task: data ?? null,
   };
 }

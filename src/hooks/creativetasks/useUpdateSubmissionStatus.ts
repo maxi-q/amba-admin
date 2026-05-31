@@ -2,23 +2,23 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
-import creativeTaskService from '@services/creativetasks/creativetasks.service';
-import type { IUpdateSubmissionStatusRequest } from '@services/creativetasks/creativetasks.types';
+import { creativeTasksControllerUpdateSubmissionStatus } from '@/api/generated/creative-tasks/creative-tasks';
+import type { UpdateSubmissionStatusRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function useUpdateSubmissionStatus() {
   const queryClient = useQueryClient();
 
   const { mutate, isPending, error, isSuccess, isError } = useMutation<
-    Awaited<ReturnType<typeof creativeTaskService.updateSubmissionStatus>>,
+    Awaited<ReturnType<typeof creativeTasksControllerUpdateSubmissionStatus>>,
     ApiError,
-    { id: string; data: IUpdateSubmissionStatusRequest }
+    { id: string; data: UpdateSubmissionStatusRequestDto }
   >({
     mutationKey: [MutationKeys.UPDATE_SUBMISSION_STATUS],
-    mutationFn: ({ id, data }: { id: string; data: IUpdateSubmissionStatusRequest }) =>
-      creativeTaskService.updateSubmissionStatus(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateSubmissionStatusRequestDto }) =>
+      creativeTasksControllerUpdateSubmissionStatus(id, data),
     onSuccess: (response, { id }) => {
-      const taskId = response?.data?.taskId;
+      const taskId = response?.taskId;
       if (taskId) {
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.SUBMISSIONS, taskId],

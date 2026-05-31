@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { Badge, Card, CardContent, Button } from "@senler/ui";
-import type { ICreativeTask } from "@services/creativetasks/creativetasks.types";
+import type { BaseCreativeTaskDto } from "@/api/generated/model";
 import { formatDateRange, isTaskActive } from "../utils/creativetaskUtils";
 import { TaskSubmissionsList } from "./TaskSubmissionsList";
 
 interface CreativeTaskCardProps {
-  task: ICreativeTask;
-  onEdit: (task: ICreativeTask) => void;
+  task: BaseCreativeTaskDto;
+  onEdit: (task: BaseCreativeTaskDto) => void;
 }
 
 /**
@@ -17,8 +17,8 @@ interface CreativeTaskCardProps {
  */
 export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const dateRange = formatDateRange(task.startsAt, task.endsAt);
-  const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt);
+  const dateRange = formatDateRange(task.startsAt, task.endsAt ?? null);
+  const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt ?? null);
 
   return (
     <Link

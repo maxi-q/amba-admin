@@ -10,11 +10,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@senler/ui";
-import type { IInvitation } from "@services/invitations/invitations.types";
+import type { BaseAfterRegistrationInvitationDto } from "@/api/generated/model";
 
 interface DeleteInvitationDialogProps {
   open: boolean;
-  invitation: IInvitation | null;
+  invitation: BaseAfterRegistrationInvitationDto | null;
   onClose: () => void;
   onConfirm: () => void;
   isPending: boolean;

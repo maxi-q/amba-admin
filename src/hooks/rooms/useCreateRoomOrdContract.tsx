@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import roomsService from '@services/rooms/rooms.service';
-import type { ICreateRoomOrdContractRequest } from '@services/rooms/rooms.types';
+import { ordContractsControllerCreateRoomOrdContract } from '@/api/generated/ord-contracts/ord-contracts';
+import type { CreateRoomOrdContractRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
 export function useCreateRoomOrdContract() {
@@ -11,8 +11,8 @@ export function useCreateRoomOrdContract() {
 
   const { mutate, isPending, error, isSuccess, reset } = useMutation({
     mutationKey: [MutationKeys.CREATE_ROOM_ORD_CONTRACT],
-    mutationFn: ({ roomId, data }: { roomId: string; data: ICreateRoomOrdContractRequest }) =>
-      roomsService.createRoomOrdContract(roomId, data),
+    mutationFn: ({ roomId, data }: { roomId: string; data: CreateRoomOrdContractRequestDto }) =>
+      ordContractsControllerCreateRoomOrdContract(roomId, data),
     onSuccess: (_data, { roomId }) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.ROOM_ORD_CONTRACTS, roomId] });
     },

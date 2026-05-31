@@ -1,11 +1,11 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import creativeTaskService from '@services/creativetasks/creativetasks.service';
+import { creativeTasksControllerGetSubmissionById } from '@/api/generated/creative-tasks/creative-tasks';
 import { useQuery } from '@tanstack/react-query';
 
 export function useSubmission(submissionId: string) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.SUBMISSION, submissionId],
-    queryFn: () => creativeTaskService.getSubmission(submissionId),
+    queryFn: () => creativeTasksControllerGetSubmissionById(submissionId),
     enabled: !!submissionId,
     staleTime: 30 * 60 * 1000,
     retry: 2,
@@ -16,6 +16,6 @@ export function useSubmission(submissionId: string) {
     isError,
     error,
     refetch,
-    submission: data?.data ?? null,
+    submission: data ?? null,
   };
 }

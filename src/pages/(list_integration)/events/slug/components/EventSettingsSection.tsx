@@ -1,10 +1,10 @@
 import { InputField, Switch, Textarea } from "@senler/ui";
-import type { IPatchEventsRequest } from "@services/events/events.types";
+import type { UpdateEventRequestDto } from "@/api/generated/model";
 
 interface EventSettingsSectionProps {
-  formData: IPatchEventsRequest;
+  formData: UpdateEventRequestDto;
   prefix: string;
-  onInputChange: (field: keyof IPatchEventsRequest) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onInputChange: (field: keyof UpdateEventRequestDto) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onPrefixChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   createValidationErrors?: Record<string, string[]>;
   updateValidationErrors?: Record<string, string[]>;
@@ -60,7 +60,7 @@ export const EventSettingsSection = ({
         <Textarea
           placeholder="Текст описания события"
           className="min-h-[100px] w-full"
-          value={formData.description}
+          value={formData.description ?? ""}
           onChange={onInputChange("description")}
         />
         {descErr ? (

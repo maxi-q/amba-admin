@@ -12,11 +12,11 @@ import {
 import { useUpdateRoom } from "@/hooks/rooms/useUpdateRoom";
 import { useRotateSecretKey } from "@/hooks/rooms/useRotateSecretKey";
 import { WebhookSection } from "./WebhookSection";
-import type { IGetRoomByIdResponse } from "@services/rooms/rooms.types";
+import type { GetRoomByIdResponseDto } from "@/api/generated/model";
 
 interface SettingsWebhookSectionProps {
   slug: string;
-  room: IGetRoomByIdResponse | undefined;
+  room: GetRoomByIdResponseDto | undefined;
   onSaveSuccess?: () => void;
   onCopySuccess?: () => void;
 }

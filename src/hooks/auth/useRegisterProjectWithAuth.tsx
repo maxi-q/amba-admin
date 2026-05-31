@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-import authService from '@/services/auth/auth.service';
 import { useAuthStore } from '@store/index';
-import type { IRegisterProjectRequest, ILoginRequest } from '@/services/auth/user.types';
+import { authControllerCreateProject, authControllerLogin } from '@/api/generated/auth/auth';
+import type { LoginBySignRequestDto, RegisterProjectByAuthorizationCodeRequestDto } from '@/api/generated/model';
 
 export function useRegisterProjectWithAuth() {
   const navigate = useNavigate();
@@ -14,13 +14,13 @@ export function useRegisterProjectWithAuth() {
       registerData, 
       authData 
     }: { 
-      registerData: IRegisterProjectRequest; 
-      authData: ILoginRequest; 
+      registerData: RegisterProjectByAuthorizationCodeRequestDto; 
+      authData: LoginBySignRequestDto; 
     }) => {
       // Сначала регистрируем проект
-      await authService.registerProject(registerData);
+      await authControllerCreateProject(registerData);
 
-      const authResponse = await authService.auth(authData);
+      const authResponse = await authControllerLogin(authData);
       return authResponse;
     },
     onSuccess: (response) => {

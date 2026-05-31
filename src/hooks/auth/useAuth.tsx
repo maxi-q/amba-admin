@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-import authService from '@/services/auth/auth.service';
 import { useAuthStore } from '@store/index';
-import type { ILoginRequest } from '@/services/auth/user.types';
+import { authControllerLogin } from '@/api/generated/auth/auth';
+import type { LoginBySignRequestDto } from '@/api/generated/model';
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ export function useAuth() {
   const { login, logout } = useAuthStore();
 
   return useMutation({
-    mutationFn: (data: ILoginRequest) => authService.auth(data),
+    mutationFn: (data: LoginBySignRequestDto) => authControllerLogin(data),
     onSuccess: (response) => {
       if (response?.token) {
         login(response.token);

@@ -1,18 +1,18 @@
 import { format } from "date-fns";
-import roomsService from "@/services/rooms/rooms.service";
+import { roomsControllerGetRoomPromoCodeUsages } from "@/api/generated/rooms/rooms";
 import type {
-  IGetRoomPromoCodeUsagesRequest,
-  IGetRoomPromoCodeUsagesResponse,
-} from "@/services/rooms/rooms.types";
+  GetRoomPromoCodeUsagesResponseDto,
+  RoomsControllerGetRoomPromoCodeUsagesParams,
+} from "@/api/generated/model";
 
 const EXPORT_PAGE_SIZE = 500;
 
-type PromoCodeUsage = IGetRoomPromoCodeUsagesResponse["items"][number];
+type PromoCodeUsage = GetRoomPromoCodeUsagesResponseDto["items"][number];
 type NamedEntity = { id: string; name: string };
 
 interface ExportPromoCodeUsagesCsvParams {
   roomId: string;
-  filters: Omit<IGetRoomPromoCodeUsagesRequest, "page" | "size">;
+  filters: Omit<RoomsControllerGetRoomPromoCodeUsagesParams, "page" | "size">;
   sprints: NamedEntity[];
   events: NamedEntity[];
 }
@@ -84,14 +84,14 @@ function downloadCsv(filename: string, rows: string[][]) {
 
 async function fetchAllPromoCodeUsages(
   roomId: string,
-  filters: Omit<IGetRoomPromoCodeUsagesRequest, "page" | "size">
+  filters: Omit<RoomsControllerGetRoomPromoCodeUsagesParams, "page" | "size">
 ) {
   const allUsages: PromoCodeUsage[] = [];
   let page = 1;
   let totalPages = 1;
 
   do {
-    const response = await roomsService.getRoomPromoCodeUsages(roomId, {
+    const response = await roomsControllerGetRoomPromoCodeUsages(roomId, {
       ...filters,
       page,
       size: EXPORT_PAGE_SIZE,
@@ -132,9 +132,9 @@ export async function exportPromoCodeUsagesCsv({
       getPromoCodeUsageTargetType(usage),
       getPromoCodeUsageTargetName(usage, sprints, events),
       usage.createdAt ? format(new Date(usage.createdAt), "dd.MM.yyyy HH:mm") : "",
-      usage.ambassadorId,
-      usage.uniqueId,
-      usage.additionalUniqueId,
+      usage.ambassadorId ?? "",
+      usage.uniqueId ?? "",
+      usage.additionalUniqueId ?? "",
     ]),
   ];
 

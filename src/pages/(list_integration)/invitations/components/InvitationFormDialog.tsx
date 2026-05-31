@@ -11,16 +11,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@senler/ui";
-import { getFirstFieldError } from "@services/config/axios.helper";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
-import { useUpdateInvitation } from "@/hooks/invitations/useUpdateInvitation";
-import { INVITATION_CHANNEL_TYPE_VK, type IInvitation } from "@services/invitations/invitations.types";
 import { resolveVkProfileId } from "@/utils/vkProfile";
 
+const INVITATION_CHANNEL_TYPE_VK = 0;
 const SUBSCRIBER_TEXTAREA_CLASS =
   "min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  fieldErrors[fieldName]?.[0] || "";
 
 function subscriberIdsToTargets(ids: string[]): { channelTypeId: number; subscriberId: string }[] {
   return ids
@@ -32,10 +32,9 @@ function subscriberIdsToTargets(ids: string[]): { channelTypeId: number; subscri
 interface InvitationFormDialogProps {
   open: boolean;
   onClose: () => void;
-  mode: "create" | "edit";
+  mode?: "create";
   roomId: string;
   slug: string;
-  invitation: IInvitation | null;
   /**
    * Если задано — селектор задач скрывается, а указанные taskIds
    * автоматически подставляются в новое приглашение.
@@ -49,7 +48,7 @@ interface InvitationFormDialogProps {
    */
   lockedEventIds?: string[];
   /** Заголовок диалога. По умолчанию используется стандартный. */
-  titleOverride?: { create?: string; edit?: string };
+  titleOverride?: { create?: string };
   /** Если true — вместо ручного ввода subscriberId используется ссылка на профиль VK. */
   useVkProfileLink?: boolean;
   submitLabel?: string;
@@ -59,10 +58,9 @@ interface InvitationFormDialogProps {
 export function InvitationFormDialog({
   open,
   onClose,
-  mode,
+  mode = "create",
   roomId,
   slug,
-  invitation,
   lockedTaskIds,
   lockedEventIds,
   titleOverride,
@@ -93,20 +91,11 @@ export function InvitationFormDialog({
     validationErrors: createValidationErrors,
   } = useCreateInvitation();
 
-  const {
-    updateInvitation,
-    isPending: isUpdatePending,
-    reset: resetUpdate,
-    generalError: updateGeneralError,
-    validationErrors: updateValidationErrors,
-  } = useUpdateInvitation();
-
   useEffect(() => {
     if (open) {
       resetCreate();
-      resetUpdate();
     }
-  }, [open, resetCreate, resetUpdate]);
+  }, [open, resetCreate]);
 
   useEffect(() => {
     if (!open) return;
@@ -121,22 +110,9 @@ export function InvitationFormDialog({
     }
   }, [open, mode, lockedTaskIds, lockedEventIds]);
 
-  useEffect(() => {
-    if (!open || mode !== "edit" || !invitation) return;
-    const subs = (invitation.targets ?? []).map((t) => t.subscriberId).filter(Boolean);
-    setSubscriberInput(subs.join("\n"));
-    setVkProfileUrl(subs[0] ? `https://vk.com/id${subs[0]}` : "");
-    setVkProfileError("");
-    setSelectedTaskIds([...(invitation.taskIds ?? [])]);
-    setSelectedEventIds([...(invitation.eventIds ?? [])]);
-    setTaskSearch("");
-    setEventSearch("");
-  }, [open, mode, invitation]);
-
-  const isPending = (mode === "create" ? isCreatePending : isUpdatePending) || isResolvingVk;
-  const generalError = mode === "create" ? createGeneralError : updateGeneralError;
-  const validationErrors =
-    mode === "create" ? createValidationErrors : updateValidationErrors;
+  const isPending = isCreatePending || isResolvingVk;
+  const generalError = createGeneralError;
+  const validationErrors = createValidationErrors;
 
   const subscriberLines = useMemo(
     () =>
@@ -215,45 +191,24 @@ export function InvitationFormDialog({
       setIsResolvingVk(false);
     }
 
-    if (mode === "create") {
-      createInvitation(
-        {
-          roomId,
-          targets: submitTargets,
-          taskIds,
-          eventIds,
+    createInvitation(
+      {
+        roomId,
+        targets: submitTargets,
+        taskIds,
+        eventIds,
+      },
+      {
+        onSuccess: () => {
+          onClose();
+          resetCreate();
+          onInvitationSuccess?.();
         },
-        {
-          onSuccess: () => {
-            onClose();
-            resetCreate();
-            onInvitationSuccess?.();
-          },
-        }
-      );
-      return;
-    }
-    if (invitation) {
-      updateInvitation(
-        {
-          id: invitation.id,
-          roomId,
-          data: { targets: submitTargets, taskIds, eventIds },
-        },
-        {
-          onSuccess: () => {
-            onClose();
-            resetUpdate();
-          },
-        }
-      );
-    }
+      }
+    );
   };
 
-  const title =
-    mode === "create"
-      ? titleOverride?.create ?? "Создать приглашение"
-      : titleOverride?.edit ?? "Изменить приглашение";
+  const title = titleOverride?.create ?? "Создать приглашение";
 
   return (
     <Sheet

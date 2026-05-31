@@ -6,10 +6,10 @@ import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import type {
-  IPatchSprintsRequest,
-  ICreateSprintRequest,
-  ISprint,
-} from "@services/sprints/sprints.types";
+  BaseSprintDto,
+  CreateSprintRequestDto,
+  UpdateSprintRequestDto,
+} from "@/api/generated/model";
 import { dateToInput } from "./helpers";
 import { SprintPageHeader } from "./components/SprintPageHeader";
 import { SprintSettingsSection } from "./components/SprintSettingsSection";
@@ -44,11 +44,11 @@ const SprintSetting = () => {
     slug || ""
   );
 
-  const [sprint, setSprint] = useState<ISprint | null>(null);
+  const [sprint, setSprint] = useState<BaseSprintDto | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [formData, setFormData] = useState<IPatchSprintsRequest>({
+  const [formData, setFormData] = useState<UpdateSprintRequestDto>({
     name: "",
-    startDate: null,
+    startDate: "",
     endDate: null,
     ignoreEndDate: false,
     rewardType: "fix",
@@ -69,8 +69,8 @@ const SprintSetting = () => {
         setSprint(foundSprint);
         setFormData({
           name: foundSprint.name,
-          startDate: dateToInput(foundSprint.startDate),
-          endDate: dateToInput(foundSprint.endDate),
+          startDate: dateToInput(foundSprint.startDate) ?? "",
+          endDate: foundSprint.endDate ? dateToInput(foundSprint.endDate) : null,
           ignoreEndDate: foundSprint.ignoreEndDate,
           rewardType: foundSprint.rewardType,
           rewardUnits: foundSprint.rewardUnits,
@@ -152,7 +152,7 @@ const SprintSetting = () => {
         }
       );
     } else if (slug) {
-      const createData: ICreateSprintRequest = {
+      const createData: CreateSprintRequestDto = {
         ...storeData,
         roomId: slug,
       };
@@ -178,7 +178,7 @@ const SprintSetting = () => {
   };
 
   const handleInputChange =
-    (field: keyof IPatchSprintsRequest) =>
+    (field: keyof UpdateSprintRequestDto) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = event.target.value;
       const updatedData = {
@@ -192,7 +192,7 @@ const SprintSetting = () => {
     };
 
   const handleSelectChange =
-    (field: keyof IPatchSprintsRequest) =>
+    (field: keyof UpdateSprintRequestDto) =>
     (event: { target: { value: string } }) => {
       const newValue = event.target.value;
       setFormData({

@@ -1,5 +1,5 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import invitationsService from '@services/invitations/invitations.service';
+import { afterRegistrationInvitationsControllerGetInvitations } from '@/api/generated/after-registration-invitations/after-registration-invitations';
 import { useQuery } from '@tanstack/react-query';
 import { normalizeInvitationsResponse } from './normalizeInvitationsResponse';
 
@@ -7,8 +7,8 @@ export function useRoomInvitations(roomId: string) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.INVITATIONS, roomId],
     queryFn: async () => {
-      const res = await invitationsService.getInvitationsByRoom(roomId);
-      return normalizeInvitationsResponse(res.data);
+      const res = await afterRegistrationInvitationsControllerGetInvitations(roomId);
+      return normalizeInvitationsResponse(res);
     },
     enabled: !!roomId,
     staleTime: 0,

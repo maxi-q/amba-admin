@@ -6,7 +6,7 @@ import { useCreateEvent } from "@/hooks/events/useCreateEvent";
 import { usePatchEvent } from "@/hooks/events/usePatchEvent";
 import { useCheckPromoCodesPrefixAvailable } from "@/hooks/events/useCheckPromoCodesPrefixAvailable";
 import { Alert, AlertDescription, PageLoader } from "@senler/ui";
-import type { IEvent, IPatchEventsRequest } from "@services/events/events.types";
+import type { GetMyEventsResponseItemDto, UpdateEventRequestDto } from "@/api/generated/model";
 import { dateToInput } from "./helpers";
 import { EventPageHeader } from "./components/EventPageHeader";
 import { EventSettingsSection } from "./components/EventSettingsSection";
@@ -58,14 +58,14 @@ const EventsSetting = () => {
     generalError: checkPrefixGeneralError
   } = useCheckPromoCodesPrefixAvailable();
 
-  const [event, setEvent] = useState<IEvent>();
+  const [event, setEvent] = useState<GetMyEventsResponseItemDto>();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [prefixValidationError, setPrefixValidationError] = useState<string>("");
   const [prefixOccupiedError, setPrefixOccupiedError] = useState<string>("");
-  const [formData, setFormData] = useState<IPatchEventsRequest>({
+  const [formData, setFormData] = useState<UpdateEventRequestDto>({
     name: "",
     description: "",
-    startDate: null,
+    startDate: "",
     endDate: null,
     ignoreEndDate: false,
     rewardType: "fix",
@@ -85,7 +85,7 @@ const EventsSetting = () => {
         setFormData({
           name: foundEvent.name,
           description: foundEvent.description ?? "",
-          startDate: dateToInput(foundEvent.startDate),
+          startDate: dateToInput(foundEvent.startDate) ?? "",
           endDate: dateToInput(foundEvent.endDate),
           ignoreEndDate: foundEvent.ignoreEndDate,
           rewardType: foundEvent.rewardType,
@@ -171,7 +171,7 @@ const EventsSetting = () => {
   };
 
   const handleInputChange =
-    (field: keyof IPatchEventsRequest) =>
+    (field: keyof UpdateEventRequestDto) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const newValue = e.target.value;
       const updatedData = {

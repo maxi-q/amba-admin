@@ -11,12 +11,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@senler/ui";
-import { getFirstFieldError, hasFieldError } from "@services/config/axios.helper";
 import { useCreateCreativeTask } from "@/hooks/creativetasks/useCreateCreativeTask";
-import type { ICreateCreativeTaskRequest } from "@services/creativetasks/creativetasks.types";
+import type { CreateCreativeTaskRequestDto } from "@/api/generated/model";
 
 const DESC_CLASS =
   "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  fieldErrors[fieldName]?.[0] || "";
+const hasFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
+  Boolean(fieldErrors[fieldName]?.length);
 
 /** Локальная datetime строка → ISO */
 function toISOString(localDateTime: string): string {
@@ -60,7 +63,7 @@ export function CreateCreativeTaskDialog({
 
   const handleSubmit = () => {
     if (!roomId) return;
-    const payload: ICreateCreativeTaskRequest = {
+    const payload: CreateCreativeTaskRequestDto = {
       title: title.trim(),
       description: description.trim(),
       startsAt: toISOString(startsAt),
