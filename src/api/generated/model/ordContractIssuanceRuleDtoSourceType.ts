@@ -15,6 +15,5 @@ export type OrdContractIssuanceRuleDtoSourceType = typeof OrdContractIssuanceRul
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const OrdContractIssuanceRuleDtoSourceType = {
   room: 'room',
-  event: 'event',
   creativeTask: 'creativeTask',
 } as const;

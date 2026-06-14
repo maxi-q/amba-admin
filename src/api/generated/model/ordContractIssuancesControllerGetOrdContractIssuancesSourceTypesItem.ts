@@ -12,6 +12,5 @@ export type OrdContractIssuancesControllerGetOrdContractIssuancesSourceTypesItem
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const OrdContractIssuancesControllerGetOrdContractIssuancesSourceTypesItem = {
   room: 'room',
-  event: 'event',
   creativeTask: 'creativeTask',
 } as const;
