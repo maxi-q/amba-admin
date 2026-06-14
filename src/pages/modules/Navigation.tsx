@@ -29,8 +29,8 @@ import {
   OrdProfilePage,
   OrdContractDetailPage,
   OrdTemplatesPage,
-  OrdTemplateRulesPage,
-  OrdTemplateLinksPage
+  OrdAutoIssuancePage,
+  OrdTaskIssuanceRulePage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -123,8 +123,7 @@ export const Navigation = () => {
         <Route path="ord" element={<OrdLayout />}>
           <Route index element={<OrdContractsPage />} />
           <Route path="templates" element={<OrdTemplatesPage />} />
-          <Route path="template-rules" element={<OrdTemplateRulesPage />} />
-          <Route path="template-links/:entityType/:entityId" element={<OrdTemplateLinksPage />} />
+          <Route path="auto-issuance" element={<OrdAutoIssuancePage />} />
           <Route path="profile" element={<OrdProfilePage />} />
           <Route path=":contractId" element={<OrdContractDetailPage />} />
         </Route>
@@ -133,6 +132,7 @@ export const Navigation = () => {
           <Route index element={<CreativeTaskDescriptionPage />} />
           <Route path="answers" element={<CreativeTaskAnswersPage />} />
           <Route path="invitations" element={<CreativeTaskInvitationsPage />} />
+          <Route path="ord-auto-issuance" element={<OrdTaskIssuanceRulePage />} />
         </Route>
 
         <Route path="*" element={<RoomRedirect />} />

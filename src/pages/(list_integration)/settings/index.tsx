@@ -13,7 +13,7 @@ import { RoomActionButtons } from "./components/RoomActionButtons";
 import { DeleteRoomDialog } from "./components/DeleteRoomDialog";
 import { SettingsBotsSection } from "./components/SettingsBotsSection";
 import { SettingsWebhookSection } from "./components/SettingsWebhookSection";
-import { OrdTemplateLinksSummaryCard } from "../ord/components/OrdTemplateLinksSummaryCard";
+import { OrdIssuanceRuleSummaryCard } from "../ord/components/OrdIssuanceRuleSummaryCard";
 
 export default function SettingPage() {
   const { slug } = useParams();
@@ -177,12 +177,12 @@ export default function SettingPage() {
         isUpdating={isDeleting}
       />
 
-      <OrdTemplateLinksSummaryCard
-        title="ORD-шаблоны комнаты"
-        description="Привязки шаблонов вынесены на отдельную страницу, чтобы не перегружать настройки комнаты."
-        to={`/rooms/${slug}/ord/template-links/room/${room.id}`}
+      <OrdIssuanceRuleSummaryCard
+        title="Автовыпуск ORD-договоров"
+        description="Настройте автоматический выпуск договоров для одобренных участников комнаты."
+        to={`/rooms/${slug}/ord/auto-issuance`}
         disabled={!room.ordPerson}
-        disabledText="Чтобы подключать ORD-шаблоны, сначала создайте профиль ОРД комнаты."
+        disabledText="Чтобы настроить автовыпуск, сначала создайте профиль ОРД комнаты."
       />
 
       <div ref={botsSectionRef}>

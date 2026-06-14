@@ -1,11 +1,11 @@
+import { useOutletContext, useParams } from "react-router-dom";
 import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
 import { Pencil } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
 import type { BaseCreativeTaskDto } from "@/api/generated/model";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
 import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
-import { OrdTemplateLinksSummaryCard } from "../ord/components/OrdTemplateLinksSummaryCard";
+import { OrdIssuanceRuleSummaryCard } from "../ord/components/OrdIssuanceRuleSummaryCard";
 
 interface OutletCtx {
   task: BaseCreativeTaskDto;
@@ -15,6 +15,7 @@ interface OutletCtx {
  * Подпункт «Описание» задачи: заголовок, описание, диапазон дат, статус и редактирование.
  */
 export default function CreativeTaskDescriptionPage() {
+  const { slug, taskId } = useParams<{ slug: string; taskId: string }>();
   const { task } = useOutletContext<OutletCtx>();
   const [editOpen, setEditOpen] = useState(false);
 
@@ -74,12 +75,12 @@ export default function CreativeTaskDescriptionPage() {
         task={task}
       />
 
-      <OrdTemplateLinksSummaryCard
-        title="ORD-шаблоны задачи"
-        description="Управляйте несколькими шаблонами задачи на отдельной странице."
-        to={`/rooms/${task.roomId}/ord/template-links/creativeTask/${task.id}`}
+      <OrdIssuanceRuleSummaryCard
+        title="Автовыпуск ORD-договоров"
+        description="Настройте автоматический выпуск договоров для участников этой задачи."
+        to={`/rooms/${slug}/creativetasks/${taskId}/ord-auto-issuance`}
         disabled={task.isDeleted}
-        disabledText="Для удалённой задачи управление ORD-шаблонами недоступно."
+        disabledText="Для удалённой задачи автовыпуск недоступен."
       />
     </>
   );

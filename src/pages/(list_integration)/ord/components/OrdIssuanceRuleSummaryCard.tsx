@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@senler/ui";
 
-interface OrdTemplateLinksSummaryCardProps {
+interface OrdIssuanceRuleSummaryCardProps {
   title: string;
   description: string;
   to: string;
@@ -9,13 +9,13 @@ interface OrdTemplateLinksSummaryCardProps {
   disabledText?: string;
 }
 
-export function OrdTemplateLinksSummaryCard({
+export function OrdIssuanceRuleSummaryCard({
   title,
   description,
   to,
   disabled = false,
   disabledText,
-}: OrdTemplateLinksSummaryCardProps) {
+}: OrdIssuanceRuleSummaryCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -25,14 +25,14 @@ export function OrdTemplateLinksSummaryCard({
       <CardContent>
         {disabled ? (
           <p className="text-sm text-muted-foreground">
-            {disabledText ?? "Управление ORD-шаблонами сейчас недоступно."}
+            {disabledText ?? "Настройка автовыпуска сейчас недоступна."}
           </p>
         ) : (
           <Link
             to={to}
             className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90"
           >
-            Управлять ORD-шаблонами
+            Настроить автовыпуск
           </Link>
         )}
       </CardContent>

@@ -14,21 +14,20 @@ export const OrdHeader = () => {
   const slug =
     params.slug || location.pathname.split("/rooms/")[1]?.split("/")[0] || "";
 
-  const { isContractsTab, isProfileTab, isTemplateRulesTab, isTemplatesTab } = useMemo(() => {
+  const { isContractsTab, isProfileTab, isAutoIssuanceTab, isTemplatesTab } = useMemo(() => {
     if (!slug) {
-      return { isContractsTab: false, isProfileTab: false, isTemplateRulesTab: false, isTemplatesTab: false };
+      return { isContractsTab: false, isProfileTab: false, isAutoIssuanceTab: false, isTemplatesTab: false };
     }
     const p = location.pathname;
     const base = `/rooms/${slug}/ord`;
     const isProfile = p.includes(`${base}/profile`);
-    const isTemplateRules = p.includes(`${base}/template-rules`);
-    const isTemplates =
-      !isTemplateRules && (p.includes(`${base}/templates`) || p.includes(`${base}/template-links`));
-    const isContracts = p.includes(base) && !isProfile && !isTemplateRules && !isTemplates;
+    const isAutoIssuance = p.includes(`${base}/auto-issuance`);
+    const isTemplates = !isAutoIssuance && p.includes(`${base}/templates`);
+    const isContracts = p.includes(base) && !isProfile && !isAutoIssuance && !isTemplates;
     return {
       isContractsTab: isContracts,
       isProfileTab: isProfile,
-      isTemplateRulesTab: isTemplateRules,
+      isAutoIssuanceTab: isAutoIssuance,
       isTemplatesTab: isTemplates,
     };
   }, [location.pathname, slug]);
@@ -51,10 +50,10 @@ export const OrdHeader = () => {
           {ORD_COPY.templatesTab}
         </Link>
         <Link
-          to={`/rooms/${slug}/ord/template-rules`}
-          className={isTemplateRulesTab ? tabActive : tabInactive}
+          to={`/rooms/${slug}/ord/auto-issuance`}
+          className={isAutoIssuanceTab ? tabActive : tabInactive}
         >
-          {ORD_COPY.templateRulesTab}
+          {ORD_COPY.autoIssuanceTab}
         </Link>
         <Link
           to={`/rooms/${slug}/ord/profile`}

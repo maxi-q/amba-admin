@@ -29,9 +29,6 @@ import {
   useOrdContractTemplatesControllerUpdateTemplate,
 } from "@/api/generated/ord-contract-templates/ord-contract-templates";
 import type {
-  CreateOrdContractTemplateRequestDto,
-  CreateOrdContractTemplateRequestDtoDateEndStrategy,
-  CreateOrdContractTemplateRequestDtoDateStrategy,
   CreateOrdContractTemplateRequestDtoFlagsItem,
   CreateOrdContractTemplateRequestDtoType,
   OrdContractTemplateItemDto,
@@ -44,103 +41,20 @@ import {
   ORD_COPY,
 } from "./ord.constants";
 import { formatOrdDate, ordContractTypeLabel } from "./ord.utils";
+import {
+  buildOrdContractTemplatePayload,
+  emptyOrdTemplateForm,
+  ORD_TEMPLATE_DATE_END_STRATEGY_OPTIONS,
+  ORD_TEMPLATE_DATE_STRATEGY_OPTIONS,
+  ORD_TEMPLATE_FLAG_OPTIONS,
+  ORD_TEMPLATE_SELECT_EMPTY,
+  ordTemplateFormFromTemplate,
+  type OrdTemplateFormState,
+} from "./ordTemplateForm.utils";
 
-const SELECT_EMPTY = "__empty__";
-const DATE_STRATEGY_OPTIONS: { value: CreateOrdContractTemplateRequestDtoDateStrategy; label: string }[] = [
-  { value: "today", label: "Дата создания договора" },
-  { value: "fixed", label: "Фиксированная дата" },
-];
-const DATE_END_STRATEGY_OPTIONS: { value: CreateOrdContractTemplateRequestDtoDateEndStrategy; label: string }[] = [
-  { value: "none", label: "Без даты окончания" },
-  { value: "fixed", label: "Фиксированная дата" },
-  { value: "offsetDays", label: "Через N дней" },
-];
-const FLAG_OPTIONS: { value: CreateOrdContractTemplateRequestDtoFlagsItem; label: string }[] = [
-  { value: "vat_included", label: "НДС включён" },
-  { value: "contractor_is_creatives_reporter", label: "Исполнитель — репортёр креативов" },
-  { value: "agent_acting_for_publisher", label: "Агент действует для издателя" },
-  { value: "is_charge_paid_by_agent", label: "Вознаграждение платит агент" },
-];
-
-type TemplateFormState = {
-  name: string;
-  type: CreateOrdContractTemplateRequestDtoType;
-  dateStrategy: CreateOrdContractTemplateRequestDtoDateStrategy;
-  fixedDate: string;
-  dateEndStrategy: CreateOrdContractTemplateRequestDtoDateEndStrategy;
-  fixedDateEnd: string;
-  dateEndOffsetDays: string;
-  fixedAmount: string;
-  autoGetCid: boolean;
-  actionType: string;
-  subjectType: string;
-  flags: CreateOrdContractTemplateRequestDtoFlagsItem[];
-};
-
-const emptyForm = (): TemplateFormState => ({
-  name: "",
-  type: "service",
-  dateStrategy: "today",
-  fixedDate: "",
-  dateEndStrategy: "none",
-  fixedDateEnd: "",
-  dateEndOffsetDays: "",
-  fixedAmount: "",
-  autoGetCid: false,
-  actionType: "",
-  subjectType: "",
-  flags: [],
-});
-
-const dateInput = (iso: string | null | undefined) => {
-  if (!iso) return "";
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
-};
-const isoDate = (value: string) => (value ? new Date(`${value}T12:00:00`).toISOString() : undefined);
 const errorMessage = (error: unknown, fallback: string) => (error instanceof Error ? error.message : fallback);
 const optionLabel = (options: { value: string; label: string }[], value: string | null | undefined) =>
   options.find((option) => option.value === value)?.label ?? value ?? "—";
-
-const formFromTemplate = (template: OrdContractTemplateItemDto): TemplateFormState => ({
-  name: template.name,
-  type: template.type,
-  dateStrategy: template.dateStrategy,
-  fixedDate: dateInput(template.fixedDate),
-  dateEndStrategy: template.dateEndStrategy,
-  fixedDateEnd: dateInput(template.fixedDateEnd),
-  dateEndOffsetDays: template.dateEndOffsetDays ? String(template.dateEndOffsetDays) : "",
-  fixedAmount: template.fixedAmount ?? "",
-  autoGetCid: template.autoGetCid,
-  actionType: template.actionType ?? "",
-  subjectType: template.subjectType ?? "",
-  flags: template.flags ?? [],
-});
-
-const buildPayload = (form: TemplateFormState): CreateOrdContractTemplateRequestDto => {
-  const payload: CreateOrdContractTemplateRequestDto = {
-    name: form.name.trim(),
-    type: form.type,
-    dateStrategy: form.dateStrategy,
-    dateEndStrategy: form.dateEndStrategy,
-    autoGetCid: form.autoGetCid,
-  };
-  const fixedDate = isoDate(form.fixedDate);
-  const fixedDateEnd = isoDate(form.fixedDateEnd);
-  const offsetDays = Number(form.dateEndOffsetDays);
-
-  if (form.dateStrategy === "fixed" && fixedDate) payload.fixedDate = fixedDate;
-  if (form.dateEndStrategy === "fixed" && fixedDateEnd) payload.fixedDateEnd = fixedDateEnd;
-  if (form.dateEndStrategy === "offsetDays" && Number.isFinite(offsetDays) && offsetDays > 0) {
-    payload.dateEndOffsetDays = offsetDays;
-  }
-  if (form.fixedAmount.trim()) payload.fixedAmount = form.fixedAmount.trim();
-  if (form.actionType) payload.actionType = form.actionType as CreateOrdContractTemplateRequestDto["actionType"];
-  if (form.subjectType) payload.subjectType = form.subjectType as CreateOrdContractTemplateRequestDto["subjectType"];
-  if (form.flags.length) payload.flags = form.flags;
-
-  return payload;
-};
 
 export default function OrdTemplatesPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -150,7 +64,7 @@ export default function OrdTemplatesPage() {
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [form, setForm] = useState<TemplateFormState>(() => emptyForm());
+  const [form, setForm] = useState<OrdTemplateFormState>(() => emptyOrdTemplateForm());
   const templatesQuery = useOrdContractTemplatesControllerGetTemplates(
     roomId,
     { page, size: 10 },
@@ -171,7 +85,7 @@ export default function OrdTemplatesPage() {
 
   useEffect(() => {
     if (detailQuery.data && selectedTemplateId) {
-      setForm(formFromTemplate(detailQuery.data));
+      setForm(ordTemplateFormFromTemplate(detailQuery.data));
     }
   }, [detailQuery.data, selectedTemplateId]);
 
@@ -187,14 +101,14 @@ export default function OrdTemplatesPage() {
   const closeSheet = () => {
     setSheetOpen(false);
     setSelectedTemplateId(null);
-    setForm(emptyForm());
+    setForm(emptyOrdTemplateForm());
     createTemplate.reset();
     updateTemplate.reset();
   };
 
   const openCreateSheet = () => {
     setSelectedTemplateId(null);
-    setForm(emptyForm());
+    setForm(emptyOrdTemplateForm());
     createTemplate.reset();
     updateTemplate.reset();
     setSheetOpen(true);
@@ -202,7 +116,7 @@ export default function OrdTemplatesPage() {
 
   const openEditSheet = (template: OrdContractTemplateItemDto) => {
     setSelectedTemplateId(template.id);
-    setForm(formFromTemplate(template));
+    setForm(ordTemplateFormFromTemplate(template));
     createTemplate.reset();
     updateTemplate.reset();
     setSheetOpen(true);
@@ -217,7 +131,7 @@ export default function OrdTemplatesPage() {
 
   const handleSubmit = () => {
     if (!roomId || !form.name.trim()) return;
-    const payload = buildPayload(form);
+    const payload = buildOrdContractTemplatePayload(form);
 
     if (selectedTemplateId) {
       updateTemplate.mutate(
@@ -311,11 +225,11 @@ export default function OrdTemplatesPage() {
                     </td>
                     <td className="px-3 py-2.5 align-top text-foreground">{ordContractTypeLabel(template.type)}</td>
                     <td className="px-3 py-2.5 align-top">
-                      <span className="text-foreground">{optionLabel(DATE_STRATEGY_OPTIONS, template.dateStrategy)}</span>
+                      <span className="text-foreground">{optionLabel(ORD_TEMPLATE_DATE_STRATEGY_OPTIONS, template.dateStrategy)}</span>
                       {template.fixedDate ? <span className="block text-xs text-muted-foreground">{formatOrdDate(template.fixedDate)}</span> : null}
                     </td>
                     <td className="px-3 py-2.5 align-top">
-                      <span className="text-foreground">{optionLabel(DATE_END_STRATEGY_OPTIONS, template.dateEndStrategy)}</span>
+                      <span className="text-foreground">{optionLabel(ORD_TEMPLATE_DATE_END_STRATEGY_OPTIONS, template.dateEndStrategy)}</span>
                       {template.fixedDateEnd || template.dateEndOffsetDays ? (
                         <span className="block text-xs text-muted-foreground">
                           {template.fixedDateEnd ? formatOrdDate(template.fixedDateEnd) : `+${template.dateEndOffsetDays} дн.`}
@@ -383,8 +297,8 @@ function TemplateForm({
   setForm,
   toggleFlag,
 }: {
-  form: TemplateFormState;
-  setForm: Dispatch<SetStateAction<TemplateFormState>>;
+  form: OrdTemplateFormState;
+  setForm: Dispatch<SetStateAction<OrdTemplateFormState>>;
   toggleFlag: (value: CreateOrdContractTemplateRequestDtoFlagsItem) => void;
 }) {
   return (
@@ -394,9 +308,9 @@ function TemplateForm({
         <InputField value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Например, договор для событий" aria-label="Название шаблона" />
       </div>
       <SelectBlock label="Тип договора" value={form.type} onChange={(value) => setForm((prev) => ({ ...prev, type: value as CreateOrdContractTemplateRequestDtoType }))} options={ORD_CONTRACT_TYPE_OPTIONS} />
-      <SelectBlock label="Дата заключения" value={form.dateStrategy} onChange={(value) => setForm((prev) => ({ ...prev, dateStrategy: value as CreateOrdContractTemplateRequestDtoDateStrategy }))} options={DATE_STRATEGY_OPTIONS} />
+      <SelectBlock label="Дата заключения" value={form.dateStrategy} onChange={(value) => setForm((prev) => ({ ...prev, dateStrategy: value as OrdTemplateFormState["dateStrategy"] }))} options={ORD_TEMPLATE_DATE_STRATEGY_OPTIONS} />
       {form.dateStrategy === "fixed" ? <InputBlock label="Фиксированная дата заключения" type="date" value={form.fixedDate} onChange={(value) => setForm((prev) => ({ ...prev, fixedDate: value }))} /> : null}
-      <SelectBlock label="Дата окончания" value={form.dateEndStrategy} onChange={(value) => setForm((prev) => ({ ...prev, dateEndStrategy: value as CreateOrdContractTemplateRequestDtoDateEndStrategy }))} options={DATE_END_STRATEGY_OPTIONS} />
+      <SelectBlock label="Дата окончания" value={form.dateEndStrategy} onChange={(value) => setForm((prev) => ({ ...prev, dateEndStrategy: value as OrdTemplateFormState["dateEndStrategy"] }))} options={ORD_TEMPLATE_DATE_END_STRATEGY_OPTIONS} />
       {form.dateEndStrategy === "fixed" ? <InputBlock label="Фиксированная дата окончания" type="date" value={form.fixedDateEnd} onChange={(value) => setForm((prev) => ({ ...prev, fixedDateEnd: value }))} /> : null}
       {form.dateEndStrategy === "offsetDays" ? <InputBlock label="Сдвиг в днях" type="number" value={form.dateEndOffsetDays} onChange={(value) => setForm((prev) => ({ ...prev, dateEndOffsetDays: value }))} /> : null}
       <InputBlock label="Сумма" value={form.fixedAmount} onChange={(value) => setForm((prev) => ({ ...prev, fixedAmount: value }))} placeholder="Необязательно" />
@@ -404,12 +318,12 @@ function TemplateForm({
         <input type="checkbox" className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2" checked={form.autoGetCid} onChange={(e) => setForm((prev) => ({ ...prev, autoGetCid: e.target.checked }))} />
         <span><span className="block font-medium text-foreground">Автоматически запрашивать CID</span><span className="block text-muted-foreground">Новые договоры будут вставать в очередь на получение CID.</span></span>
       </label>
-      <SelectBlock label="Тип действия" value={form.actionType || SELECT_EMPTY} onChange={(value) => setForm((prev) => ({ ...prev, actionType: value === SELECT_EMPTY ? "" : value }))} options={[{ value: SELECT_EMPTY, label: "Не указано" }, ...ORD_CONTRACT_ACTION_OPTIONS]} />
-      <SelectBlock label="Предмет договора" value={form.subjectType || SELECT_EMPTY} onChange={(value) => setForm((prev) => ({ ...prev, subjectType: value === SELECT_EMPTY ? "" : value }))} options={[{ value: SELECT_EMPTY, label: "Не указано" }, ...ORD_CONTRACT_SUBJECT_OPTIONS]} />
+      <SelectBlock label="Тип действия" value={form.actionType || ORD_TEMPLATE_SELECT_EMPTY} onChange={(value) => setForm((prev) => ({ ...prev, actionType: value === ORD_TEMPLATE_SELECT_EMPTY ? "" : value }))} options={[{ value: ORD_TEMPLATE_SELECT_EMPTY, label: "Не указано" }, ...ORD_CONTRACT_ACTION_OPTIONS]} />
+      <SelectBlock label="Предмет договора" value={form.subjectType || ORD_TEMPLATE_SELECT_EMPTY} onChange={(value) => setForm((prev) => ({ ...prev, subjectType: value === ORD_TEMPLATE_SELECT_EMPTY ? "" : value }))} options={[{ value: ORD_TEMPLATE_SELECT_EMPTY, label: "Не указано" }, ...ORD_CONTRACT_SUBJECT_OPTIONS]} />
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Флаги</p>
         <div className="flex flex-col gap-2 rounded-md border border-border p-3">
-          {FLAG_OPTIONS.map((flag) => (
+          {ORD_TEMPLATE_FLAG_OPTIONS.map((flag) => (
             <label key={flag.value} className="flex cursor-pointer items-start gap-2 text-sm leading-snug">
               <input type="checkbox" className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2" checked={form.flags.includes(flag.value)} onChange={() => toggleFlag(flag.value)} />
               <span>{flag.label}</span>
