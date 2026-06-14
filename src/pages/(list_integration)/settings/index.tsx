@@ -14,6 +14,7 @@ import { DeleteRoomDialog } from "./components/DeleteRoomDialog";
 import { SettingsBotsSection } from "./components/SettingsBotsSection";
 import { SettingsWebhookSection } from "./components/SettingsWebhookSection";
 import { OrdIssuanceRuleSummaryCard } from "../ord/components/OrdIssuanceRuleSummaryCard";
+import { OrdRoomFilesSummaryCard } from "../ord/components/OrdRoomFilesSummaryCard";
 
 export default function SettingPage() {
   const { slug } = useParams();
@@ -183,6 +184,12 @@ export default function SettingPage() {
         to={`/rooms/${slug}/ord/auto-issuance`}
         disabled={!room.ordPerson}
         disabledText="Чтобы настроить автовыпуск, сначала создайте профиль ОРД комнаты."
+      />
+
+      <OrdRoomFilesSummaryCard
+        to={`/rooms/${slug}/ord/files`}
+        disabled={!room.ordPerson}
+        disabledText="Чтобы загружать ORD-файлы, сначала создайте профиль ОРД комнаты."
       />
 
       <div ref={botsSectionRef}>

@@ -28,6 +28,7 @@ import OrdProfilePage from './ord/profile';
 import OrdContractDetailPage from './ord/OrdContractDetailPage';
 import OrdTemplatesPage from './ord/templates';
 import OrdAutoIssuancePage from './ord/auto-issuance';
+import OrdRoomFilesPage from './ord/files';
 import OrdTaskIssuanceRulePage from './creativetasks/OrdTaskIssuanceRulePage';
 
 export {
@@ -60,6 +61,7 @@ export {
     OrdContractDetailPage,
     OrdTemplatesPage,
     OrdAutoIssuancePage,
+    OrdRoomFilesPage,
     OrdTaskIssuanceRulePage,
     EventsLayout
 };

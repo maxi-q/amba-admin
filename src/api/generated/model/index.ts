@@ -216,7 +216,6 @@ export * from './updateSubmissionStatusRequestDtoStatus';
 export * from './updateSubmissionStatusResponseDto';
 export * from './updateSubmissionStatusResponseDtoStatus';
 export * from './uploadUrlResponseDto';
-export * from './uploadUrlResponseDtoFields';
 export * from './upsertOrdIssuanceRuleDto';
 export * from './upsertOrdIssuanceRuleDtoActionType';
 export * from './upsertOrdIssuanceRuleDtoDateEndStrategy';

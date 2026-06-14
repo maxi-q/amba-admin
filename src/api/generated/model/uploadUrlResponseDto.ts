@@ -5,13 +5,10 @@
  * Description
  * OpenAPI spec version: 1.0
  */
-import type { UploadUrlResponseDtoFields } from './uploadUrlResponseDtoFields';
 
 export interface UploadUrlResponseDto {
-  /** URL бакета, на который клиент делает multipart/form-data POST */
+  /** Presigned PUT URL — клиент делает PUT {url} с телом файла */
   url: string;
-  /** Поля формы, которые нужно отправить вместе с файлом (поле file — последним) */
-  fields: UploadUrlResponseDtoFields;
   /** Ключ объекта в бакете */
   key: string;
   /** Максимальный размер тела в байтах */
