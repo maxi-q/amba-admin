@@ -5,6 +5,8 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { UpdateCreativeTaskResponseDtoOrdForm } from './updateCreativeTaskResponseDtoOrdForm';
+import type { UpdateCreativeTaskResponseDtoOrdFlagsItem } from './updateCreativeTaskResponseDtoOrdFlagsItem';
 
 export interface UpdateCreativeTaskResponseDto {
   /** Unique identifier */
@@ -33,4 +35,41 @@ export interface UpdateCreativeTaskResponseDto {
   isWhitelistEnabled: boolean;
   /** ID комнаты */
   roomId: string;
+  /**
+   * Форма распространения креатива (тип креатива)
+   * @nullable
+   */
+  ordForm?: UpdateCreativeTaskResponseDtoOrdForm;
+  /** Особый тип рекламного объявления (вид рекламы). native на запись не поддерживается ОРД */
+  ordFlags?: UpdateCreativeTaskResponseDtoOrdFlagsItem[];
+  /** Коды ККТУ (1 для обычного креатива, до 16 для кобрендингового) */
+  ordKktus?: string[];
+  /**
+   * Бренд рекламируемых товаров или услуг
+   * @nullable
+   */
+  ordBrand?: string | null;
+  /**
+   * Вид рекламируемых товаров или услуг
+   * @nullable
+   */
+  ordCategory?: string | null;
+  /**
+   * Дополнительное описание рекламируемых товаров или услуг
+   * @nullable
+   */
+  ordProductDescription?: string | null;
+  /**
+   * Описание целевой аудитории
+   * @nullable
+   */
+  ordTargeting?: string | null;
+  /** Может ли амбассадор прикреплять свои медиафайлы. false — используются только дефолтные медиа (требуется минимум один). */
+  allowAmbassadorMedia: boolean;
+  /** Может ли амбассадор использовать свои тексты. false — используются только дефолтные тексты (требуется минимум один). */
+  allowAmbassadorText: boolean;
+  /** ID дефолтных медиафайлов комнаты */
+  defaultMediaIds: string[];
+  /** Дефолтные тексты креатива */
+  defaultTexts: string[];
 }

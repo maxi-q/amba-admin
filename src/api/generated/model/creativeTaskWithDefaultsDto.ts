@@ -5,10 +5,16 @@
  * Description
  * OpenAPI spec version: 1.0
  */
-import type { CreateCreativeTaskRequestDtoOrdForm } from './createCreativeTaskRequestDtoOrdForm';
-import type { CreateCreativeTaskRequestDtoOrdFlagsItem } from './createCreativeTaskRequestDtoOrdFlagsItem';
+import type { CreativeTaskWithDefaultsDtoOrdForm } from './creativeTaskWithDefaultsDtoOrdForm';
+import type { CreativeTaskWithDefaultsDtoOrdFlagsItem } from './creativeTaskWithDefaultsDtoOrdFlagsItem';
 
-export interface CreateCreativeTaskRequestDto {
+export interface CreativeTaskWithDefaultsDto {
+  /** Unique identifier */
+  id: string;
+  /** Timestamp of when the record was created */
+  createdAt: string;
+  /** Timestamp of the last update of the record */
+  updatedAt: string;
   /** Название задания */
   title: string;
   /**
@@ -23,15 +29,19 @@ export interface CreateCreativeTaskRequestDto {
    * @nullable
    */
   endsAt?: string | null;
+  /** Флаг удаления */
+  isDeleted: boolean;
+  /** Включён ли вайтлист доступа для амбассадоров */
+  isWhitelistEnabled: boolean;
   /** ID комнаты */
   roomId: string;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable
    */
-  ordForm?: CreateCreativeTaskRequestDtoOrdForm;
+  ordForm?: CreativeTaskWithDefaultsDtoOrdForm;
   /** Особый тип рекламного объявления (вид рекламы). native на запись не поддерживается ОРД */
-  ordFlags?: CreateCreativeTaskRequestDtoOrdFlagsItem[];
+  ordFlags?: CreativeTaskWithDefaultsDtoOrdFlagsItem[];
   /** Коды ККТУ (1 для обычного креатива, до 16 для кобрендингового) */
   ordKktus?: string[];
   /**
@@ -58,8 +68,8 @@ export interface CreateCreativeTaskRequestDto {
   allowAmbassadorMedia: boolean;
   /** Может ли амбассадор использовать свои тексты. false — используются только дефолтные тексты (требуется минимум один). */
   allowAmbassadorText: boolean;
-  /** ID дефолтных медиафайлов комнаты (амбассадор сможет использовать их по умолчанию) */
-  defaultMediaIds?: string[];
+  /** ID дефолтных медиафайлов комнаты */
+  defaultMediaIds: string[];
   /** Дефолтные тексты креатива */
-  defaultTexts?: string[];
+  defaultTexts: string[];
 }

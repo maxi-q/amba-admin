@@ -43,6 +43,12 @@ export function CreativeTaskDetailHeader() {
         >
           Приглашения в задачу
         </NavLink>
+        <NavLink
+          to={`${base}/ord-creative`}
+          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+        >
+          Креатив ОРД
+        </NavLink>
       </nav>
     </div>
   );

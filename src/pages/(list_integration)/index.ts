@@ -30,6 +30,7 @@ import OrdTemplatesPage from './ord/templates';
 import OrdAutoIssuancePage from './ord/auto-issuance';
 import OrdRoomFilesPage from './ord/files';
 import OrdTaskIssuanceRulePage from './creativetasks/OrdTaskIssuanceRulePage';
+import OrdCreativePage from './creativetasks/OrdCreativePage';
 
 export {
     SettingPage,
@@ -63,5 +64,6 @@ export {
     OrdAutoIssuancePage,
     OrdRoomFilesPage,
     OrdTaskIssuanceRulePage,
+    OrdCreativePage,
     EventsLayout
 };

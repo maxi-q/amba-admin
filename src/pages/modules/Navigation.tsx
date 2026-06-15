@@ -31,7 +31,8 @@ import {
   OrdTemplatesPage,
   OrdAutoIssuancePage,
   OrdRoomFilesPage,
-  OrdTaskIssuanceRulePage
+  OrdTaskIssuanceRulePage,
+  OrdCreativePage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -134,6 +135,7 @@ export const Navigation = () => {
           <Route index element={<CreativeTaskDescriptionPage />} />
           <Route path="answers" element={<CreativeTaskAnswersPage />} />
           <Route path="invitations" element={<CreativeTaskInvitationsPage />} />
+          <Route path="ord-creative" element={<OrdCreativePage />} />
           <Route path="ord-auto-issuance" element={<OrdTaskIssuanceRulePage />} />
         </Route>
 

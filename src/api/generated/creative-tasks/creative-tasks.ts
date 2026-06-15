@@ -25,12 +25,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  BaseCreativeTaskDto,
   BaseCreativeTaskSubmissionDto,
   CreateCreativeTaskRequestDto,
   CreateCreativeTaskResponseDto,
   CreateSubmissionByAmbassadorRequestDto,
   CreateSubmissionResponseDto,
+  CreativeTaskWithDefaultsDto,
   CreativeTasksControllerAddToWhitelistBody,
   CreativeTasksControllerGetCreativeTasksParams,
   CreativeTasksControllerGetMySubmissionsParams,
@@ -162,7 +162,7 @@ export const creativeTasksControllerGetCreativeTaskById = (
 ) => {
       
       
-      return customInstance<BaseCreativeTaskDto>(
+      return customInstance<CreativeTaskWithDefaultsDto>(
       {url: `/api/creative-tasks/${id}`, method: 'GET', signal
     },
       options);

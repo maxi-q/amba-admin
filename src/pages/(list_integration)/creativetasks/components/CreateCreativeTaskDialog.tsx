@@ -69,6 +69,8 @@ export function CreateCreativeTaskDialog({
       startsAt: toISOString(startsAt),
       endsAt: toISOString(endsAt),
       roomId,
+      allowAmbassadorMedia: true,
+      allowAmbassadorText: true,
     };
     createCreativeTask(payload, {
       onSuccess: () => {

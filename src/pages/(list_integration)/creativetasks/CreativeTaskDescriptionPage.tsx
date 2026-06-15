@@ -2,13 +2,14 @@ import { useOutletContext, useParams } from "react-router-dom";
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
-import type { BaseCreativeTaskDto } from "@/api/generated/model";
+import type { CreativeTaskWithDefaultsDto } from "@/api/generated/model";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
 import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
 import { OrdIssuanceRuleSummaryCard } from "../ord/components/OrdIssuanceRuleSummaryCard";
+import { OrdCreativeSummaryCard } from "./components/OrdCreativeSummaryCard";
 
 interface OutletCtx {
-  task: BaseCreativeTaskDto;
+  task: CreativeTaskWithDefaultsDto;
 }
 
 /**
@@ -74,6 +75,8 @@ export default function CreativeTaskDescriptionPage() {
         onClose={() => setEditOpen(false)}
         task={task}
       />
+
+      <OrdCreativeSummaryCard task={task} slug={slug ?? ""} taskId={taskId ?? ""} />
 
       <OrdIssuanceRuleSummaryCard
         title="Автовыпуск ORD-договоров"
