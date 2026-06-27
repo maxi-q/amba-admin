@@ -27,6 +27,18 @@ export interface UpdateCreativeTaskRequestDto {
   isDeleted?: boolean;
   /** Включён ли вайтлист доступа для амбассадоров */
   isWhitelistEnabled?: boolean;
+  /** Допустимые форматы ответа на задание */
+  allowedFormats?: string[];
+  /**
+   * Гарантированная награда за задание (в баллах)
+   * @minimum 0
+   */
+  guaranteedRewardBalls?: number;
+  /**
+   * Максимальная награда за задание (в баллах)
+   * @minimum 0
+   */
+  maxRewardBalls?: number;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable

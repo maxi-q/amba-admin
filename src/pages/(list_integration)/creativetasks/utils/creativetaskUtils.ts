@@ -26,3 +26,40 @@ export function isTaskActive(startsAt: string | null, endsAt: string | null): bo
   const end = new Date(endsAt || '');
   return !isNaN(start.getTime()) && !isNaN(end.getTime()) && now >= start && now <= end;
 }
+
+export function parseAllowedFormatsInput(value: string): string[] {
+  return Array.from(
+    new Set(
+      value
+        .split(/\r?\n/)
+        .map((format) => format.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+export function formatAllowedFormatsInput(formats: string[] | undefined): string {
+  return formats?.join('\n') ?? '';
+}
+
+export function parseRewardBalls(value: string): number {
+  if (!value.trim()) return 0;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function formatRewardRange(guaranteed: number | undefined, max: number | undefined): string {
+  const guaranteedValue = guaranteed ?? 0;
+  const maxValue = max ?? 0;
+
+  if (guaranteedValue === 0 && maxValue === 0) {
+    return 'Без баллов';
+  }
+
+  if (maxValue === guaranteedValue) {
+    return `${guaranteedValue} баллов`;
+  }
+
+  return `${guaranteedValue}–${maxValue} баллов`;
+}

@@ -4,7 +4,7 @@ import { Pencil } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
 import type { CreativeTaskWithDefaultsDto } from "@/api/generated/model";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
-import { formatDateRange, isTaskActive } from "./utils/creativetaskUtils";
+import { formatDateRange, formatRewardRange, isTaskActive } from "./utils/creativetaskUtils";
 import { OrdIssuanceRuleSummaryCard } from "../ord/components/OrdIssuanceRuleSummaryCard";
 import { OrdCreativeSummaryCard } from "./components/OrdCreativeSummaryCard";
 
@@ -48,6 +48,20 @@ export default function CreativeTaskDescriptionPage() {
                 {task.description || "—"}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">{dateRange}</p>
+              <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                <Badge variant="secondary">
+                  {formatRewardRange(task.guaranteedRewardBalls, task.maxRewardBalls)}
+                </Badge>
+                {task.allowedFormats?.length ? (
+                  task.allowedFormats.map((format) => (
+                    <Badge key={format} variant="outline">
+                      {format}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge variant="outline">Любой формат</Badge>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {!task.isDeleted ? (
