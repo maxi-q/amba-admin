@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreateCreativeTaskRequestDtoAllowedFormatsItem } from './createCreativeTaskRequestDtoAllowedFormatsItem';
 import type { CreateCreativeTaskRequestDtoOrdForm } from './createCreativeTaskRequestDtoOrdForm';
 import type { CreateCreativeTaskRequestDtoOrdFlagsItem } from './createCreativeTaskRequestDtoOrdFlagsItem';
 
@@ -23,18 +24,15 @@ export interface CreateCreativeTaskRequestDto {
    * @nullable
    */
   endsAt?: string | null;
+  /** Критерии выполнения задания */
+  criteria?: string[];
   /** Допустимые форматы ответа на задание */
-  allowedFormats?: string[];
+  allowedFormats?: CreateCreativeTaskRequestDtoAllowedFormatsItem[];
   /**
-   * Гарантированная награда за задание (в баллах)
+   * Минимальная награда за задание (в баллах)
    * @minimum 0
    */
-  guaranteedRewardBalls: number;
-  /**
-   * Максимальная награда за задание (в баллах)
-   * @minimum 0
-   */
-  maxRewardBalls: number;
+  minimalRewardInBalls: number;
   /** ID комнаты */
   roomId: string;
   /**

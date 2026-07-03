@@ -10,6 +10,8 @@ export enum QueryKeys {
 
   CREATIVE_TASKS = 'creativeTasks',
   CREATIVE_TASK = 'creativeTask',
+  PRIVATE_CREATIVE_TASKS = 'privateCreativeTasks',
+  PRIVATE_CREATIVE_TASK = 'privateCreativeTask',
   SUBMISSIONS = 'submissions',
   SUBMISSION = 'submission',
   CREATIVE_TASK_WHITELIST = 'creativeTaskWhitelist',

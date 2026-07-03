@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
-import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
+import { useRoomPrivateCreativeTasks } from "@/hooks/creativetasks/useRoomPrivateCreativeTasks";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
@@ -31,7 +31,7 @@ export default function InvitationsPage() {
 
   const roomId = room?.id ?? "";
 
-  const { tasks } = useRoomCreativeTasks(roomId, { page: 1, size: 100 });
+  const { tasks } = useRoomPrivateCreativeTasks(roomId, { page: 1, size: 100 });
   const { events } = useEvents({ page: 1, size: 100 }, slug ?? "");
 
   const { invitations, isLoading, isError, error } = useRoomInvitations(roomId);
@@ -62,7 +62,7 @@ export default function InvitationsPage() {
 
   const roomInvitations = useMemo(() => {
     return invitations.filter(
-      (inv) => (inv.taskIds ?? []).length === 0 && (inv.eventIds ?? []).length === 0
+      (inv) => (inv.privateTaskIds ?? []).length === 0 && (inv.eventIds ?? []).length === 0
     );
   }, [invitations]);
 
@@ -162,7 +162,7 @@ export default function InvitationsPage() {
         onClose={handleCloseForm}
         roomId={roomId}
         slug={slug ?? ""}
-        lockedTaskIds={ROOM_INVITATION_LINK_IDS}
+        lockedPrivateTaskIds={ROOM_INVITATION_LINK_IDS}
         lockedEventIds={ROOM_INVITATION_LINK_IDS}
         titleOverride={{
           create: "Создать приглашение в комнату",

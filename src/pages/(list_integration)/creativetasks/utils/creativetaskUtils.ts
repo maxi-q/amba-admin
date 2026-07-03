@@ -27,7 +27,20 @@ export function isTaskActive(startsAt: string | null, endsAt: string | null): bo
   return !isNaN(start.getTime()) && !isNaN(end.getTime()) && now >= start && now <= end;
 }
 
-export function parseAllowedFormatsInput(value: string): string[] {
+export const CREATIVE_TASK_FORMAT_LABELS = {
+  STORY: 'История',
+  POST: 'Пост',
+  ARTICLE: 'Статья',
+  VIDEO: 'Видео',
+} as const;
+
+export type CreativeTaskFormat = keyof typeof CREATIVE_TASK_FORMAT_LABELS;
+
+export const CREATIVE_TASK_FORMAT_OPTIONS = Object.entries(CREATIVE_TASK_FORMAT_LABELS).map(
+  ([value, label]) => ({ value: value as CreativeTaskFormat, label })
+);
+
+export function parseMultilineList(value: string): string[] {
   return Array.from(
     new Set(
       value
@@ -38,8 +51,8 @@ export function parseAllowedFormatsInput(value: string): string[] {
   );
 }
 
-export function formatAllowedFormatsInput(formats: string[] | undefined): string {
-  return formats?.join('\n') ?? '';
+export function formatMultilineList(items: string[] | undefined): string {
+  return items?.join('\n') ?? '';
 }
 
 export function parseRewardBalls(value: string): number {
@@ -49,17 +62,24 @@ export function parseRewardBalls(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function formatRewardRange(guaranteed: number | undefined, max: number | undefined): string {
-  const guaranteedValue = guaranteed ?? 0;
-  const maxValue = max ?? 0;
-
-  if (guaranteedValue === 0 && maxValue === 0) {
+export function formatBallsReward(value: number | undefined): string {
+  const reward = value ?? 0;
+  if (reward === 0) {
     return 'Без баллов';
   }
 
-  if (maxValue === guaranteedValue) {
-    return `${guaranteedValue} баллов`;
+  return `${reward} баллов`;
+}
+
+export function formatRubReward(value: number | undefined): string {
+  const reward = value ?? 0;
+  if (reward === 0) {
+    return 'Без оплаты';
   }
 
-  return `${guaranteedValue}–${maxValue} баллов`;
+  return `${reward} ₽`;
+}
+
+export function formatTaskFormat(format: string): string {
+  return CREATIVE_TASK_FORMAT_LABELS[format as CreativeTaskFormat] ?? format;
 }

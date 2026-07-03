@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { BaseCreativeTaskDtoAllowedFormatsItem } from './baseCreativeTaskDtoAllowedFormatsItem';
 import type { BaseCreativeTaskDtoOrdForm } from './baseCreativeTaskDtoOrdForm';
 import type { BaseCreativeTaskDtoOrdFlagsItem } from './baseCreativeTaskDtoOrdFlagsItem';
 
@@ -31,20 +32,15 @@ export interface BaseCreativeTaskDto {
   endsAt?: string | null;
   /** Флаг удаления */
   isDeleted: boolean;
-  /** Включён ли вайтлист доступа для амбассадоров */
-  isWhitelistEnabled: boolean;
+  /** Критерии выполнения задания */
+  criteria?: string[];
   /** Допустимые форматы ответа на задание */
-  allowedFormats?: string[];
+  allowedFormats?: BaseCreativeTaskDtoAllowedFormatsItem[];
   /**
-   * Гарантированная награда за задание (в баллах)
+   * Минимальная награда за задание (в баллах)
    * @minimum 0
    */
-  guaranteedRewardBalls: number;
-  /**
-   * Максимальная награда за задание (в баллах)
-   * @minimum 0
-   */
-  maxRewardBalls: number;
+  minimalRewardInBalls: number;
   /** ID комнаты */
   roomId: string;
   /**

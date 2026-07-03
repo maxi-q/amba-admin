@@ -31,6 +31,7 @@ import type {
   AmbassadorControllerGetMyEventApplicationsParams,
   AmbassadorControllerGetMyEventsParams,
   AmbassadorControllerGetMyOrdContractsParams,
+  AmbassadorControllerGetMyPrivateCreativeTasksParams,
   AmbassadorControllerGetMyRoomApplicationsParams,
   AmbassadorControllerGetRoomApplicationsParams,
   AmbassadorRoomPublicDto,
@@ -46,6 +47,7 @@ import type {
   GetMyCreativeTasksResponseDto,
   GetMyEventsResponseDto,
   GetMyOrdContractsResponseDto,
+  GetMyPrivateCreativeTasksResponseDto,
   GetRoomApplicationsResponseDto,
   OrdPersonItemDto,
   UpdateAmbassadorMeRequestDto,
@@ -543,6 +545,99 @@ export function useAmbassadorControllerGetMyCreativeTasks<TData = Awaited<Return
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAmbassadorControllerGetMyCreativeTasksQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Возвращает приватные задания. Задание с включённым вайтлистом видно только амбассадорам из вайтлиста.
+ * @summary Приватные задания в комнатах, где текущий амбассадор одобрен
+ */
+export const ambassadorControllerGetMyPrivateCreativeTasks = (
+    params?: AmbassadorControllerGetMyPrivateCreativeTasksParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<GetMyPrivateCreativeTasksResponseDto>(
+      {url: `/api/ambassador/me/private-creative-tasks`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getAmbassadorControllerGetMyPrivateCreativeTasksQueryKey = (params?: AmbassadorControllerGetMyPrivateCreativeTasksParams,) => {
+    return [
+    `/api/ambassador/me/private-creative-tasks`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getAmbassadorControllerGetMyPrivateCreativeTasksQueryOptions = <TData = Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError = unknown>(params?: AmbassadorControllerGetMyPrivateCreativeTasksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAmbassadorControllerGetMyPrivateCreativeTasksQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>> = ({ signal }) => ambassadorControllerGetMyPrivateCreativeTasks(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AmbassadorControllerGetMyPrivateCreativeTasksQueryResult = NonNullable<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>>
+export type AmbassadorControllerGetMyPrivateCreativeTasksQueryError = unknown
+
+
+export function useAmbassadorControllerGetMyPrivateCreativeTasks<TData = Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError = unknown>(
+ params: undefined |  AmbassadorControllerGetMyPrivateCreativeTasksParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>,
+          TError,
+          Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAmbassadorControllerGetMyPrivateCreativeTasks<TData = Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError = unknown>(
+ params?: AmbassadorControllerGetMyPrivateCreativeTasksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>,
+          TError,
+          Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAmbassadorControllerGetMyPrivateCreativeTasks<TData = Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError = unknown>(
+ params?: AmbassadorControllerGetMyPrivateCreativeTasksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Приватные задания в комнатах, где текущий амбассадор одобрен
+ */
+
+export function useAmbassadorControllerGetMyPrivateCreativeTasks<TData = Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError = unknown>(
+ params?: AmbassadorControllerGetMyPrivateCreativeTasksParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof ambassadorControllerGetMyPrivateCreativeTasks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAmbassadorControllerGetMyPrivateCreativeTasksQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

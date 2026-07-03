@@ -1,11 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getOrdIssuanceRulesControllerGetRoomIssuanceRuleQueryKey,
-  getOrdIssuanceRulesControllerGetTaskIssuanceRuleQueryKey,
   useOrdIssuanceRulesControllerGetRoomIssuanceRule,
-  useOrdIssuanceRulesControllerGetTaskIssuanceRule,
   useOrdIssuanceRulesControllerUpsertRoomIssuanceRule,
-  useOrdIssuanceRulesControllerUpsertTaskIssuanceRule,
 } from "@/api/generated/ord-issuance-rules/ord-issuance-rules";
 import type { UpsertOrdIssuanceRuleDto } from "@/api/generated/model";
 import { ApiError } from "@/types";
@@ -34,7 +31,7 @@ export function useRoomOrdIssuanceRule({ roomId, enabled = true }: UseRoomOrdIss
   const query = useOrdIssuanceRulesControllerGetRoomIssuanceRule(roomId, {
     query: {
       enabled: enabled && !!roomId,
-      retry: (failureCount, error) => !isNotConfiguredError(error) && failureCount < 2,
+      retry: (failureCount: number, error: unknown) => !isNotConfiguredError(error) && failureCount < 2,
     },
   });
 
@@ -50,23 +47,16 @@ export function useRoomOrdIssuanceRule({ roomId, enabled = true }: UseRoomOrdIss
   };
 }
 
-export function useTaskOrdIssuanceRule({ roomId, taskId, enabled = true }: UseTaskOrdIssuanceRuleParams) {
-  const query = useOrdIssuanceRulesControllerGetTaskIssuanceRule(roomId, taskId, {
-    query: {
-      enabled: enabled && !!roomId && !!taskId,
-      retry: (failureCount, error) => !isNotConfiguredError(error) && failureCount < 2,
-    },
-  });
-
-  const isNotConfigured = isNotConfiguredError(query.error);
+export function useTaskOrdIssuanceRule(...args: [UseTaskOrdIssuanceRuleParams]) {
+  void args;
 
   return {
-    rule: isNotConfigured ? null : (query.data ?? null),
-    isLoading: query.isLoading,
-    isError: query.isError && !isNotConfigured,
-    error: isNotConfigured ? null : query.error,
-    isNotConfigured,
-    refetch: query.refetch,
+    rule: null,
+    isLoading: false,
+    isError: false,
+    error: null,
+    isNotConfigured: true,
+    refetch: async () => ({}) as never,
   };
 }
 
@@ -103,33 +93,21 @@ export function useUpsertRoomOrdIssuanceRule(roomId: string) {
 }
 
 export function useUpsertTaskOrdIssuanceRule(roomId: string, taskId: string) {
-  const queryClient = useQueryClient();
-  const mutation = useOrdIssuanceRulesControllerUpsertTaskIssuanceRule();
-  const error = mutation.error ?? null;
+  const mutate = (...args: [UpsertOrdIssuanceRuleDto, (() => void)?]) => {
+    void args;
 
-  const mutate = (data: UpsertOrdIssuanceRuleDto, onSuccess?: () => void) => {
-    if (!roomId || !taskId || mutation.isPending) return;
-
-    mutation.mutate(
-      { roomId, taskId, data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: getOrdIssuanceRulesControllerGetTaskIssuanceRuleQueryKey(roomId, taskId),
-          });
-          onSuccess?.();
-        },
-      }
-    );
+    if (!roomId || !taskId) return;
   };
 
   return {
     mutate,
-    isPending: mutation.isPending,
-    isSuccess: mutation.isSuccess,
-    isError: mutation.isError,
-    error,
-    reset: mutation.reset,
-    ...getMutationErrorState(error),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    error: null,
+    reset: () => undefined,
+    isValidationError: false,
+    validationErrors: {},
+    generalError: "Автовыпуск ORD-договоров для задачи больше не поддерживается API.",
   };
 }

@@ -19,6 +19,7 @@ import {
   CodePage,
   ApplicationsPage,
   CreativeTasksPage,
+  PrivateCreativeTasksPage,
   CreativeTaskDetailLayout,
   CreativeTaskDescriptionPage,
   CreativeTaskAnswersPage,
@@ -131,6 +132,8 @@ export const Navigation = () => {
           <Route path=":contractId" element={<OrdContractDetailPage />} />
         </Route>
         <Route path="creativetasks" element={<CreativeTasksPage />} />
+        <Route path="creativetasks/private" element={<PrivateCreativeTasksPage />} />
+        <Route path="private-creativetasks" element={<Navigate to="../creativetasks/private" replace />} />
         <Route path="creativetasks/:taskId" element={<CreativeTaskDetailLayout />}>
           <Route index element={<CreativeTaskDescriptionPage />} />
           <Route path="answers" element={<CreativeTaskAnswersPage />} />

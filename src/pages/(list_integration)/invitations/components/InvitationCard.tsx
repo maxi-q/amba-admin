@@ -45,7 +45,7 @@ export function InvitationCard({
   showLinkedEntities = true,
 }: InvitationCardProps) {
   const vkTargets = invitation.targets ?? [];
-  const taskIds = invitation.taskIds ?? [];
+  const privateTaskIds = invitation.privateTaskIds ?? [];
   const eventIds = invitation.eventIds ?? [];
 
   return (
@@ -82,7 +82,7 @@ export function InvitationCard({
             </p>
             {showLinkedEntities ? (
               <div className="mt-3 flex flex-col gap-3">
-                <IdLine label="Креативные задачи" ids={taskIds} resolve={resolveTaskLabel} />
+                <IdLine label="Индивидуальные задачи" ids={privateTaskIds} resolve={resolveTaskLabel} />
                 <IdLine label="События" ids={eventIds} resolve={resolveEventLabel} />
               </div>
             ) : null}

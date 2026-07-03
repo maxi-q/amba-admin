@@ -92,7 +92,7 @@ export function OrdIssuanceRuleEditor({
     });
   };
 
-  const mutationError = upsert.generalError || upsert.validationErrors.name?.[0];
+  const mutationError = upsert.generalError || (upsert.validationErrors as Record<string, string[]>).name?.[0];
 
   if (ruleQuery.isLoading) {
     return (

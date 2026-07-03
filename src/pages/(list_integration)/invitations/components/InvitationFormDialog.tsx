@@ -11,7 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@senler/ui";
-import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
+import { useRoomPrivateCreativeTasks } from "@/hooks/creativetasks/useRoomPrivateCreativeTasks";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
 import { resolveVkProfileId } from "@/utils/vkProfile";
@@ -36,11 +36,11 @@ interface InvitationFormDialogProps {
   roomId: string;
   slug: string;
   /**
-   * Если задано — селектор задач скрывается, а указанные taskIds
+   * Если задано — селектор задач скрывается, а указанные privateTaskIds
    * автоматически подставляются в новое приглашение.
-   * При редактировании существующие taskIds сохраняются как есть.
+   * При редактировании существующие privateTaskIds сохраняются как есть.
    */
-  lockedTaskIds?: string[];
+  lockedPrivateTaskIds?: string[];
   /**
    * Если задано — селектор событий скрывается, а указанные eventIds
    * автоматически подставляются в новое приглашение.
@@ -61,7 +61,7 @@ export function InvitationFormDialog({
   mode = "create",
   roomId,
   slug,
-  lockedTaskIds,
+  lockedPrivateTaskIds,
   lockedEventIds,
   titleOverride,
   useVkProfileLink = false,
@@ -77,10 +77,10 @@ export function InvitationFormDialog({
   const [taskSearch, setTaskSearch] = useState("");
   const [eventSearch, setEventSearch] = useState("");
 
-  const isTaskPickerHidden = !!lockedTaskIds;
+  const isTaskPickerHidden = !!lockedPrivateTaskIds;
   const isEventPickerHidden = !!lockedEventIds;
 
-  const { tasks } = useRoomCreativeTasks(roomId, { page: 1, size: 100 });
+  const { tasks } = useRoomPrivateCreativeTasks(roomId, { page: 1, size: 100 });
   const { events } = useEvents({ page: 1, size: 100 }, slug);
 
   const {
@@ -103,12 +103,12 @@ export function InvitationFormDialog({
       setSubscriberInput("");
       setVkProfileUrl("");
       setVkProfileError("");
-      setSelectedTaskIds(lockedTaskIds ?? []);
+      setSelectedTaskIds(lockedPrivateTaskIds ?? []);
       setSelectedEventIds(lockedEventIds ?? []);
       setTaskSearch("");
       setEventSearch("");
     }
-  }, [open, mode, lockedTaskIds, lockedEventIds]);
+  }, [open, mode, lockedPrivateTaskIds, lockedEventIds]);
 
   const isPending = isCreatePending || isResolvingVk;
   const generalError = createGeneralError;
@@ -162,7 +162,7 @@ export function InvitationFormDialog({
     "По одному ID на строку; можно вставить список из нескольких строк.";
 
   const handleSubmit = async () => {
-    const taskIds = selectedTaskIds;
+    const privateTaskIds = selectedTaskIds;
     const eventIds = selectedEventIds;
     let submitTargets = targetsPayload;
 
@@ -195,7 +195,7 @@ export function InvitationFormDialog({
       {
         roomId,
         targets: submitTargets,
-        taskIds,
+        privateTaskIds,
         eventIds,
       },
       {
@@ -281,7 +281,7 @@ export function InvitationFormDialog({
 
           {isTaskPickerHidden ? null : (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Креативные задачи</p>
+              <p className="text-sm font-medium text-foreground">Индивидуальные задачи</p>
               <InputField
                 value={taskSearch}
                 onChange={(e) => setTaskSearch(e.target.value)}

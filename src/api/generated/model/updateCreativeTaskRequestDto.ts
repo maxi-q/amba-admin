@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { UpdateCreativeTaskRequestDtoAllowedFormatsItem } from './updateCreativeTaskRequestDtoAllowedFormatsItem';
 import type { UpdateCreativeTaskRequestDtoOrdForm } from './updateCreativeTaskRequestDtoOrdForm';
 import type { UpdateCreativeTaskRequestDtoOrdFlagsItem } from './updateCreativeTaskRequestDtoOrdFlagsItem';
 
@@ -25,20 +26,15 @@ export interface UpdateCreativeTaskRequestDto {
   endsAt?: string | null;
   /** Флаг удаления */
   isDeleted?: boolean;
-  /** Включён ли вайтлист доступа для амбассадоров */
-  isWhitelistEnabled?: boolean;
+  /** Критерии выполнения задания */
+  criteria?: string[];
   /** Допустимые форматы ответа на задание */
-  allowedFormats?: string[];
+  allowedFormats?: UpdateCreativeTaskRequestDtoAllowedFormatsItem[];
   /**
-   * Гарантированная награда за задание (в баллах)
+   * Минимальная награда за задание (в баллах)
    * @minimum 0
    */
-  guaranteedRewardBalls?: number;
-  /**
-   * Максимальная награда за задание (в баллах)
-   * @minimum 0
-   */
-  maxRewardBalls?: number;
+  minimalRewardInBalls?: number;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable

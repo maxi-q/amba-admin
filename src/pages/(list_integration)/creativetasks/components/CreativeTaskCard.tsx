@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { Badge, Card, CardContent, Button } from "@senler/ui";
 import type { BaseCreativeTaskDto } from "@/api/generated/model";
-import { formatDateRange, formatRewardRange, isTaskActive } from "../utils/creativetaskUtils";
+import { formatBallsReward, formatDateRange, formatTaskFormat, isTaskActive } from "../utils/creativetaskUtils";
 import { TaskSubmissionsList } from "./TaskSubmissionsList";
 
 interface CreativeTaskCardProps {
@@ -62,12 +62,12 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge variant="secondary">
-                  {formatRewardRange(task.guaranteedRewardBalls, task.maxRewardBalls)}
+                  {formatBallsReward(task.minimalRewardInBalls)}
                 </Badge>
                 {task.allowedFormats?.length ? (
                   task.allowedFormats.slice(0, 3).map((format) => (
                     <Badge key={format} variant="outline" className="font-normal">
-                      {format}
+                      {formatTaskFormat(format)}
                     </Badge>
                   ))
                 ) : (
@@ -81,6 +81,11 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
                   </Badge>
                 ) : null}
               </div>
+              {task.criteria?.length ? (
+                <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">
+                  Критерии: {task.criteria.join("; ")}
+                </p>
+              ) : null}
             </div>
 
             <div

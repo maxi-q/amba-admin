@@ -12,8 +12,8 @@ export interface CreateInvitationRequestDto {
   roomId: string;
   /** Список пользователей (мин. 1, макс. 500) */
   targets: InvitationTargetInputDto[];
-  /** UUID заданий для вайтлиста */
-  taskIds?: string[];
+  /** UUID приватных заданий для вайтлиста */
+  privateTaskIds?: string[];
   /** UUID событий для автодобавления */
   eventIds?: string[];
 }

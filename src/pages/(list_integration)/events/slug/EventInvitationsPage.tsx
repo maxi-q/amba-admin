@@ -120,7 +120,7 @@ const EventInvitationsPage = () => {
               subscriberId,
             },
           ],
-          taskIds: [],
+          privateTaskIds: [],
           eventIds: [eventId],
         },
         {

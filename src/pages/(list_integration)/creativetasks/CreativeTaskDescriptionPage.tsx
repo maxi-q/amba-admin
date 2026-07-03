@@ -4,8 +4,7 @@ import { Pencil } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
 import type { CreativeTaskWithDefaultsDto } from "@/api/generated/model";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
-import { formatDateRange, formatRewardRange, isTaskActive } from "./utils/creativetaskUtils";
-import { OrdIssuanceRuleSummaryCard } from "../ord/components/OrdIssuanceRuleSummaryCard";
+import { formatBallsReward, formatDateRange, formatTaskFormat, isTaskActive } from "./utils/creativetaskUtils";
 import { OrdCreativeSummaryCard } from "./components/OrdCreativeSummaryCard";
 
 interface OutletCtx {
@@ -50,18 +49,28 @@ export default function CreativeTaskDescriptionPage() {
               <p className="mt-2 text-sm text-muted-foreground">{dateRange}</p>
               <div className="mt-4 flex flex-wrap gap-2 text-sm">
                 <Badge variant="secondary">
-                  {formatRewardRange(task.guaranteedRewardBalls, task.maxRewardBalls)}
+                  {formatBallsReward(task.minimalRewardInBalls)}
                 </Badge>
                 {task.allowedFormats?.length ? (
                   task.allowedFormats.map((format) => (
                     <Badge key={format} variant="outline">
-                      {format}
+                      {formatTaskFormat(format)}
                     </Badge>
                   ))
                 ) : (
                   <Badge variant="outline">Любой формат</Badge>
                 )}
               </div>
+              {task.criteria?.length ? (
+                <div className="mt-4 rounded-md border border-border bg-muted/30 p-3">
+                  <p className="mb-2 text-sm font-medium text-foreground">Критерии выполнения</p>
+                  <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                    {task.criteria.map((criterion) => (
+                      <li key={criterion}>{criterion}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
             <div className="flex items-center gap-2">
               {!task.isDeleted ? (
@@ -91,14 +100,6 @@ export default function CreativeTaskDescriptionPage() {
       />
 
       <OrdCreativeSummaryCard task={task} slug={slug ?? ""} taskId={taskId ?? ""} />
-
-      <OrdIssuanceRuleSummaryCard
-        title="Автовыпуск ORD-договоров"
-        description="Настройте автоматический выпуск договоров для участников этой задачи."
-        to={`/rooms/${slug}/creativetasks/${taskId}/ord-auto-issuance`}
-        disabled={task.isDeleted}
-        disabledText="Для удалённой задачи автовыпуск недоступен."
-      />
     </>
   );
 }

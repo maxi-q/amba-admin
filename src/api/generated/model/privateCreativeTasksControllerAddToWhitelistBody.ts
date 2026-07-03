@@ -6,6 +6,6 @@
  * OpenAPI spec version: 1.0
  */
 
-export type CreativeTasksControllerAddToWhitelistBody = {
+export type PrivateCreativeTasksControllerAddToWhitelistBody = {
   ambassadorId: string;
 };

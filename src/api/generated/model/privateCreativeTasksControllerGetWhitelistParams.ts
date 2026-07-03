@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 
-export type CreativeTasksControllerGetWhitelistParams = {
+export type PrivateCreativeTasksControllerGetWhitelistParams = {
 size?: number;
 page?: number;
 };

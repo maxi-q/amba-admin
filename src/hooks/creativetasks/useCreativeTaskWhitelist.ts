@@ -1,6 +1,6 @@
 import { QueryKeys } from '@/config/tanstack/queryKeys';
-import { creativeTasksControllerGetWhitelist } from '@/api/generated/creative-tasks/creative-tasks';
-import type { CreativeTasksControllerGetWhitelistParams } from '@/api/generated/model';
+import { privateCreativeTasksControllerGetWhitelist } from '@/api/generated/private-creative-tasks/private-creative-tasks';
+import type { PrivateCreativeTasksControllerGetWhitelistParams } from '@/api/generated/model';
 import { useQuery } from '@tanstack/react-query';
 
 type CreativeTaskWhitelistResponse = {
@@ -19,7 +19,7 @@ const DEFAULT_SIZE = 50;
 
 export function useCreativeTaskWhitelist(
   taskId: string,
-  params: CreativeTasksControllerGetWhitelistParams = {}
+  params: PrivateCreativeTasksControllerGetWhitelistParams = {}
 ) {
   const page = params.page ?? DEFAULT_PAGE;
   const size = params.size ?? DEFAULT_SIZE;
@@ -27,7 +27,7 @@ export function useCreativeTaskWhitelist(
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.CREATIVE_TASK_WHITELIST, taskId, page, size],
     queryFn: () =>
-      creativeTasksControllerGetWhitelist(taskId, { page, size }) as unknown as Promise<CreativeTaskWhitelistResponse>,
+      privateCreativeTasksControllerGetWhitelist(taskId, { page, size }) as unknown as Promise<CreativeTaskWhitelistResponse>,
     enabled: !!taskId,
     staleTime: 30 * 1000,
     retry: 2,

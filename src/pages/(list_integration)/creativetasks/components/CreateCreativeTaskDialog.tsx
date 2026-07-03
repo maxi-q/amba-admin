@@ -12,8 +12,16 @@ import {
   SheetTitle,
 } from "@senler/ui";
 import { useCreateCreativeTask } from "@/hooks/creativetasks/useCreateCreativeTask";
-import type { CreateCreativeTaskRequestDto } from "@/api/generated/model";
-import { parseAllowedFormatsInput, parseRewardBalls } from "../utils/creativetaskUtils";
+import type {
+  CreateCreativeTaskRequestDto,
+  CreateCreativeTaskRequestDtoAllowedFormatsItem,
+} from "@/api/generated/model";
+import {
+  CREATIVE_TASK_FORMAT_OPTIONS,
+  parseMultilineList,
+  parseRewardBalls,
+  type CreativeTaskFormat,
+} from "../utils/creativetaskUtils";
 
 const DESC_CLASS =
   "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
@@ -45,9 +53,9 @@ export function CreateCreativeTaskDialog({
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
-  const [guaranteedRewardBalls, setGuaranteedRewardBalls] = useState("0");
-  const [maxRewardBalls, setMaxRewardBalls] = useState("0");
-  const [allowedFormats, setAllowedFormats] = useState("");
+  const [minimalRewardInBalls, setMinimalRewardInBalls] = useState("0");
+  const [allowedFormats, setAllowedFormats] = useState<CreativeTaskFormat[]>([]);
+  const [criteria, setCriteria] = useState("");
 
   const {
     createCreativeTask,
@@ -62,11 +70,19 @@ export function CreateCreativeTaskDialog({
       setDescription("");
       setStartsAt("");
       setEndsAt("");
-      setGuaranteedRewardBalls("0");
-      setMaxRewardBalls("0");
-      setAllowedFormats("");
+      setMinimalRewardInBalls("0");
+      setAllowedFormats([]);
+      setCriteria("");
     }
   }, [open]);
+
+  const toggleFormat = (format: CreativeTaskFormat) => {
+    setAllowedFormats((current) =>
+      current.includes(format)
+        ? current.filter((item) => item !== format)
+        : [...current, format]
+    );
+  };
 
   const handleSubmit = () => {
     if (!roomId) return;
@@ -76,9 +92,9 @@ export function CreateCreativeTaskDialog({
       startsAt: toISOString(startsAt),
       endsAt: toISOString(endsAt),
       roomId,
-      allowedFormats: parseAllowedFormatsInput(allowedFormats),
-      guaranteedRewardBalls: parseRewardBalls(guaranteedRewardBalls),
-      maxRewardBalls: parseRewardBalls(maxRewardBalls),
+      criteria: parseMultilineList(criteria),
+      allowedFormats: allowedFormats as CreateCreativeTaskRequestDtoAllowedFormatsItem[],
+      minimalRewardInBalls: parseRewardBalls(minimalRewardInBalls),
       allowAmbassadorMedia: true,
       allowAmbassadorText: true,
     };
@@ -171,48 +187,57 @@ export function CreateCreativeTaskDialog({
               aria-label="Дата окончания"
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Гарантированные баллы</p>
-              <InputField
-                type="number"
-                min={0}
-                step={1}
-                value={guaranteedRewardBalls}
-                onChange={(e) => setGuaranteedRewardBalls(e.target.value)}
-                error={hasFieldError(validationErrors, "guaranteedRewardBalls")}
-                helperText={getFirstFieldError(validationErrors, "guaranteedRewardBalls") ?? undefined}
-                aria-label="Гарантированные баллы"
-              />
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Максимальные баллы</p>
-              <InputField
-                type="number"
-                min={0}
-                step={1}
-                value={maxRewardBalls}
-                onChange={(e) => setMaxRewardBalls(e.target.value)}
-                error={hasFieldError(validationErrors, "maxRewardBalls")}
-                helperText={getFirstFieldError(validationErrors, "maxRewardBalls") ?? undefined}
-                aria-label="Максимальные баллы"
-              />
-            </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Минимальная награда, баллы</p>
+            <InputField
+              type="number"
+              min={0}
+              step={1}
+              value={minimalRewardInBalls}
+              onChange={(e) => setMinimalRewardInBalls(e.target.value)}
+              error={hasFieldError(validationErrors, "minimalRewardInBalls")}
+              helperText={getFirstFieldError(validationErrors, "minimalRewardInBalls") ?? undefined}
+              aria-label="Минимальная награда в баллах"
+            />
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Разрешённые форматы</p>
-            <textarea
-              className={DESC_CLASS}
-              value={allowedFormats}
-              onChange={(e) => setAllowedFormats(e.target.value)}
-              rows={3}
-              placeholder="Например: фото&#10;видео&#10;текст"
-              aria-label="Разрешённые форматы"
-            />
-            <p className="text-xs text-muted-foreground">Каждый формат укажите с новой строки.</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {CREATIVE_TASK_FORMAT_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-foreground"
+                >
+                  <input
+                    type="checkbox"
+                    checked={allowedFormats.includes(option.value)}
+                    onChange={() => toggleFormat(option.value)}
+                    className="size-4"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
             {hasFieldError(validationErrors, "allowedFormats") ? (
               <p className="text-sm text-destructive">
                 {getFirstFieldError(validationErrors, "allowedFormats")}
+              </p>
+            ) : null}
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Критерии выполнения</p>
+            <textarea
+              className={DESC_CLASS}
+              value={criteria}
+              onChange={(e) => setCriteria(e.target.value)}
+              rows={3}
+              placeholder="Например: указать ссылку на публикацию&#10;сохранить публикацию 7 дней"
+              aria-label="Критерии выполнения"
+            />
+            <p className="text-xs text-muted-foreground">Каждый критерий укажите с новой строки.</p>
+            {hasFieldError(validationErrors, "criteria") ? (
+              <p className="text-sm text-destructive">
+                {getFirstFieldError(validationErrors, "criteria")}
               </p>
             ) : null}
           </div>

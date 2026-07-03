@@ -19,7 +19,7 @@ import {
 import { useCreativeTaskWhitelist } from "@/hooks/creativetasks/useCreativeTaskWhitelist";
 import { useAddToCreativeTaskWhitelist } from "@/hooks/creativetasks/useAddToCreativeTaskWhitelist";
 import { useRemoveFromCreativeTaskWhitelist } from "@/hooks/creativetasks/useRemoveFromCreativeTaskWhitelist";
-import { useUpdateCreativeTask } from "@/hooks/creativetasks/useUpdateCreativeTask";
+import { useUpdatePrivateCreativeTask } from "@/hooks/creativetasks/useUpdatePrivateCreativeTask";
 import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
@@ -28,7 +28,7 @@ import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useGetProject } from "@/hooks/projects/useGetProject";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
 import { InvitationSuccessDialog } from "../../invitations/components/InvitationSuccessDialog";
-import type { BaseAfterRegistrationInvitationDto, BaseAmbassadorDto, BaseCreativeTaskDto } from "@/api/generated/model";
+import type { BaseAfterRegistrationInvitationDto, BaseAmbassadorDto, BasePrivateCreativeTaskDto } from "@/api/generated/model";
 import { resolveVkProfileId } from "@/utils/vkProfile";
 
 const INVITATION_CHANNEL_TYPE_VK = 0;
@@ -51,7 +51,7 @@ type TaskInvitationRow =
     };
 
 interface CreativeTaskWhitelistSectionProps {
-  task: BaseCreativeTaskDto;
+  task: BasePrivateCreativeTaskDto;
 }
 
 function getOptionLabel(a: BaseAmbassadorDto) {
@@ -105,10 +105,10 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
   } = useDeleteInvitation();
 
   const {
-    updateCreativeTask,
+    updatePrivateCreativeTask,
     isPending: isUpdatingTask,
     generalError: updateTaskError,
-  } = useUpdateCreativeTask();
+  } = useUpdatePrivateCreativeTask();
 
   const {
     createInvitation,
@@ -148,7 +148,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
 
   const taskInvitations = useMemo(() => {
     return invitations
-      .filter((inv) => inv.taskIds?.includes(task.id))
+      .filter((inv) => inv.privateTaskIds?.includes(task.id))
       .sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -213,7 +213,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
   const isInvitationPending = isResolvingVk || isCreatingInvitation;
 
   const handleWhitelistEnabledChange = (enabled: boolean) => {
-    updateCreativeTask({
+    updatePrivateCreativeTask({
       id: task.id,
       data: {
         title: task.title,
@@ -222,6 +222,9 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
         endsAt: task.endsAt,
         isDeleted: task.isDeleted,
         isWhitelistEnabled: enabled,
+        criteria: task.criteria,
+        allowedFormats: task.allowedFormats,
+        rewardInRubs: task.rewardInRubs,
       },
     });
   };
@@ -244,7 +247,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
               subscriberId,
             },
           ],
-          taskIds: [task.id],
+          privateTaskIds: [task.id],
           eventIds: [],
         },
         {
@@ -267,7 +270,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
   };
 
   return (
-    <Card className="mt-6 border border-border bg-card shadow-sm">
+    <Card className="border border-border bg-card shadow-sm">
       <CardContent className="space-y-3 p-4 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>

@@ -17,6 +17,7 @@ import { EventsLayout } from './events/EventsLayout';
 import CodePage from './code';
 import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
+import PrivateCreativeTasksPage from './creativetasks/PrivateCreativeTasksPage';
 import CreativeTaskDetailLayout from './creativetasks/CreativeTaskDetailLayout';
 import CreativeTaskDescriptionPage from './creativetasks/CreativeTaskDescriptionPage';
 import CreativeTaskAnswersPage from './creativetasks/CreativeTaskAnswersPage';
@@ -51,6 +52,7 @@ export {
     CodePage,
     ApplicationsPage,
     CreativeTasksPage,
+    PrivateCreativeTasksPage,
     CreativeTaskDetailLayout,
     CreativeTaskDescriptionPage,
     CreativeTaskAnswersPage,

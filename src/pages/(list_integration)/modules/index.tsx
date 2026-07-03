@@ -244,7 +244,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         </Button>
       }
       sidebarClassName="h-auto min-h-dvh self-stretch"
-      mainClassName="min-h-min flex-none overflow-visible p-4 md:p-6"
+      mainClassName="min-h-0 flex-1 overflow-y-auto p-4 md:p-6"
     >
       {children}
     </AppShell>
