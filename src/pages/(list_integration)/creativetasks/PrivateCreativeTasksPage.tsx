@@ -417,6 +417,7 @@ function PrivateTaskCard({
   const { slug } = useParams<{ slug: string }>();
   const dateRange = formatDateRange(task.startsAt, task.endsAt ?? null);
   const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt ?? null);
+  const detailPath = `/rooms/${slug ?? ""}/creativetasks/private/${task.id}`;
 
   return (
     <Card className={`border border-border shadow-sm ${task.isDeleted ? "opacity-60" : ""}`}>
@@ -424,7 +425,9 @@ function PrivateTaskCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3 className={`mb-1 text-lg font-medium leading-snug ${task.isDeleted ? "text-muted-foreground line-through" : "text-foreground"}`}>
-              {task.title}
+              <Link to={detailPath} className="text-inherit underline-offset-4 hover:underline">
+                {task.title}
+              </Link>
             </h3>
             <p className={`line-clamp-2 text-sm ${task.isDeleted ? "text-muted-foreground line-through" : "text-muted-foreground"}`}>
               {task.description || "—"}
@@ -452,16 +455,18 @@ function PrivateTaskCard({
                 Критерии: {task.criteria.join("; ")}
               </p>
             ) : null}
+            <div className="mt-4">
+              <Link to={detailPath} className="inline-flex no-underline">
+                <Button type="button" variant="outline" size="sm">
+                  Открыть задачу
+                </Button>
+              </Link>
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {!task.isDeleted ? (
               <Badge variant={active ? "success" : "secondary"}>{active ? "Активна" : "Неактивна"}</Badge>
             ) : null}
-            <Link to={`/rooms/${slug ?? ""}/creativetasks/private/${task.id}`}>
-              <Button type="button" variant="outline" size="sm">
-                Открыть
-              </Button>
-            </Link>
             <Button type="button" variant="ghost" size="icon" className="size-9" onClick={() => setExpanded((prev) => !prev)} aria-label={expanded ? "Свернуть" : "Развернуть"}>
               {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
             </Button>
