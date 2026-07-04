@@ -7,14 +7,13 @@
  */
 
 /**
- * Статус проверки ответа
+ * Итоговый статус модерации
  */
 export type UpdateSubmissionStatusRequestDtoStatus = typeof UpdateSubmissionStatusRequestDtoStatus[keyof typeof UpdateSubmissionStatusRequestDtoStatus];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UpdateSubmissionStatusRequestDtoStatus = {
-  pending: 'pending',
   approved: 'approved',
-  rejected: 'rejected',
+  rejected_for_format: 'rejected_for_format',
 } as const;

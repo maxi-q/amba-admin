@@ -718,7 +718,7 @@ export function useCreativeTasksControllerGetSubmissionById<TData = Awaited<Retu
 
 
 /**
- * Позволяет амбассадору изменить контент (content) и/или комментарий (comment) своего ответа. Редактирование возможно только если ответ ещё не получил статус approved или rejected.
+ * Позволяет амбассадору изменить контент (content) и/или комментарий (comment) своего ответа. Редактирование возможно, пока ответ не получил статус approved. Статус при редактировании не меняется.
  * @summary Обновить ответ на задание (для амбассадора)
  */
 export const creativeTasksControllerUpdateSubmissionByAmbassador = (
@@ -779,6 +779,69 @@ export const useCreativeTasksControllerUpdateSubmissionByAmbassador = <TError = 
       > => {
 
       const mutationOptions = getCreativeTasksControllerUpdateSubmissionByAmbassadorMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Переводит ответ из статуса new (черновик) или rejected_for_format в waiting_for_review. После этого ответ становится доступен для модерации владельцем комнаты.
+ * @summary Отправить ответ на проверку (для амбассадора)
+ */
+export const creativeTasksControllerSubmitSubmissionForReview = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CreateSubmissionResponseDto>(
+      {url: `/api/creative-tasks/submissions/${id}/submit`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getCreativeTasksControllerSubmitSubmissionForReviewMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerSubmitSubmissionForReview>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerSubmitSubmissionForReview>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['creativeTasksControllerSubmitSubmissionForReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creativeTasksControllerSubmitSubmissionForReview>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  creativeTasksControllerSubmitSubmissionForReview(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreativeTasksControllerSubmitSubmissionForReviewMutationResult = NonNullable<Awaited<ReturnType<typeof creativeTasksControllerSubmitSubmissionForReview>>>
+    
+    export type CreativeTasksControllerSubmitSubmissionForReviewMutationError = unknown
+
+    /**
+ * @summary Отправить ответ на проверку (для амбассадора)
+ */
+export const useCreativeTasksControllerSubmitSubmissionForReview = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerSubmitSubmissionForReview>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creativeTasksControllerSubmitSubmissionForReview>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getCreativeTasksControllerSubmitSubmissionForReviewMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -3,18 +3,20 @@ import { Badge, Card, CardContent } from "@senler/ui";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 
 const statusLabels: Record<BaseCreativeTaskSubmissionDto["status"], string> = {
-  pending: "На рассмотрении",
+  new: "Черновик",
+  waiting_for_review: "На рассмотрении",
   approved: "Одобрено",
-  rejected: "Отклонено",
+  rejected_for_format: "Отклонено",
 };
 
 const statusVariant: Record<
   BaseCreativeTaskSubmissionDto["status"],
   "success" | "destructive" | "secondary"
 > = {
-  pending: "secondary",
+  new: "secondary",
+  waiting_for_review: "secondary",
   approved: "success",
-  rejected: "destructive",
+  rejected_for_format: "destructive",
 };
 
 interface TaskSubmissionsListProps {
@@ -31,7 +33,7 @@ export function TaskSubmissionsList({
   taskId,
   page = 1,
   size = 10,
-  status = "pending",
+  status = "waiting_for_review",
 }: TaskSubmissionsListProps) {
   const { submissions, isLoading, pagination } = useSubmissions(taskId, {
     page,

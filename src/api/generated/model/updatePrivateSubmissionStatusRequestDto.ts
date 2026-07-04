@@ -8,11 +8,11 @@
 import type { UpdatePrivateSubmissionStatusRequestDtoStatus } from './updatePrivateSubmissionStatusRequestDtoStatus';
 
 export interface UpdatePrivateSubmissionStatusRequestDto {
-  /** Статус проверки ответа */
-  status: UpdatePrivateSubmissionStatusRequestDtoStatus;
   /**
    * Комментарий от проверяющего
    * @nullable
    */
   reviewComment?: string | null;
+  /** Итоговый статус модерации */
+  status: UpdatePrivateSubmissionStatusRequestDtoStatus;
 }

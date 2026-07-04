@@ -14,7 +14,8 @@ export type GetSubmissionsResponseItemDtoStatus = typeof GetSubmissionsResponseI
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const GetSubmissionsResponseItemDtoStatus = {
-  pending: 'pending',
+  new: 'new',
+  waiting_for_review: 'waiting_for_review',
   approved: 'approved',
-  rejected: 'rejected',
+  rejected_for_format: 'rejected_for_format',
 } as const;

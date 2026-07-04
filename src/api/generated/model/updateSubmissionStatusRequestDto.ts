@@ -8,8 +8,6 @@
 import type { UpdateSubmissionStatusRequestDtoStatus } from './updateSubmissionStatusRequestDtoStatus';
 
 export interface UpdateSubmissionStatusRequestDto {
-  /** Статус проверки ответа */
-  status: UpdateSubmissionStatusRequestDtoStatus;
   /**
    * Комментарий от проверяющего
    * @nullable
@@ -17,4 +15,6 @@ export interface UpdateSubmissionStatusRequestDto {
   reviewComment?: string | null;
   /** Значение награды */
   rewardValue: number;
+  /** Итоговый статус модерации */
+  status: UpdateSubmissionStatusRequestDtoStatus;
 }

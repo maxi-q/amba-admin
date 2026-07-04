@@ -8,18 +8,20 @@ import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
 
 const statusLabels: Record<BaseCreativeTaskSubmissionDto["status"], string> = {
-  pending: "На рассмотрении",
+  new: "Черновик",
+  waiting_for_review: "На рассмотрении",
   approved: "Одобрено",
-  rejected: "Отклонено",
+  rejected_for_format: "Отклонено",
 };
 
 const statusVariant: Record<
   BaseCreativeTaskSubmissionDto["status"],
   "success" | "destructive" | "secondary"
 > = {
-  pending: "secondary",
+  new: "secondary",
+  waiting_for_review: "secondary",
   approved: "success",
-  rejected: "destructive",
+  rejected_for_format: "destructive",
 };
 
 const tabInactive =
@@ -30,9 +32,9 @@ const tabActive =
 type StatusTab = BaseCreativeTaskSubmissionDto["status"];
 
 const TABS: { value: StatusTab; label: string }[] = [
-  { value: "pending", label: "На рассмотрении" },
+  { value: "waiting_for_review", label: "На рассмотрении" },
   { value: "approved", label: "Одобрено" },
-  { value: "rejected", label: "Отклонено" },
+  { value: "rejected_for_format", label: "Отклонено" },
 ];
 
 interface TaskDetailSubmissionsListProps {
@@ -40,7 +42,7 @@ interface TaskDetailSubmissionsListProps {
 }
 
 export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListProps) {
-  const [statusTab, setStatusTab] = useState<StatusTab>("pending");
+  const [statusTab, setStatusTab] = useState<StatusTab>("waiting_for_review");
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [approveSubmission, setApproveSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
@@ -67,7 +69,7 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
     if (!rejectSubmission) return;
     updateSubmissionStatus({
       id: rejectSubmission.id,
-      data: { status: "rejected", reviewComment, rewardValue: 0 },
+      data: { status: "rejected_for_format", reviewComment, rewardValue: 0 },
     });
     setRejectSubmission(null);
   };
@@ -133,7 +135,7 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
                       {statusLabels[sub.status]}
                     </Badge>
                   </div>
-                  {sub.status === "pending" ? (
+                  {sub.status === "waiting_for_review" ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Button
                         type="button"

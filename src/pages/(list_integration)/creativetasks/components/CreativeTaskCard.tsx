@@ -146,7 +146,7 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
               <p className="mb-2 text-sm font-medium text-muted-foreground">
                 Заявки по задаче
               </p>
-              <TaskSubmissionsList taskId={task.id} page={1} size={5} status="pending" />
+              <TaskSubmissionsList taskId={task.id} page={1} size={5} status="waiting_for_review" />
             </div>
           ) : null}
         </CardContent>
