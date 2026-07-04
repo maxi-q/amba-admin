@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ChevronDown, ChevronUp, Pencil, X } from "lucide-react";
 import {
   Alert,
@@ -310,7 +310,7 @@ function CreatePrivateTaskDialog({
   );
 }
 
-function EditPrivateTaskDialog({
+export function EditPrivateTaskDialog({
   open,
   onClose,
   task,
@@ -414,6 +414,7 @@ function PrivateTaskCard({
   onEdit: (task: BasePrivateCreativeTaskDto) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const { slug } = useParams<{ slug: string }>();
   const dateRange = formatDateRange(task.startsAt, task.endsAt ?? null);
   const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt ?? null);
 
@@ -456,6 +457,11 @@ function PrivateTaskCard({
             {!task.isDeleted ? (
               <Badge variant={active ? "success" : "secondary"}>{active ? "Активна" : "Неактивна"}</Badge>
             ) : null}
+            <Link to={`/rooms/${slug ?? ""}/creativetasks/private/${task.id}`}>
+              <Button type="button" variant="outline" size="sm">
+                Открыть
+              </Button>
+            </Link>
             <Button type="button" variant="ghost" size="icon" className="size-9" onClick={() => setExpanded((prev) => !prev)} aria-label={expanded ? "Свернуть" : "Развернуть"}>
               {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
             </Button>

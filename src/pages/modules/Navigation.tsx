@@ -21,9 +21,13 @@ import {
   CreativeTasksPage,
   PrivateCreativeTasksPage,
   CreativeTaskDetailLayout,
+  PrivateCreativeTaskDetailLayout,
   CreativeTaskDescriptionPage,
+  PrivateCreativeTaskDescriptionPage,
   CreativeTaskAnswersPage,
+  PrivateCreativeTaskAnswersPage,
   CreativeTaskInvitationsPage,
+  PrivateCreativeTaskInvitationsPage,
   InvitationsPage,
   OrdLayout,
   OrdContractsPage,
@@ -33,7 +37,8 @@ import {
   OrdAutoIssuancePage,
   OrdRoomFilesPage,
   OrdTaskIssuanceRulePage,
-  OrdCreativePage
+  OrdCreativePage,
+  PrivateOrdCreativePage
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -134,6 +139,12 @@ export const Navigation = () => {
         <Route path="creativetasks" element={<CreativeTasksPage />} />
         <Route path="creativetasks/private" element={<PrivateCreativeTasksPage />} />
         <Route path="private-creativetasks" element={<Navigate to="../creativetasks/private" replace />} />
+        <Route path="creativetasks/private/:privateTaskId" element={<PrivateCreativeTaskDetailLayout />}>
+          <Route index element={<PrivateCreativeTaskDescriptionPage />} />
+          <Route path="answers" element={<PrivateCreativeTaskAnswersPage />} />
+          <Route path="invitations" element={<PrivateCreativeTaskInvitationsPage />} />
+          <Route path="ord-creative" element={<PrivateOrdCreativePage />} />
+        </Route>
         <Route path="creativetasks/:taskId" element={<CreativeTaskDetailLayout />}>
           <Route index element={<CreativeTaskDescriptionPage />} />
           <Route path="answers" element={<CreativeTaskAnswersPage />} />

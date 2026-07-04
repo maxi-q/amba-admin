@@ -19,9 +19,13 @@ import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
 import PrivateCreativeTasksPage from './creativetasks/PrivateCreativeTasksPage';
 import CreativeTaskDetailLayout from './creativetasks/CreativeTaskDetailLayout';
+import PrivateCreativeTaskDetailLayout from './creativetasks/PrivateCreativeTaskDetailLayout';
 import CreativeTaskDescriptionPage from './creativetasks/CreativeTaskDescriptionPage';
+import PrivateCreativeTaskDescriptionPage from './creativetasks/PrivateCreativeTaskDescriptionPage';
 import CreativeTaskAnswersPage from './creativetasks/CreativeTaskAnswersPage';
+import PrivateCreativeTaskAnswersPage from './creativetasks/PrivateCreativeTaskAnswersPage';
 import CreativeTaskInvitationsPage from './creativetasks/CreativeTaskInvitationsPage';
+import PrivateCreativeTaskInvitationsPage from './creativetasks/PrivateCreativeTaskInvitationsPage';
 import InvitationsPage from './invitations';
 import OrdLayout from './ord/OrdLayout';
 import OrdContractsPage from './ord/contracts';
@@ -32,6 +36,7 @@ import OrdAutoIssuancePage from './ord/auto-issuance';
 import OrdRoomFilesPage from './ord/files';
 import OrdTaskIssuanceRulePage from './creativetasks/OrdTaskIssuanceRulePage';
 import OrdCreativePage from './creativetasks/OrdCreativePage';
+import PrivateOrdCreativePage from './creativetasks/PrivateOrdCreativePage';
 
 export {
     SettingPage,
@@ -54,9 +59,13 @@ export {
     CreativeTasksPage,
     PrivateCreativeTasksPage,
     CreativeTaskDetailLayout,
+    PrivateCreativeTaskDetailLayout,
     CreativeTaskDescriptionPage,
+    PrivateCreativeTaskDescriptionPage,
     CreativeTaskAnswersPage,
+    PrivateCreativeTaskAnswersPage,
     CreativeTaskInvitationsPage,
+    PrivateCreativeTaskInvitationsPage,
     InvitationsPage,
     OrdLayout,
     OrdContractsPage,
@@ -67,5 +76,6 @@ export {
     OrdRoomFilesPage,
     OrdTaskIssuanceRulePage,
     OrdCreativePage,
+    PrivateOrdCreativePage,
     EventsLayout
 };
