@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
@@ -11,7 +10,6 @@ import { ApiError } from "@/types";
 
 export function useCreateRoom() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const { mutate: createRoom, isPending, error, isSuccess } = useMutation({
     mutationKey: [MutationKeys.CREATE_ROOM],
@@ -24,7 +22,6 @@ export function useCreateRoom() {
         queryClient.setQueryData([QueryKeys.ROOMS], (old: Array<GetMyRoomsResponseItemDto>) => {
           return Array.isArray(old) ? [...old, createdRoom] : [createdRoom];
         });
-        navigate(`/rooms/${createdRoom.id}`);
       }
     }
   });

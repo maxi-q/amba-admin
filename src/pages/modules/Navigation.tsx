@@ -4,6 +4,8 @@ import {
   RoomsPage,
   SettingPage,
   SettingsInfo,
+  SelectServicePlanPage,
+  ServicePlanPaymentPage,
   SprintList,
   SprintSetting,
   SprintSettingsPage,
@@ -99,6 +101,18 @@ export const Navigation = () => {
           <RoomsPage />
         </ProtectedRoute>
       }/>
+
+      <Route path="rooms/:slug/onboarding/tariff" element={
+        <ProtectedRoute>
+          <SelectServicePlanPage />
+        </ProtectedRoute>
+      } />
+
+      <Route path="rooms/:slug/onboarding/payment" element={
+        <ProtectedRoute>
+          <ServicePlanPaymentPage />
+        </ProtectedRoute>
+      } />
 
       <Route path="rooms/:slug" element={
         <ProtectedRoute>

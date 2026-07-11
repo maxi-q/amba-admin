@@ -1,76 +1,80 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageLoader } from "@senler/ui";
 import { useRooms } from "@/hooks/rooms/useRooms";
 import { useCreateRoom } from "@/hooks/rooms/useCreateRoom";
 import { RoomsHeader } from "./components/RoomsHeader";
 import { CreateRoomButton } from "./components/CreateRoomButton";
 import { RoomCard } from "./components/RoomCard";
-import { RoomsEmptyState } from "./components/RoomsEmptyState";
-import { CreateRoomDialog } from "./components/CreateRoomDialog";
+import { RoomsWelcome } from "./components/RoomsWelcome";
+import { CreateCompanyForm } from "./components/CreateCompanyForm";
 
 export default function RoomsPage() {
+  const navigate = useNavigate();
   const { rooms, isLoading } = useRooms();
   const {
     createRoom,
     isPending,
     isValidationError,
     validationErrors,
-    generalError: hookGeneralError
+    generalError: hookGeneralError,
   } = useCreateRoom();
 
-  const [openDialog, setOpenDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    webhookUrl: '',
-  });
+  const [isCreating, setIsCreating] = useState(false);
+  const [companyName, setCompanyName] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [generalError, setGeneralError] = useState<string>('');
+  const [generalError, setGeneralError] = useState("");
 
   useEffect(() => {
     if (isValidationError && Object.keys(validationErrors).length > 0) {
       setFieldErrors(validationErrors);
-      setGeneralError('');
+      setGeneralError("");
     } else if (hookGeneralError) {
       setGeneralError(hookGeneralError);
       setFieldErrors({});
     } else {
       setFieldErrors({});
-      setGeneralError('');
+      setGeneralError("");
     }
   }, [isValidationError, validationErrors, hookGeneralError]);
 
-  const handleCreateRoom = () => {
-    setOpenDialog(true);
+  const resetCreateForm = () => {
+    setCompanyName("");
+    setFieldErrors({});
+    setGeneralError("");
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setFormData({ name: '', webhookUrl: '' });
-    setFieldErrors({});
-    setGeneralError('');
+  const handleOpenCreate = () => {
+    resetCreateForm();
+    setIsCreating(true);
   };
 
-  const handleSubmit = async () => {
-    if (!formData.name.trim()) return;
+  const handleCloseCreate = () => {
+    setIsCreating(false);
+    resetCreateForm();
+  };
+
+  const handleSubmit = () => {
+    if (!companyName.trim()) return;
 
     setFieldErrors({});
-    setGeneralError('');
+    setGeneralError("");
 
-    createRoom({
-      name: formData.name,
-      webhookUrl: formData.webhookUrl,
-    }, {
-      onSuccess: () => {
-        handleCloseDialog();
+    // Аватар пока только в UI; для бэкенда — buildCompanyAvatarFormData() в types/companyAvatar.ts
+    createRoom(
+      {
+        name: companyName.trim(),
+        webhookUrl: "",
+      },
+      {
+        onSuccess: (createdRoom) => {
+          handleCloseCreate();
+          if (createdRoom?.id) {
+            navigate(`/rooms/${createdRoom.id}/onboarding/tariff`);
+          }
+        },
       }
-    });
-  };
-
-  const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
+    );
   };
 
   if (isLoading) {
@@ -81,30 +85,36 @@ export default function RoomsPage() {
     );
   }
 
-  return (
-    <div className="min-h-[652px] w-full px-6 py-6">
-      <RoomsHeader />
-      <CreateRoomButton onClick={handleCreateRoom} />
-      <div className="flex flex-col p-0">
-        {rooms.length ? (
-          rooms.map((room) => (
-            <RoomCard key={room.id} room={room} />
-          ))
-        ) : (
-          <RoomsEmptyState onCreateClick={handleCreateRoom} />
-        )}
-      </div>
+  const isFirstCompany = rooms.length === 0;
 
-      <CreateRoomDialog
-        open={openDialog}
-        formData={formData}
+  if (isFirstCompany && !isCreating) {
+    return <RoomsWelcome onGetStarted={handleOpenCreate} />;
+  }
+
+  if (isCreating) {
+    return (
+      <CreateCompanyForm
+        isFirst={isFirstCompany}
+        name={companyName}
         fieldErrors={fieldErrors}
         generalError={generalError}
         isPending={isPending}
-        onClose={handleCloseDialog}
+        onNameChange={setCompanyName}
+        onBack={handleCloseCreate}
         onSubmit={handleSubmit}
-        onInputChange={handleInputChange}
       />
+    );
+  }
+
+  return (
+    <div className="min-h-[652px] w-full px-6 py-6">
+      <RoomsHeader />
+      <CreateRoomButton onClick={handleOpenCreate} />
+      <div className="flex flex-col p-0">
+        {rooms.map((room) => (
+          <RoomCard key={room.id} room={room} />
+        ))}
+      </div>
     </div>
   );
 }

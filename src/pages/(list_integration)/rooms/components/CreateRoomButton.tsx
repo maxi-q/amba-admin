@@ -8,7 +8,7 @@ export const CreateRoomButton = ({ onClick }: CreateRoomButtonProps) => {
   return (
     <div className="mb-4 mt-2 flex flex-row justify-start">
       <Button type="button" onClick={onClick} size="lg">
-        Создать комнату
+        Создать компанию
       </Button>
     </div>
   );

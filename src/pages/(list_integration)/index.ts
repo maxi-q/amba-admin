@@ -1,5 +1,7 @@
 import SettingPage from './settings'
 import RoomsPage from './rooms'
+import SelectServicePlanPage from './rooms/onboarding/SelectServicePlanPage'
+import ServicePlanPaymentPage from './rooms/onboarding/ServicePlanPaymentPage'
 import RoomBox from './modules';
 import SprintList from './sprints';
 import SprintSetting from './sprints/slug';
@@ -41,6 +43,8 @@ import PrivateOrdCreativePage from './creativetasks/PrivateOrdCreativePage';
 export {
     SettingPage,
     RoomsPage,
+    SelectServicePlanPage,
+    ServicePlanPaymentPage,
     RoomBox,
     SprintList,
     SprintSetting,

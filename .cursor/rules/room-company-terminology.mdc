@@ -1,0 +1,28 @@
+---
+description: Room and company are internal synonyms; users see "company"
+globs: **/*.{tsx,jsx,ts,md,mdc}
+alwaysApply: true
+---
+
+# Room ↔ Company Terminology
+
+In the codebase, **room** (`Room`, `useRooms`, `rooms/*`, API `CreateRoomRequestDto`, etc.) is the technical entity name.
+
+In Figma and product copy for users, the same entity is **компания** (company).
+
+## Rules
+
+- **User-facing UI** (labels, titles, buttons, placeholders, toasts, empty states): use **компания** / **компании**, not «комната».
+- **Code** (files, types, hooks, API, routes, variables): keep existing **room** naming unless a dedicated refactor is requested.
+- Treat **room** and **company** as internal synonyms in comments, rules, and agent reasoning — they refer to the same product object.
+- Do not rename API fields, route paths (`/rooms/:slug`), or generated DTOs to «company» without an explicit backend + codegen task.
+
+## Examples
+
+| Context | Use |
+|---------|-----|
+| Button label | «Создать компанию» |
+| Page title | «Список компаний» |
+| Form placeholder | «Введите название компании» |
+| Hook / file | `useCreateRoom`, `rooms/index.tsx` |
+| API payload | `{ name: string }` on `CreateRoomRequestDto` |
