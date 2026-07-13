@@ -13,6 +13,7 @@ import {
 import {
   ORD_CREATIVE_FLAG_OPTIONS,
   ORD_CREATIVE_FORM_OPTIONS,
+  ORD_CREATIVE_PAY_TYPE_OPTIONS,
   requiresOrdProductInfo,
   type OrdCreativeFormState,
 } from "../ordCreative.utils";
@@ -102,6 +103,34 @@ export function OrdCreativeFormFields({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Тип оплаты *</p>
+          <Select
+            value={form.ordPayType || undefined}
+            onValueChange={(value) =>
+              setForm((prev) => ({
+                ...prev,
+                ordPayType: value as OrdCreativeFormState["ordPayType"],
+              }))
+            }
+            disabled={disabled}
+          >
+            <SelectTrigger aria-label="Тип оплаты">
+              <SelectValue placeholder="Выберите тип оплаты" />
+            </SelectTrigger>
+            <SelectContent>
+              {ORD_CREATIVE_PAY_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {fieldErrors.ordPayType ? (
+            <p className="text-sm text-destructive">{fieldErrors.ordPayType}</p>
+          ) : null}
         </div>
 
         <div className="space-y-2">

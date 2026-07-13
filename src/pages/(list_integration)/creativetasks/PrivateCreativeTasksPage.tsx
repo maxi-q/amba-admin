@@ -50,6 +50,7 @@ import {
   parseRewardBalls,
   type CreativeTaskFormat,
 } from "./utils/creativetaskUtils";
+import { OrdContractTemplateSelect } from "../ord/components/OrdContractTemplateSelect";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const TEXTAREA_CLASS =
@@ -244,19 +245,25 @@ function CreatePrivateTaskDialog({
   open,
   onClose,
   roomId,
+  roomSlug,
   onSuccess,
 }: {
   open: boolean;
   onClose: () => void;
   roomId: string;
+  roomSlug?: string;
   onSuccess?: () => void;
 }) {
   const [form, setForm] = useState<PrivateTaskFormState>(() => emptyForm());
+  const [ordContractTemplateId, setOrdContractTemplateId] = useState("");
   const { createPrivateCreativeTask, isPending, generalError, validationErrors } =
     useCreatePrivateCreativeTask();
 
   useEffect(() => {
-    if (!open) setForm(emptyForm());
+    if (!open) {
+      setForm(emptyForm());
+      setOrdContractTemplateId("");
+    }
   }, [open]);
 
   const handleSubmit = () => {
@@ -272,6 +279,7 @@ function CreatePrivateTaskDialog({
       rewardInRubs: parseRewardBalls(form.rewardInRubs),
       allowAmbassadorMedia: true,
       allowAmbassadorText: true,
+      ordContractTemplateId,
     };
 
     createPrivateCreativeTask(payload, {
@@ -298,10 +306,18 @@ function CreatePrivateTaskDialog({
             <Alert variant="destructive"><AlertDescription>{generalError}</AlertDescription></Alert>
           ) : null}
           <PrivateTaskFields form={form} setForm={setForm} validationErrors={validationErrors} />
+          <OrdContractTemplateSelect
+            roomId={roomId}
+            roomSlug={roomSlug}
+            value={ordContractTemplateId}
+            onChange={setOrdContractTemplateId}
+            error={getFirstFieldError(validationErrors, "ordContractTemplateId") || undefined}
+            required
+          />
         </div>
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">
           <Button type="button" variant="outline" size="lg" onClick={onClose} disabled={isPending}>Отмена</Button>
-          <Button type="button" size="lg" onClick={handleSubmit} disabled={isPending || !form.title.trim()}>
+          <Button type="button" size="lg" onClick={handleSubmit} disabled={isPending || !form.title.trim() || !ordContractTemplateId}>
             {isPending ? "Создание…" : "Создать"}
           </Button>
         </SheetFooter>
@@ -574,6 +590,7 @@ export default function PrivateCreativeTasksPage() {
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         roomId={roomId}
+        roomSlug={slug}
         onSuccess={() => void refetch()}
       />
       <EditPrivateTaskDialog

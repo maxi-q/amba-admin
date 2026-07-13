@@ -56,7 +56,10 @@ export interface ISubmission {
   id: string
   createdAt: string
   updatedAt: string
-  content: string
+  texts?: string[]
+  mediaFileIds?: string[]
+  targetUrls?: string[]
+  erid?: string | null
   comment: string
   status: 'pending' | 'approved' | 'rejected'
   reviewComment: string

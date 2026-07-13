@@ -22,6 +22,7 @@ import {
   parseRewardBalls,
   type CreativeTaskFormat,
 } from "../utils/creativetaskUtils";
+import { OrdContractTemplateSelect } from "../../ord/components/OrdContractTemplateSelect";
 
 const DESC_CLASS =
   "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
@@ -40,6 +41,7 @@ interface CreateCreativeTaskDialogProps {
   open: boolean;
   onClose: () => void;
   roomId: string;
+  roomSlug?: string;
   onSuccess?: () => void;
 }
 
@@ -47,6 +49,7 @@ export function CreateCreativeTaskDialog({
   open,
   onClose,
   roomId,
+  roomSlug,
   onSuccess,
 }: CreateCreativeTaskDialogProps) {
   const [title, setTitle] = useState("");
@@ -56,6 +59,7 @@ export function CreateCreativeTaskDialog({
   const [minimalRewardInBalls, setMinimalRewardInBalls] = useState("0");
   const [allowedFormats, setAllowedFormats] = useState<CreativeTaskFormat[]>([]);
   const [criteria, setCriteria] = useState("");
+  const [ordContractTemplateId, setOrdContractTemplateId] = useState("");
 
   const {
     createCreativeTask,
@@ -73,6 +77,7 @@ export function CreateCreativeTaskDialog({
       setMinimalRewardInBalls("0");
       setAllowedFormats([]);
       setCriteria("");
+      setOrdContractTemplateId("");
     }
   }, [open]);
 
@@ -97,6 +102,7 @@ export function CreateCreativeTaskDialog({
       minimalRewardInBalls: parseRewardBalls(minimalRewardInBalls),
       allowAmbassadorMedia: true,
       allowAmbassadorText: true,
+      ordContractTemplateId,
     };
     createCreativeTask(payload, {
       onSuccess: () => {
@@ -241,6 +247,14 @@ export function CreateCreativeTaskDialog({
               </p>
             ) : null}
           </div>
+          <OrdContractTemplateSelect
+            roomId={roomId}
+            roomSlug={roomSlug}
+            value={ordContractTemplateId}
+            onChange={setOrdContractTemplateId}
+            error={getFirstFieldError(validationErrors, "ordContractTemplateId") || undefined}
+            required
+          />
         </div>
 
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">
@@ -251,7 +265,7 @@ export function CreateCreativeTaskDialog({
             type="button"
             size="lg"
             onClick={handleSubmit}
-            disabled={isPending || !title.trim()}
+            disabled={isPending || !title.trim() || !ordContractTemplateId}
           >
             {isPending ? "Создание…" : "Создать"}
           </Button>

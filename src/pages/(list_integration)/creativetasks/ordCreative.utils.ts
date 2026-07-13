@@ -3,6 +3,7 @@ import type {
   UpdateCreativeTaskRequestDto,
   UpdateCreativeTaskRequestDtoOrdFlagsItem,
   UpdateCreativeTaskRequestDtoOrdForm,
+  UpdateCreativeTaskRequestDtoOrdPayType,
 } from "@/api/generated/model";
 
 export const ORD_CREATIVE_KKTU_PRODUCT_CODE = "30.15.1";
@@ -36,12 +37,27 @@ export const ORD_CREATIVE_FLAG_OPTIONS: {
   { value: "social_quota", label: "Социальная реклама (квота)" },
 ];
 
+export const ORD_CREATIVE_PAY_TYPE_OPTIONS: {
+  value: NonNullable<UpdateCreativeTaskRequestDtoOrdPayType>;
+  label: string;
+}[] = [
+  { value: "cpm", label: "CPM (за показы)" },
+  { value: "cpc", label: "CPC (за клики)" },
+  { value: "cpa", label: "CPA (за действия)" },
+  { value: "other", label: "Иное" },
+];
+
 const ordFormLabelByValue = new Map(
   ORD_CREATIVE_FORM_OPTIONS.map((option) => [option.value, option.label])
 );
 
+const ordPayTypeLabelByValue = new Map(
+  ORD_CREATIVE_PAY_TYPE_OPTIONS.map((option) => [option.value, option.label])
+);
+
 export type OrdCreativeFormState = {
   ordForm: UpdateCreativeTaskRequestDtoOrdForm | "";
+  ordPayType: UpdateCreativeTaskRequestDtoOrdPayType | "";
   ordFlags: UpdateCreativeTaskRequestDtoOrdFlagsItem[];
   ordKktus: string[];
   ordBrand: string;
@@ -57,6 +73,7 @@ export type OrdCreativeFormState = {
 export function taskToOrdCreativeForm(task: CreativeTaskWithDefaultsDto): OrdCreativeFormState {
   return {
     ordForm: task.ordForm ?? "",
+    ordPayType: task.ordPayType ?? "",
     ordFlags: task.ordFlags?.filter((flag) => flag !== "native") ?? [],
     ordKktus: task.ordKktus ?? [],
     ordBrand: task.ordBrand ?? "",
@@ -75,6 +92,7 @@ export function ordCreativeFormToPayload(form: OrdCreativeFormState): UpdateCrea
 
   return {
     ordForm: form.ordForm || null,
+    ordPayType: form.ordPayType || null,
     ordFlags: form.ordFlags.length ? form.ordFlags : [],
     ordKktus: form.ordKktus,
     ordBrand: form.ordBrand.trim() || null,
@@ -94,6 +112,10 @@ export function requiresOrdProductInfo(kktus: string[]): boolean {
 
 export function validateOrdCreativeForm(form: OrdCreativeFormState): Record<string, string> {
   const errors: Record<string, string> = {};
+
+  if (!form.ordPayType) {
+    errors.ordPayType = "Укажите тип оплаты креатива.";
+  }
 
   if (!form.allowAmbassadorMedia && form.defaultMediaIds.length === 0) {
     errors.defaultMediaIds = "Выберите хотя бы один ORD-файл комнаты или разрешите медиа амбассадора.";
@@ -124,9 +146,17 @@ export function getOrdFormLabel(value: UpdateCreativeTaskRequestDtoOrdForm | nul
   return ordFormLabelByValue.get(value) ?? value;
 }
 
+export function getOrdPayTypeLabel(
+  value: UpdateCreativeTaskRequestDtoOrdPayType | null | undefined
+): string {
+  if (!value) return "Не задан";
+  return ordPayTypeLabelByValue.get(value) ?? value;
+}
+
 export function getOrdCreativeSummaryLines(task: CreativeTaskWithDefaultsDto): string[] {
   const lines: string[] = [];
   lines.push(`Тип креатива: ${getOrdFormLabel(task.ordForm)}`);
+  lines.push(`Тип оплаты: ${getOrdPayTypeLabel(task.ordPayType)}`);
 
   const kktuCount = task.ordKktus?.length ?? 0;
   lines.push(kktuCount ? `ККТУ: ${kktuCount} ${kktuCount === 1 ? "код" : "кода"}` : "ККТУ: не выбраны");

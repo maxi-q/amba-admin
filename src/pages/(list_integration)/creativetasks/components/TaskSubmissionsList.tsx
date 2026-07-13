@@ -1,6 +1,7 @@
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
 import { Badge, Card, CardContent } from "@senler/ui";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
+import { getSubmissionPreviewText } from "../submissionContent.utils";
 
 const statusLabels: Record<BaseCreativeTaskSubmissionDto["status"], string> = {
   new: "Черновик",
@@ -66,7 +67,7 @@ export function TaskSubmissionsList({
           <CardContent className="p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="min-w-0 flex-1 truncate text-sm text-foreground">
-                {sub.content || "—"}
+                {getSubmissionPreviewText(sub)}
               </p>
               <Badge variant={statusVariant[sub.status]}>
                 {statusLabels[sub.status]}

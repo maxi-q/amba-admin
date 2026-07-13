@@ -4,6 +4,7 @@ import { useUpdateSubmissionStatus } from "@/hooks/creativetasks/useUpdateSubmis
 import { SubmissionApproveDialog } from "./SubmissionApproveDialog";
 import { SubmissionRejectDialog } from "./SubmissionRejectDialog";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
+import { SubmissionContentPreview } from "./SubmissionContentPreview";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
 
@@ -112,9 +113,7 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
                 <CardContent className="p-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="whitespace-pre-wrap text-sm text-foreground">
-                        {sub.content || "—"}
-                      </p>
+                      <SubmissionContentPreview submission={sub} />
                       {sub.comment ? (
                         <p className="mt-1.5 text-sm text-muted-foreground">
                           Комментарий: {sub.comment}

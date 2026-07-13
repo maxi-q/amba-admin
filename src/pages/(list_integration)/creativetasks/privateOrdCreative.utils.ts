@@ -6,6 +6,7 @@ import type {
 } from "@/api/generated/model";
 import {
   getOrdFormLabel,
+  getOrdPayTypeLabel,
   type OrdCreativeFormState,
 } from "./ordCreative.utils";
 
@@ -14,6 +15,7 @@ export function privateTaskToOrdCreativeForm(
 ): OrdCreativeFormState {
   return {
     ordForm: (task.ordForm ?? "") as OrdCreativeFormState["ordForm"],
+    ordPayType: (task.ordPayType ?? "") as OrdCreativeFormState["ordPayType"],
     ordFlags: (task.ordFlags?.filter((flag) => flag !== "native") ??
       []) as OrdCreativeFormState["ordFlags"],
     ordKktus: task.ordKktus ?? [],
@@ -35,6 +37,7 @@ export function privateOrdCreativeFormToPayload(
 
   return {
     ordForm: (form.ordForm || null) as UpdatePrivateCreativeTaskRequestDtoOrdForm | null,
+    ordPayType: (form.ordPayType || null) as UpdatePrivateCreativeTaskRequestDto["ordPayType"],
     ordFlags: form.ordFlags.length
       ? (form.ordFlags as UpdatePrivateCreativeTaskRequestDtoOrdFlagsItem[])
       : [],
@@ -55,6 +58,7 @@ export function getPrivateOrdCreativeSummaryLines(
 ): string[] {
   const lines: string[] = [];
   lines.push(`Тип креатива: ${getOrdFormLabel(task.ordForm as Exclude<OrdCreativeFormState["ordForm"], ""> | undefined)}`);
+  lines.push(`Тип оплаты: ${getOrdPayTypeLabel(task.ordPayType)}`);
 
   const kktuCount = task.ordKktus?.length ?? 0;
   lines.push(kktuCount ? `ККТУ: ${kktuCount} ${kktuCount === 1 ? "код" : "кода"}` : "ККТУ: не выбраны");

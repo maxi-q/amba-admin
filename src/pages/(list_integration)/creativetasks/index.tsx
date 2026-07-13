@@ -156,6 +156,7 @@ export default function CreativeTasksPage() {
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         roomId={roomId}
+        roomSlug={slug}
         onSuccess={handleCreateSuccess}
       />
 

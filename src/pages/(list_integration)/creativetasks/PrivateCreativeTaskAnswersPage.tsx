@@ -20,6 +20,7 @@ import type {
 import { usePrivateSubmissions } from "@/hooks/creativetasks/usePrivateSubmissions";
 import { useUpdatePrivateSubmissionStatus } from "@/hooks/creativetasks/useUpdatePrivateSubmissionStatus";
 import { CreativesPaginationControls } from "./components/CreativesPaginationControls";
+import { SubmissionContentPreview } from "./components/SubmissionContentPreview";
 
 type PrivateSubmissionStatus = GetPrivateSubmissionsResponseItemDto["status"];
 
@@ -210,9 +211,7 @@ export default function PrivateCreativeTaskAnswersPage() {
                 <CardContent className="p-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="whitespace-pre-wrap text-sm text-foreground">
-                        {submission.content || "—"}
-                      </p>
+                      <SubmissionContentPreview submission={submission} />
                       {submission.comment ? (
                         <p className="mt-1.5 text-sm text-muted-foreground">
                           Комментарий: {submission.comment}
