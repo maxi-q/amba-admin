@@ -5,7 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
-import type { UpdatePrivateSubmissionStatusRequestDtoStatus } from './updatePrivateSubmissionStatusRequestDtoStatus';
+import type { UpdatePrivateSubmissionStatusRequestDtoDecision } from './updatePrivateSubmissionStatusRequestDtoDecision';
 
 export interface UpdatePrivateSubmissionStatusRequestDto {
   /**
@@ -13,6 +13,6 @@ export interface UpdatePrivateSubmissionStatusRequestDto {
    * @nullable
    */
   reviewComment?: string | null;
-  /** Итоговый статус модерации */
-  status: UpdatePrivateSubmissionStatusRequestDtoStatus;
+  /** Решение модерации на текущем этапе (approve — одобрить, reject — отклонить) */
+  decision: UpdatePrivateSubmissionStatusRequestDtoDecision;
 }

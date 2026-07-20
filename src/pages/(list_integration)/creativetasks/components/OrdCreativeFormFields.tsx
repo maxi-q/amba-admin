@@ -285,6 +285,76 @@ export function OrdCreativeFormFields({
             ) : null}
           </div>
         ) : null}
+
+        <SwitchRow
+          label="Амбассадор может использовать свои ссылки перехода"
+          checked={form.allowAmbassadorTargetUrl}
+          onCheckedChange={(allowAmbassadorTargetUrl) =>
+            setForm((prev) => ({ ...prev, allowAmbassadorTargetUrl }))
+          }
+          disabled={disabled}
+        />
+
+        {!form.allowAmbassadorTargetUrl ? (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">Дефолтные ссылки</p>
+            {form.defaultTargetUrls.map((url, index) => (
+              <div key={index} className="flex gap-2">
+                <InputField
+                  value={url}
+                  onChange={(event) =>
+                    setForm((prev) => {
+                      const next = [...prev.defaultTargetUrls];
+                      next[index] = event.target.value;
+                      return { ...prev, defaultTargetUrls: next };
+                    })
+                  }
+                  disabled={disabled}
+                  aria-label={`Дефолтная ссылка ${index + 1}`}
+                  placeholder="https://"
+                />
+                {form.defaultTargetUrls.length > 1 && !disabled ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-muted-foreground hover:text-destructive"
+                    aria-label="Удалить ссылку"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        defaultTargetUrls: prev.defaultTargetUrls.filter(
+                          (_, itemIndex) => itemIndex !== index
+                        ),
+                      }))
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                ) : null}
+              </div>
+            ))}
+            {!disabled ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    defaultTargetUrls: [...prev.defaultTargetUrls, ""],
+                  }))
+                }
+              >
+                <Plus className="mr-1 size-4" />
+                Добавить ссылку
+              </Button>
+            ) : null}
+            {fieldErrors.defaultTargetUrls ? (
+              <p className="text-sm text-destructive">{fieldErrors.defaultTargetUrls}</p>
+            ) : null}
+          </div>
+        ) : null}
       </section>
     </div>
   );

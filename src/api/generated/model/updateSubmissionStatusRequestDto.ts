@@ -5,7 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
-import type { UpdateSubmissionStatusRequestDtoStatus } from './updateSubmissionStatusRequestDtoStatus';
+import type { UpdateSubmissionStatusRequestDtoDecision } from './updateSubmissionStatusRequestDtoDecision';
 
 export interface UpdateSubmissionStatusRequestDto {
   /**
@@ -13,8 +13,8 @@ export interface UpdateSubmissionStatusRequestDto {
    * @nullable
    */
   reviewComment?: string | null;
-  /** Значение награды */
-  rewardValue: number;
-  /** Итоговый статус модерации */
-  status: UpdateSubmissionStatusRequestDtoStatus;
+  /** Решение модерации на текущем этапе (approve — одобрить, reject — отклонить) */
+  decision: UpdateSubmissionStatusRequestDtoDecision;
+  /** Значение награды (учитывается при финальном одобрении) */
+  rewardValue?: number;
 }

@@ -102,6 +102,10 @@ export function CreateCreativeTaskDialog({
       minimalRewardInBalls: parseRewardBalls(minimalRewardInBalls),
       allowAmbassadorMedia: true,
       allowAmbassadorText: true,
+      allowAmbassadorTargetUrl: true,
+      publicationsCount: 1,
+      requireMaterialsReview: true,
+      requirePublicationReview: true,
       ordContractTemplateId,
     };
     createCreativeTask(payload, {

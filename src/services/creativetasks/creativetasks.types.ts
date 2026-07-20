@@ -52,16 +52,21 @@ export interface IGetSubmissionsRequest {
   status: 'pending' | 'approved' | 'rejected'
 }
 
-export interface ISubmission {
+export interface ISubmissionItem {
   id: string
-  createdAt: string
-  updatedAt: string
   texts?: string[]
   mediaFileIds?: string[]
   targetUrls?: string[]
   erid?: string | null
+}
+
+export interface ISubmission {
+  id: string
+  createdAt: string
+  updatedAt: string
+  items: ISubmissionItem[]
   comment: string
-  status: 'pending' | 'approved' | 'rejected'
+  status: string
   reviewComment: string
   taskId: string
   ambassadorId: string

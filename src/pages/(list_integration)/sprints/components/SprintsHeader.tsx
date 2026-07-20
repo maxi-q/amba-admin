@@ -6,7 +6,7 @@ const tabActive =
   "relative pb-3 pt-0 text-[15px] font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary";
 
 /** Сегменты маршрута, для которых не показываем вкладку «Спринт» */
-const NO_SPRINT_TAB = new Set(["settings", "info"]);
+const NO_SPRINT_TAB = new Set(["settings", "info", "leaderboard"]);
 
 export const SprintsHeader = () => {
   const { slug, sprintId: sprintIdParam } = useParams<{
@@ -21,6 +21,7 @@ export const SprintsHeader = () => {
 
   const listPath = slug ? `/rooms/${slug}/sprints` : "";
   const settingsPath = slug ? `/rooms/${slug}/sprints/settings` : "";
+  const leaderboardPath = slug ? `/rooms/${slug}/sprints/leaderboard` : "";
   const sprintPath =
     slug && sprintSectionId
       ? `/rooms/${slug}/sprints/${sprintSectionId}`
@@ -48,6 +49,12 @@ export const SprintsHeader = () => {
             Спринт
           </NavLink>
         ) : null}
+        <NavLink
+          to={leaderboardPath}
+          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+        >
+          Лидерборд
+        </NavLink>
         <NavLink
           to={settingsPath}
           className={({ isActive }) => (isActive ? tabActive : tabInactive)}

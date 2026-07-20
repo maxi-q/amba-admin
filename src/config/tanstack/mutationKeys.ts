@@ -35,4 +35,12 @@ export enum MutationKeys {
   CREATE_INVITATION = 'createInvitation',
   UPDATE_INVITATION = 'updateInvitation',
   DELETE_INVITATION = 'deleteInvitation',
+
+  CREATE_REWARD = 'createReward',
+  UPDATE_REWARD = 'updateReward',
+  DELETE_REWARD = 'deleteReward',
+
+  CREATE_SPRINT_REWARD_RULE = 'createSprintRewardRule',
+  UPDATE_SPRINT_REWARD_RULE = 'updateSprintRewardRule',
+  DELETE_SPRINT_REWARD_RULE = 'deleteSprintRewardRule',
 }

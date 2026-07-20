@@ -279,6 +279,10 @@ function CreatePrivateTaskDialog({
       rewardInRubs: parseRewardBalls(form.rewardInRubs),
       allowAmbassadorMedia: true,
       allowAmbassadorText: true,
+      allowAmbassadorTargetUrl: true,
+      publicationsCount: 1,
+      requireMaterialsReview: true,
+      requirePublicationReview: true,
       ordContractTemplateId,
     };
 

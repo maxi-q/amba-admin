@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreativeTaskSubmissionItemDto } from './creativeTaskSubmissionItemDto';
 import type { UpdateSubmissionByAmbassadorResponseDtoStatus } from './updateSubmissionByAmbassadorResponseDtoStatus';
 
 export interface UpdateSubmissionByAmbassadorResponseDto {
@@ -14,12 +15,8 @@ export interface UpdateSubmissionByAmbassadorResponseDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
-  /** Собственные тексты креатива от амбассадора. Разрешены только если allowAmbassadorText=true у задачи. */
-  texts?: string[];
-  /** ID собственных медиафайлов амбассадора. Разрешены только если allowAmbassadorMedia=true у задачи. */
-  mediaFileIds?: string[];
-  /** Целевые ссылки перехода креатива (target_urls в ОРД) */
-  targetUrls?: string[];
+  /** Под-ответы (публикации): у каждой свой набор материалов и свой креатив в ОРД */
+  items: CreativeTaskSubmissionItemDto[];
   /**
    * Комментарий от амбассадора
    * @nullable
@@ -34,11 +31,6 @@ export interface UpdateSubmissionByAmbassadorResponseDto {
   reviewComment?: string | null;
   /** Значение награды */
   rewardValue: number;
-  /**
-   * Маркер рекламы (erid), появляется после регистрации креатива в ОРД
-   * @nullable
-   */
-  erid?: string | null;
   /** ID задания */
   taskId: string;
   /** ID амбассадора */

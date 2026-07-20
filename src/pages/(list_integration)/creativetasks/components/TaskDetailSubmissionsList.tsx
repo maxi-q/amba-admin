@@ -7,43 +7,22 @@ import { CreativesPaginationControls } from "./CreativesPaginationControls";
 import { SubmissionContentPreview } from "./SubmissionContentPreview";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
-
-const statusLabels: Record<BaseCreativeTaskSubmissionDto["status"], string> = {
-  new: "Черновик",
-  waiting_for_review: "На рассмотрении",
-  approved: "Одобрено",
-  rejected_for_format: "Отклонено",
-};
-
-const statusVariant: Record<
-  BaseCreativeTaskSubmissionDto["status"],
-  "success" | "destructive" | "secondary"
-> = {
-  new: "secondary",
-  waiting_for_review: "secondary",
-  approved: "success",
-  rejected_for_format: "destructive",
-};
-
-const tabInactive =
-  "relative border-0 border-b-2 border-transparent bg-transparent pb-2 pt-0.5 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
-const tabActive =
-  "relative border-0 border-b-2 border-primary bg-transparent pb-2 pt-0.5 text-[15px] font-semibold text-foreground";
+import {
+  SUBMISSION_REVIEW_TABS,
+  SUBMISSION_STATUS_LABELS,
+  SUBMISSION_STATUS_VARIANT,
+  isFinalApproveStatus,
+  isReviewableSubmissionStatus,
+} from "../submissionStatus";
 
 type StatusTab = BaseCreativeTaskSubmissionDto["status"];
-
-const TABS: { value: StatusTab; label: string }[] = [
-  { value: "waiting_for_review", label: "На рассмотрении" },
-  { value: "approved", label: "Одобрено" },
-  { value: "rejected_for_format", label: "Отклонено" },
-];
 
 interface TaskDetailSubmissionsListProps {
   taskId: string;
 }
 
 export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListProps) {
-  const [statusTab, setStatusTab] = useState<StatusTab>("waiting_for_review");
+  const [statusTab, setStatusTab] = useState<StatusTab>("waiting_for_review_materials");
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [approveSubmission, setApproveSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
@@ -57,11 +36,22 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
 
   const { updateSubmissionStatus, isPending } = useUpdateSubmissionStatus();
 
+  const handleApproveClick = (sub: BaseCreativeTaskSubmissionDto) => {
+    if (isFinalApproveStatus(sub.status)) {
+      setApproveSubmission(sub);
+      return;
+    }
+    updateSubmissionStatus({
+      id: sub.id,
+      data: { decision: "approve", reviewComment: "" },
+    });
+  };
+
   const handleApproveConfirm = ({ rewardValue }: { rewardValue: number }) => {
     if (!approveSubmission) return;
     updateSubmissionStatus({
       id: approveSubmission.id,
-      data: { status: "approved", reviewComment: "", rewardValue },
+      data: { decision: "approve", reviewComment: "", rewardValue },
     });
     setApproveSubmission(null);
   };
@@ -70,7 +60,7 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
     if (!rejectSubmission) return;
     updateSubmissionStatus({
       id: rejectSubmission.id,
-      data: { status: "rejected_for_format", reviewComment, rewardValue: 0 },
+      data: { decision: "reject", reviewComment },
     });
     setRejectSubmission(null);
   };
@@ -81,12 +71,16 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
 
       <div className="mb-2 border-b border-border">
         <div className="flex flex-wrap gap-2 sm:gap-4" role="tablist" aria-label="Статус заявок">
-          {TABS.map((t) => (
+          {SUBMISSION_REVIEW_TABS.map((t) => (
             <button
               key={t.value}
               type="button"
               role="tab"
-              className={statusTab === t.value ? tabActive : tabInactive}
+              className={
+                statusTab === t.value
+                  ? "relative border-0 border-b-2 border-primary bg-transparent pb-2 pt-0.5 text-[15px] font-semibold text-foreground"
+                  : "relative border-0 border-b-2 border-transparent bg-transparent pb-2 pt-0.5 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground"
+              }
               aria-selected={statusTab === t.value}
               onClick={() => {
                 setStatusTab(t.value);
@@ -130,16 +124,16 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
                         </p>
                       ) : null}
                     </div>
-                    <Badge variant={statusVariant[sub.status]}>
-                      {statusLabels[sub.status]}
+                    <Badge variant={SUBMISSION_STATUS_VARIANT[sub.status]}>
+                      {SUBMISSION_STATUS_LABELS[sub.status]}
                     </Badge>
                   </div>
-                  {sub.status === "waiting_for_review" ? (
+                  {isReviewableSubmissionStatus(sub.status) ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Button
                         type="button"
                         size="default"
-                        onClick={() => setApproveSubmission(sub)}
+                        onClick={() => handleApproveClick(sub)}
                         disabled={isPending}
                       >
                         Одобрить

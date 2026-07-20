@@ -82,8 +82,22 @@ export interface UpdateCreativeTaskResponseDto {
   allowAmbassadorMedia: boolean;
   /** Может ли амбассадор использовать свои тексты. false — используются только дефолтные тексты (требуется минимум один). */
   allowAmbassadorText: boolean;
+  /** Может ли амбассадор использовать свои ссылки перехода. false — используются только дефолтные ссылки (требуется минимум одна). */
+  allowAmbassadorTargetUrl: boolean;
+  /**
+   * Точное количество публикаций (под-ответов), которое обязан подготовить амбассадор
+   * @minimum 1
+   * @maximum 100
+   */
+  publicationsCount: number;
+  /** Требуется ли этап проверки материалов перед публикацией. false — этап пропускается. */
+  requireMaterialsReview: boolean;
+  /** Требуется ли этап проверки опубликованного контента перед начислением награды. false — после отчёта о публикации ответ сразу одобряется. */
+  requirePublicationReview: boolean;
   /** ID дефолтных медиафайлов комнаты */
   defaultMediaIds: string[];
   /** Дефолтные тексты креатива */
   defaultTexts: string[];
+  /** Дефолтные ссылки перехода креатива (target_urls в ОРД) */
+  defaultTargetUrls: string[];
 }

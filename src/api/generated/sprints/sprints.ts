@@ -25,10 +25,18 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CreateRewardRuleRequestDto,
+  CreateRewardRuleResponseDto,
   CreateSprintRequestDto,
   CreateSprintResponseDto,
+  GetLeaderboardResponseDto,
   GetMySprintsResponseDto,
+  GetRewardRulesResponseDto,
+  SprintsControllerGetLeaderboardAsAmbassadorParams,
+  SprintsControllerGetLeaderboardParams,
   SprintsControllerGetMySprintsParams,
+  UpdateRewardRuleRequestDto,
+  UpdateRewardRuleResponseDto,
   UpdateSprintRequestDto,
   UpdateSprintResponseDto
 } from '.././model';
@@ -41,6 +49,488 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * @summary Лидерборд активного спринта комнаты (для админа проекта)
+ */
+export const sprintsControllerGetLeaderboard = (
+    roomId: string,
+    params?: SprintsControllerGetLeaderboardParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<GetLeaderboardResponseDto>(
+      {url: `/api/sprints/${roomId}/leaderboard`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getSprintsControllerGetLeaderboardQueryKey = (roomId?: string,
+    params?: SprintsControllerGetLeaderboardParams,) => {
+    return [
+    `/api/sprints/${roomId}/leaderboard`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getSprintsControllerGetLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError = unknown>(roomId: string,
+    params?: SprintsControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSprintsControllerGetLeaderboardQueryKey(roomId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>> = ({ signal }) => sprintsControllerGetLeaderboard(roomId,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(roomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SprintsControllerGetLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>>
+export type SprintsControllerGetLeaderboardQueryError = unknown
+
+
+export function useSprintsControllerGetLeaderboard<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError = unknown>(
+ roomId: string,
+    params: undefined |  SprintsControllerGetLeaderboardParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetLeaderboard<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError = unknown>(
+ roomId: string,
+    params?: SprintsControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetLeaderboard<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError = unknown>(
+ roomId: string,
+    params?: SprintsControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Лидерборд активного спринта комнаты (для админа проекта)
+ */
+
+export function useSprintsControllerGetLeaderboard<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError = unknown>(
+ roomId: string,
+    params?: SprintsControllerGetLeaderboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSprintsControllerGetLeaderboardQueryOptions(roomId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Лидерборд активного спринта комнаты (для амбассадора комнаты)
+ */
+export const sprintsControllerGetLeaderboardAsAmbassador = (
+    roomId: string,
+    params?: SprintsControllerGetLeaderboardAsAmbassadorParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<GetLeaderboardResponseDto>(
+      {url: `/api/sprints/${roomId}/leaderboard/me`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getSprintsControllerGetLeaderboardAsAmbassadorQueryKey = (roomId?: string,
+    params?: SprintsControllerGetLeaderboardAsAmbassadorParams,) => {
+    return [
+    `/api/sprints/${roomId}/leaderboard/me`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getSprintsControllerGetLeaderboardAsAmbassadorQueryOptions = <TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError = unknown>(roomId: string,
+    params?: SprintsControllerGetLeaderboardAsAmbassadorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSprintsControllerGetLeaderboardAsAmbassadorQueryKey(roomId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>> = ({ signal }) => sprintsControllerGetLeaderboardAsAmbassador(roomId,params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(roomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SprintsControllerGetLeaderboardAsAmbassadorQueryResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>>
+export type SprintsControllerGetLeaderboardAsAmbassadorQueryError = unknown
+
+
+export function useSprintsControllerGetLeaderboardAsAmbassador<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError = unknown>(
+ roomId: string,
+    params: undefined |  SprintsControllerGetLeaderboardAsAmbassadorParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetLeaderboardAsAmbassador<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError = unknown>(
+ roomId: string,
+    params?: SprintsControllerGetLeaderboardAsAmbassadorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetLeaderboardAsAmbassador<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError = unknown>(
+ roomId: string,
+    params?: SprintsControllerGetLeaderboardAsAmbassadorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Лидерборд активного спринта комнаты (для амбассадора комнаты)
+ */
+
+export function useSprintsControllerGetLeaderboardAsAmbassador<TData = Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError = unknown>(
+ roomId: string,
+    params?: SprintsControllerGetLeaderboardAsAmbassadorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetLeaderboardAsAmbassador>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSprintsControllerGetLeaderboardAsAmbassadorQueryOptions(roomId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Получить правила выдачи наград спринта
+ */
+export const sprintsControllerGetRewardRules = (
+    sprintId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<GetRewardRulesResponseDto>(
+      {url: `/api/sprints/${sprintId}/reward-rules`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getSprintsControllerGetRewardRulesQueryKey = (sprintId?: string,) => {
+    return [
+    `/api/sprints/${sprintId}/reward-rules`
+    ] as const;
+    }
+
+    
+export const getSprintsControllerGetRewardRulesQueryOptions = <TData = Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError = unknown>(sprintId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSprintsControllerGetRewardRulesQueryKey(sprintId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>> = ({ signal }) => sprintsControllerGetRewardRules(sprintId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(sprintId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SprintsControllerGetRewardRulesQueryResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>>
+export type SprintsControllerGetRewardRulesQueryError = unknown
+
+
+export function useSprintsControllerGetRewardRules<TData = Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError = unknown>(
+ sprintId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetRewardRules<TData = Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError = unknown>(
+ sprintId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetRewardRules<TData = Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError = unknown>(
+ sprintId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Получить правила выдачи наград спринта
+ */
+
+export function useSprintsControllerGetRewardRules<TData = Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError = unknown>(
+ sprintId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetRewardRules>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSprintsControllerGetRewardRulesQueryOptions(sprintId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Создать правило выдачи наград спринта
+ */
+export const sprintsControllerCreateRewardRule = (
+    sprintId: string,
+    createRewardRuleRequestDto: CreateRewardRuleRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CreateRewardRuleResponseDto>(
+      {url: `/api/sprints/${sprintId}/reward-rules`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createRewardRuleRequestDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getSprintsControllerCreateRewardRuleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerCreateRewardRule>>, TError,{sprintId: string;data: CreateRewardRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerCreateRewardRule>>, TError,{sprintId: string;data: CreateRewardRuleRequestDto}, TContext> => {
+
+const mutationKey = ['sprintsControllerCreateRewardRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sprintsControllerCreateRewardRule>>, {sprintId: string;data: CreateRewardRuleRequestDto}> = (props) => {
+          const {sprintId,data} = props ?? {};
+
+          return  sprintsControllerCreateRewardRule(sprintId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SprintsControllerCreateRewardRuleMutationResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerCreateRewardRule>>>
+    export type SprintsControllerCreateRewardRuleMutationBody = CreateRewardRuleRequestDto
+    export type SprintsControllerCreateRewardRuleMutationError = unknown
+
+    /**
+ * @summary Создать правило выдачи наград спринта
+ */
+export const useSprintsControllerCreateRewardRule = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerCreateRewardRule>>, TError,{sprintId: string;data: CreateRewardRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sprintsControllerCreateRewardRule>>,
+        TError,
+        {sprintId: string;data: CreateRewardRuleRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSprintsControllerCreateRewardRuleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Обновить правило выдачи наград (полная замена)
+ */
+export const sprintsControllerUpdateRewardRule = (
+    id: string,
+    updateRewardRuleRequestDto: UpdateRewardRuleRequestDto,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<UpdateRewardRuleResponseDto>(
+      {url: `/api/sprints/reward-rules/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateRewardRuleRequestDto
+    },
+      options);
+    }
+  
+
+
+export const getSprintsControllerUpdateRewardRuleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerUpdateRewardRule>>, TError,{id: string;data: UpdateRewardRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerUpdateRewardRule>>, TError,{id: string;data: UpdateRewardRuleRequestDto}, TContext> => {
+
+const mutationKey = ['sprintsControllerUpdateRewardRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sprintsControllerUpdateRewardRule>>, {id: string;data: UpdateRewardRuleRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sprintsControllerUpdateRewardRule(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SprintsControllerUpdateRewardRuleMutationResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerUpdateRewardRule>>>
+    export type SprintsControllerUpdateRewardRuleMutationBody = UpdateRewardRuleRequestDto
+    export type SprintsControllerUpdateRewardRuleMutationError = unknown
+
+    /**
+ * @summary Обновить правило выдачи наград (полная замена)
+ */
+export const useSprintsControllerUpdateRewardRule = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerUpdateRewardRule>>, TError,{id: string;data: UpdateRewardRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sprintsControllerUpdateRewardRule>>,
+        TError,
+        {id: string;data: UpdateRewardRuleRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSprintsControllerUpdateRewardRuleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Удалить правило выдачи наград
+ */
+export const sprintsControllerDeleteRewardRule = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/sprints/reward-rules/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getSprintsControllerDeleteRewardRuleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerDeleteRewardRule>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerDeleteRewardRule>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['sprintsControllerDeleteRewardRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sprintsControllerDeleteRewardRule>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  sprintsControllerDeleteRewardRule(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SprintsControllerDeleteRewardRuleMutationResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerDeleteRewardRule>>>
+    
+    export type SprintsControllerDeleteRewardRuleMutationError = unknown
+
+    /**
+ * @summary Удалить правило выдачи наград
+ */
+export const useSprintsControllerDeleteRewardRule = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerDeleteRewardRule>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sprintsControllerDeleteRewardRule>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSprintsControllerDeleteRewardRuleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Get my sprints from room
  */
 export const sprintsControllerGetMySprints = (

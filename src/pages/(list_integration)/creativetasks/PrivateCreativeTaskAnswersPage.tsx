@@ -21,33 +21,19 @@ import { usePrivateSubmissions } from "@/hooks/creativetasks/usePrivateSubmissio
 import { useUpdatePrivateSubmissionStatus } from "@/hooks/creativetasks/useUpdatePrivateSubmissionStatus";
 import { CreativesPaginationControls } from "./components/CreativesPaginationControls";
 import { SubmissionContentPreview } from "./components/SubmissionContentPreview";
+import {
+  SUBMISSION_REVIEW_TABS,
+  SUBMISSION_STATUS_LABELS,
+  SUBMISSION_STATUS_VARIANT,
+  isReviewableSubmissionStatus,
+} from "./submissionStatus";
 
 type PrivateSubmissionStatus = GetPrivateSubmissionsResponseItemDto["status"];
-
-const statusLabels: Record<PrivateSubmissionStatus, string> = {
-  new: "Черновик",
-  waiting_for_review: "На рассмотрении",
-  approved: "Одобрено",
-  rejected_for_format: "Отклонено",
-};
-
-const statusVariant: Record<PrivateSubmissionStatus, "success" | "destructive" | "secondary"> = {
-  new: "secondary",
-  waiting_for_review: "secondary",
-  approved: "success",
-  rejected_for_format: "destructive",
-};
 
 const tabInactive =
   "relative border-0 border-b-2 border-transparent bg-transparent pb-2 pt-0.5 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
 const tabActive =
   "relative border-0 border-b-2 border-primary bg-transparent pb-2 pt-0.5 text-[15px] font-semibold text-foreground";
-
-const TABS: { value: PrivateSubmissionStatus; label: string }[] = [
-  { value: "waiting_for_review", label: "На рассмотрении" },
-  { value: "approved", label: "Одобрено" },
-  { value: "rejected_for_format", label: "Отклонено" },
-];
 
 const TEXTAREA_CLASS =
   "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
@@ -145,7 +131,7 @@ function RejectPrivateSubmissionDialog({
 
 export default function PrivateCreativeTaskAnswersPage() {
   const { task } = useOutletContext<OutletCtx>();
-  const [statusTab, setStatusTab] = useState<PrivateSubmissionStatus>("waiting_for_review");
+  const [statusTab, setStatusTab] = useState<PrivateSubmissionStatus>("waiting_for_review_materials");
   const [page, setPage] = useState(1);
   const [rejectSubmission, setRejectSubmission] = useState<GetPrivateSubmissionsResponseItemDto | null>(null);
   const pageSize = 10;
@@ -160,7 +146,7 @@ export default function PrivateCreativeTaskAnswersPage() {
   const approveSubmission = (submission: GetPrivateSubmissionsResponseItemDto) => {
     updatePrivateSubmissionStatus({
       id: submission.id,
-      data: { status: "approved", reviewComment: "" },
+      data: { decision: "approve", reviewComment: "" },
     });
   };
 
@@ -168,7 +154,7 @@ export default function PrivateCreativeTaskAnswersPage() {
     if (!rejectSubmission) return;
     updatePrivateSubmissionStatus({
       id: rejectSubmission.id,
-      data: { status: "rejected_for_format", reviewComment },
+      data: { decision: "reject", reviewComment },
     });
     setRejectSubmission(null);
   };
@@ -179,7 +165,7 @@ export default function PrivateCreativeTaskAnswersPage() {
 
       <div className="mb-2 border-b border-border">
         <div className="flex flex-wrap gap-2 sm:gap-4" role="tablist" aria-label="Статус ответов">
-          {TABS.map((tab) => (
+          {SUBMISSION_REVIEW_TABS.map((tab) => (
             <button
               key={tab.value}
               type="button"
@@ -226,11 +212,11 @@ export default function PrivateCreativeTaskAnswersPage() {
                         Амбассадор: {submission.ambassadorId}
                       </p>
                     </div>
-                    <Badge variant={statusVariant[submission.status]}>
-                      {statusLabels[submission.status]}
+                    <Badge variant={SUBMISSION_STATUS_VARIANT[submission.status]}>
+                      {SUBMISSION_STATUS_LABELS[submission.status]}
                     </Badge>
                   </div>
-                  {submission.status === "waiting_for_review" ? (
+                  {isReviewableSubmissionStatus(submission.status) ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Button
                         type="button"

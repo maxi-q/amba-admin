@@ -39,6 +39,8 @@ import OrdRoomFilesPage from './ord/files';
 import OrdTaskIssuanceRulePage from './creativetasks/OrdTaskIssuanceRulePage';
 import OrdCreativePage from './creativetasks/OrdCreativePage';
 import PrivateOrdCreativePage from './creativetasks/PrivateOrdCreativePage';
+import RewardsPage from './rewards';
+import SprintLeaderboardPage from './sprints/leaderboard';
 
 export {
     SettingPage,
@@ -81,5 +83,7 @@ export {
     OrdTaskIssuanceRulePage,
     OrdCreativePage,
     PrivateOrdCreativePage,
-    EventsLayout
+    EventsLayout,
+    RewardsPage,
+    SprintLeaderboardPage,
 };

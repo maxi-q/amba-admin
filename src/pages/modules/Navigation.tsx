@@ -40,7 +40,9 @@ import {
   OrdRoomFilesPage,
   OrdTaskIssuanceRulePage,
   OrdCreativePage,
-  PrivateOrdCreativePage
+  PrivateOrdCreativePage,
+  RewardsPage,
+  SprintLeaderboardPage,
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -126,10 +128,13 @@ export const Navigation = () => {
 
         <Route path="sprints" element={<SprintsLayout />}>
           <Route index element={<SprintList />} />
-          <Route path=":sprintId" element={<SprintSetting />} />
+          <Route path="leaderboard" element={<SprintLeaderboardPage />} />
           <Route path="settings" element={<SprintSettingsPage />} />
           <Route path="info" element={<SprintInfo />} />
+          <Route path=":sprintId" element={<SprintSetting />} />
         </Route>
+
+        <Route path="rewards" element={<RewardsPage />} />
 
         <Route path="events" element={<EventsLayout />}>
           <Route index element={<EventsPage />} />

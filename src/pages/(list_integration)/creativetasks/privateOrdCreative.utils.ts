@@ -25,8 +25,10 @@ export function privateTaskToOrdCreativeForm(
     ordTargeting: task.ordTargeting ?? "",
     allowAmbassadorMedia: task.allowAmbassadorMedia,
     allowAmbassadorText: task.allowAmbassadorText,
+    allowAmbassadorTargetUrl: task.allowAmbassadorTargetUrl,
     defaultMediaIds: task.defaultMediaIds ?? [],
     defaultTexts: task.defaultTexts?.length ? [...task.defaultTexts] : [""],
+    defaultTargetUrls: task.defaultTargetUrls?.length ? [...task.defaultTargetUrls] : [""],
   };
 }
 
@@ -34,6 +36,7 @@ export function privateOrdCreativeFormToPayload(
   form: OrdCreativeFormState
 ): UpdatePrivateCreativeTaskRequestDto {
   const defaultTexts = form.defaultTexts.map((text) => text.trim()).filter(Boolean);
+  const defaultTargetUrls = form.defaultTargetUrls.map((url) => url.trim()).filter(Boolean);
 
   return {
     ordForm: (form.ordForm || null) as UpdatePrivateCreativeTaskRequestDtoOrdForm | null,
@@ -48,8 +51,10 @@ export function privateOrdCreativeFormToPayload(
     ordTargeting: form.ordTargeting.trim() || null,
     allowAmbassadorMedia: form.allowAmbassadorMedia,
     allowAmbassadorText: form.allowAmbassadorText,
+    allowAmbassadorTargetUrl: form.allowAmbassadorTargetUrl,
     defaultMediaIds: form.defaultMediaIds,
     defaultTexts,
+    defaultTargetUrls,
   };
 }
 
@@ -72,6 +77,11 @@ export function getPrivateOrdCreativeSummaryLines(
     task.allowAmbassadorText
       ? "Тексты: амбассадор может использовать свои"
       : `Тексты: только дефолтные (${task.defaultTexts?.length ?? 0})`
+  );
+  lines.push(
+    task.allowAmbassadorTargetUrl
+      ? "Ссылки: амбассадор может использовать свои"
+      : `Ссылки: только дефолтные (${task.defaultTargetUrls?.length ?? 0})`
   );
 
   return lines;

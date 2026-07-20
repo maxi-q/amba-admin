@@ -5,19 +5,16 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { SubmissionItemInputDto } from './submissionItemInputDto';
 
 export interface CreatePrivateSubmissionByAmbassadorRequestDto {
-  /** Собственные тексты креатива от амбассадора. Разрешены только если allowAmbassadorText=true у задачи. */
-  texts?: string[];
-  /** ID собственных медиафайлов амбассадора. Разрешены только если allowAmbassadorMedia=true у задачи. */
-  mediaFileIds?: string[];
-  /** Целевые ссылки перехода креатива (target_urls в ОРД) */
-  targetUrls?: string[];
   /**
    * Комментарий от амбассадора
    * @nullable
    */
   comment?: string | null;
+  /** Под-ответы (публикации) с материалами. Количество должно совпадать с publicationsCount задачи. */
+  items: SubmissionItemInputDto[];
   /** ID приватного задания */
   privateTaskId: string;
 }

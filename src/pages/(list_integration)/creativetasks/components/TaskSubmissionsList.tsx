@@ -2,23 +2,10 @@ import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
 import { Badge, Card, CardContent } from "@senler/ui";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 import { getSubmissionPreviewText } from "../submissionContent.utils";
-
-const statusLabels: Record<BaseCreativeTaskSubmissionDto["status"], string> = {
-  new: "Черновик",
-  waiting_for_review: "На рассмотрении",
-  approved: "Одобрено",
-  rejected_for_format: "Отклонено",
-};
-
-const statusVariant: Record<
-  BaseCreativeTaskSubmissionDto["status"],
-  "success" | "destructive" | "secondary"
-> = {
-  new: "secondary",
-  waiting_for_review: "secondary",
-  approved: "success",
-  rejected_for_format: "destructive",
-};
+import {
+  SUBMISSION_STATUS_LABELS,
+  SUBMISSION_STATUS_VARIANT,
+} from "../submissionStatus";
 
 interface TaskSubmissionsListProps {
   taskId: string;
@@ -34,7 +21,7 @@ export function TaskSubmissionsList({
   taskId,
   page = 1,
   size = 10,
-  status = "waiting_for_review",
+  status = "waiting_for_review_materials",
 }: TaskSubmissionsListProps) {
   const { submissions, isLoading, pagination } = useSubmissions(taskId, {
     page,
@@ -69,8 +56,8 @@ export function TaskSubmissionsList({
               <p className="min-w-0 flex-1 truncate text-sm text-foreground">
                 {getSubmissionPreviewText(sub)}
               </p>
-              <Badge variant={statusVariant[sub.status]}>
-                {statusLabels[sub.status]}
+              <Badge variant={SUBMISSION_STATUS_VARIANT[sub.status]}>
+                {SUBMISSION_STATUS_LABELS[sub.status]}
               </Badge>
             </div>
             {sub.reviewComment ? (

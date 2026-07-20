@@ -14,9 +14,11 @@ import { dateToInput } from "./helpers";
 import { SprintPageHeader } from "./components/SprintPageHeader";
 import { SprintSettingsSection } from "./components/SprintSettingsSection";
 import { SprintPromoCodesSection } from "./components/SprintPromoCodesSection";
+import { SprintRewardRulesSection } from "./components/SprintRewardRulesSection";
 import { SprintActionButtons } from "./components/SprintActionButtons";
 import { DeleteSprintDialog } from "./components/DeleteSprintDialog";
 import { SprintNotFoundState } from "./components/SprintNotFoundState";
+import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
@@ -38,6 +40,9 @@ const SprintSetting = () => {
     validationErrors: updateValidationErrors,
     generalError: updateGeneralError,
   } = usePatchSprint();
+
+  const { room } = useGetRoomById(slug || "");
+  const roomId = room?.id ?? slug ?? "";
 
   const { sprints, isLoading: isLoadingSprints } = useSprints(
     { page: 1, size: 100 },
@@ -272,6 +277,13 @@ const SprintSetting = () => {
             onIgnorePromoCodeUsageLimitChange={
               handleIgnorePromoCodeUsageLimitChange
             }
+          />
+
+          <SprintRewardRulesSection
+            sprintId={sprintId || ""}
+            roomId={roomId}
+            roomSlug={slug || ""}
+            disabled={formData.isDeleted}
           />
         </div>
 

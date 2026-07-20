@@ -66,8 +66,10 @@ export type OrdCreativeFormState = {
   ordTargeting: string;
   allowAmbassadorMedia: boolean;
   allowAmbassadorText: boolean;
+  allowAmbassadorTargetUrl: boolean;
   defaultMediaIds: string[];
   defaultTexts: string[];
+  defaultTargetUrls: string[];
 };
 
 export function taskToOrdCreativeForm(task: CreativeTaskWithDefaultsDto): OrdCreativeFormState {
@@ -82,13 +84,16 @@ export function taskToOrdCreativeForm(task: CreativeTaskWithDefaultsDto): OrdCre
     ordTargeting: task.ordTargeting ?? "",
     allowAmbassadorMedia: task.allowAmbassadorMedia,
     allowAmbassadorText: task.allowAmbassadorText,
+    allowAmbassadorTargetUrl: task.allowAmbassadorTargetUrl,
     defaultMediaIds: task.defaultMediaIds ?? [],
     defaultTexts: task.defaultTexts?.length ? [...task.defaultTexts] : [""],
+    defaultTargetUrls: task.defaultTargetUrls?.length ? [...task.defaultTargetUrls] : [""],
   };
 }
 
 export function ordCreativeFormToPayload(form: OrdCreativeFormState): UpdateCreativeTaskRequestDto {
   const defaultTexts = form.defaultTexts.map((text) => text.trim()).filter(Boolean);
+  const defaultTargetUrls = form.defaultTargetUrls.map((url) => url.trim()).filter(Boolean);
 
   return {
     ordForm: form.ordForm || null,
@@ -101,8 +106,10 @@ export function ordCreativeFormToPayload(form: OrdCreativeFormState): UpdateCrea
     ordTargeting: form.ordTargeting.trim() || null,
     allowAmbassadorMedia: form.allowAmbassadorMedia,
     allowAmbassadorText: form.allowAmbassadorText,
+    allowAmbassadorTargetUrl: form.allowAmbassadorTargetUrl,
     defaultMediaIds: form.defaultMediaIds,
     defaultTexts,
+    defaultTargetUrls,
   };
 }
 
@@ -124,6 +131,12 @@ export function validateOrdCreativeForm(form: OrdCreativeFormState): Record<stri
   const texts = form.defaultTexts.map((text) => text.trim()).filter(Boolean);
   if (!form.allowAmbassadorText && texts.length === 0) {
     errors.defaultTexts = "Добавьте хотя бы один дефолтный текст или разрешите тексты амбассадора.";
+  }
+
+  const urls = form.defaultTargetUrls.map((url) => url.trim()).filter(Boolean);
+  if (!form.allowAmbassadorTargetUrl && urls.length === 0) {
+    errors.defaultTargetUrls =
+      "Добавьте хотя бы одну дефолтную ссылку или разрешите ссылки амбассадора.";
   }
 
   if (requiresOrdProductInfo(form.ordKktus)) {
@@ -170,6 +183,11 @@ export function getOrdCreativeSummaryLines(task: CreativeTaskWithDefaultsDto): s
     task.allowAmbassadorText
       ? "Тексты: амбассадор может использовать свои"
       : `Тексты: только дефолтные (${task.defaultTexts?.length ?? 0})`
+  );
+  lines.push(
+    task.allowAmbassadorTargetUrl
+      ? "Ссылки: амбассадор может использовать свои"
+      : `Ссылки: только дефолтные (${task.defaultTargetUrls?.length ?? 0})`
   );
 
   return lines;

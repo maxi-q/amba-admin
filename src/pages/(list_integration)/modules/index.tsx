@@ -66,6 +66,15 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         id: "sprints",
         label: "Спринты",
         href: `${roomBase}/sprints`,
+        match: (p) => {
+          const pt = p.split("#")[0];
+          return pt === `${roomBase}/sprints` || pt.startsWith(`${roomBase}/sprints/`);
+        },
+      },
+      {
+        id: "rewards",
+        label: "Награды",
+        href: `${roomBase}/rewards`,
       },
       {
         id: "events",

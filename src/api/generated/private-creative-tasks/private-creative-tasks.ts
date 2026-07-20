@@ -790,8 +790,8 @@ export const usePrivateCreativeTasksControllerUpdateSubmissionByAmbassador = <TE
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Переводит ответ из статуса new (черновик) или rejected_for_format в waiting_for_review. После этого ответ становится доступен для модерации владельцем комнаты.
- * @summary Отправить ответ на проверку (для амбассадора)
+ * Переводит ответ из статуса new (черновик) или rejected_for_materials на следующий этап: waiting_for_review_materials (если задача требует проверки материалов) либо сразу waiting_for_publication.
+ * @summary Отправить материалы на проверку (для амбассадора)
  */
 export const privateCreativeTasksControllerSubmitSubmissionForReview = (
     id: string,
@@ -837,7 +837,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PrivateCreativeTasksControllerSubmitSubmissionForReviewMutationError = unknown
 
     /**
- * @summary Отправить ответ на проверку (для амбассадора)
+ * @summary Отправить материалы на проверку (для амбассадора)
  */
 export const usePrivateCreativeTasksControllerSubmitSubmissionForReview = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof privateCreativeTasksControllerSubmitSubmissionForReview>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -849,6 +849,69 @@ export const usePrivateCreativeTasksControllerSubmitSubmissionForReview = <TErro
       > => {
 
       const mutationOptions = getPrivateCreativeTasksControllerSubmitSubmissionForReviewMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Переводит ответ из статуса waiting_for_publication или rejected_for_publication на следующий этап: waiting_for_review_publication (если задача требует проверки публикации) либо сразу approved.
+ * @summary Отчитаться о публикации (для амбассадора)
+ */
+export const privateCreativeTasksControllerReportPublication = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CreatePrivateSubmissionResponseDto>(
+      {url: `/api/private-creative-tasks/submissions/${id}/report-publication`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getPrivateCreativeTasksControllerReportPublicationMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof privateCreativeTasksControllerReportPublication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof privateCreativeTasksControllerReportPublication>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['privateCreativeTasksControllerReportPublication'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof privateCreativeTasksControllerReportPublication>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  privateCreativeTasksControllerReportPublication(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrivateCreativeTasksControllerReportPublicationMutationResult = NonNullable<Awaited<ReturnType<typeof privateCreativeTasksControllerReportPublication>>>
+    
+    export type PrivateCreativeTasksControllerReportPublicationMutationError = unknown
+
+    /**
+ * @summary Отчитаться о публикации (для амбассадора)
+ */
+export const usePrivateCreativeTasksControllerReportPublication = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof privateCreativeTasksControllerReportPublication>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof privateCreativeTasksControllerReportPublication>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getPrivateCreativeTasksControllerReportPublicationMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
