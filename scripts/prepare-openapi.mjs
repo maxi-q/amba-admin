@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 
-const SOURCE_URL = 'https://api.ambassador.sen.collabox.dev/api/docs-json';
+const SOURCE_URL = 'https://api-ambassador.senler.ru/api/docs-json';
 const TARGET_PATH = new URL('../.openapi/ambassador.openapi.json', import.meta.url);
 
 const isObject = (value) =>
