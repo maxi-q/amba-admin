@@ -10,7 +10,7 @@ Use Orval-generated code as the only frontend boundary for backend communication
 
 - Generated API code lives in `src/api/generated/**`.
 - The shared Orval axios mutator lives in `src/api/mutator/custom-instance.ts`.
-- Regenerate the client with `npm run api:generate`; it prepares Swagger from `https://api.ambassador.sen.collabox.dev/api/docs-json` before running Orval.
+- Regenerate the client with `npm run api:generate`; it prepares Swagger from `https://api-ambassador.senler.ru/api/docs-json` before running Orval.
 - Do not add new handwritten `fetch`, raw `axios`, service methods, or custom request functions for backend endpoints.
 - Do not import or call Orval-generated hooks/functions directly from pages or UI components.
 - Wrap Orval-generated code in app-level hooks under `src/hooks/**`; pages and components should consume only these app hooks.
