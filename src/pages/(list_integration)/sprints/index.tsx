@@ -3,8 +3,10 @@ import { useSprints } from "@/hooks/sprints/useSprints";
 import { PageLoader } from "@senler/ui";
 import { SprintsErrorState } from "./components/SprintsErrorState";
 import { SprintsEmptyState } from "./components/SprintsEmptyState";
+import { SprintsPageToolbar } from "./components/SprintsPageToolbar";
 import { SprintCard } from "./components/SprintCard";
 import { CreateSprintButton } from "./components/CreateSprintButton";
+import { SprintsHeader } from "./components/SprintsHeader";
 
 export default function SprintList() {
   const { slug } = useParams();
@@ -21,7 +23,7 @@ export default function SprintList() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-dvh w-full items-center justify-center">
+      <div className="flex min-h-[50vh] w-full items-center justify-center">
         <PageLoader label="Загрузка…" />
       </div>
     );
@@ -33,17 +35,23 @@ export default function SprintList() {
 
   const activeSprints = sprints.filter((sprint) => !sprint.isDeleted);
 
-  return (
-    <div className="w-full px-2 pb-6">
-      <div className="flex flex-col gap-2">
-        {activeSprints.length === 0 ? (
-          <SprintsEmptyState onCreateClick={handleCreateSprint} />
-        ) : (
-          activeSprints.map((sprint) => (
-            <SprintCard key={sprint.id} sprint={sprint} />
-          ))
-        )}
+  if (activeSprints.length === 0) {
+    return (
+      <div className="flex min-h-[calc(100dvh-2rem)] min-w-0 flex-col bg-[#FFFFFF]">
+        <SprintsPageToolbar onCreateClick={handleCreateSprint} />
+        <SprintsEmptyState onCreateClick={handleCreateSprint} />
+      </div>
+    );
+  }
 
+  return (
+    <div className="flex min-w-0 flex-col gap-4 pb-6">
+      <SprintsPageToolbar onCreateClick={handleCreateSprint} />
+      <SprintsHeader />
+      <div className="flex flex-col gap-2">
+        {activeSprints.map((sprint) => (
+          <SprintCard key={sprint.id} sprint={sprint} />
+        ))}
         <CreateSprintButton onClick={handleCreateSprint} />
       </div>
     </div>

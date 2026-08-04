@@ -5,6 +5,8 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { RewardPhotoDto } from './rewardPhotoDto';
+import type { RewardImageUploadDto } from './rewardImageUploadDto';
 
 export interface CreateRewardResponseDto {
   /** Unique identifier */
@@ -16,12 +18,20 @@ export interface CreateRewardResponseDto {
   /** Наименование награды */
   name: string;
   /**
-   * Иконка награды (URL или ключ хранилища)
+   * Presigned URL иконки; null только пока загрузка ещё не подтверждена
    * @nullable
    */
-  iconUrl?: string | null;
+  iconUrl: string | null;
+  /**
+   * Дата подтверждения загрузки иконки
+   * @nullable
+   */
+  iconUploadedAt: string | null;
+  /** Дополнительные фото галереи */
+  photos: RewardPhotoDto[];
   /** Флаг удаления */
   isDeleted: boolean;
   /** ID комнаты */
   roomId: string;
+  iconUpload: RewardImageUploadDto;
 }

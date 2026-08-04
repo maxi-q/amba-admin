@@ -7,7 +7,7 @@
  */
 
 /**
- * Тип распределения награды. byRank — по занятому месту (диапазону мест); byPoints — пропорционально баллам подходящих участников.
+ * Тип распределения награды. byRank — по занятому месту (диапазону мест); byPoints — пропорционально баллам подходящих участников; manual — пул, распределяемый вручную (система получателей не назначает).
  */
 export type CreateRewardRuleRequestDtoType = typeof CreateRewardRuleRequestDtoType[keyof typeof CreateRewardRuleRequestDtoType];
 
@@ -16,4 +16,5 @@ export type CreateRewardRuleRequestDtoType = typeof CreateRewardRuleRequestDtoTy
 export const CreateRewardRuleRequestDtoType = {
   byRank: 'byRank',
   byPoints: 'byPoints',
+  manual: 'manual',
 } as const;

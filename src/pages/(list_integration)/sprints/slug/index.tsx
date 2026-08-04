@@ -18,6 +18,13 @@ import { SprintRewardRulesSection } from "./components/SprintRewardRulesSection"
 import { SprintActionButtons } from "./components/SprintActionButtons";
 import { DeleteSprintDialog } from "./components/DeleteSprintDialog";
 import { SprintNotFoundState } from "./components/SprintNotFoundState";
+import { SprintCreationStepOne } from "./components/SprintCreationStepOne";
+import {
+  SprintCreationStepTwo,
+  type DraftProportionalReward,
+  type DraftRankRule,
+  type SprintRewardMode,
+} from "./components/SprintCreationStepTwo";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 
 const SprintSetting = () => {
@@ -50,6 +57,15 @@ const SprintSetting = () => {
   );
 
   const [sprint, setSprint] = useState<BaseSprintDto | null>(null);
+  const [description, setDescription] = useState("");
+  const [creationStep, setCreationStep] = useState<1 | 2>(1);
+  const [rewardMode, setRewardMode] = useState<SprintRewardMode>("rating");
+  const [draftRankRules, setDraftRankRules] = useState<DraftRankRule[]>([]);
+  const [draftProportional, setDraftProportional] =
+    useState<DraftProportionalReward>({
+      amount: "",
+      rankTo: "",
+    });
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [formData, setFormData] = useState<UpdateSprintRequestDto>({
     name: "",
@@ -234,6 +250,45 @@ const SprintSetting = () => {
     });
   };
 
+  const handleDateRangeChange = (from?: Date, to?: Date) => {
+    const toInputValue = (date?: Date) => {
+      if (!date) return null;
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    setFormData((previous) => ({
+      ...previous,
+      startDate: toInputValue(from) ?? "",
+      endDate: toInputValue(to),
+      ignoreEndDate: false,
+    }));
+  };
+
+  const handleCreationStepOneContinue = () => {
+    const errors: Record<string, string[]> = {};
+    if (!formData.name.trim()) {
+      errors.name = ["Укажите название спринта"];
+    }
+    if (!formData.startDate) {
+      errors.startDate = ["Выберите дату начала"];
+    }
+    if (!formData.endDate) {
+      errors.endDate = ["Выберите дату окончания"];
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length === 0) {
+      setCreationStep(2);
+    }
+  };
+
+  const handleDraftClick = () => {
+    // TODO: подключить сохранение черновика после появления draft-статуса/endpoint на backend.
+    toast.message("Сохранение черновика будет доступно позже");
+  };
+
   if (isLoadingSprints) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center">
@@ -244,6 +299,47 @@ const SprintSetting = () => {
 
   if (!isNewSprint && sprints.length > 0 && !sprint) {
     return <SprintNotFoundState />;
+  }
+
+  if (isNewSprint) {
+    return (
+      <div className="flex min-h-full w-full flex-col py-6">
+        {generalError ? (
+          <Alert variant="destructive" className="mx-auto mb-4 w-full max-w-[700px]">
+            <AlertDescription>{generalError}</AlertDescription>
+          </Alert>
+        ) : null}
+        {creationStep === 1 ? (
+          <SprintCreationStepOne
+            formData={formData}
+            description={description}
+            fieldErrors={fieldErrors}
+            isSaving={isCreating}
+            onNameChange={handleInputChange("name")}
+            onDescriptionChange={setDescription}
+            onDateRangeChange={handleDateRangeChange}
+            onSaveDraft={handleDraftClick}
+            onContinue={handleCreationStepOneContinue}
+          />
+        ) : (
+          <SprintCreationStepTwo
+            roomId={roomId}
+            roomSlug={slug ?? ""}
+            mode={rewardMode}
+            rankRules={draftRankRules}
+            proportional={draftProportional}
+            onModeChange={setRewardMode}
+            onRankRulesChange={setDraftRankRules}
+            onProportionalChange={setDraftProportional}
+            onBack={() => setCreationStep(1)}
+            onContinue={() =>
+              toast.message("Шаг «Задания» будет добавлен следующим")
+            }
+            onSaveDraft={handleDraftClick}
+          />
+        )}
+      </div>
+    );
   }
 
   return (

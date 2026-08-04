@@ -16,6 +16,7 @@ import type {
   CreateCreativeTaskRequestDto,
   CreateCreativeTaskRequestDtoAllowedFormatsItem,
 } from "@/api/generated/model";
+import { CreateCreativeTaskRequestDtoTargetPlatform } from "@/api/generated/model";
 import {
   CREATIVE_TASK_FORMAT_OPTIONS,
   parseMultilineList,
@@ -99,6 +100,7 @@ export function CreateCreativeTaskDialog({
       roomId,
       criteria: parseMultilineList(criteria),
       allowedFormats: allowedFormats as CreateCreativeTaskRequestDtoAllowedFormatsItem[],
+      targetPlatform: CreateCreativeTaskRequestDtoTargetPlatform.VK_GROUP,
       minimalRewardInBalls: parseRewardBalls(minimalRewardInBalls),
       allowAmbassadorMedia: true,
       allowAmbassadorText: true,

@@ -7,6 +7,7 @@
  */
 import type { GetLeaderboardResponseDtoSprint } from './getLeaderboardResponseDtoSprint';
 import type { LeaderboardEntryDto } from './leaderboardEntryDto';
+import type { LeaderboardRewardDto } from './leaderboardRewardDto';
 
 export interface GetLeaderboardResponseDto {
   /**
@@ -16,6 +17,8 @@ export interface GetLeaderboardResponseDto {
   sprint: GetLeaderboardResponseDtoSprint;
   /** Строки лидерборда на текущей странице */
   items: LeaderboardEntryDto[];
+  /** Награды правил с типом manual: пул, который распределяется вручную и не привязан к участникам. Количество суммируется по всем правилам спринта с этим типом. */
+  manualRewards: LeaderboardRewardDto[];
   /** Номер текущей страницы (1-based) */
   page: number;
   /** Размер страницы */

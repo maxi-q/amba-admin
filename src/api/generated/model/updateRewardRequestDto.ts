@@ -9,11 +9,6 @@
 export interface UpdateRewardRequestDto {
   /** Наименование награды */
   name?: string;
-  /**
-   * Иконка награды (URL или ключ хранилища)
-   * @nullable
-   */
-  iconUrl?: string | null;
   /** Флаг удаления */
   isDeleted?: boolean;
 }

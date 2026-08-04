@@ -29,6 +29,7 @@ import type {
   UpdatePrivateCreativeTaskRequestDto,
   UpdatePrivateCreativeTaskRequestDtoAllowedFormatsItem,
 } from "@/api/generated/model";
+import { CreatePrivateCreativeTaskRequestDtoTargetPlatform } from "@/api/generated/model";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomPrivateCreativeTasks } from "@/hooks/creativetasks/useRoomPrivateCreativeTasks";
 import { usePrivateCreativeTask } from "@/hooks/creativetasks/usePrivateCreativeTask";
@@ -276,6 +277,7 @@ function CreatePrivateTaskDialog({
       isWhitelistEnabled: form.isWhitelistEnabled,
       criteria: parseMultilineList(form.criteria),
       allowedFormats: formatsPayload(form.allowedFormats),
+      targetPlatform: CreatePrivateCreativeTaskRequestDtoTargetPlatform.VK_GROUP,
       rewardInRubs: parseRewardBalls(form.rewardInRubs),
       allowAmbassadorMedia: true,
       allowAmbassadorText: true,

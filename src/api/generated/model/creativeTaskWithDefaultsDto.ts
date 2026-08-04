@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { CreativeTaskWithDefaultsDtoAllowedFormatsItem } from './creativeTaskWithDefaultsDtoAllowedFormatsItem';
+import type { CreativeTaskWithDefaultsDtoTargetPlatform } from './creativeTaskWithDefaultsDtoTargetPlatform';
 import type { CreativeTaskWithDefaultsDtoOrdForm } from './creativeTaskWithDefaultsDtoOrdForm';
 import type { CreativeTaskWithDefaultsDtoOrdFlagsItem } from './creativeTaskWithDefaultsDtoOrdFlagsItem';
 import type { CreativeTaskWithDefaultsDtoOrdPayType } from './creativeTaskWithDefaultsDtoOrdPayType';
@@ -37,6 +38,8 @@ export interface CreativeTaskWithDefaultsDto {
   criteria?: string[];
   /** Допустимые форматы ответа на задание */
   allowedFormats?: CreativeTaskWithDefaultsDtoAllowedFormatsItem[];
+  /** Целевая платформа публикации */
+  targetPlatform: CreativeTaskWithDefaultsDtoTargetPlatform;
   /**
    * Минимальная награда за задание (в баллах)
    * @minimum 0

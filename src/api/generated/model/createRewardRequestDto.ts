@@ -5,15 +5,13 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreateRewardRequestDtoContentType } from './createRewardRequestDtoContentType';
 
 export interface CreateRewardRequestDto {
   /** Наименование награды */
   name: string;
-  /**
-   * Иконка награды (URL или ключ хранилища)
-   * @nullable
-   */
-  iconUrl?: string | null;
   /** ID комнаты */
   roomId: string;
+  /** MIME-тип изображения */
+  contentType: CreateRewardRequestDtoContentType;
 }

@@ -16,4 +16,5 @@ export type SprintRewardRuleDtoType = typeof SprintRewardRuleDtoType[keyof typeo
 export const SprintRewardRuleDtoType = {
   byRank: 'byRank',
   byPoints: 'byPoints',
+  manual: 'manual',
 } as const;

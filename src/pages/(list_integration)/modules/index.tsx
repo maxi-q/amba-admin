@@ -4,22 +4,58 @@ import { useMemo } from "react";
 import { toast } from "sonner";
 import {
   AppShell,
-  type AppShellBreadcrumb,
   type AppShellNavigationGroup,
   type AppShellNavigationItem,
   type AppShellRenderLink,
 } from "@senler/ui/app-shell";
-import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+  PageLoader,
+} from "@senler/ui";
+import {
+  Bell,
+  Bot,
+  Calendar,
+  ChartPie,
+  ChevronsUpDown,
+  CircleQuestionMark,
+  CircleDashed,
+  CircleUser,
+  Ellipsis,
+  Gift,
+  Users,
+} from "lucide-react";
+import { IndividualTasksIcon } from "@/assets/icons/IndividualTasksIcon";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
-
-
 
 interface RoomBoxProps {
   children: ReactNode | ReactNode[];
 }
 
+type OverflowNavItem = {
+  id: string;
+  label: string;
+  href: string;
+  match: (path: string) => boolean;
+};
+
+const pathWithoutHash = (path: string) => path.split("#")[0];
+
+const stubSoon = () => {
+  toast.message("Скоро");
+};
+
+const sidebarStubRowClassName =
+  "flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.25px] text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring";
+
 const RoomBox = ({ children }: RoomBoxProps) => {
-  const { slug, eventId } = useParams<{
+  const { slug } = useParams<{
     slug: string;
     eventId?: string;
   }>();
@@ -35,97 +71,37 @@ const RoomBox = ({ children }: RoomBoxProps) => {
   const roomBase = slug ? `/rooms/${slug}` : "";
   const currentPath = `${location.pathname}${location.hash}`;
 
-  const navigation = useMemo((): AppShellNavigationGroup[] => {
-    if (!roomBase) {
-      return [{ id: "main", items: [] }];
-    }
+  const overflowItems = useMemo((): OverflowNavItem[] => {
+    if (!roomBase) return [];
 
-    const items: AppShellNavigationItem[] = [
+    return [
       {
         id: "setting",
         label: "Настройки",
         href: `${roomBase}/setting`,
-        match: (p) => p.split("#")[0] === `${roomBase}/setting`,
-        defaultOpen: true,
-        items: [
-          {
-            id: "bots",
-            label: "Боты",
-            href: `${roomBase}/setting#bots`,
-            match: (p) => p.includes("#bots"),
-          },
-          {
-            id: "webhook",
-            label: "Webhook",
-            href: `${roomBase}/setting#webhook`,
-            match: (p) => p.includes("#webhook"),
-          },
-        ],
-      },
-      {
-        id: "sprints",
-        label: "Спринты",
-        href: `${roomBase}/sprints`,
-        match: (p) => {
-          const pt = p.split("#")[0];
-          return pt === `${roomBase}/sprints` || pt.startsWith(`${roomBase}/sprints/`);
-        },
-      },
-      {
-        id: "rewards",
-        label: "Награды",
-        href: `${roomBase}/rewards`,
+        match: (p) => pathWithoutHash(p).startsWith(`${roomBase}/setting`),
       },
       {
         id: "events",
         label: "События",
         href: `${roomBase}/events`,
         match: (p) => {
-          const pt = p.split("#")[0];
+          const pt = pathWithoutHash(p);
           return (
-            pt === `${roomBase}/events` ||
-            pt.startsWith(`${roomBase}/events/`)
+            pt === `${roomBase}/events` || pt.startsWith(`${roomBase}/events/`)
           );
         },
-        defaultOpen: true,
-        items: [
-          {
-            id: "events-list",
-            label: "Список",
-            href: `${roomBase}/events`,
-            match: (p) => p.split("#")[0] === `${roomBase}/events`,
-          },
-          ...(eventId
-            ? [
-                {
-                  id: "events-event",
-                  label: "Событие",
-                  href: `${roomBase}/events/${eventId}`,
-                  match: (p: string) =>
-                    p.split("#")[0].startsWith(
-                      `${roomBase}/events/${eventId}`
-                    ),
-                },
-              ]
-            : []),
-          {
-            id: "events-info",
-            label: "Справка",
-            href: `${roomBase}/events/info`,
-            match: (p) =>
-              p.split("#")[0] === `${roomBase}/events/info`,
-          },
-        ],
       },
       {
         id: "creativetasks",
         label: "Задачи",
         href: `${roomBase}/creativetasks`,
         match: (p) => {
-          const pt = p.split("#")[0];
+          const pt = pathWithoutHash(p);
           return (
             pt === `${roomBase}/creativetasks` ||
-            pt.startsWith(`${roomBase}/creativetasks/`)
+            (pt.startsWith(`${roomBase}/creativetasks/`) &&
+              !pt.startsWith(`${roomBase}/creativetasks/private`))
           );
         },
       },
@@ -133,39 +109,93 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         id: "invitations",
         label: "Приглашения",
         href: `${roomBase}/invitations`,
+        match: (p) => pathWithoutHash(p) === `${roomBase}/invitations`,
       },
       {
         id: "ord",
         label: "ОРД",
         href: `${roomBase}/ord`,
-      },
-      {
-        id: "applications",
-        label: "Заявки",
-        href: `${roomBase}/applications`,
-      },
-      {
-        id: "statistics",
-        label: "Статистика",
-        href: `${roomBase}/statistics`,
+        match: (p) => {
+          const pt = pathWithoutHash(p);
+          return (
+            (pt === `${roomBase}/ord` || pt.startsWith(`${roomBase}/ord/`)) &&
+            pt !== `${roomBase}/ord/profile` &&
+            !pt.startsWith(`${roomBase}/ord/profile/`)
+          );
+        },
       },
       {
         id: "code",
         label: "Код для сайта",
         href: `${roomBase}/code`,
+        match: (p) => pathWithoutHash(p) === `${roomBase}/code`,
+      },
+    ];
+  }, [roomBase]);
+
+  const overflowActive = overflowItems.some((item) => item.match(currentPath));
+
+  const navigation = useMemo((): AppShellNavigationGroup[] => {
+    if (!roomBase) {
+      return [{ id: "main", items: [] }];
+    }
+
+    const items: AppShellNavigationItem[] = [
+      {
+        id: "sprints",
+        label: "Спринт",
+        icon: Calendar,
+        href: `${roomBase}/sprints`,
+        match: (p) => {
+          const pt = pathWithoutHash(p);
+          return (
+            pt === `${roomBase}/sprints` || pt.startsWith(`${roomBase}/sprints/`)
+          );
+        },
+      },
+      {
+        id: "private-tasks",
+        label: "Индивидуальные задания",
+        icon: IndividualTasksIcon,
+        href: `${roomBase}/creativetasks/private`,
+        match: (p) =>
+          pathWithoutHash(p).startsWith(`${roomBase}/creativetasks/private`),
+      },
+      {
+        id: "rewards",
+        label: "Награды",
+        icon: Gift,
+        href: `${roomBase}/rewards`,
+      },
+      {
+        id: "statistics",
+        label: "Аналитика",
+        icon: ChartPie,
+        href: `${roomBase}/statistics`,
+      },
+      {
+        id: "applications",
+        label: "Участники",
+        icon: Users,
+        href: `${roomBase}/applications`,
+      },
+      {
+        id: "ord-profile",
+        label: "Профиль ОРД",
+        icon: CircleUser,
+        href: `${roomBase}/ord/profile`,
+        match: (p) => {
+          const pt = pathWithoutHash(p);
+          return (
+            pt === `${roomBase}/ord/profile` ||
+            pt.startsWith(`${roomBase}/ord/profile/`)
+          );
+        },
       },
     ];
 
     return [{ id: "room-nav", items }];
-  }, [roomBase, eventId]);
-
-  const headerBreadcrumbs: AppShellBreadcrumb[] = useMemo(
-    () => [
-      { id: "rooms", label: "Список комнат", href: "/" },
-      { id: "room-name", label: roomData?.name ?? "…" },
-    ],
-    [roomData?.name]
-  );
+  }, [roomBase]);
 
   const renderLink: AppShellRenderLink = ({
     href,
@@ -178,20 +208,6 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       {children}
     </NavLink>
   );
-
-  const handleCopyRoomId = async () => {
-    try {
-      await navigator.clipboard.writeText(
-        `ID комнаты:${roomData?.id ?? "Ошибка получения ID комнаты"}`
-      );
-      toast.success("Скопировано");
-    } catch {
-      console.error("Ошибка при копировании");
-      toast.error(
-        `Браузер запретил копирование. ID комнаты: ${roomData?.id ?? ""}`
-      );
-    }
-  };
 
   if (isLoading) {
     return (
@@ -206,7 +222,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       <div className="w-full px-4 py-6">
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>
-            Ошибка при загрузке комнаты:{" "}
+            Ошибка при загрузке компании:{" "}
             {error?.message ?? "Неизвестная ошибка"}
           </AlertDescription>
         </Alert>
@@ -225,7 +241,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
     return (
       <div className="w-full px-4 py-6">
         <Alert>
-          <AlertDescription>Комната не найдена</AlertDescription>
+          <AlertDescription>Компания не найдена</AlertDescription>
         </Alert>
       </div>
     );
@@ -236,24 +252,119 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       navigation={navigation}
       currentPath={currentPath}
       renderLink={renderLink}
+      className="bg-[#FFFFFF]"
       brand={
-        <span className="truncate text-sm font-semibold text-sidebar-foreground">
-          {roomData.name}
-        </span>
-      }
-      headerBreadcrumbs={headerBreadcrumbs}
-      headerActions={
-        <Button
-          type="button"
-          variant="link"
-          className="h-auto shrink-0 px-0 text-[13px] font-normal"
-          onClick={handleCopyRoomId}
+        <NavLink
+          to="/"
+          className="flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+          title="К списку компаний"
         >
-          Скопировать ID комнаты
-        </Button>
+          <span
+            className="size-6 shrink-0 rounded-lg bg-[#141414]"
+            aria-hidden
+          />
+          <span className="min-w-0 truncate text-[13px] font-medium leading-4 tracking-[-0.25px]">
+            {roomData.name}
+          </span>
+          <ChevronsUpDown
+            className="size-3 shrink-0 text-[#707070]"
+            aria-hidden
+          />
+          <span className="ml-auto flex shrink-0 items-center gap-1 text-[13px] text-[#797979]">
+            <Users className="size-4" aria-hidden />
+            0
+          </span>
+        </NavLink>
       }
-      sidebarClassName="h-auto min-h-dvh self-stretch"
-      mainClassName="min-h-0 flex-1 overflow-y-auto p-4 md:p-6"
+      sidebarHeaderActions={
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon_sm"
+              className={
+                overflowActive ? "bg-muted text-foreground" : undefined
+              }
+              aria-label="Ещё разделы"
+              title="Ещё разделы"
+            >
+              <Ellipsis className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-44">
+            {overflowItems.map((item) => (
+              <DropdownMenuItem key={item.id} asChild>
+                <NavLink to={item.href} className="cursor-pointer">
+                  {item.label}
+                </NavLink>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenuRoot>
+      }
+      sidebarTop={
+        <ul className="grid gap-1">
+          <li>
+            <button
+              type="button"
+              className={sidebarStubRowClassName}
+              onClick={stubSoon}
+              title="Токены — скоро"
+            >
+              <CircleDashed
+                className="size-5 shrink-0 text-[#22C55E]"
+                aria-hidden
+              />
+              <span className="min-w-0 shrink truncate">Токены</span>
+              <span className="ml-auto shrink-0 text-[13px] font-medium leading-4 text-[#797979] tabular-nums">
+                5 000
+              </span>
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className={sidebarStubRowClassName}
+              onClick={stubSoon}
+              title="Уведомления — скоро"
+            >
+              <Bell className="size-5 shrink-0 text-[#707070]" aria-hidden />
+              <span className="min-w-0 shrink truncate">Уведомления</span>
+              <span className="ml-auto flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[6px] bg-[#D52094] px-1.5 text-[12px] font-medium leading-4 text-white tabular-nums">
+                1
+              </span>
+            </button>
+          </li>
+        </ul>
+      }
+      sidebarFooter={
+        <button
+          type="button"
+          className="flex h-8 w-full items-center gap-2 rounded-lg border border-[#e4e4e4] bg-[#FFFFFF] px-2 text-left text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+          onClick={stubSoon}
+          title="Создаем бота — скоро"
+        >
+          <Bot className="size-4 shrink-0 text-[#2563eb]" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">Создаем бота...</span>
+          <CircleQuestionMark
+            className="size-4 shrink-0 text-[#707070]"
+            aria-hidden
+          />
+        </button>
+      }
+      headerClassName="hidden"
+      sidebarClassName={[
+        "h-auto min-h-dvh w-[260px] self-stretch border-[#e4e4e4] bg-[#FFFFFF] text-sidebar-foreground",
+        // хедер компании = обычная строка списка, без линии и без лишней высоты
+        "[&>div>div:first-child]:h-auto [&>div>div:first-child]:border-b-0 [&>div>div:first-child]:px-2 [&>div>div:first-child]:pt-2 [&>div>div:first-child]:pb-0",
+        // токены/уведомления примыкают к названию и к навигации
+        "[&>div>div:nth-child(2)]:px-2 [&>div>div:nth-child(2)]:py-0",
+        "[&_nav]:gap-1 [&_nav]:px-2 [&_nav]:pb-2 [&_nav]:pt-0",
+        "[&_a[aria-current=page]]:bg-[#2563eb] [&_a[aria-current=page]]:font-medium [&_a[aria-current=page]]:text-white [&_a[aria-current=page]_svg]:text-white",
+        "[&_button[aria-current=page]]:bg-[#2563eb] [&_button[aria-current=page]]:text-white",
+      ].join(" ")}
+      mainClassName="min-h-0 flex-1 overflow-y-auto bg-[#FFFFFF] p-4 md:p-6"
     >
       {children}
     </AppShell>

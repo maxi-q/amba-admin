@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  Input,
   InputField,
   PageLoader,
   Sheet,
@@ -28,10 +29,15 @@ import {
 
 type RewardFormState = {
   name: string;
-  iconUrl: string;
+  iconFile: File | null;
+  existingIconUrl: string | null;
 };
 
-const emptyForm = (): RewardFormState => ({ name: "", iconUrl: "" });
+const emptyForm = (): RewardFormState => ({
+  name: "",
+  iconFile: null,
+  existingIconUrl: null,
+});
 
 export default function RewardsPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -72,7 +78,11 @@ export default function RewardsPage() {
 
   const openEdit = (reward: BaseRewardDto) => {
     setEditing(reward);
-    setForm({ name: reward.name, iconUrl: reward.iconUrl ?? "" });
+    setForm({
+      name: reward.name,
+      iconFile: null,
+      existingIconUrl: reward.iconUrl,
+    });
     setSheetOpen(true);
   };
 
@@ -85,8 +95,8 @@ export default function RewardsPage() {
           id: editing.id,
           data: {
             name: form.name.trim(),
-            iconUrl: form.iconUrl.trim() || null,
           },
+          iconFile: form.iconFile,
         },
         {
           onSuccess: () => {
@@ -99,11 +109,13 @@ export default function RewardsPage() {
       return;
     }
 
+    if (!form.iconFile) return;
+
     createReward(
       {
         name: form.name.trim(),
-        iconUrl: form.iconUrl.trim() || null,
         roomId,
+        iconFile: form.iconFile,
       },
       {
         onSuccess: () => {
@@ -248,15 +260,30 @@ export default function RewardsPage() {
               />
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">URL иконки</p>
-              <InputField
-                value={form.iconUrl}
-                onChange={(e) => setForm((prev) => ({ ...prev, iconUrl: e.target.value }))}
-                error={!!validationErrors.iconUrl?.length}
-                helperText={validationErrors.iconUrl?.[0]}
-                placeholder="https://"
-                aria-label="URL иконки"
+              <p className="text-sm font-medium text-foreground">
+                Иконка {!editing ? "*" : ""}
+              </p>
+              {form.existingIconUrl && !form.iconFile ? (
+                <img
+                  src={form.existingIconUrl}
+                  alt=""
+                  className="size-16 rounded-md border border-border object-cover"
+                />
+              ) : null}
+              <Input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={(event) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    iconFile: event.target.files?.[0] ?? null,
+                  }))
+                }
+                aria-label="Иконка награды"
               />
+              <p className="text-xs text-muted-foreground">
+                JPEG, PNG, WebP или GIF, до 10 МБ
+              </p>
             </div>
           </div>
 
@@ -264,7 +291,15 @@ export default function RewardsPage() {
             <Button type="button" variant="outline" onClick={() => setSheetOpen(false)} disabled={isPending}>
               Отмена
             </Button>
-            <Button type="button" onClick={handleSubmit} disabled={isPending || !form.name.trim()}>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={
+                isPending ||
+                !form.name.trim() ||
+                (!editing && !form.iconFile)
+              }
+            >
               {isPending ? "Сохранение…" : editing ? "Сохранить" : "Создать"}
             </Button>
           </SheetFooter>

@@ -25,10 +25,16 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BaseRewardDto,
+  CreateRewardPhotoRequestDto,
+  CreateRewardPhotoResponseDto,
   CreateRewardRequestDto,
   CreateRewardResponseDto,
   GetRewardsResponseDto,
+  RewardImageUploadDto,
+  RewardImageUploadRequestDto,
   RewardsControllerGetRewardsParams,
+  UpdateRewardPhotoRequestDto,
   UpdateRewardRequestDto,
   UpdateRewardResponseDto
 } from '.././model';
@@ -149,7 +155,7 @@ export const rewardsControllerGetRewardByIdForAmbassador = (
 ) => {
       
       
-      return customInstance<CreateRewardResponseDto>(
+      return customInstance<BaseRewardDto>(
       {url: `/api/rewards/me/${id}`, method: 'GET', signal
     },
       options);
@@ -241,7 +247,7 @@ export const rewardsControllerGetRewardById = (
 ) => {
       
       
-      return customInstance<CreateRewardResponseDto>(
+      return customInstance<BaseRewardDto>(
       {url: `/api/rewards/${id}`, method: 'GET', signal
     },
       options);
@@ -510,6 +516,388 @@ export const useRewardsControllerCreateReward = <TError = unknown,
       > => {
 
       const mutationOptions = getRewardsControllerCreateRewardMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Получить presigned URL для загрузки или замены иконки награды
+ */
+export const rewardsControllerCreateIconUploadUrl = (
+    id: string,
+    rewardImageUploadRequestDto: RewardImageUploadRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<RewardImageUploadDto>(
+      {url: `/api/rewards/${id}/icon/upload-url`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: rewardImageUploadRequestDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getRewardsControllerCreateIconUploadUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>, TError,{id: string;data: RewardImageUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>, TError,{id: string;data: RewardImageUploadRequestDto}, TContext> => {
+
+const mutationKey = ['rewardsControllerCreateIconUploadUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>, {id: string;data: RewardImageUploadRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rewardsControllerCreateIconUploadUrl(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewardsControllerCreateIconUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>>
+    export type RewardsControllerCreateIconUploadUrlMutationBody = RewardImageUploadRequestDto
+    export type RewardsControllerCreateIconUploadUrlMutationError = unknown
+
+    /**
+ * @summary Получить presigned URL для загрузки или замены иконки награды
+ */
+export const useRewardsControllerCreateIconUploadUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>, TError,{id: string;data: RewardImageUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>,
+        TError,
+        {id: string;data: RewardImageUploadRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRewardsControllerCreateIconUploadUrlMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Подтвердить загрузку иконки награды в S3
+ */
+export const rewardsControllerConfirmIconUpload = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<BaseRewardDto>(
+      {url: `/api/rewards/${id}/icon/confirm`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getRewardsControllerConfirmIconUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['rewardsControllerConfirmIconUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  rewardsControllerConfirmIconUpload(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewardsControllerConfirmIconUploadMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>>
+    
+    export type RewardsControllerConfirmIconUploadMutationError = unknown
+
+    /**
+ * @summary Подтвердить загрузку иконки награды в S3
+ */
+export const useRewardsControllerConfirmIconUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRewardsControllerConfirmIconUploadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Создать фото галереи и получить presigned URL загрузки
+ */
+export const rewardsControllerCreatePhoto = (
+    id: string,
+    createRewardPhotoRequestDto: CreateRewardPhotoRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CreateRewardPhotoResponseDto>(
+      {url: `/api/rewards/${id}/photos`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createRewardPhotoRequestDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getRewardsControllerCreatePhotoMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreatePhoto>>, TError,{id: string;data: CreateRewardPhotoRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreatePhoto>>, TError,{id: string;data: CreateRewardPhotoRequestDto}, TContext> => {
+
+const mutationKey = ['rewardsControllerCreatePhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewardsControllerCreatePhoto>>, {id: string;data: CreateRewardPhotoRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rewardsControllerCreatePhoto(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewardsControllerCreatePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerCreatePhoto>>>
+    export type RewardsControllerCreatePhotoMutationBody = CreateRewardPhotoRequestDto
+    export type RewardsControllerCreatePhotoMutationError = unknown
+
+    /**
+ * @summary Создать фото галереи и получить presigned URL загрузки
+ */
+export const useRewardsControllerCreatePhoto = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreatePhoto>>, TError,{id: string;data: CreateRewardPhotoRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rewardsControllerCreatePhoto>>,
+        TError,
+        {id: string;data: CreateRewardPhotoRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRewardsControllerCreatePhotoMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Подтвердить загрузку фото галереи в S3
+ */
+export const rewardsControllerConfirmPhotoUpload = (
+    id: string,
+    photoId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<BaseRewardDto>(
+      {url: `/api/rewards/${id}/photos/${photoId}/confirm`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getRewardsControllerConfirmPhotoUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmPhotoUpload>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmPhotoUpload>>, TError,{id: string;photoId: string}, TContext> => {
+
+const mutationKey = ['rewardsControllerConfirmPhotoUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewardsControllerConfirmPhotoUpload>>, {id: string;photoId: string}> = (props) => {
+          const {id,photoId} = props ?? {};
+
+          return  rewardsControllerConfirmPhotoUpload(id,photoId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewardsControllerConfirmPhotoUploadMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerConfirmPhotoUpload>>>
+    
+    export type RewardsControllerConfirmPhotoUploadMutationError = unknown
+
+    /**
+ * @summary Подтвердить загрузку фото галереи в S3
+ */
+export const useRewardsControllerConfirmPhotoUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmPhotoUpload>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rewardsControllerConfirmPhotoUpload>>,
+        TError,
+        {id: string;photoId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRewardsControllerConfirmPhotoUploadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Изменить позицию фото в галерее
+ */
+export const rewardsControllerUpdatePhoto = (
+    id: string,
+    photoId: string,
+    updateRewardPhotoRequestDto: UpdateRewardPhotoRequestDto,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<BaseRewardDto>(
+      {url: `/api/rewards/${id}/photos/${photoId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateRewardPhotoRequestDto
+    },
+      options);
+    }
+  
+
+
+export const getRewardsControllerUpdatePhotoMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerUpdatePhoto>>, TError,{id: string;photoId: string;data: UpdateRewardPhotoRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerUpdatePhoto>>, TError,{id: string;photoId: string;data: UpdateRewardPhotoRequestDto}, TContext> => {
+
+const mutationKey = ['rewardsControllerUpdatePhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewardsControllerUpdatePhoto>>, {id: string;photoId: string;data: UpdateRewardPhotoRequestDto}> = (props) => {
+          const {id,photoId,data} = props ?? {};
+
+          return  rewardsControllerUpdatePhoto(id,photoId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewardsControllerUpdatePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerUpdatePhoto>>>
+    export type RewardsControllerUpdatePhotoMutationBody = UpdateRewardPhotoRequestDto
+    export type RewardsControllerUpdatePhotoMutationError = unknown
+
+    /**
+ * @summary Изменить позицию фото в галерее
+ */
+export const useRewardsControllerUpdatePhoto = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerUpdatePhoto>>, TError,{id: string;photoId: string;data: UpdateRewardPhotoRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rewardsControllerUpdatePhoto>>,
+        TError,
+        {id: string;photoId: string;data: UpdateRewardPhotoRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRewardsControllerUpdatePhotoMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Удалить фото из галереи награды
+ */
+export const rewardsControllerDeletePhoto = (
+    id: string,
+    photoId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/rewards/${id}/photos/${photoId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getRewardsControllerDeletePhotoMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerDeletePhoto>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerDeletePhoto>>, TError,{id: string;photoId: string}, TContext> => {
+
+const mutationKey = ['rewardsControllerDeletePhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewardsControllerDeletePhoto>>, {id: string;photoId: string}> = (props) => {
+          const {id,photoId} = props ?? {};
+
+          return  rewardsControllerDeletePhoto(id,photoId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewardsControllerDeletePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerDeletePhoto>>>
+    
+    export type RewardsControllerDeletePhotoMutationError = unknown
+
+    /**
+ * @summary Удалить фото из галереи награды
+ */
+export const useRewardsControllerDeletePhoto = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerDeletePhoto>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rewardsControllerDeletePhoto>>,
+        TError,
+        {id: string;photoId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRewardsControllerDeletePhotoMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

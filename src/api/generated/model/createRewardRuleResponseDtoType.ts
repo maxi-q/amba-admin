@@ -16,4 +16,5 @@ export type CreateRewardRuleResponseDtoType = typeof CreateRewardRuleResponseDto
 export const CreateRewardRuleResponseDtoType = {
   byRank: 'byRank',
   byPoints: 'byPoints',
+  manual: 'manual',
 } as const;

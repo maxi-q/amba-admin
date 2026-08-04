@@ -9,22 +9,22 @@ import type { CreateRewardRuleRequestDtoType } from './createRewardRuleRequestDt
 import type { SprintRewardRuleRewardInputDto } from './sprintRewardRuleRewardInputDto';
 
 export interface CreateRewardRuleRequestDto {
-  /** Тип распределения награды. byRank — по занятому месту (диапазону мест); byPoints — пропорционально баллам подходящих участников. */
+  /** Тип распределения награды. byRank — по занятому месту (диапазону мест); byPoints — пропорционально баллам подходящих участников; manual — пул, распределяемый вручную (система получателей не назначает). */
   type: CreateRewardRuleRequestDtoType;
   /**
-   * Начало диапазона мест (включительно, 1-based). Обязательно для byRank, игнорируется для byPoints.
+   * Начало диапазона мест (включительно, 1-based). Обязательно для byRank, игнорируется для byPoints и manual.
    * @minimum 1
    * @nullable
    */
   rankFrom?: number | null;
   /**
-   * Конец диапазона мест (включительно, 1-based). Обязательно для byRank. Для byPoints — необязательный фильтр «до N места включительно».
+   * Конец диапазона мест (включительно, 1-based). Обязательно для byRank. Для byPoints — необязательный фильтр «до N места включительно». Игнорируется для manual.
    * @minimum 1
    * @nullable
    */
   rankTo?: number | null;
   /**
-   * Минимальный порог баллов участника (включительно). Только для byPoints.
+   * Минимальный порог баллов участника (включительно). Только для byPoints, игнорируется для byRank и manual.
    * @minimum 0
    * @maximum 9007199254740991
    * @nullable

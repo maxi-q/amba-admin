@@ -1,0 +1,56 @@
+---
+description: Figma → code workflow — quality first, no low-res shortcuts
+alwaysApply: true
+---
+
+# Figma Design → Code (качество важнее экономии MCP)
+
+Когда пользователь даёт Figma URL / ready-for-dev макет — следовать этому процессу. **Не импровизировать** «сэкономим лимиты скринами».
+
+## Запрещено
+
+- Верстать только по низкокачественному `get_screenshot` с `maxDimension: 1024` на широком артборде.
+- Считать PNG «источником стилей» (там нет отступов, токенов, типографики).
+- Вызывать MCP на огромный section/page, если можно взять **узкий frame** (один экран / сайдбар / модалка).
+- Повторно дергать MCP, если свежий кэш уже есть в `.cursor/figma-cache/`.
+- Копировать MCP React+Tailwind as-is — только reference; адаптация под `@senler/ui` и токены проекта.
+
+## Правильный порядок (обязательно)
+
+1. **Уточнить scope** — один экран/компонент за раз (например только сайдбар). Несколько URL → очередь.
+2. **Проверить кэш** — `.cursor/figma-cache/` (md + png). Если кэш свежий и полный — MCP не вызывать.
+3. **Primary: `get_design_context`** на целевой `node-id`  
+   - `clientLanguages: typescript`, `clientFrameworks: react`  
+   - `skillNames: figma-design-to-code`  
+   - Это даёт: структуру, размеры, цвета, ассеты, screenshot в контексте, референс-код.
+4. **Качественный screenshot (опционально, если нужен пиксель-чек)**  
+   - `get_screenshot` с `maxDimension` ≥ **2048** (для узкого фрейма; для очень широких — сначала сузить node).  
+   - Скачать PNG в `.cursor/figma-cache/<nodeId>.png` через curl.
+5. **Токены файла (1 раз на fileKey, если ещё нет в кэше)** — `get_variable_defs` → сохранить в кэш.
+6. **Записать кэш** — `.cursor/figma-cache/<тема>-<nodeId>.md`: URL, fileKey, nodeId, выжимка layout/стилей, ассеты, gap vs код.
+7. **Сверить с кодом** — куда садится макет; что визуал, что требует продукт/API.
+8. **Реализовать** — `@senler/ui` + существующие токены; designer-workflow + ui-change-boundaries.
+9. **Сверка** — сравнить UI со screenshot из context / кэша; коротко отчитаться.
+
+## Экономия лимитов (правильно)
+
+| Цель | Инструмент |
+|------|------------|
+| Стили + структура | `get_design_context` (обязательно) |
+| Чёткий превью | `get_screenshot` maxDimension ≥ 2048 |
+| Токены | `get_variable_defs` 1× на файл |
+| Повторная работа | читать кэш, не MCP |
+
+Плохо: 3× дешёвых blurry screenshot вместо одного `get_design_context`.
+
+Пример правильного кэша сайдбара: `.cursor/figma-cache/sidebar-16054-51631.md`.
+
+## URL
+
+- `fileKey` из `/design/:fileKey/...`
+- `node-id=15857-5091` → `15857:5091`
+- Нет `node-id` → спросить узкий URL, не угадывать.
+
+## После внедрения
+
+Обновить кэш-md: что сделано в коде, что осталось, какие MCP ещё не нужны.
