@@ -8,6 +8,7 @@ import {
   ServicePlanPaymentPage,
   SprintList,
   SprintSetting,
+  OpenSprintPage,
   SprintSettingsPage,
   SprintInfo,
   EventsPage,
@@ -131,7 +132,9 @@ export const Navigation = () => {
           <Route path="leaderboard" element={<SprintLeaderboardPage />} />
           <Route path="settings" element={<SprintSettingsPage />} />
           <Route path="info" element={<SprintInfo />} />
-          <Route path=":sprintId" element={<SprintSetting />} />
+          <Route path="new" element={<SprintSetting />} />
+          <Route path=":sprintId" element={<OpenSprintPage />} />
+          <Route path=":sprintId/edit" element={<SprintSetting />} />
         </Route>
 
         <Route path="rewards" element={<RewardsPage />} />

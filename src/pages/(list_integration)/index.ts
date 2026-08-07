@@ -5,6 +5,7 @@ import ServicePlanPaymentPage from './rooms/onboarding/ServicePlanPaymentPage'
 import RoomBox from './modules';
 import SprintList from './sprints';
 import SprintSetting from './sprints/slug';
+import OpenSprintPage from './sprints/slug/OpenSprintPage';
 import SprintInfo from './sprints/info';
 import EventsPage from './events';
 import EventsInfo from './events/info';
@@ -50,6 +51,7 @@ export {
     RoomBox,
     SprintList,
     SprintSetting,
+    OpenSprintPage,
     SprintInfo,
     EventsPage,
     EventsInfo,

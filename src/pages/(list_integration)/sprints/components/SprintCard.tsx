@@ -1,68 +1,60 @@
-import { Pencil } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Badge, Card, CardContent } from "@senler/ui";
+import { Link, useParams } from "react-router-dom";
 import type { BaseSprintDto } from "@/api/generated/model";
-import { formatDateRange, isSprintActive } from "../utils/sprintUtils";
-import { checkSprintStatus } from "../constants/sprintStatus";
+import { formatDateRange } from "../utils/sprintUtils";
+import { checkSprintStatus, statusToneStyles } from "../constants/sprintStatus";
 
 interface SprintCardProps {
   sprint: BaseSprintDto;
 }
 
 export const SprintCard = ({ sprint }: SprintCardProps) => {
-  const dateRange = formatDateRange(sprint.startDate, sprint.endDate);
-  const active = sprint.ignoreEndDate
-    ? true
-    : isSprintActive(sprint.startDate, sprint.endDate);
-  const { label, color } = checkSprintStatus(
+  const { slug } = useParams();
+  const dateRange = formatDateRange(
+    sprint.startDate,
+    sprint.ignoreEndDate ? null : sprint.endDate
+  );
+  const { label, tone } = checkSprintStatus(
     sprint.startDate,
     sprint.endDate,
     sprint.ignoreEndDate
   );
-
-  const badgeVariant =
-    color === "success" ? "success" : color === "warning" ? "warning" : "secondary";
+  const toneStyle = statusToneStyles[tone];
 
   return (
     <Link
-      to={`${sprint.id}`}
-      className={`block rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors hover:border-primary hover:bg-accent/30 ${
+      to={`/rooms/${slug}/sprints/${sprint.id}`}
+      className={`flex min-h-12 items-center gap-3 border-b border-[#e4e4e4] px-4 py-3 transition-colors hover:bg-[#fafafa] ${
         sprint.isDeleted ? "opacity-60" : ""
       }`}
     >
-      <Card className="border-0 shadow-none">
-        <CardContent className="flex items-center justify-between gap-3 p-4">
-          <div className="min-w-0 flex-1">
-            <p
-              className={`mb-1 text-lg font-medium leading-tight ${
-                sprint.isDeleted
-                  ? "text-muted-foreground line-through"
-                  : "text-foreground"
-              }`}
-            >
-              {sprint.name}
-            </p>
-            <p
-              className={`text-sm ${
-                sprint.isDeleted
-                  ? "text-muted-foreground line-through"
-                  : active
-                    ? "font-medium text-green-700 dark:text-green-400"
-                    : "text-muted-foreground"
-              }`}
-            >
-              {dateRange}
-            </p>
-          </div>
+      <p
+        className={`min-w-0 flex-1 truncate text-[13px] font-medium leading-4 ${
+          sprint.isDeleted
+            ? "text-muted-foreground line-through"
+            : "text-foreground"
+        }`}
+      >
+        {sprint.name}
+      </p>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {!sprint.isDeleted ? (
-              <Badge variant={badgeVariant}>{label}</Badge>
-            ) : null}
-            <Pencil className="size-4 text-muted-foreground" aria-hidden />
-          </div>
-        </CardContent>
-      </Card>
+      {!sprint.isDeleted ? (
+        <span
+          className={`inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md border px-1.5 text-[13px] font-medium leading-4 ${toneStyle.chip}`}
+        >
+          <span className={`size-2 shrink-0 rounded-full ${toneStyle.dot}`} />
+          {label}
+        </span>
+      ) : null}
+
+      <span
+        className={`w-[147px] shrink-0 text-right text-[13px] font-medium leading-4 ${
+          sprint.isDeleted
+            ? "text-muted-foreground line-through"
+            : "text-[#797979]"
+        }`}
+      >
+        {dateRange}
+      </span>
     </Link>
   );
 };

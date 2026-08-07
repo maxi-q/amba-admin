@@ -194,6 +194,7 @@ const SprintSetting = () => {
               navigate(`/rooms/${slug}/sprints`);
             } else {
               toast.success("Спринт успешно сохранён");
+              navigate(`/rooms/${slug}/sprints/${sprintId}`);
             }
           },
         }
