@@ -7,13 +7,13 @@
  */
 
 /**
- * Целевая платформа публикации
+ * Платформа канала
  */
-export type GetPrivateCreativeTasksResponseItemDtoTargetPlatform = typeof GetPrivateCreativeTasksResponseItemDtoTargetPlatform[keyof typeof GetPrivateCreativeTasksResponseItemDtoTargetPlatform];
+export type BaseChannelDtoType = typeof BaseChannelDtoType[keyof typeof BaseChannelDtoType];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetPrivateCreativeTasksResponseItemDtoTargetPlatform = {
+export const BaseChannelDtoType = {
   VK_GROUP: 'VK_GROUP',
   VK_USER: 'VK_USER',
   YOUTUBE_CHANNEL: 'YOUTUBE_CHANNEL',

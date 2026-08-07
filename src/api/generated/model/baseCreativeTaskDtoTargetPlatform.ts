@@ -18,8 +18,4 @@ export const BaseCreativeTaskDtoTargetPlatform = {
   VK_USER: 'VK_USER',
   YOUTUBE_CHANNEL: 'YOUTUBE_CHANNEL',
   RUTUBE_CHANNEL: 'RUTUBE_CHANNEL',
-  TG_CHANNEL: 'TG_CHANNEL',
-  TG_BOT: 'TG_BOT',
-  MAX_BOT: 'MAX_BOT',
-  MAX_CHANNEL: 'MAX_CHANNEL',
 } as const;

@@ -41,6 +41,8 @@ import type {
   PrivateCreativeTasksControllerGetWhitelistParams,
   UpdatePrivateCreativeTaskRequestDto,
   UpdatePrivateCreativeTaskResponseDto,
+  UpdatePrivatePublicationUrlRequestDto,
+  UpdatePrivatePublicationUrlResponseDto,
   UpdatePrivateSubmissionByAmbassadorRequestDto,
   UpdatePrivateSubmissionByAmbassadorResponseDto,
   UpdatePrivateSubmissionStatusRequestDto,
@@ -725,7 +727,7 @@ export function usePrivateCreativeTasksControllerGetSubmissionById<TData = Await
 
 
 /**
- * Позволяет амбассадору изменить свои тексты, медиа, целевые ссылки и/или комментарий своего ответа. Редактирование возможно, пока ответ не получил статус approved. Статус при редактировании не меняется.
+ * Позволяет амбассадору изменить комментарий своего ответа. Материалы можно заменить только в статусах new и rejected_for_materials. Статус при редактировании не меняется.
  * @summary Обновить ответ на приватное задание (для амбассадора)
  */
 export const privateCreativeTasksControllerUpdateSubmissionByAmbassador = (
@@ -786,6 +788,72 @@ export const usePrivateCreativeTasksControllerUpdateSubmissionByAmbassador = <TE
       > => {
 
       const mutationOptions = getPrivateCreativeTasksControllerUpdateSubmissionByAmbassadorMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Создаёт или заменяет ссылку отдельной публикации в статусе waiting_for_publication или rejected_for_publication.
+ * @summary Прикрепить ссылку на опубликованный материал приватного задания (для амбассадора)
+ */
+export const privateCreativeTasksControllerUpdatePublicationUrl = (
+    submissionId: string,
+    itemId: string,
+    updatePrivatePublicationUrlRequestDto: UpdatePrivatePublicationUrlRequestDto,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<UpdatePrivatePublicationUrlResponseDto>(
+      {url: `/api/private-creative-tasks/submissions/${submissionId}/items/${itemId}/publication-url`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePrivatePublicationUrlRequestDto
+    },
+      options);
+    }
+  
+
+
+export const getPrivateCreativeTasksControllerUpdatePublicationUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof privateCreativeTasksControllerUpdatePublicationUrl>>, TError,{submissionId: string;itemId: string;data: UpdatePrivatePublicationUrlRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof privateCreativeTasksControllerUpdatePublicationUrl>>, TError,{submissionId: string;itemId: string;data: UpdatePrivatePublicationUrlRequestDto}, TContext> => {
+
+const mutationKey = ['privateCreativeTasksControllerUpdatePublicationUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof privateCreativeTasksControllerUpdatePublicationUrl>>, {submissionId: string;itemId: string;data: UpdatePrivatePublicationUrlRequestDto}> = (props) => {
+          const {submissionId,itemId,data} = props ?? {};
+
+          return  privateCreativeTasksControllerUpdatePublicationUrl(submissionId,itemId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrivateCreativeTasksControllerUpdatePublicationUrlMutationResult = NonNullable<Awaited<ReturnType<typeof privateCreativeTasksControllerUpdatePublicationUrl>>>
+    export type PrivateCreativeTasksControllerUpdatePublicationUrlMutationBody = UpdatePrivatePublicationUrlRequestDto
+    export type PrivateCreativeTasksControllerUpdatePublicationUrlMutationError = unknown
+
+    /**
+ * @summary Прикрепить ссылку на опубликованный материал приватного задания (для амбассадора)
+ */
+export const usePrivateCreativeTasksControllerUpdatePublicationUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof privateCreativeTasksControllerUpdatePublicationUrl>>, TError,{submissionId: string;itemId: string;data: UpdatePrivatePublicationUrlRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof privateCreativeTasksControllerUpdatePublicationUrl>>,
+        TError,
+        {submissionId: string;itemId: string;data: UpdatePrivatePublicationUrlRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPrivateCreativeTasksControllerUpdatePublicationUrlMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -853,7 +921,7 @@ export const usePrivateCreativeTasksControllerSubmitSubmissionForReview = <TErro
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Переводит ответ из статуса waiting_for_publication или rejected_for_publication на следующий этап: waiting_for_review_publication (если задача требует проверки публикации) либо сразу approved.
+ * Переводит ответ из статуса waiting_for_publication или rejected_for_publication на следующий этап: waiting_for_review_publication (если задача требует проверки публикации) либо сразу approved. До отправки у каждой публикации должна быть прикреплена ссылка.
  * @summary Отчитаться о публикации (для амбассадора)
  */
 export const privateCreativeTasksControllerReportPublication = (

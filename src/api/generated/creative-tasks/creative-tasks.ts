@@ -39,6 +39,8 @@ import type {
   GetSubmissionsResponseDto,
   UpdateCreativeTaskRequestDto,
   UpdateCreativeTaskResponseDto,
+  UpdatePublicationUrlRequestDto,
+  UpdatePublicationUrlResponseDto,
   UpdateSubmissionByAmbassadorRequestDto,
   UpdateSubmissionByAmbassadorResponseDto,
   UpdateSubmissionStatusRequestDto,
@@ -723,7 +725,7 @@ export function useCreativeTasksControllerGetSubmissionById<TData = Awaited<Retu
 
 
 /**
- * Позволяет амбассадору изменить свои тексты, медиа, целевые ссылки и/или комментарий своего ответа. Редактирование возможно, пока ответ не получил статус approved. Статус при редактировании не меняется.
+ * Позволяет амбассадору изменить комментарий своего ответа. Материалы можно заменить только в статусах new и rejected_for_materials. Статус при редактировании не меняется.
  * @summary Обновить ответ на задание (для амбассадора)
  */
 export const creativeTasksControllerUpdateSubmissionByAmbassador = (
@@ -784,6 +786,72 @@ export const useCreativeTasksControllerUpdateSubmissionByAmbassador = <TError = 
       > => {
 
       const mutationOptions = getCreativeTasksControllerUpdateSubmissionByAmbassadorMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Создаёт или заменяет ссылку отдельной публикации в статусе waiting_for_publication или rejected_for_publication.
+ * @summary Прикрепить ссылку на опубликованный материал (для амбассадора)
+ */
+export const creativeTasksControllerUpdatePublicationUrl = (
+    submissionId: string,
+    itemId: string,
+    updatePublicationUrlRequestDto: UpdatePublicationUrlRequestDto,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<UpdatePublicationUrlResponseDto>(
+      {url: `/api/creative-tasks/submissions/${submissionId}/items/${itemId}/publication-url`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updatePublicationUrlRequestDto
+    },
+      options);
+    }
+  
+
+
+export const getCreativeTasksControllerUpdatePublicationUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerUpdatePublicationUrl>>, TError,{submissionId: string;itemId: string;data: UpdatePublicationUrlRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerUpdatePublicationUrl>>, TError,{submissionId: string;itemId: string;data: UpdatePublicationUrlRequestDto}, TContext> => {
+
+const mutationKey = ['creativeTasksControllerUpdatePublicationUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creativeTasksControllerUpdatePublicationUrl>>, {submissionId: string;itemId: string;data: UpdatePublicationUrlRequestDto}> = (props) => {
+          const {submissionId,itemId,data} = props ?? {};
+
+          return  creativeTasksControllerUpdatePublicationUrl(submissionId,itemId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreativeTasksControllerUpdatePublicationUrlMutationResult = NonNullable<Awaited<ReturnType<typeof creativeTasksControllerUpdatePublicationUrl>>>
+    export type CreativeTasksControllerUpdatePublicationUrlMutationBody = UpdatePublicationUrlRequestDto
+    export type CreativeTasksControllerUpdatePublicationUrlMutationError = unknown
+
+    /**
+ * @summary Прикрепить ссылку на опубликованный материал (для амбассадора)
+ */
+export const useCreativeTasksControllerUpdatePublicationUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerUpdatePublicationUrl>>, TError,{submissionId: string;itemId: string;data: UpdatePublicationUrlRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creativeTasksControllerUpdatePublicationUrl>>,
+        TError,
+        {submissionId: string;itemId: string;data: UpdatePublicationUrlRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getCreativeTasksControllerUpdatePublicationUrlMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -851,7 +919,7 @@ export const useCreativeTasksControllerSubmitSubmissionForReview = <TError = unk
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Переводит ответ из статуса waiting_for_publication или rejected_for_publication на следующий этап: waiting_for_review_publication (если задача требует проверки публикации) либо сразу approved.
+ * Переводит ответ из статуса waiting_for_publication или rejected_for_publication на следующий этап: waiting_for_review_publication (если задача требует проверки публикации) либо сразу approved. До отправки у каждой публикации должна быть прикреплена ссылка.
  * @summary Отчитаться о публикации (для амбассадора)
  */
 export const creativeTasksControllerReportPublication = (

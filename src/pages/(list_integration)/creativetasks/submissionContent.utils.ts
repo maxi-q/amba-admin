@@ -2,6 +2,7 @@ export type SubmissionItemContent = {
   texts?: string[];
   targetUrls?: string[];
   mediaFileIds?: string[];
+  publicationUrl?: string | null;
   erid?: string | null;
 };
 
@@ -31,6 +32,9 @@ export function getSubmissionPreviewText(submission: SubmissionWithItems): strin
     }
     if (urlCount > 0) {
       parts.push(`${urlCount} ${urlCount === 1 ? "ссылка" : "ссылки"}`);
+    }
+    if (first.publicationUrl) {
+      parts.push("ссылка на публикацию");
     }
     if (first.erid) {
       parts.push(`erid: ${first.erid}`);

@@ -16,6 +16,11 @@ export interface PrivateCreativeTaskSubmissionItemDto {
   /** ID под-ответа (публикации) */
   id: string;
   /**
+   * Ссылка на опубликованный материал
+   * @nullable
+   */
+  publicationUrl?: string | null;
+  /**
    * Маркер рекламы (erid), появляется после регистрации креатива под-ответа в ОРД
    * @nullable
    */

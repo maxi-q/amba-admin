@@ -67,6 +67,22 @@ export function SubmissionContentPreview({
               </div>
             ) : null}
 
+            {item.publicationUrl ? (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Ссылка на публикацию:
+                </p>
+                <a
+                  href={item.publicationUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block break-all text-primary underline underline-offset-2"
+                >
+                  {item.publicationUrl}
+                </a>
+              </div>
+            ) : null}
+
             {mediaCount > 0 ? (
               <p className="text-xs text-muted-foreground">Медиафайлов: {mediaCount}</p>
             ) : null}
@@ -75,7 +91,11 @@ export function SubmissionContentPreview({
               <p className="text-xs text-muted-foreground">erid: {item.erid}</p>
             ) : null}
 
-            {texts.length === 0 && targetUrls.length === 0 && mediaCount === 0 && !item.erid ? (
+            {texts.length === 0 &&
+            targetUrls.length === 0 &&
+            mediaCount === 0 &&
+            !item.publicationUrl &&
+            !item.erid ? (
               <p className="text-muted-foreground">—</p>
             ) : null}
           </div>
