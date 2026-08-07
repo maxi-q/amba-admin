@@ -17,6 +17,7 @@ export function useSprintLeaderboard(
   return {
     sprint: query.data?.sprint ?? null,
     entries: query.data?.items ?? [],
+    manualRewards: query.data?.manualRewards ?? [],
     pagination: query.data
       ? {
           page: query.data.page,

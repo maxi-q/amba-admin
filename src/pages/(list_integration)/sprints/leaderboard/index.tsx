@@ -12,10 +12,11 @@ export default function SprintLeaderboardPage() {
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
-  const { sprint, entries, pagination, isLoading, isError, error } = useSprintLeaderboard(roomId, {
-    page,
-    size: pageSize,
-  });
+  const { sprint, entries, manualRewards, pagination, isLoading, isError, error } =
+    useSprintLeaderboard(roomId, {
+      page,
+      size: pageSize,
+    });
 
   if (isRoomLoading || isLoading) {
     return (
@@ -63,6 +64,27 @@ export default function SprintLeaderboardPage() {
               {sprint.isEndless ? <Badge variant="outline">Бессрочный</Badge> : null}
             </CardContent>
           </Card>
+
+          {manualRewards.length > 0 ? (
+            <Card className="mb-4 border border-border shadow-none">
+              <CardContent className="space-y-2 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium text-foreground">Ручной пул наград</p>
+                  <Badge variant="secondary">Вручную</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Не привязан к участникам — распределяется вручную вне системы.
+                </p>
+                <ul className="space-y-1 text-sm text-foreground">
+                  {manualRewards.map((reward) => (
+                    <li key={reward.rewardId}>
+                      {reward.name} × {reward.amount}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ) : null}
 
           {entries.length === 0 ? (
             <p className="text-sm text-muted-foreground">Пока нет участников в рейтинге.</p>

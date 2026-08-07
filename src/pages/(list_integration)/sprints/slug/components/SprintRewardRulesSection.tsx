@@ -92,6 +92,16 @@ function formToPayload(form: RuleFormState): CreateRewardRuleRequestDto | null {
     };
   }
 
+  if (form.type === "manual") {
+    return {
+      type: "manual",
+      rankFrom: null,
+      rankTo: null,
+      minPoints: null,
+      rewards,
+    };
+  }
+
   return {
     type: "byPoints",
     rankFrom: null,
@@ -101,9 +111,18 @@ function formToPayload(form: RuleFormState): CreateRewardRuleRequestDto | null {
   };
 }
 
+function ruleTypeLabel(type: SprintRewardRuleDto["type"]): string {
+  if (type === "byRank") return "По местам";
+  if (type === "manual") return "Вручную";
+  return "По баллам";
+}
+
 function describeRule(rule: SprintRewardRuleDto): string {
   if (rule.type === "byRank") {
     return `Места ${rule.rankFrom ?? "?"}–${rule.rankTo ?? "?"}`;
+  }
+  if (rule.type === "manual") {
+    return "Пул без привязки к местам";
   }
   const parts = ["По баллам"];
   if (rule.rankTo != null) parts.push(`до ${rule.rankTo} места`);
@@ -165,7 +184,11 @@ export function SprintRewardRulesSection({
   const handleSubmit = () => {
     const payload = formToPayload(form);
     if (!payload) {
-      setClientError("Заполните тип, места/баллы и хотя бы одну награду с количеством.");
+      setClientError(
+        form.type === "manual"
+          ? "Укажите хотя бы одну награду с количеством."
+          : "Заполните тип, места/баллы и хотя бы одну награду с количеством."
+      );
       return;
     }
     setClientError("");
@@ -227,7 +250,8 @@ export function SprintRewardRulesSection({
         <div>
           <h3 className="text-xl font-bold tracking-tight">Правила выдачи наград</h3>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Как распределяются награды из каталога по местам или баллам лидерборда.
+            Как распределяются награды из каталога: по местам, по баллам или вручную
+            вне автоматической выдачи.
           </p>
         </div>
         <Button type="button" onClick={openCreate} disabled={disabled || activeRewards.length === 0}>
@@ -259,9 +283,7 @@ export function SprintRewardRulesSection({
               <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">
-                      {rule.type === "byRank" ? "По местам" : "По баллам"}
-                    </Badge>
+                    <Badge variant="secondary">{ruleTypeLabel(rule.type)}</Badge>
                     <Badge variant="outline">{describeRule(rule)}</Badge>
                   </div>
                   <ul className="space-y-1 text-sm text-foreground">
@@ -346,8 +368,15 @@ export function SprintRewardRulesSection({
                 <SelectContent>
                   <SelectItem value="byRank">По местам</SelectItem>
                   <SelectItem value="byPoints">По баллам (пропорционально)</SelectItem>
+                  <SelectItem value="manual">Вручную (пул без получателей)</SelectItem>
                 </SelectContent>
               </Select>
+              {form.type === "manual" ? (
+                <p className="text-sm text-muted-foreground">
+                  Система не назначает получателей — пул отображается в лидерборде
+                  отдельным блоком для ручной выдачи.
+                </p>
+              ) : null}
             </div>
 
             {form.type === "byRank" ? (
@@ -371,7 +400,9 @@ export function SprintRewardRulesSection({
                   />
                 </div>
               </div>
-            ) : (
+            ) : null}
+
+            {form.type === "byPoints" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">До места включительно</p>
@@ -394,7 +425,7 @@ export function SprintRewardRulesSection({
                   />
                 </div>
               </div>
-            )}
+            ) : null}
 
             <div className="space-y-3">
               <p className="text-sm font-medium text-foreground">Награды *</p>

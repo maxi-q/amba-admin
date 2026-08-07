@@ -1,15 +1,23 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useBlocker } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Alert, AlertDescription, PageLoader } from "@senler/ui";
 import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { useSprints } from "@/hooks/sprints/useSprints";
+import { creativeTasksControllerCreateCreativeTask } from "@/api/generated/creative-tasks/creative-tasks";
+import {
+  sprintsControllerCreate,
+  sprintsControllerCreateRewardRule,
+} from "@/api/generated/sprints/sprints";
 import type {
   BaseSprintDto,
   CreateSprintRequestDto,
   UpdateSprintRequestDto,
 } from "@/api/generated/model";
+import { QueryKeys } from "@/config/tanstack/queryKeys";
+import { ApiError } from "@/types";
 import { dateToInput } from "./helpers";
 import { SprintPageHeader } from "./components/SprintPageHeader";
 import { SprintSettingsSection } from "./components/SprintSettingsSection";
@@ -21,15 +29,21 @@ import { SprintNotFoundState } from "./components/SprintNotFoundState";
 import { SprintCreationStepOne } from "./components/SprintCreationStepOne";
 import {
   SprintCreationStepTwo,
+  type DraftManualReward,
   type DraftProportionalReward,
   type DraftRankRule,
   type SprintRewardMode,
 } from "./components/SprintCreationStepTwo";
+import { SprintCreationStepThree } from "./components/SprintCreationStepThree";
+import { SprintUnsavedLeaveDialog } from "./components/SprintUnsavedLeaveDialog";
+import type { DraftSprintTask } from "./components/draftSprintTask";
+import { draftTaskToCreatePayload } from "./components/draftSprintTask";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isNewSprint = sprintId === "new";
 
   const {
@@ -58,7 +72,7 @@ const SprintSetting = () => {
 
   const [sprint, setSprint] = useState<BaseSprintDto | null>(null);
   const [description, setDescription] = useState("");
-  const [creationStep, setCreationStep] = useState<1 | 2>(1);
+  const [creationStep, setCreationStep] = useState<1 | 2 | 3>(1);
   const [rewardMode, setRewardMode] = useState<SprintRewardMode>("rating");
   const [draftRankRules, setDraftRankRules] = useState<DraftRankRule[]>([]);
   const [draftProportional, setDraftProportional] =
@@ -66,7 +80,19 @@ const SprintSetting = () => {
       amount: "",
       rankTo: "",
     });
+  const [draftManualRewards, setDraftManualRewards] = useState<
+    DraftManualReward[]
+  >([]);
+  const [draftTasks, setDraftTasks] = useState<DraftSprintTask[]>([]);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [allowLeave, setAllowLeave] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const shouldBlockLeave = isNewSprint && !allowLeave && !isLaunching;
+  const leaveBlocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      shouldBlockLeave && currentLocation.pathname !== nextLocation.pathname
+  );
   const [formData, setFormData] = useState<UpdateSprintRequestDto>({
     name: "",
     startDate: "",
@@ -289,6 +315,128 @@ const SprintSetting = () => {
     toast.message("Сохранение черновика будет доступно позже");
   };
 
+  const handleStayOnPage = () => {
+    if (leaveBlocker.state === "blocked") {
+      leaveBlocker.reset();
+    }
+  };
+
+  const handleLeaveWithoutSaving = () => {
+    if (leaveBlocker.state === "blocked") {
+      leaveBlocker.proceed();
+      return;
+    }
+    setAllowLeave(true);
+  };
+
+  const handleSaveDraftAndLeave = () => {
+    handleDraftClick();
+    if (leaveBlocker.state === "blocked") {
+      leaveBlocker.proceed();
+      return;
+    }
+    setAllowLeave(true);
+  };
+
+  useEffect(() => {
+    if (!shouldBlockLeave) return;
+
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [shouldBlockLeave]);
+
+  const handleLaunchSprint = async () => {
+    if (!slug || draftTasks.length === 0) return;
+
+    const targetRoomId = room?.id || roomId || slug;
+    const startDate = (
+      formData.startDate ? new Date(formData.startDate) : new Date()
+    ).toISOString();
+    const endDate = formData.endDate
+      ? new Date(formData.endDate).toISOString()
+      : null;
+
+    setIsLaunching(true);
+    setGeneralError("");
+
+    try {
+      const createData: CreateSprintRequestDto = {
+        name: formData.name,
+        startDate,
+        endDate,
+        ignoreEndDate: formData.ignoreEndDate,
+        rewardType: formData.rewardType,
+        rewardUnits: formData.rewardUnits,
+        rewardValue: formData.rewardValue,
+        promoCodeUsageLimit: formData.promoCodeUsageLimit,
+        ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
+        isDeleted: false,
+        roomId: targetRoomId,
+      };
+
+      const createdSprint = await sprintsControllerCreate(createData);
+
+      if (rewardMode === "rating") {
+        for (const rule of draftRankRules) {
+          if (rule.rewards.length === 0) continue;
+          await sprintsControllerCreateRewardRule(createdSprint.id, {
+            type: "byRank",
+            rankFrom: rule.rankFrom,
+            rankTo: rule.rankTo,
+            minPoints: null,
+            rewards: rule.rewards.map((reward) => ({
+              rewardId: reward.rewardId,
+              amount: reward.amount,
+            })),
+          });
+        }
+      } else if (rewardMode === "manual" && draftManualRewards.length > 0) {
+        await sprintsControllerCreateRewardRule(createdSprint.id, {
+          type: "manual",
+          rankFrom: null,
+          rankTo: null,
+          minPoints: null,
+          rewards: draftManualRewards.map((reward) => ({
+            rewardId: reward.rewardId,
+            amount: reward.amount,
+          })),
+        });
+      }
+
+      for (const task of draftTasks) {
+        await creativeTasksControllerCreateCreativeTask(
+          draftTaskToCreatePayload(task, targetRoomId, startDate, endDate)
+        );
+      }
+
+      await queryClient.invalidateQueries({
+        queryKey: [QueryKeys.SPRINTS, createdSprint.roomId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [QueryKeys.CREATIVE_TASKS, targetRoomId],
+        exact: false,
+      });
+
+      toast.success("Спринт запущен");
+      setAllowLeave(true);
+      navigate(`/rooms/${slug}/sprints/${createdSprint.id}`);
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Не удалось запустить спринт";
+      setGeneralError(message);
+      toast.error(message);
+    } finally {
+      setIsLaunching(false);
+    }
+  };
+
   if (isLoadingSprints) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center">
@@ -304,6 +452,12 @@ const SprintSetting = () => {
   if (isNewSprint) {
     return (
       <div className="flex min-h-full w-full flex-col py-6">
+        <SprintUnsavedLeaveDialog
+          open={leaveBlocker.state === "blocked"}
+          onStay={handleStayOnPage}
+          onLeaveWithoutSaving={handleLeaveWithoutSaving}
+          onSaveDraft={handleSaveDraftAndLeave}
+        />
         {generalError ? (
           <Alert variant="destructive" className="mx-auto mb-4 w-full max-w-[700px]">
             <AlertDescription>{generalError}</AlertDescription>
@@ -321,23 +475,38 @@ const SprintSetting = () => {
             onSaveDraft={handleDraftClick}
             onContinue={handleCreationStepOneContinue}
           />
-        ) : (
+        ) : null}
+        {creationStep === 2 ? (
           <SprintCreationStepTwo
             roomId={roomId}
             roomSlug={slug ?? ""}
             mode={rewardMode}
             rankRules={draftRankRules}
             proportional={draftProportional}
+            manualRewards={draftManualRewards}
             onModeChange={setRewardMode}
             onRankRulesChange={setDraftRankRules}
             onProportionalChange={setDraftProportional}
+            onManualRewardsChange={setDraftManualRewards}
             onBack={() => setCreationStep(1)}
-            onContinue={() =>
-              toast.message("Шаг «Задания» будет добавлен следующим")
-            }
+            onContinue={() => setCreationStep(3)}
             onSaveDraft={handleDraftClick}
           />
-        )}
+        ) : null}
+        {creationStep === 3 ? (
+          <SprintCreationStepThree
+            roomId={roomId}
+            roomSlug={slug ?? ""}
+            tasks={draftTasks}
+            isLaunching={isLaunching}
+            onTasksChange={setDraftTasks}
+            onBack={() => setCreationStep(2)}
+            onLaunch={() => {
+              void handleLaunchSprint();
+            }}
+            onSaveDraft={handleDraftClick}
+          />
+        ) : null}
       </div>
     );
   }

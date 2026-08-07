@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Minus, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Minus, Pencil, Plus, X } from "lucide-react";
 import {
   Button,
   CheckBox,
@@ -21,7 +21,7 @@ import type { BaseRewardDto } from "@/api/generated/model";
 import { useRoomRewards } from "@/hooks/rewards/useRoomRewards";
 import { SprintCreationHeader } from "./SprintCreationHeader";
 
-export type SprintRewardMode = "rating" | "proportional";
+export type SprintRewardMode = "rating" | "manual" | "proportional";
 
 export interface DraftRankReward {
   rewardId: string;
@@ -40,15 +40,19 @@ export interface DraftProportionalReward {
   rankTo: string;
 }
 
+export type DraftManualReward = DraftRankReward;
+
 interface SprintCreationStepTwoProps {
   roomId: string;
   roomSlug: string;
   mode: SprintRewardMode;
   rankRules: DraftRankRule[];
   proportional: DraftProportionalReward;
+  manualRewards: DraftManualReward[];
   onModeChange: (mode: SprintRewardMode) => void;
   onRankRulesChange: (rules: DraftRankRule[]) => void;
   onProportionalChange: (value: DraftProportionalReward) => void;
+  onManualRewardsChange: (rewards: DraftManualReward[]) => void;
   onBack: () => void;
   onContinue: () => void;
   onSaveDraft: () => void;
@@ -72,15 +76,19 @@ const RewardImage = ({ reward }: { reward: BaseRewardDto }) =>
     </div>
   );
 
+const MANUAL_DIALOG_ID = "__manual__";
+
 export const SprintCreationStepTwo = ({
   roomId,
   roomSlug,
   mode,
   rankRules,
   proportional,
+  manualRewards,
   onModeChange,
   onRankRulesChange,
   onProportionalChange,
+  onManualRewardsChange,
   onBack,
   onContinue,
   onSaveDraft,
@@ -126,6 +134,11 @@ export const SprintCreationStepTwo = ({
     setRewardDialogRuleId(rule.id);
   };
 
+  const openManualRewardDialog = () => {
+    setRewardDraft(manualRewards.map((reward) => ({ ...reward })));
+    setRewardDialogRuleId(MANUAL_DIALOG_ID);
+  };
+
   const handleAddRange = () => {
     const from = Number(rangeFrom);
     const to = Number(rangeTo);
@@ -164,8 +177,29 @@ export const SprintCreationStepTwo = ({
     );
   };
 
+  const changeManualAmount = (rewardId: string, nextAmount: number) => {
+    onManualRewardsChange(
+      manualRewards.map((reward) =>
+        reward.rewardId === rewardId
+          ? { ...reward, amount: Math.max(1, nextAmount) }
+          : reward
+      )
+    );
+  };
+
+  const removeManualReward = (rewardId: string) => {
+    onManualRewardsChange(
+      manualRewards.filter((reward) => reward.rewardId !== rewardId)
+    );
+  };
+
   const saveRuleRewards = () => {
     if (!rewardDialogRuleId) return;
+    if (rewardDialogRuleId === MANUAL_DIALOG_ID) {
+      onManualRewardsChange(rewardDraft.map((reward) => ({ ...reward })));
+      setRewardDialogRuleId(null);
+      return;
+    }
     onRankRulesChange(
       rankRules.map((rule) =>
         rule.id === rewardDialogRuleId
@@ -178,11 +212,18 @@ export const SprintCreationStepTwo = ({
 
   const ratingValid =
     rankRules.length > 0 && rankRules.every((rule) => rule.rewards.length > 0);
+  const manualValid = manualRewards.length > 0;
   const proportionalValid =
     Number(proportional.amount) > 0 &&
     Number.isInteger(Number(proportional.rankTo)) &&
     Number(proportional.rankTo) > 0;
-  const canContinue = mode === "rating" ? ratingValid : proportionalValid;
+  const canContinue =
+    mode === "rating"
+      ? ratingValid
+      : mode === "manual"
+        ? manualValid
+        : proportionalValid;
+  const isManualDialog = rewardDialogRuleId === MANUAL_DIALOG_ID;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
@@ -199,6 +240,7 @@ export const SprintCreationStepTwo = ({
             </h2>
             <TabsList className="mt-3 w-fit" size="medium">
               <TabsTrigger value="rating">Рейтинг</TabsTrigger>
+              <TabsTrigger value="manual">Ручной выбор</TabsTrigger>
               <TabsTrigger value="proportional">Пропорционально</TabsTrigger>
             </TabsList>
 
@@ -296,6 +338,105 @@ export const SprintCreationStepTwo = ({
                     >
                       <Plus className="size-4" aria-hidden />
                       Добавить место
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="manual" className="mt-2">
+              <p className="text-[13px] font-medium leading-4 text-[#797979]">
+                Награды распределяются вами самостоятельно
+              </p>
+
+              <div className="mt-4">
+                <p className="text-[13px] font-medium leading-4">Награды</p>
+
+                {manualRewards.length === 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 h-7 border-[#e4e4e4] bg-white px-2 text-[13px] shadow-none"
+                    onClick={openManualRewardDialog}
+                  >
+                    <Plus className="size-4" aria-hidden />
+                    Добавить
+                  </Button>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex flex-col gap-2">
+                      {manualRewards.map((item) => {
+                        const reward = rewardById.get(item.rewardId);
+                        if (!reward) return null;
+                        return (
+                          <div
+                            key={item.rewardId}
+                            className="flex min-h-12 items-center gap-1.5"
+                          >
+                            <RewardImage reward={reward} />
+                            <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4">
+                              {reward.name}
+                            </span>
+                            <div className="flex h-7 items-center overflow-hidden rounded-md border border-[#e4e4e4]">
+                              <button
+                                type="button"
+                                className="flex size-7 items-center justify-center border-r border-[#e4e4e4]"
+                                onClick={() =>
+                                  changeManualAmount(item.rewardId, item.amount - 1)
+                                }
+                                aria-label="Уменьшить количество"
+                              >
+                                <Minus className="size-3" />
+                              </button>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={item.amount}
+                                onChange={(event) =>
+                                  changeManualAmount(
+                                    item.rewardId,
+                                    Number(event.target.value) || 1
+                                  )
+                                }
+                                aria-label={`Количество: ${reward.name}`}
+                                className="h-7 w-12 rounded-none border-0 px-1 text-center text-[13px] shadow-none"
+                              />
+                              <button
+                                type="button"
+                                className="flex size-7 items-center justify-center border-l border-[#e4e4e4]"
+                                onClick={() =>
+                                  changeManualAmount(item.rewardId, item.amount + 1)
+                                }
+                                aria-label="Увеличить количество"
+                              >
+                                <Plus className="size-3" />
+                              </button>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="size-7 shrink-0 border-[#e4e4e4] bg-white shadow-none"
+                              aria-label={`Удалить ${reward.name}`}
+                              onClick={() => removeManualReward(item.rewardId)}
+                            >
+                              <X className="size-4" aria-hidden />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 border-[#e4e4e4] bg-white px-2 text-[13px] shadow-none"
+                      onClick={openManualRewardDialog}
+                    >
+                      <Plus className="size-4" aria-hidden />
+                      Добавить
                     </Button>
                   </div>
                 )}
@@ -411,7 +552,9 @@ export const SprintCreationStepTwo = ({
           <DialogHeader>
             <DialogTitle>Награды</DialogTitle>
             <DialogDescription>
-              Выберите награды и укажите количество для каждого участника.
+              {isManualDialog
+                ? "Выберите награды для ручного пула и укажите количество."
+                : "Выберите награды и укажите количество для каждого участника."}
             </DialogDescription>
           </DialogHeader>
 
