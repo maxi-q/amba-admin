@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { X } from "lucide-react";
 import {
   Alert,
   AlertDescription,
   Button,
   InputField,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Sheet,
   SheetContent,
   SheetFooter,
@@ -12,6 +18,7 @@ import {
   SheetTitle,
 } from "@senler/ui";
 import { useCreateCreativeTask } from "@/hooks/creativetasks/useCreateCreativeTask";
+import { useSprints } from "@/hooks/sprints/useSprints";
 import type {
   CreateCreativeTaskRequestDto,
   CreateCreativeTaskRequestDtoAllowedFormatsItem,
@@ -53,6 +60,11 @@ export function CreateCreativeTaskDialog({
   roomSlug,
   onSuccess,
 }: CreateCreativeTaskDialogProps) {
+  const { slug: slugParam } = useParams();
+  const sprintRoomKey = roomSlug || slugParam || "";
+  const { sprints } = useSprints({ page: 1, size: 100 }, sprintRoomKey);
+  const activeSprints = sprints.filter((sprint) => !sprint.isDeleted);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startsAt, setStartsAt] = useState("");
@@ -60,6 +72,8 @@ export function CreateCreativeTaskDialog({
   const [minimalRewardInBalls, setMinimalRewardInBalls] = useState("0");
   const [allowedFormats, setAllowedFormats] = useState<CreativeTaskFormat[]>([]);
   const [criteria, setCriteria] = useState("");
+  const [restrictions, setRestrictions] = useState("");
+  const [sprintId, setSprintId] = useState("");
   const [ordContractTemplateId, setOrdContractTemplateId] = useState("");
 
   const {
@@ -78,6 +92,8 @@ export function CreateCreativeTaskDialog({
       setMinimalRewardInBalls("0");
       setAllowedFormats([]);
       setCriteria("");
+      setRestrictions("");
+      setSprintId("");
       setOrdContractTemplateId("");
     }
   }, [open]);
@@ -91,14 +107,16 @@ export function CreateCreativeTaskDialog({
   };
 
   const handleSubmit = () => {
-    if (!roomId) return;
+    if (!roomId || !sprintId) return;
     const payload: CreateCreativeTaskRequestDto = {
       title: title.trim(),
       description: description.trim(),
       startsAt: toISOString(startsAt),
       endsAt: toISOString(endsAt),
       roomId,
+      sprintId,
       criteria: parseMultilineList(criteria),
+      restrictions: parseMultilineList(restrictions),
       allowedFormats: allowedFormats as CreateCreativeTaskRequestDtoAllowedFormatsItem[],
       targetPlatform: CreateCreativeTaskRequestDtoTargetPlatform.VK_GROUP,
       minimalRewardInBalls: parseRewardBalls(minimalRewardInBalls),
@@ -161,6 +179,31 @@ export function CreateCreativeTaskDialog({
               helperText={getFirstFieldError(validationErrors, "title") ?? undefined}
               aria-label="Название"
             />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Спринт *</p>
+            <Select value={sprintId || undefined} onValueChange={setSprintId}>
+              <SelectTrigger aria-label="Спринт">
+                <SelectValue placeholder="Выберите спринт" />
+              </SelectTrigger>
+              <SelectContent>
+                {activeSprints.map((sprint) => (
+                  <SelectItem key={sprint.id} value={sprint.id}>
+                    {sprint.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {activeSprints.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Сначала создайте спринт — задание привязывается к нему.
+              </p>
+            ) : null}
+            {hasFieldError(validationErrors, "sprintId") ? (
+              <p className="text-sm text-destructive">
+                {getFirstFieldError(validationErrors, "sprintId")}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Описание</p>
@@ -253,6 +296,22 @@ export function CreateCreativeTaskDialog({
               </p>
             ) : null}
           </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Что запрещено</p>
+            <textarea
+              className={DESC_CLASS}
+              value={restrictions}
+              onChange={(e) => setRestrictions(e.target.value)}
+              rows={3}
+              placeholder="Каждый запрет с новой строки"
+              aria-label="Что запрещено"
+            />
+            {hasFieldError(validationErrors, "restrictions") ? (
+              <p className="text-sm text-destructive">
+                {getFirstFieldError(validationErrors, "restrictions")}
+              </p>
+            ) : null}
+          </div>
           <OrdContractTemplateSelect
             roomId={roomId}
             roomSlug={roomSlug}
@@ -271,7 +330,9 @@ export function CreateCreativeTaskDialog({
             type="button"
             size="lg"
             onClick={handleSubmit}
-            disabled={isPending || !title.trim() || !ordContractTemplateId}
+            disabled={
+              isPending || !title.trim() || !ordContractTemplateId || !sprintId
+            }
           >
             {isPending ? "Создание…" : "Создать"}
           </Button>

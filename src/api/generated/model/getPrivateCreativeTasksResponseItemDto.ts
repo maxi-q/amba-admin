@@ -38,6 +38,8 @@ export interface GetPrivateCreativeTasksResponseItemDto {
   isWhitelistEnabled: boolean;
   /** Критерии выполнения задания */
   criteria?: string[];
+  /** Что запрещено при выполнении задания */
+  restrictions?: string[];
   /** Допустимые форматы ответа на задание */
   allowedFormats?: GetPrivateCreativeTasksResponseItemDtoAllowedFormatsItem[];
   /** Целевая платформа публикации */
@@ -49,6 +51,8 @@ export interface GetPrivateCreativeTasksResponseItemDto {
   rewardInRubs: number;
   /** ID комнаты */
   roomId: string;
+  /** ID спринта */
+  sprintId: string;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable

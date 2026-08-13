@@ -16,6 +16,11 @@ export interface CreateSprintResponseDto {
   updatedAt: string;
   /** Название спринта */
   name: string;
+  /**
+   * Описание спринта
+   * @nullable
+   */
+  description?: string | null;
   /** Дата начала */
   startDate: string;
   /**

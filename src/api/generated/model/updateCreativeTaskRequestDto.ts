@@ -30,6 +30,8 @@ export interface UpdateCreativeTaskRequestDto {
   isDeleted?: boolean;
   /** Критерии выполнения задания */
   criteria?: string[];
+  /** Что запрещено при выполнении задания */
+  restrictions?: string[];
   /** Допустимые форматы ответа на задание */
   allowedFormats?: UpdateCreativeTaskRequestDtoAllowedFormatsItem[];
   /** Целевая платформа публикации */
@@ -39,6 +41,8 @@ export interface UpdateCreativeTaskRequestDto {
    * @minimum 0
    */
   minimalRewardInBalls?: number;
+  /** ID спринта */
+  sprintId?: string;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable

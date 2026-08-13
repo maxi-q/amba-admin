@@ -32,6 +32,8 @@ export interface UpdatePrivateCreativeTaskRequestDto {
   isWhitelistEnabled?: boolean;
   /** Критерии выполнения задания */
   criteria?: string[];
+  /** Что запрещено при выполнении задания */
+  restrictions?: string[];
   /** Допустимые форматы ответа на задание */
   allowedFormats?: UpdatePrivateCreativeTaskRequestDtoAllowedFormatsItem[];
   /** Целевая платформа публикации */
@@ -41,6 +43,8 @@ export interface UpdatePrivateCreativeTaskRequestDto {
    * @minimum 0
    */
   rewardInRubs?: number;
+  /** ID спринта */
+  sprintId?: string;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable

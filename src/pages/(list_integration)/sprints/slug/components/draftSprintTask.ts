@@ -32,7 +32,6 @@ export const PLATFORM_OPTIONS: { value: DraftSprintTaskPlatform; label: string }
   { value: CreateCreativeTaskRequestDtoTargetPlatform.VK_USER, label: "VK — страница" },
   { value: CreateCreativeTaskRequestDtoTargetPlatform.YOUTUBE_CHANNEL, label: "YouTube" },
   { value: CreateCreativeTaskRequestDtoTargetPlatform.RUTUBE_CHANNEL, label: "Rutube" },
-  { value: CreateCreativeTaskRequestDtoTargetPlatform.TG_CHANNEL, label: "Telegram" },
 ];
 
 export const emptyDraftSprintTask = (): DraftSprintTask => ({
@@ -72,30 +71,34 @@ function cleanList(items: string[]): string[] {
   return items.map((item) => item.trim()).filter(Boolean);
 }
 
-function buildDescription(task: DraftSprintTask): string {
-  const parts = [task.description.trim()];
-  if (task.prohibited.trim()) {
-    parts.push(`Запрещено:\n${task.prohibited.trim()}`);
-  }
-  return parts.filter(Boolean).join("\n\n");
+/** «Что запрещено» → массив restrictions (строки по переносам) */
+function prohibitedToRestrictions(prohibited: string): string[] {
+  return prohibited
+    .split(/\n|;/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export function draftTaskToCreatePayload(
   task: DraftSprintTask,
   roomId: string,
+  sprintId: string,
   startsAt: string,
   endsAt: string | null
 ): CreateCreativeTaskRequestDto {
   const defaultTargetUrls = cleanList(task.targetUrls);
   const defaultTexts = cleanList(task.defaultTexts);
+  const restrictions = prohibitedToRestrictions(task.prohibited);
 
   return {
     title: task.title.trim(),
-    description: buildDescription(task) || null,
+    description: task.description.trim() || null,
     startsAt,
     endsAt,
     roomId,
+    sprintId,
     criteria: cleanList(task.criteria),
+    restrictions,
     allowedFormats: task.allowedFormats,
     targetPlatform: task.targetPlatform,
     minimalRewardInBalls: parseRewardBalls(task.minimalRewardInBalls),

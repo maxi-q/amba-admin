@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button, PageLoader } from "@senler/ui";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { SprintNotFoundState } from "./components/SprintNotFoundState";
 import { OpenSprintQuestRow } from "./components/OpenSprintQuestRow";
 import { OpenSprintSidebar } from "./components/OpenSprintSidebar";
 import { OpenSprintLeaderboardTab } from "./components/OpenSprintLeaderboardTab";
+import SprintSetting from "./index";
 
 type OpenSprintTab = "quests" | "leaderboard";
 
@@ -23,6 +24,9 @@ export default function OpenSprintPage() {
   const [tab, setTab] = useState<OpenSprintTab>("quests");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const isCreatePath = sprintId === "new";
+  const effectiveSprintId = isCreatePath ? "" : sprintId;
+
   const { room } = useGetRoomById(slug);
   const roomId = room?.id ?? "";
 
@@ -30,9 +34,11 @@ export default function OpenSprintPage() {
     { page: 1, size: 100 },
     slug
   );
-  const sprint = sprints.find((item) => item.id === sprintId) ?? null;
+  const sprint =
+    sprints.find((item) => item.id === effectiveSprintId) ?? null;
 
-  const { rules, isLoading: isLoadingRules } = useSprintRewardRules(sprintId);
+  const { rules, isLoading: isLoadingRules } =
+    useSprintRewardRules(effectiveSprintId);
   const { tasks, isLoading: isLoadingTasks } = useRoomCreativeTasks(roomId, {
     page: 1,
     size: 100,
@@ -47,6 +53,7 @@ export default function OpenSprintPage() {
         sprintId: sprint.id,
         data: {
           name: sprint.name,
+          description: sprint.description ?? null,
           startDate: sprint.startDate,
           endDate: sprint.endDate ? dateToInput(sprint.endDate) : null,
           ignoreEndDate: sprint.ignoreEndDate,
@@ -67,6 +74,14 @@ export default function OpenSprintPage() {
       }
     );
   };
+
+  if (isCreatePath) {
+    return <SprintSetting />;
+  }
+
+  if (!sprintId) {
+    return <Navigate to={`/rooms/${slug}/sprints`} replace />;
+  }
 
   if (isLoadingSprints) {
     return (
@@ -94,7 +109,9 @@ export default function OpenSprintPage() {
               size="icon"
               className="size-7 border-[#e4e4e4] shadow-none"
               aria-label="Редактировать спринт"
-              onClick={() => navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)}
+              onClick={() =>
+                navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)
+              }
             >
               <Pencil className="size-4" aria-hidden />
             </Button>
@@ -141,22 +158,30 @@ export default function OpenSprintPage() {
             <div className="flex justify-center py-10">
               <PageLoader label="Загрузка…" />
             </div>
-          ) : tasks.length === 0 ? (
-            <p className="px-4 py-6 text-[13px] font-medium text-[#797979]">
-              Квестов пока нет
-            </p>
-          ) : (
-            <div className="flex flex-col">
-              {tasks.map((task) => (
-                <OpenSprintQuestRow
-                  key={task.id}
-                  taskId={task.id}
-                  title={task.title}
-                  roomSlug={slug}
-                />
-              ))}
-            </div>
-          )
+          ) : (() => {
+            const sprintTasks = tasks.filter(
+              (task) => task.sprintId === sprint.id && !task.isDeleted
+            );
+            if (sprintTasks.length === 0) {
+              return (
+                <p className="px-4 py-6 text-[13px] font-medium text-[#797979]">
+                  Квестов пока нет
+                </p>
+              );
+            }
+            return (
+              <div className="flex flex-col">
+                {sprintTasks.map((task) => (
+                  <OpenSprintQuestRow
+                    key={task.id}
+                    taskId={task.id}
+                    title={task.title}
+                    roomSlug={slug}
+                  />
+                ))}
+              </div>
+            );
+          })()
         ) : (
           <OpenSprintLeaderboardTab roomId={roomId} sprintId={sprint.id} />
         )}

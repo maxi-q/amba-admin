@@ -31,6 +31,7 @@ import type {
 } from "@/api/generated/model";
 import { CreatePrivateCreativeTaskRequestDtoTargetPlatform } from "@/api/generated/model";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
+import { useSprints } from "@/hooks/sprints/useSprints";
 import { useRoomPrivateCreativeTasks } from "@/hooks/creativetasks/useRoomPrivateCreativeTasks";
 import { usePrivateCreativeTask } from "@/hooks/creativetasks/usePrivateCreativeTask";
 import { useCreatePrivateCreativeTask } from "@/hooks/creativetasks/useCreatePrivateCreativeTask";
@@ -82,6 +83,8 @@ interface PrivateTaskFormState {
   endsAt: string;
   rewardInRubs: string;
   criteria: string;
+  restrictions: string;
+  sprintId: string;
   allowedFormats: CreativeTaskFormat[];
   isWhitelistEnabled: boolean;
   isDeleted: boolean;
@@ -94,6 +97,8 @@ const emptyForm = (): PrivateTaskFormState => ({
   endsAt: "",
   rewardInRubs: "0",
   criteria: "",
+  restrictions: "",
+  sprintId: "",
   allowedFormats: [],
   isWhitelistEnabled: true,
   isDeleted: false,
@@ -109,11 +114,15 @@ function PrivateTaskFields({
   setForm,
   validationErrors,
   includeDeleted,
+  sprintOptions = [],
+  requireSprint = false,
 }: {
   form: PrivateTaskFormState;
   setForm: (next: PrivateTaskFormState) => void;
   validationErrors: Record<string, string[]>;
   includeDeleted?: boolean;
+  sprintOptions?: { id: string; name: string }[];
+  requireSprint?: boolean;
 }) {
   const update = <K extends keyof PrivateTaskFormState>(key: K, value: PrivateTaskFormState[K]) => {
     setForm({ ...form, [key]: value });
@@ -140,6 +149,33 @@ function PrivateTaskFields({
           aria-label="Название"
         />
       </div>
+      {requireSprint || sprintOptions.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            Спринт{requireSprint ? " *" : ""}
+          </p>
+          <Select
+            value={form.sprintId || undefined}
+            onValueChange={(value) => update("sprintId", value)}
+          >
+            <SelectTrigger aria-label="Спринт">
+              <SelectValue placeholder="Выберите спринт" />
+            </SelectTrigger>
+            <SelectContent>
+              {sprintOptions.map((sprint) => (
+                <SelectItem key={sprint.id} value={sprint.id}>
+                  {sprint.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {hasFieldError(validationErrors, "sprintId") ? (
+            <p className="text-sm text-destructive">
+              {getFirstFieldError(validationErrors, "sprintId")}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Описание</p>
         <textarea
@@ -220,6 +256,17 @@ function PrivateTaskFields({
           aria-label="Критерии выполнения"
         />
       </div>
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Что запрещено</p>
+        <textarea
+          className={TEXTAREA_CLASS}
+          value={form.restrictions}
+          onChange={(e) => update("restrictions", e.target.value)}
+          rows={3}
+          placeholder="Каждый запрет с новой строки"
+          aria-label="Что запрещено"
+        />
+      </div>
       <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
         <p className="text-sm text-foreground">Доступ только по приглашениям</p>
         <Switch
@@ -255,6 +302,13 @@ function CreatePrivateTaskDialog({
   roomSlug?: string;
   onSuccess?: () => void;
 }) {
+  const { slug: slugParam } = useParams();
+  const sprintRoomKey = roomSlug || slugParam || "";
+  const { sprints } = useSprints({ page: 1, size: 100 }, sprintRoomKey);
+  const sprintOptions = sprints
+    .filter((sprint) => !sprint.isDeleted)
+    .map((sprint) => ({ id: sprint.id, name: sprint.name }));
+
   const [form, setForm] = useState<PrivateTaskFormState>(() => emptyForm());
   const [ordContractTemplateId, setOrdContractTemplateId] = useState("");
   const { createPrivateCreativeTask, isPending, generalError, validationErrors } =
@@ -268,14 +322,17 @@ function CreatePrivateTaskDialog({
   }, [open]);
 
   const handleSubmit = () => {
+    if (!form.sprintId) return;
     const payload: CreatePrivateCreativeTaskRequestDto = {
       title: form.title.trim(),
       description: form.description.trim(),
       startsAt: toISOString(form.startsAt),
       endsAt: toISOString(form.endsAt),
       roomId,
+      sprintId: form.sprintId,
       isWhitelistEnabled: form.isWhitelistEnabled,
       criteria: parseMultilineList(form.criteria),
+      restrictions: parseMultilineList(form.restrictions),
       allowedFormats: formatsPayload(form.allowedFormats),
       targetPlatform: CreatePrivateCreativeTaskRequestDtoTargetPlatform.VK_GROUP,
       rewardInRubs: parseRewardBalls(form.rewardInRubs),
@@ -311,7 +368,13 @@ function CreatePrivateTaskDialog({
           {generalError ? (
             <Alert variant="destructive"><AlertDescription>{generalError}</AlertDescription></Alert>
           ) : null}
-          <PrivateTaskFields form={form} setForm={setForm} validationErrors={validationErrors} />
+          <PrivateTaskFields
+            form={form}
+            setForm={setForm}
+            validationErrors={validationErrors}
+            sprintOptions={sprintOptions}
+            requireSprint
+          />
           <OrdContractTemplateSelect
             roomId={roomId}
             roomSlug={roomSlug}
@@ -323,7 +386,17 @@ function CreatePrivateTaskDialog({
         </div>
         <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">
           <Button type="button" variant="outline" size="lg" onClick={onClose} disabled={isPending}>Отмена</Button>
-          <Button type="button" size="lg" onClick={handleSubmit} disabled={isPending || !form.title.trim() || !ordContractTemplateId}>
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleSubmit}
+            disabled={
+              isPending ||
+              !form.title.trim() ||
+              !ordContractTemplateId ||
+              !form.sprintId
+            }
+          >
             {isPending ? "Создание…" : "Создать"}
           </Button>
         </SheetFooter>
@@ -358,6 +431,8 @@ export function EditPrivateTaskDialog({
       endsAt: toLocalDateTime(data.endsAt),
       rewardInRubs: String(data.rewardInRubs ?? 0),
       criteria: formatMultilineList(data.criteria),
+      restrictions: formatMultilineList(data.restrictions),
+      sprintId: data.sprintId ?? "",
       allowedFormats: (data.allowedFormats ?? []) as CreativeTaskFormat[],
       isWhitelistEnabled: data.isWhitelistEnabled ?? true,
       isDeleted: data.isDeleted,
@@ -375,6 +450,8 @@ export function EditPrivateTaskDialog({
       isDeleted: form.isDeleted,
       isWhitelistEnabled: form.isWhitelistEnabled,
       criteria: parseMultilineList(form.criteria),
+      restrictions: parseMultilineList(form.restrictions),
+      sprintId: form.sprintId || undefined,
       allowedFormats: formatsPayload(form.allowedFormats),
       rewardInRubs: parseRewardBalls(form.rewardInRubs),
     };

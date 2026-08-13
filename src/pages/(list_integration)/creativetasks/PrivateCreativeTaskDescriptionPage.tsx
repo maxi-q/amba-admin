@@ -71,6 +71,16 @@ export default function PrivateCreativeTaskDescriptionPage() {
                   </ul>
                 </div>
               ) : null}
+              {task.restrictions?.length ? (
+                <div className="mt-4 rounded-md border border-border bg-muted/30 p-3">
+                  <p className="mb-2 text-sm font-medium text-foreground">Что запрещено</p>
+                  <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                    {task.restrictions.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
             <div className="flex items-center gap-2">
               {!task.isDeleted ? (

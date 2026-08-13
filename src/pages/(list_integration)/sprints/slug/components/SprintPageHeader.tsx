@@ -1,5 +1,5 @@
 import { Button } from "@senler/ui";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 interface SprintPageHeaderProps {
   /** Зарезервировано под подзаголовок / контекст */
@@ -11,7 +11,9 @@ export const SprintPageHeader = ({
   onCopySprintId,
 }: SprintPageHeaderProps) => {
   const { sprintId } = useParams();
-  const isNewSprint = sprintId === "new";
+  const { pathname } = useLocation();
+  const isNewSprint =
+    sprintId === "new" || /\/sprints\/new\/?$/.test(pathname);
 
   if (isNewSprint) {
     return null;

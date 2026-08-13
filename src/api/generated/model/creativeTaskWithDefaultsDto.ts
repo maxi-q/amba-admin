@@ -36,6 +36,8 @@ export interface CreativeTaskWithDefaultsDto {
   isDeleted: boolean;
   /** Критерии выполнения задания */
   criteria?: string[];
+  /** Что запрещено при выполнении задания */
+  restrictions?: string[];
   /** Допустимые форматы ответа на задание */
   allowedFormats?: CreativeTaskWithDefaultsDtoAllowedFormatsItem[];
   /** Целевая платформа публикации */
@@ -47,6 +49,8 @@ export interface CreativeTaskWithDefaultsDto {
   minimalRewardInBalls: number;
   /** ID комнаты */
   roomId: string;
+  /** ID спринта */
+  sprintId: string;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable

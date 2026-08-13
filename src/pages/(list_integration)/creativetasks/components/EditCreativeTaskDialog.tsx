@@ -75,6 +75,7 @@ export function EditCreativeTaskDialog({
   const [minimalRewardInBalls, setMinimalRewardInBalls] = useState("0");
   const [allowedFormats, setAllowedFormats] = useState<CreativeTaskFormat[]>([]);
   const [criteria, setCriteria] = useState("");
+  const [restrictions, setRestrictions] = useState("");
 
   const { task: currentTask, isLoading: isLoadingTask } = useCreativeTask(
     task?.id ?? ""
@@ -98,6 +99,7 @@ export function EditCreativeTaskDialog({
       setMinimalRewardInBalls(String(data.minimalRewardInBalls ?? 0));
       setAllowedFormats((data.allowedFormats ?? []) as CreativeTaskFormat[]);
       setCriteria(formatMultilineList(data.criteria));
+      setRestrictions(formatMultilineList(data.restrictions));
     }
   }, [data, open]);
 
@@ -118,6 +120,7 @@ export function EditCreativeTaskDialog({
       endsAt: toISOString(endsAt),
       isDeleted,
       criteria: parseMultilineList(criteria),
+      restrictions: parseMultilineList(restrictions),
       allowedFormats: allowedFormats as UpdateCreativeTaskRequestDtoAllowedFormatsItem[],
       minimalRewardInBalls: parseRewardBalls(minimalRewardInBalls),
     };
@@ -271,6 +274,22 @@ export function EditCreativeTaskDialog({
               {hasFieldError(validationErrors, "criteria") ? (
                 <p className="text-sm text-destructive">
                   {getFirstFieldError(validationErrors, "criteria")}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Что запрещено</p>
+              <textarea
+                className={DESC_CLASS}
+                value={restrictions}
+                onChange={(e) => setRestrictions(e.target.value)}
+                rows={3}
+                placeholder="Каждый запрет с новой строки"
+                aria-label="Что запрещено"
+              />
+              {hasFieldError(validationErrors, "restrictions") ? (
+                <p className="text-sm text-destructive">
+                  {getFirstFieldError(validationErrors, "restrictions")}
                 </p>
               ) : null}
             </div>

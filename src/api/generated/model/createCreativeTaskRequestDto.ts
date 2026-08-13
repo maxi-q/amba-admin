@@ -28,6 +28,8 @@ export interface CreateCreativeTaskRequestDto {
   endsAt?: string | null;
   /** Критерии выполнения задания */
   criteria?: string[];
+  /** Что запрещено при выполнении задания */
+  restrictions?: string[];
   /** Допустимые форматы ответа на задание */
   allowedFormats?: CreateCreativeTaskRequestDtoAllowedFormatsItem[];
   /** Целевая платформа публикации */
@@ -39,6 +41,8 @@ export interface CreateCreativeTaskRequestDto {
   minimalRewardInBalls: number;
   /** ID комнаты */
   roomId: string;
+  /** ID спринта */
+  sprintId: string;
   /**
    * Форма распространения креатива (тип креатива)
    * @nullable

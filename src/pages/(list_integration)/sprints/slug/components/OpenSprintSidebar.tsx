@@ -70,7 +70,9 @@ export function OpenSprintSidebar({ sprint, rules }: OpenSprintSidebarProps) {
     <aside className="flex w-full shrink-0 flex-col border-l border-[#e4e4e4] lg:w-[260px]">
       <div className="flex flex-col gap-1 border-b border-[#e4e4e4] p-4 text-[13px] font-medium leading-4 tracking-[-0.25px]">
         <p className="text-foreground">О спринте</p>
-        <p className="text-[#797979]">Нет описания</p>
+        <p className="whitespace-pre-wrap text-[#797979]">
+          {sprint.description?.trim() || "Нет описания"}
+        </p>
       </div>
 
       <div className="flex flex-col gap-1 border-b border-[#e4e4e4] p-4">

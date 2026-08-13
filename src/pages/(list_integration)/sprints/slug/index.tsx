@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useBlocker } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useBlocker,
+  useLocation,
+} from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Alert, AlertDescription, PageLoader } from "@senler/ui";
@@ -42,9 +47,12 @@ import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
+  const { pathname } = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const isNewSprint = sprintId === "new";
+  // Маршрут `sprints/new` не объявляет `:sprintId`, поэтому смотрим и path
+  const isNewSprint =
+    sprintId === "new" || /\/sprints\/new\/?$/.test(pathname);
 
   const {
     createSprint,
@@ -95,6 +103,7 @@ const SprintSetting = () => {
   );
   const [formData, setFormData] = useState<UpdateSprintRequestDto>({
     name: "",
+    description: null,
     startDate: "",
     endDate: null,
     ignoreEndDate: false,
@@ -114,8 +123,10 @@ const SprintSetting = () => {
       const foundSprint = sprints.find((s) => s.id === sprintId);
       if (foundSprint) {
         setSprint(foundSprint);
+        setDescription(foundSprint.description ?? "");
         setFormData({
           name: foundSprint.name,
+          description: foundSprint.description ?? null,
           startDate: dateToInput(foundSprint.startDate) ?? "",
           endDate: foundSprint.endDate ? dateToInput(foundSprint.endDate) : null,
           ignoreEndDate: foundSprint.ignoreEndDate,
@@ -168,6 +179,7 @@ const SprintSetting = () => {
 
     const storeData = {
       name: formData.name,
+      description: (description || formData.description || "").trim() || null,
       startDate: (
         formData.startDate ? new Date(formData.startDate) : new Date()
       ).toISOString(),
@@ -368,6 +380,7 @@ const SprintSetting = () => {
     try {
       const createData: CreateSprintRequestDto = {
         name: formData.name,
+        description: description.trim() || null,
         startDate,
         endDate,
         ignoreEndDate: formData.ignoreEndDate,
@@ -411,7 +424,13 @@ const SprintSetting = () => {
 
       for (const task of draftTasks) {
         await creativeTasksControllerCreateCreativeTask(
-          draftTaskToCreatePayload(task, targetRoomId, startDate, endDate)
+          draftTaskToCreatePayload(
+            task,
+            targetRoomId,
+            createdSprint.id,
+            startDate,
+            endDate
+          )
         );
       }
 
@@ -533,6 +552,10 @@ const SprintSetting = () => {
             onInputChange={handleInputChange}
             fieldErrors={fieldErrors}
             onIgnoreEndDateChange={handleIgnoreEndDateChange}
+            onDescriptionChange={(value) => {
+              setDescription(value);
+              setFormData((prev) => ({ ...prev, description: value || null }));
+            }}
           />
 
           <SprintPromoCodesSection

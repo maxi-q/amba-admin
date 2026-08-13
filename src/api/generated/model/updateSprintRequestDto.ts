@@ -10,6 +10,11 @@ import type { UpdateSprintRequestDtoRewardType } from './updateSprintRequestDtoR
 export interface UpdateSprintRequestDto {
   /** Название спринта */
   name: string;
+  /**
+   * Описание спринта
+   * @nullable
+   */
+  description?: string | null;
   /** Дата начала */
   startDate: string;
   /**

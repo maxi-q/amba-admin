@@ -1,4 +1,4 @@
-import { InputField, Switch } from "@senler/ui";
+import { InputField, Switch, Textarea } from "@senler/ui";
 import type { UpdateSprintRequestDto } from "@/api/generated/model";
 
 interface SprintSettingsSectionProps {
@@ -8,6 +8,7 @@ interface SprintSettingsSectionProps {
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
   fieldErrors?: Record<string, string[]>;
   onIgnoreEndDateChange: (value: boolean) => void;
+  onDescriptionChange?: (value: string) => void;
 }
 
 export const SprintSettingsSection = ({
@@ -15,6 +16,7 @@ export const SprintSettingsSection = ({
   onInputChange,
   fieldErrors,
   onIgnoreEndDateChange,
+  onDescriptionChange,
 }: SprintSettingsSectionProps) => {
   const getFirstError = (field: string) => fieldErrors?.[field]?.[0];
   const hasError = (field: string) => !!fieldErrors?.[field];
@@ -31,6 +33,20 @@ export const SprintSettingsSection = ({
           helperText={getFirstError("name") ?? undefined}
           aria-label="Название спринта"
         />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">Описание</p>
+        <Textarea
+          placeholder="Кратко опишите спринт для участников"
+          value={formData.description ?? ""}
+          onChange={(event) => onDescriptionChange?.(event.target.value)}
+          aria-label="Описание спринта"
+          className="min-h-[88px]"
+        />
+        {hasError("description") ? (
+          <p className="text-sm text-destructive">{getFirstError("description")}</p>
+        ) : null}
       </div>
 
       <div className="space-y-2">
