@@ -3,6 +3,16 @@ import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 import { API_URL } from '@/constants';
 import { ApiError, type IApiErrorResponse } from '@/types';
 
+type CustomInstanceMock = (
+  config: AxiosRequestConfig,
+) => unknown | Promise<unknown>;
+
+let customInstanceMock: CustomInstanceMock | null = null;
+
+export const setCustomInstanceMock = (mock: CustomInstanceMock | null) => {
+  customInstanceMock = mock;
+};
+
 const getBaseUrl = () => {
   const normalizedUrl = (API_URL || '').replace(/\/+$/, '');
 
@@ -43,17 +53,23 @@ export const customInstance = async <T>(
 ): Promise<T> => {
   const token = localStorage.getItem('token');
 
+  const requestConfig: AxiosRequestConfig = {
+    ...config,
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...config.headers,
+      ...options?.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  };
+
+  if (customInstanceMock) {
+    return customInstanceMock(requestConfig) as Promise<T>;
+  }
+
   try {
-    const response = await axiosInstance.request<T>({
-      ...config,
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...config.headers,
-        ...options?.headers,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    const response = await axiosInstance.request<T>(requestConfig);
 
     return response.data;
   } catch (error) {

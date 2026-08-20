@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 
 import { MessageProvider } from './messages/messageProvider'
@@ -7,11 +7,15 @@ import { Navigation } from './pages/modules/Navigation'
 
 import { Toaster } from 'sonner'
 
-function App() {
+interface AppProps {
+	initialPath?: string
+}
+
+function App({ initialPath }: AppProps) {
 	const [client] = useState(() => new QueryClient())
 	const router = useMemo(
-		() =>
-			createBrowserRouter([
+		() => {
+			const routes = [
 				{
 					path: '*',
 					element: (
@@ -21,8 +25,13 @@ function App() {
 						</>
 					),
 				},
-			]),
-		[]
+			]
+
+			return initialPath
+				? createMemoryRouter(routes, { initialEntries: [initialPath] })
+				: createBrowserRouter(routes)
+		},
+		[initialPath]
 	)
 
 	return (
