@@ -18,7 +18,7 @@ export const formatDateRange = (
   const end = new Date(endDate);
   if (Number.isNaN(end.getTime())) return `${formatDate(start)} – бессрочно`;
 
-  return `${formatDate(start)} - ${formatDate(end)}`;
+  return `${formatDate(start)} – ${formatDate(end)}`;
 };
 
 export const isSprintActive = (startDate: string | null, endDate: string | null): boolean => {

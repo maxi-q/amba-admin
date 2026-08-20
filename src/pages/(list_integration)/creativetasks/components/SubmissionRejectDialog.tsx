@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { Button, Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@senler/ui";
+import {
+  Button,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@senler/ui";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 
 const TEXTAREA_CLASS =
@@ -67,6 +75,9 @@ export function SubmissionRejectDialog({
           <SheetTitle className="flex-1 text-left text-lg font-medium text-primary-foreground">
             Отклонить ответ
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Укажите причину отклонения ответа
+          </SheetDescription>
         </SheetHeader>
 
         <div className="px-4 py-4">

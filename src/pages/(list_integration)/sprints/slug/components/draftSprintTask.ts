@@ -82,9 +82,7 @@ function prohibitedToRestrictions(prohibited: string): string[] {
 export function draftTaskToCreatePayload(
   task: DraftSprintTask,
   roomId: string,
-  sprintId: string,
-  startsAt: string,
-  endsAt: string | null
+  sprintId: string
 ): CreateCreativeTaskRequestDto {
   const defaultTargetUrls = cleanList(task.targetUrls);
   const defaultTexts = cleanList(task.defaultTexts);
@@ -93,8 +91,6 @@ export function draftTaskToCreatePayload(
   return {
     title: task.title.trim(),
     description: task.description.trim() || null,
-    startsAt,
-    endsAt,
     roomId,
     sprintId,
     criteria: cleanList(task.criteria),

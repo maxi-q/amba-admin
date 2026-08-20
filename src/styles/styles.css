@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+body:has([data-task-status-log-dialog]) [data-slot="dialog-overlay"] {
+  top: 44px;
+  background-color: rgb(0 0 0 / 40%) !important;
+}

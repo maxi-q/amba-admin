@@ -34,8 +34,6 @@ export interface CreateSprintRequestDto {
   promoCodeUsageLimit: number;
   /** Игнорировать ограничение по промокодам */
   ignorePromoCodeUsageLimit: boolean;
-  /** Флаг удаления */
-  isDeleted: boolean;
   /** ID комнаты */
   roomId: string;
 }

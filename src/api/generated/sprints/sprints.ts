@@ -341,7 +341,7 @@ export function useSprintsControllerGetRewardRules<TData = Awaited<ReturnType<ty
 
 
 /**
- * @summary Создать правило выдачи наград спринта
+ * @summary Создать правило выдачи наград спринта. Доступно только в статусе active
  */
 export const sprintsControllerCreateRewardRule = (
     sprintId: string,
@@ -390,7 +390,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SprintsControllerCreateRewardRuleMutationError = unknown
 
     /**
- * @summary Создать правило выдачи наград спринта
+ * @summary Создать правило выдачи наград спринта. Доступно только в статусе active
  */
 export const useSprintsControllerCreateRewardRule = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerCreateRewardRule>>, TError,{sprintId: string;data: CreateRewardRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -406,7 +406,7 @@ export const useSprintsControllerCreateRewardRule = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Обновить правило выдачи наград (полная замена)
+ * @summary Обновить правило выдачи наград (полная замена). Доступно только в статусе active
  */
 export const sprintsControllerUpdateRewardRule = (
     id: string,
@@ -454,7 +454,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SprintsControllerUpdateRewardRuleMutationError = unknown
 
     /**
- * @summary Обновить правило выдачи наград (полная замена)
+ * @summary Обновить правило выдачи наград (полная замена). Доступно только в статусе active
  */
 export const useSprintsControllerUpdateRewardRule = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerUpdateRewardRule>>, TError,{id: string;data: UpdateRewardRuleRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -470,7 +470,7 @@ export const useSprintsControllerUpdateRewardRule = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Удалить правило выдачи наград
+ * @summary Удалить правило выдачи наград. Доступно только в статусе active
  */
 export const sprintsControllerDeleteRewardRule = (
     id: string,
@@ -515,7 +515,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SprintsControllerDeleteRewardRuleMutationError = unknown
 
     /**
- * @summary Удалить правило выдачи наград
+ * @summary Удалить правило выдачи наград. Доступно только в статусе active
  */
 export const useSprintsControllerDeleteRewardRule = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerDeleteRewardRule>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}

@@ -12,5 +12,10 @@ interface OutletCtx {
 export default function CreativeTaskAnswersPage() {
   const { task } = useOutletContext<OutletCtx>();
 
-  return <TaskDetailSubmissionsList taskId={task.id} />;
+  return (
+    <TaskDetailSubmissionsList
+      taskId={task.id}
+      minimalRewardInBalls={task.minimalRewardInBalls}
+    />
+  );
 }

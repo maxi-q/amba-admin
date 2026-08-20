@@ -7,6 +7,7 @@
  */
 import type { PrivateCreativeTaskSubmissionItemDto } from './privateCreativeTaskSubmissionItemDto';
 import type { CreatePrivateSubmissionResponseDtoStatus } from './createPrivateSubmissionResponseDtoStatus';
+import type { CreativeTaskSubmissionEventDto } from './creativeTaskSubmissionEventDto';
 
 export interface CreatePrivateSubmissionResponseDto {
   /** Unique identifier */
@@ -33,4 +34,6 @@ export interface CreatePrivateSubmissionResponseDto {
   privateTaskId: string;
   /** ID амбассадора */
   ambassadorId: string;
+  /** Лог событий ответа: смена статуса или патч содержимого */
+  events: CreativeTaskSubmissionEventDto[];
 }

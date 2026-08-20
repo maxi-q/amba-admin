@@ -43,11 +43,9 @@ import { CreativesPaginationControls } from "./components/CreativesPaginationCon
 import { CreativeTaskWhitelistSection } from "./components/CreativeTaskWhitelistSection";
 import {
   CREATIVE_TASK_FORMAT_OPTIONS,
-  formatDateRange,
   formatRubReward,
   formatTaskFormat,
   formatMultilineList,
-  isTaskActive,
   parseMultilineList,
   parseRewardBalls,
   type CreativeTaskFormat,
@@ -63,24 +61,9 @@ const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: st
 const hasFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
   Boolean(fieldErrors[fieldName]?.length);
 
-function toISOString(localDateTime: string): string {
-  if (!localDateTime) return "";
-  return new Date(localDateTime).toISOString();
-}
-
-function toLocalDateTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
 interface PrivateTaskFormState {
   title: string;
   description: string;
-  startsAt: string;
-  endsAt: string;
   rewardInRubs: string;
   criteria: string;
   restrictions: string;
@@ -93,8 +76,6 @@ interface PrivateTaskFormState {
 const emptyForm = (): PrivateTaskFormState => ({
   title: "",
   description: "",
-  startsAt: "",
-  endsAt: "",
   rewardInRubs: "0",
   criteria: "",
   restrictions: "",
@@ -189,30 +170,6 @@ function PrivateTaskFields({
           <p className="text-sm text-destructive">{getFirstFieldError(validationErrors, "description")}</p>
         ) : null}
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Дата начала</p>
-          <InputField
-            type="datetime-local"
-            value={form.startsAt}
-            onChange={(e) => update("startsAt", e.target.value)}
-            error={hasFieldError(validationErrors, "startsAt")}
-            helperText={getFirstFieldError(validationErrors, "startsAt") || undefined}
-            aria-label="Дата начала"
-          />
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Дата окончания</p>
-          <InputField
-            type="datetime-local"
-            value={form.endsAt}
-            onChange={(e) => update("endsAt", e.target.value)}
-            error={hasFieldError(validationErrors, "endsAt")}
-            helperText={getFirstFieldError(validationErrors, "endsAt") || undefined}
-            aria-label="Дата окончания"
-          />
-        </div>
-      </div>
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">Награда, ₽</p>
         <InputField
@@ -306,7 +263,7 @@ function CreatePrivateTaskDialog({
   const sprintRoomKey = roomSlug || slugParam || "";
   const { sprints } = useSprints({ page: 1, size: 100 }, sprintRoomKey);
   const sprintOptions = sprints
-    .filter((sprint) => !sprint.isDeleted)
+    .filter((sprint) => sprint.status === "active")
     .map((sprint) => ({ id: sprint.id, name: sprint.name }));
 
   const [form, setForm] = useState<PrivateTaskFormState>(() => emptyForm());
@@ -326,8 +283,6 @@ function CreatePrivateTaskDialog({
     const payload: CreatePrivateCreativeTaskRequestDto = {
       title: form.title.trim(),
       description: form.description.trim(),
-      startsAt: toISOString(form.startsAt),
-      endsAt: toISOString(form.endsAt),
       roomId,
       sprintId: form.sprintId,
       isWhitelistEnabled: form.isWhitelistEnabled,
@@ -427,8 +382,6 @@ export function EditPrivateTaskDialog({
     setForm({
       title: data.title,
       description: data.description ?? "",
-      startsAt: toLocalDateTime(data.startsAt),
-      endsAt: toLocalDateTime(data.endsAt),
       rewardInRubs: String(data.rewardInRubs ?? 0),
       criteria: formatMultilineList(data.criteria),
       restrictions: formatMultilineList(data.restrictions),
@@ -445,8 +398,6 @@ export function EditPrivateTaskDialog({
     const payload: UpdatePrivateCreativeTaskRequestDto = {
       title: form.title.trim(),
       description: form.description.trim(),
-      startsAt: toISOString(form.startsAt),
-      endsAt: toISOString(form.endsAt),
       isDeleted: form.isDeleted,
       isWhitelistEnabled: form.isWhitelistEnabled,
       criteria: parseMultilineList(form.criteria),
@@ -514,8 +465,6 @@ function PrivateTaskCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const { slug } = useParams<{ slug: string }>();
-  const dateRange = formatDateRange(task.startsAt, task.endsAt ?? null);
-  const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt ?? null);
   const detailPath = `/rooms/${slug ?? ""}/creativetasks/private/${task.id}`;
 
   return (
@@ -530,9 +479,6 @@ function PrivateTaskCard({
             </h3>
             <p className={`line-clamp-2 text-sm ${task.isDeleted ? "text-muted-foreground line-through" : "text-muted-foreground"}`}>
               {task.description || "—"}
-            </p>
-            <p className={`mt-1 text-sm ${active ? "font-medium text-green-700 dark:text-green-400" : "text-muted-foreground"}`}>
-              {dateRange}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge variant="secondary">{formatRubReward(task.rewardInRubs)}</Badge>
@@ -563,9 +509,9 @@ function PrivateTaskCard({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            {!task.isDeleted ? (
-              <Badge variant={active ? "success" : "secondary"}>{active ? "Активна" : "Неактивна"}</Badge>
-            ) : null}
+            <Badge variant="secondary">
+              {task.isDeleted ? "Удалена" : "В спринте"}
+            </Badge>
             <Button type="button" variant="ghost" size="icon" className="size-9" onClick={() => setExpanded((prev) => !prev)} aria-label={expanded ? "Свернуть" : "Развернуть"}>
               {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
             </Button>

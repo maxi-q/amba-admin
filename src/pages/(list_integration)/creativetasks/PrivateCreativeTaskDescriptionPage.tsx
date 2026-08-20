@@ -4,11 +4,9 @@ import { Pencil } from "lucide-react";
 import { Badge, Button, Card, CardContent } from "@senler/ui";
 import type { PrivateCreativeTaskWithDefaultsDto } from "@/api/generated/model";
 import {
-  formatDateRange,
   formatMultilineList,
   formatRubReward,
   formatTaskFormat,
-  isTaskActive,
 } from "./utils/creativetaskUtils";
 import { EditPrivateTaskDialog } from "./PrivateCreativeTasksPage";
 import { PrivateOrdCreativeSummaryCard } from "./components/PrivateOrdCreativeSummaryCard";
@@ -20,9 +18,6 @@ interface OutletCtx {
 export default function PrivateCreativeTaskDescriptionPage() {
   const { task } = useOutletContext<OutletCtx>();
   const [editOpen, setEditOpen] = useState(false);
-  const dateRange = formatDateRange(task.startsAt, task.endsAt ?? null);
-  const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt ?? null);
-
   return (
     <>
       <Card className={`mb-4 border border-border ${task.isDeleted ? "opacity-70" : ""}`}>
@@ -43,7 +38,6 @@ export default function PrivateCreativeTaskDescriptionPage() {
               >
                 {task.description || "—"}
               </p>
-              <p className="mt-2 text-sm text-muted-foreground">{dateRange}</p>
               <div className="mt-4 flex flex-wrap gap-2 text-sm">
                 <Badge variant="secondary">{formatRubReward(task.rewardInRubs)}</Badge>
                 {task.allowedFormats?.length ? (
@@ -83,11 +77,9 @@ export default function PrivateCreativeTaskDescriptionPage() {
               ) : null}
             </div>
             <div className="flex items-center gap-2">
-              {!task.isDeleted ? (
-                <Badge variant={active ? "success" : "secondary"}>
-                  {active ? "Активна" : "Неактивна"}
-                </Badge>
-              ) : null}
+              <Badge variant="secondary">
+                {task.isDeleted ? "Удалена" : "В спринте"}
+              </Badge>
               <Button
                 type="button"
                 variant="ghost"

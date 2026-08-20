@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { UpdateSprintRequestDtoRewardType } from './updateSprintRequestDtoRewardType';
+import type { UpdateSprintRequestDtoStatus } from './updateSprintRequestDtoStatus';
 
 export interface UpdateSprintRequestDto {
   /** Название спринта */
@@ -34,6 +35,6 @@ export interface UpdateSprintRequestDto {
   promoCodeUsageLimit: number;
   /** Игнорировать ограничение по промокодам */
   ignorePromoCodeUsageLimit: boolean;
-  /** Флаг удаления */
-  isDeleted: boolean;
+  /** Статус спринта. Если не передан — текущий статус не меняется */
+  status?: UpdateSprintRequestDtoStatus;
 }

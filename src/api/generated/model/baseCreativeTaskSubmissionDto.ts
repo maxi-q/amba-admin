@@ -7,6 +7,7 @@
  */
 import type { CreativeTaskSubmissionItemDto } from './creativeTaskSubmissionItemDto';
 import type { BaseCreativeTaskSubmissionDtoStatus } from './baseCreativeTaskSubmissionDtoStatus';
+import type { CreativeTaskSubmissionEventDto } from './creativeTaskSubmissionEventDto';
 
 export interface BaseCreativeTaskSubmissionDto {
   /** Unique identifier */
@@ -35,4 +36,6 @@ export interface BaseCreativeTaskSubmissionDto {
   taskId: string;
   /** ID амбассадора */
   ambassadorId: string;
+  /** Лог событий ответа: смена статуса или патч содержимого */
+  events: CreativeTaskSubmissionEventDto[];
 }

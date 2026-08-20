@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { Button, InputField, Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@senler/ui";
+import {
+  Button,
+  InputField,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@senler/ui";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
 
 interface SubmissionApproveDialogProps {
@@ -63,6 +72,9 @@ export function SubmissionApproveDialog({
           <SheetTitle className="flex-1 text-left text-lg font-medium text-primary-foreground">
             Одобрить ответ
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Укажите награду за одобренную публикацию
+          </SheetDescription>
         </SheetHeader>
 
         <div className="px-4 py-4">

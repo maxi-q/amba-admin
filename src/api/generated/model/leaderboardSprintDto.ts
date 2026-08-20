@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { LeaderboardSprintDtoStatus } from './leaderboardSprintDtoStatus';
 
 export interface LeaderboardSprintDto {
   /** ID спринта */
@@ -20,6 +21,8 @@ export interface LeaderboardSprintDto {
   endDate: string | null;
   /** Флаг игнорирования даты окончания */
   ignoreEndDate: boolean;
+  /** Статус спринта */
+  status: LeaderboardSprintDtoStatus;
   /** Является ли спринт бессрочным (заполняет пробелы между спринтами) */
   isEndless: boolean;
 }

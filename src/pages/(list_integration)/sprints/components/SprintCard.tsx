@@ -1,7 +1,8 @@
 import { Link, useParams } from "react-router-dom";
+import { Pencil } from "lucide-react";
 import type { BaseSprintDto } from "@/api/generated/model";
 import { formatDateRange } from "../utils/sprintUtils";
-import { checkSprintStatus, statusToneStyles } from "../constants/sprintStatus";
+import { checkSprintStatus } from "../constants/sprintStatus";
 
 interface SprintCardProps {
   sprint: BaseSprintDto;
@@ -16,44 +17,51 @@ export const SprintCard = ({ sprint }: SprintCardProps) => {
   const { label, tone } = checkSprintStatus(
     sprint.startDate,
     sprint.endDate,
-    sprint.ignoreEndDate
+    sprint.ignoreEndDate,
+    sprint.status
   );
-  const toneStyle = statusToneStyles[tone];
+  const statusLabel =
+    sprint.status === "awarding"
+      ? "Выдача наград"
+      : sprint.status === "completed"
+        ? "Завершен"
+        : label;
+  const statusDotClass =
+    sprint.status === "awarding"
+      ? "border-[#22c55e]"
+      : sprint.status === "completed" || tone === "ended"
+        ? "border-[#a3a3a3]"
+        : tone === "planned"
+          ? "border-[#f97316]"
+          : "border-[#22c55e]";
 
   return (
     <Link
       to={`/rooms/${slug}/sprints/${sprint.id}`}
-      className={`flex min-h-12 items-center gap-3 border-b border-[#e4e4e4] px-4 py-3 transition-colors hover:bg-[#fafafa] ${
-        sprint.isDeleted ? "opacity-60" : ""
-      }`}
+      className="flex h-12 items-center gap-4 border-b border-[#e4e4e4] px-4 transition-colors hover:bg-[#fafafa]"
     >
-      <p
-        className={`min-w-0 flex-1 truncate text-[13px] font-medium leading-4 ${
-          sprint.isDeleted
-            ? "text-muted-foreground line-through"
-            : "text-foreground"
-        }`}
-      >
+      <p className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 text-foreground">
         {sprint.name}
       </p>
 
-      {!sprint.isDeleted ? (
-        <span
-          className={`inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md border px-1.5 text-[13px] font-medium leading-4 ${toneStyle.chip}`}
-        >
-          <span className={`size-2 shrink-0 rounded-full ${toneStyle.dot}`} />
-          {label}
+      <span
+        className="inline-flex h-6 shrink-0 items-center gap-0.5 rounded-[28px] border border-[#e4e4e4] bg-white px-1.5 text-[13px] font-medium leading-4 text-foreground"
+      >
+        <span className="flex size-4 shrink-0 items-center justify-center">
+          <span className={`size-2 rounded-full border ${statusDotClass}`} />
         </span>
-      ) : null}
+        {statusLabel}
+      </span>
+
+      <span className="w-[147px] shrink-0 text-right text-[13px] font-medium leading-4 text-[#797979]">
+        {dateRange}
+      </span>
 
       <span
-        className={`w-[147px] shrink-0 text-right text-[13px] font-medium leading-4 ${
-          sprint.isDeleted
-            ? "text-muted-foreground line-through"
-            : "text-[#797979]"
-        }`}
+        className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#e4e4e4] bg-white"
+        aria-hidden
       >
-        {dateRange}
+        <Pencil className="size-4" strokeWidth={1.5} />
       </span>
     </Link>
   );

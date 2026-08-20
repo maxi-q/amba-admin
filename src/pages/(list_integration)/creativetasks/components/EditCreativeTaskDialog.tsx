@@ -35,25 +35,6 @@ const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: st
 const hasFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
   Boolean(fieldErrors[fieldName]?.length);
 
-/** ISO datetime в значение для input datetime-local */
-function toLocalDateTime(iso: string | null | undefined): string {
-  if (!iso) return "";
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "";
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } catch {
-    return "";
-  }
-}
-
-/** Локальная datetime строка в ISO */
-function toISOString(localDateTime: string): string {
-  if (!localDateTime) return "";
-  return new Date(localDateTime).toISOString();
-}
-
 interface EditCreativeTaskDialogProps {
   open: boolean;
   onClose: () => void;
@@ -69,8 +50,6 @@ export function EditCreativeTaskDialog({
 }: EditCreativeTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
   const [isDeleted, setIsDeleted] = useState(false);
   const [minimalRewardInBalls, setMinimalRewardInBalls] = useState("0");
   const [allowedFormats, setAllowedFormats] = useState<CreativeTaskFormat[]>([]);
@@ -93,8 +72,6 @@ export function EditCreativeTaskDialog({
     if (data) {
       setTitle(data.title);
       setDescription(data.description ?? "");
-      setStartsAt(toLocalDateTime(data.startsAt));
-      setEndsAt(toLocalDateTime(data.endsAt));
       setIsDeleted(data.isDeleted);
       setMinimalRewardInBalls(String(data.minimalRewardInBalls ?? 0));
       setAllowedFormats((data.allowedFormats ?? []) as CreativeTaskFormat[]);
@@ -116,8 +93,6 @@ export function EditCreativeTaskDialog({
     const payload: UpdateCreativeTaskRequestDto = {
       title: title.trim(),
       description: description.trim(),
-      startsAt: toISOString(startsAt),
-      endsAt: toISOString(endsAt),
       isDeleted,
       criteria: parseMultilineList(criteria),
       restrictions: parseMultilineList(restrictions),
@@ -200,28 +175,6 @@ export function EditCreativeTaskDialog({
                   {getFirstFieldError(validationErrors, "description")}
                 </p>
               ) : null}
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Дата начала</p>
-              <InputField
-                type="datetime-local"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                error={hasFieldError(validationErrors, "startsAt")}
-                helperText={getFirstFieldError(validationErrors, "startsAt") ?? undefined}
-                aria-label="Дата начала"
-              />
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Дата окончания</p>
-              <InputField
-                type="datetime-local"
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-                error={hasFieldError(validationErrors, "endsAt")}
-                helperText={getFirstFieldError(validationErrors, "endsAt") ?? undefined}
-                aria-label="Дата окончания"
-              />
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Минимальная награда, баллы</p>

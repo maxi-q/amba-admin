@@ -31,11 +31,9 @@ export default function SprintList() {
     return <SprintsErrorState errorMessage={error?.message} />;
   }
 
-  const activeSprints = sprints.filter((sprint) => !sprint.isDeleted);
-
-  if (activeSprints.length === 0) {
+  if (sprints.length === 0) {
     return (
-      <div className="flex min-h-[calc(100dvh-2rem)] min-w-0 flex-col bg-white">
+      <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-col bg-white md:-m-6 md:w-[calc(100%+3rem)]">
         <SprintsPageToolbar onCreateClick={handleCreateSprint} />
         <SprintsEmptyState onCreateClick={handleCreateSprint} />
       </div>
@@ -43,10 +41,10 @@ export default function SprintList() {
   }
 
   return (
-    <div className="flex min-w-0 flex-col bg-white pb-6">
+    <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-col bg-white md:-m-6 md:w-[calc(100%+3rem)]">
       <SprintsPageToolbar onCreateClick={handleCreateSprint} />
       <div className="flex flex-col">
-        {activeSprints.map((sprint) => (
+        {sprints.map((sprint) => (
           <SprintCard key={sprint.id} sprint={sprint} />
         ))}
       </div>

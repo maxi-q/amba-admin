@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button, PageLoader } from "@senler/ui";
-import { toast } from "sonner";
 import { useSprints } from "@/hooks/sprints/useSprints";
-import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
 import { useSprintRewardRules } from "@/hooks/sprints/useSprintRewardRules";
-import { dateToInput } from "./helpers";
-import { DeleteSprintDialog } from "./components/DeleteSprintDialog";
 import { SprintNotFoundState } from "./components/SprintNotFoundState";
 import { OpenSprintQuestRow } from "./components/OpenSprintQuestRow";
 import { OpenSprintSidebar } from "./components/OpenSprintSidebar";
@@ -22,7 +18,6 @@ export default function OpenSprintPage() {
   const { sprintId = "", slug = "" } = useParams();
   const navigate = useNavigate();
   const [tab, setTab] = useState<OpenSprintTab>("quests");
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const isCreatePath = sprintId === "new";
   const effectiveSprintId = isCreatePath ? "" : sprintId;
@@ -44,37 +39,6 @@ export default function OpenSprintPage() {
     size: 100,
   });
 
-  const { patchSprint, isPending: isUpdating } = usePatchSprint();
-
-  const handleConfirmDelete = () => {
-    if (!sprint) return;
-    patchSprint(
-      {
-        sprintId: sprint.id,
-        data: {
-          name: sprint.name,
-          description: sprint.description ?? null,
-          startDate: sprint.startDate,
-          endDate: sprint.endDate ? dateToInput(sprint.endDate) : null,
-          ignoreEndDate: sprint.ignoreEndDate,
-          rewardType: sprint.rewardType,
-          rewardUnits: sprint.rewardUnits,
-          rewardValue: sprint.rewardValue,
-          promoCodeUsageLimit: sprint.promoCodeUsageLimit,
-          ignorePromoCodeUsageLimit: sprint.ignorePromoCodeUsageLimit,
-          isDeleted: true,
-        },
-      },
-      {
-        onSuccess: () => {
-          setShowDeleteDialog(false);
-          toast.success("Спринт удалён");
-          navigate(`/rooms/${slug}/sprints`);
-        },
-      }
-    );
-  };
-
   if (isCreatePath) {
     return <SprintSetting />;
   }
@@ -91,62 +55,56 @@ export default function OpenSprintPage() {
     );
   }
 
-  if (!sprint || sprint.isDeleted) {
+  if (!sprint) {
     return <SprintNotFoundState />;
   }
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col bg-white lg:flex-row">
+    <div className="-m-4 grid min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-1 grid-cols-1 bg-white md:-m-6 md:w-[calc(100%+3rem)] lg:grid-cols-[minmax(0,680px)_260px]">
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-4 md:px-4">
+        <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4">
           <h1 className="min-w-0 truncate text-[20px] font-medium leading-8 tracking-[-0.34px] text-foreground">
             {sprint.name}
           </h1>
           <div className="flex shrink-0 items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-7 border-[#e4e4e4] shadow-none"
-              aria-label="Редактировать спринт"
-              onClick={() =>
-                navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)
-              }
-            >
-              <Pencil className="size-4" aria-hidden />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-7 border-[#e4e4e4] text-destructive shadow-none hover:text-destructive"
-              aria-label="Удалить спринт"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="size-4" aria-hidden />
-            </Button>
+            {sprint.status === "active" ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-7 border-[#e4e4e4] shadow-none"
+                aria-label="Редактировать спринт"
+                onClick={() =>
+                  navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)
+                }
+              >
+                <Pencil className="size-4" aria-hidden />
+              </Button>
+            ) : null}
           </div>
         </div>
 
-        <div className="px-4 pb-2">
+        <div className="px-4">
           <div className="inline-flex items-center gap-0.5 rounded-md bg-[#f0f0f0] p-0.5">
             <button
               type="button"
-              className={`rounded px-1.5 py-1 text-[13px] font-medium leading-4 tracking-[-0.25px] ${
+              className={`rounded px-1.5 py-1 text-[13px] font-medium leading-4 tracking-[-0.25px] outline-none focus:ring-0 ${
                 tab === "quests" ? "bg-white text-foreground" : "text-foreground"
               }`}
               onClick={() => setTab("quests")}
+              aria-pressed={tab === "quests"}
             >
-              Квесты
+              Задания
             </button>
             <button
               type="button"
-              className={`rounded px-1.5 py-1 text-[13px] font-medium leading-4 tracking-[-0.25px] ${
+              className={`rounded px-1.5 py-1 text-[13px] font-medium leading-4 tracking-[-0.25px] outline-none focus:ring-0 ${
                 tab === "leaderboard"
                   ? "bg-white text-foreground"
                   : "text-foreground"
               }`}
               onClick={() => setTab("leaderboard")}
+              aria-pressed={tab === "leaderboard"}
             >
               Таблица лидеров
             </button>
@@ -165,7 +123,7 @@ export default function OpenSprintPage() {
             if (sprintTasks.length === 0) {
               return (
                 <p className="px-4 py-6 text-[13px] font-medium text-[#797979]">
-                  Квестов пока нет
+                  Заданий пока нет
                 </p>
               );
             }
@@ -194,14 +152,6 @@ export default function OpenSprintPage() {
       ) : (
         <OpenSprintSidebar sprint={sprint} rules={rules} />
       )}
-
-      <DeleteSprintDialog
-        open={showDeleteDialog}
-        sprintName={sprint.name}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setShowDeleteDialog(false)}
-        isUpdating={isUpdating}
-      />
     </div>
   );
 }

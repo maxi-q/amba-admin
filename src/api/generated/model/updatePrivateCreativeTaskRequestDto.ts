@@ -19,13 +19,6 @@ export interface UpdatePrivateCreativeTaskRequestDto {
    * @nullable
    */
   description?: string | null;
-  /** Дата начала приёма ответов */
-  startsAt?: string;
-  /**
-   * Дата окончания приёма ответов
-   * @nullable
-   */
-  endsAt?: string | null;
   /** Флаг удаления */
   isDeleted?: boolean;
   /** Включён ли вайтлист доступа для амбассадоров */

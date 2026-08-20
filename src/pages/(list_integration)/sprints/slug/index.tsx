@@ -29,7 +29,6 @@ import { SprintSettingsSection } from "./components/SprintSettingsSection";
 import { SprintPromoCodesSection } from "./components/SprintPromoCodesSection";
 import { SprintRewardRulesSection } from "./components/SprintRewardRulesSection";
 import { SprintActionButtons } from "./components/SprintActionButtons";
-import { DeleteSprintDialog } from "./components/DeleteSprintDialog";
 import { SprintNotFoundState } from "./components/SprintNotFoundState";
 import { SprintCreationStepOne } from "./components/SprintCreationStepOne";
 import {
@@ -94,7 +93,6 @@ const SprintSetting = () => {
   const [draftTasks, setDraftTasks] = useState<DraftSprintTask[]>([]);
   const [isLaunching, setIsLaunching] = useState(false);
   const [allowLeave, setAllowLeave] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const shouldBlockLeave = isNewSprint && !allowLeave && !isLaunching;
   const leaveBlocker = useBlocker(
@@ -112,7 +110,6 @@ const SprintSetting = () => {
     rewardValue: 0,
     promoCodeUsageLimit: 0,
     ignorePromoCodeUsageLimit: false,
-    isDeleted: false,
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -135,7 +132,6 @@ const SprintSetting = () => {
           rewardValue: foundSprint.rewardValue,
           promoCodeUsageLimit: foundSprint.promoCodeUsageLimit,
           ignorePromoCodeUsageLimit: foundSprint.ignorePromoCodeUsageLimit,
-          isDeleted: foundSprint.isDeleted,
         });
       }
     }
@@ -173,7 +169,7 @@ const SprintSetting = () => {
     updateGeneralError,
   ]);
 
-  const handleSave = (isDeletedFlag: boolean = false) => {
+  const handleSave = () => {
     setFieldErrors({});
     setGeneralError("");
 
@@ -190,24 +186,15 @@ const SprintSetting = () => {
       rewardValue: formData.rewardValue,
       promoCodeUsageLimit: formData.promoCodeUsageLimit,
       ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
-      isDeleted: isDeletedFlag,
     };
-
-    if (isDeletedFlag && !isNewSprint) {
-      setFormData((prev) => ({ ...prev, isDeleted: true }));
-    }
 
     if (!isNewSprint) {
       patchSprint(
         { data: storeData, sprintId: sprintId || "" },
         {
-          onSuccess: (_, variables) => {
-            if (variables.data.isDeleted) {
-              navigate(`/rooms/${slug}/sprints`);
-            } else {
-              toast.success("Спринт успешно сохранён");
-              navigate(`/rooms/${slug}/sprints/${sprintId}`);
-            }
+          onSuccess: () => {
+            toast.success("Спринт успешно сохранён");
+            navigate(`/rooms/${slug}/sprints/${sprintId}`);
           },
         }
       );
@@ -222,19 +209,6 @@ const SprintSetting = () => {
         },
       });
     }
-  };
-
-  const handleDelete = () => {
-    setShowDeleteDialog(true);
-  };
-
-  const handleConfirmDelete = () => {
-    setShowDeleteDialog(false);
-    handleSave(true);
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteDialog(false);
   };
 
   const handleInputChange =
@@ -389,7 +363,6 @@ const SprintSetting = () => {
         rewardValue: formData.rewardValue,
         promoCodeUsageLimit: formData.promoCodeUsageLimit,
         ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
-        isDeleted: false,
         roomId: targetRoomId,
       };
 
@@ -424,13 +397,7 @@ const SprintSetting = () => {
 
       for (const task of draftTasks) {
         await creativeTasksControllerCreateCreativeTask(
-          draftTaskToCreatePayload(
-            task,
-            targetRoomId,
-            createdSprint.id,
-            startDate,
-            endDate
-          )
+          draftTaskToCreatePayload(task, targetRoomId, createdSprint.id)
         );
       }
 
@@ -572,26 +539,18 @@ const SprintSetting = () => {
             sprintId={sprintId || ""}
             roomId={roomId}
             roomSlug={slug || ""}
-            disabled={formData.isDeleted}
+            disabled={sprint?.status !== "active"}
           />
         </div>
 
         <SprintActionButtons
           isNewSprint={isNewSprint}
           onSave={() => handleSave()}
-          onDelete={handleDelete}
           isCreating={isCreating}
           isUpdating={isUpdating}
         />
       </div>
 
-      <DeleteSprintDialog
-        open={showDeleteDialog}
-        sprintName={sprint?.name}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-        isUpdating={isUpdating}
-      />
     </div>
   );
 };

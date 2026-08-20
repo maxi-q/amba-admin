@@ -5,11 +5,11 @@
  * Description
  * OpenAPI spec version: 1.0
  */
-import type { BaseCreativeTaskDto } from './baseCreativeTaskDto';
+import type { AmbassadorCreativeTaskDto } from './ambassadorCreativeTaskDto';
 
 export interface GetMyCreativeTasksResponseDto {
   /** Список заданий на текущей странице */
-  items: BaseCreativeTaskDto[];
+  items: AmbassadorCreativeTaskDto[];
   /** Текущая страница (начиная с 1) */
   page: number;
   /** Количество элементов на странице */

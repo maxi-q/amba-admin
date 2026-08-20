@@ -1,14 +1,8 @@
 import { NavLink, useParams } from "react-router-dom";
 
-const tabInactive =
-  "relative pb-3 pt-0 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
-const tabActive =
-  "relative pb-3 pt-0 text-[15px] font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary";
+const tabClass =
+  "rounded-[4px] px-1.5 py-1 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black outline-none transition-colors hover:bg-white/70 focus:ring-0";
 
-/**
- * Табы на странице задачи: Описание, ответы, приглашения.
- * (Сайдбар остаётся только с пунктом «Задачи» → список.)
- */
 export function CreativeTaskDetailHeader() {
   const { slug, taskId } = useParams<{
     slug: string;
@@ -22,32 +16,27 @@ export function CreativeTaskDetailHeader() {
   const base = `/rooms/${slug}/creativetasks/${taskId}`;
 
   return (
-    <div className="mb-4 border-b border-border">
-      <nav className="flex flex-wrap gap-6" aria-label="Разделы задачи">
+    <div className="px-4 pt-3">
+      <nav
+        className="inline-flex h-7 items-center gap-0.5 rounded-[6px] bg-[#f0f0f0] p-0.5"
+        aria-label="Разделы задания"
+      >
+        <NavLink
+          to={`${base}/answers`}
+          className={({ isActive }) =>
+            `${tabClass} ${isActive ? "bg-white shadow-[inset_0_0_0_1px_#e4e4e4]" : ""}`
+          }
+        >
+          Отчеты
+        </NavLink>
         <NavLink
           to={base}
           end
-          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
+          className={({ isActive }) =>
+            `${tabClass} ${isActive ? "bg-white shadow-[inset_0_0_0_1px_#e4e4e4]" : ""}`
+          }
         >
-          Описание
-        </NavLink>
-        <NavLink
-          to={`${base}/answers`}
-          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
-        >
-          Ответы на задачу
-        </NavLink>
-        <NavLink
-          to={`${base}/invitations`}
-          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
-        >
-          Приглашения в задачу
-        </NavLink>
-        <NavLink
-          to={`${base}/ord-creative`}
-          className={({ isActive }) => (isActive ? tabActive : tabInactive)}
-        >
-          Креатив ОРД
+          Информация
         </NavLink>
       </nav>
     </div>

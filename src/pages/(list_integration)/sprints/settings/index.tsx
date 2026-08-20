@@ -116,7 +116,7 @@ export default function SprintSettingsPage() {
     },
   ];
 
-  const activeSprints = sprints.filter((sprint) => !sprint.isDeleted).length;
+  const activeSprints = sprints.filter((sprint) => sprint.status === "active").length;
   const totalSprints = sprints.length;
 
   return (

@@ -39,12 +39,6 @@ const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: st
 const hasFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
   Boolean(fieldErrors[fieldName]?.length);
 
-/** Локальная datetime строка → ISO */
-function toISOString(localDateTime: string): string {
-  if (!localDateTime) return "";
-  return new Date(localDateTime).toISOString();
-}
-
 interface CreateCreativeTaskDialogProps {
   open: boolean;
   onClose: () => void;
@@ -63,12 +57,10 @@ export function CreateCreativeTaskDialog({
   const { slug: slugParam } = useParams();
   const sprintRoomKey = roomSlug || slugParam || "";
   const { sprints } = useSprints({ page: 1, size: 100 }, sprintRoomKey);
-  const activeSprints = sprints.filter((sprint) => !sprint.isDeleted);
+  const activeSprints = sprints.filter((sprint) => sprint.status === "active");
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
   const [minimalRewardInBalls, setMinimalRewardInBalls] = useState("0");
   const [allowedFormats, setAllowedFormats] = useState<CreativeTaskFormat[]>([]);
   const [criteria, setCriteria] = useState("");
@@ -87,8 +79,6 @@ export function CreateCreativeTaskDialog({
     if (!open) {
       setTitle("");
       setDescription("");
-      setStartsAt("");
-      setEndsAt("");
       setMinimalRewardInBalls("0");
       setAllowedFormats([]);
       setCriteria("");
@@ -111,8 +101,6 @@ export function CreateCreativeTaskDialog({
     const payload: CreateCreativeTaskRequestDto = {
       title: title.trim(),
       description: description.trim(),
-      startsAt: toISOString(startsAt),
-      endsAt: toISOString(endsAt),
       roomId,
       sprintId,
       criteria: parseMultilineList(criteria),
@@ -219,28 +207,6 @@ export function CreateCreativeTaskDialog({
                 {getFirstFieldError(validationErrors, "description")}
               </p>
             ) : null}
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Дата начала</p>
-            <InputField
-              type="datetime-local"
-              value={startsAt}
-              onChange={(e) => setStartsAt(e.target.value)}
-              error={hasFieldError(validationErrors, "startsAt")}
-              helperText={getFirstFieldError(validationErrors, "startsAt") ?? undefined}
-              aria-label="Дата начала"
-            />
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Дата окончания</p>
-            <InputField
-              type="datetime-local"
-              value={endsAt}
-              onChange={(e) => setEndsAt(e.target.value)}
-              error={hasFieldError(validationErrors, "endsAt")}
-              helperText={getFirstFieldError(validationErrors, "endsAt") ?? undefined}
-              aria-label="Дата окончания"
-            />
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Минимальная награда, баллы</p>

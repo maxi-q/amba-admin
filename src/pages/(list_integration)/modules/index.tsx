@@ -19,19 +19,20 @@ import {
   PageLoader,
 } from "@senler/ui";
 import {
+  BadgePercent,
   Bell,
   Bot,
   Calendar,
   ChartPie,
   ChevronsUpDown,
   CircleQuestionMark,
-  CircleDashed,
   CircleUser,
   Ellipsis,
   Gift,
   Users,
 } from "lucide-react";
 import { IndividualTasksIcon } from "@/assets/icons/IndividualTasksIcon";
+import tokenIcon from "@/assets/sprint-flow/token.svg";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 
 interface RoomBoxProps {
@@ -52,7 +53,7 @@ const stubSoon = () => {
 };
 
 const sidebarStubRowClassName =
-  "flex h-8 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.25px] text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring";
+  "flex h-8 w-full cursor-pointer items-center gap-[9px] rounded-lg px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.25px] text-black outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring";
 
 const RoomBox = ({ children }: RoomBoxProps) => {
   const { slug } = useParams<{
@@ -148,8 +149,12 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         href: `${roomBase}/sprints`,
         match: (p) => {
           const pt = pathWithoutHash(p);
+          const creativeTaskBase = `${roomBase}/creativetasks/`;
           return (
-            pt === `${roomBase}/sprints` || pt.startsWith(`${roomBase}/sprints/`)
+            pt === `${roomBase}/sprints` ||
+            pt.startsWith(`${roomBase}/sprints/`) ||
+            (pt.startsWith(creativeTaskBase) &&
+              !pt.startsWith(`${creativeTaskBase}private`))
           );
         },
       },
@@ -256,22 +261,32 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       brand={
         <NavLink
           to="/"
-          className="flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+          className="flex h-8 min-w-0 items-center justify-between rounded-lg pl-1.5 pr-2 text-black transition-colors hover:bg-sidebar-accent"
           title="К списку компаний"
         >
-          <span
-            className="size-6 shrink-0 rounded-lg bg-[#141414]"
-            aria-hidden
-          />
-          <span className="min-w-0 truncate text-[13px] font-medium leading-4 tracking-[-0.25px]">
-            {roomData.name}
+          <span className="flex min-w-0 items-center gap-[7px]">
+            <span
+              className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-[#e4e4e4] bg-[#141414]"
+              aria-hidden
+            >
+              <BadgePercent
+                className="size-4 text-[#A07AFF]"
+                strokeWidth={1.25}
+              />
+            </span>
+            <span className="flex min-w-0 items-center gap-0.5">
+              <span className="min-w-0 truncate text-[13px] font-medium leading-4 tracking-[-0.25px]">
+                {roomData.name}
+              </span>
+              <ChevronsUpDown
+                className="size-3 shrink-0 text-[#707070]"
+                strokeWidth={1.5}
+                aria-hidden
+              />
+            </span>
           </span>
-          <ChevronsUpDown
-            className="size-3 shrink-0 text-[#707070]"
-            aria-hidden
-          />
           <span className="ml-auto flex shrink-0 items-center gap-1 text-[13px] text-[#797979]">
-            <Users className="size-4" aria-hidden />
+            <Users className="size-4" strokeWidth={1.5} aria-hidden />
             0
           </span>
         </NavLink>
@@ -283,13 +298,14 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               type="button"
               variant="ghost"
               size="icon_sm"
-              className={
-                overflowActive ? "bg-muted text-foreground" : undefined
-              }
+              className={[
+                "opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100",
+                overflowActive ? "bg-muted text-foreground" : "",
+              ].join(" ")}
               aria-label="Ещё разделы"
               title="Ещё разделы"
             >
-              <Ellipsis className="size-4" />
+              <Ellipsis className="size-4" strokeWidth={1.5} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-44">
@@ -304,7 +320,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         </DropdownMenuRoot>
       }
       sidebarTop={
-        <ul className="grid gap-1">
+        <ul className="grid gap-0">
           <li>
             <button
               type="button"
@@ -312,8 +328,10 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               onClick={stubSoon}
               title="Токены — скоро"
             >
-              <CircleDashed
-                className="size-5 shrink-0 text-[#22C55E]"
+              <img
+                src={tokenIcon}
+                alt=""
+                className="size-5 shrink-0"
                 aria-hidden
               />
               <span className="min-w-0 shrink truncate">Токены</span>
@@ -329,7 +347,11 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               onClick={stubSoon}
               title="Уведомления — скоро"
             >
-              <Bell className="size-5 shrink-0 text-[#707070]" aria-hidden />
+              <Bell
+                className="size-5 shrink-0 text-[#707070]"
+                strokeWidth={1.5}
+                aria-hidden
+              />
               <span className="min-w-0 shrink truncate">Уведомления</span>
               <span className="ml-auto flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[6px] bg-[#D52094] px-1.5 text-[12px] font-medium leading-4 text-white tabular-nums">
                 1
@@ -341,28 +363,40 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       sidebarFooter={
         <button
           type="button"
-          className="flex h-8 w-full items-center gap-2 rounded-lg border border-[#e4e4e4] bg-[#FFFFFF] px-2 text-left text-[13px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+          className="flex h-8 w-full items-center gap-2 rounded-lg border border-[#e4e4e4] bg-[#FFFFFF] px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.25px] text-black transition-colors hover:bg-sidebar-accent"
           onClick={stubSoon}
           title="Создаем бота — скоро"
         >
-          <Bot className="size-4 shrink-0 text-[#2563eb]" aria-hidden />
+          <Bot
+            className="size-5 shrink-0 text-[#2563eb]"
+            strokeWidth={1.5}
+            aria-hidden
+          />
           <span className="min-w-0 flex-1 truncate">Создаем бота...</span>
           <CircleQuestionMark
             className="size-4 shrink-0 text-[#707070]"
+            strokeWidth={1.5}
             aria-hidden
           />
         </button>
       }
       headerClassName="hidden"
       sidebarClassName={[
-        "h-auto min-h-dvh w-[260px] self-stretch border-[#e4e4e4] bg-[#FFFFFF] text-sidebar-foreground",
+        "h-auto min-h-dvh w-[260px] self-stretch border-[#e4e4e4] bg-[#FFFFFF] text-black",
         // хедер компании = обычная строка списка, без линии и без лишней высоты
-        "[&>div>div:first-child]:h-auto [&>div>div:first-child]:border-b-0 [&>div>div:first-child]:px-2 [&>div>div:first-child]:pt-2 [&>div>div:first-child]:pb-0",
+        "[&>div>div:first-child]:relative [&>div>div:first-child]:h-auto [&>div>div:first-child]:border-b-0 [&>div>div:first-child]:pl-1 [&>div>div:first-child]:pr-2 [&>div>div:first-child]:pt-[6px] [&>div>div:first-child]:pb-0",
+        // overflow сохраняет доступность, но не занимает место и показывается только по hover/focus
+        "[&>div>div:first-child>div:last-child]:absolute [&>div>div:first-child>div:last-child]:right-2 [&>div>div:first-child>div:last-child]:top-[10px]",
         // токены/уведомления примыкают к названию и к навигации
-        "[&>div>div:nth-child(2)]:px-2 [&>div>div:nth-child(2)]:py-0",
-        "[&_nav]:gap-1 [&_nav]:px-2 [&_nav]:pb-2 [&_nav]:pt-0",
+        "[&>div>div:nth-child(2)]:pl-1 [&>div>div:nth-child(2)]:pr-2 [&>div>div:nth-child(2)]:py-0",
+        "[&_nav]:gap-0 [&_nav]:pl-1 [&_nav]:pr-2 [&_nav]:pb-2 [&_nav]:pt-0 [&_nav_ul]:gap-0",
+        "[&_nav_a]:gap-[9px] [&_nav_a]:rounded-lg [&_nav_a]:text-[13px] [&_nav_a]:font-medium [&_nav_a]:leading-4 [&_nav_a]:tracking-[-0.25px] [&_nav_a]:text-black",
+        "[&_nav_button]:gap-[9px] [&_nav_button]:rounded-lg [&_nav_button]:text-[13px] [&_nav_button]:font-medium [&_nav_button]:leading-4 [&_nav_button]:tracking-[-0.25px] [&_nav_button]:text-black",
+        "[&_nav_svg]:size-5 [&_nav_svg]:text-[#707070] [&_nav_svg]:[stroke-width:1.5]",
         "[&_a[aria-current=page]]:bg-[#2563eb] [&_a[aria-current=page]]:font-medium [&_a[aria-current=page]]:text-white [&_a[aria-current=page]_svg]:text-white",
         "[&_button[aria-current=page]]:bg-[#2563eb] [&_button[aria-current=page]]:text-white",
+        // footer по макету: x=4, right=8, bottom=4, h=32
+        "[&>div>div:last-child]:pl-1 [&>div>div:last-child]:pr-2 [&>div>div:last-child]:pt-0 [&>div>div:last-child]:pb-1",
       ].join(" ")}
       mainClassName="min-h-0 flex-1 overflow-y-auto bg-[#FFFFFF] p-4 md:p-6"
     >

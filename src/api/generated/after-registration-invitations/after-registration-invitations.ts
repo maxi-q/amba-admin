@@ -106,7 +106,7 @@ export const useAfterRegistrationInvitationsControllerParseVkUserId = <TError = 
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Создать приглашение после регистрации
+ * @summary Создать приглашение в комнату
  */
 export const afterRegistrationInvitationsControllerCreateInvitation = (
     createInvitationRequestDto: CreateInvitationRequestDto,
@@ -154,7 +154,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AfterRegistrationInvitationsControllerCreateInvitationMutationError = void
 
     /**
- * @summary Создать приглашение после регистрации
+ * @summary Создать приглашение в комнату
  */
 export const useAfterRegistrationInvitationsControllerCreateInvitation = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof afterRegistrationInvitationsControllerCreateInvitation>>, TError,{data: CreateInvitationRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}

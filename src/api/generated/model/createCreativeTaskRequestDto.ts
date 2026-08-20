@@ -19,13 +19,6 @@ export interface CreateCreativeTaskRequestDto {
    * @nullable
    */
   description?: string | null;
-  /** Дата начала приёма ответов */
-  startsAt: string;
-  /**
-   * Дата окончания приёма ответов
-   * @nullable
-   */
-  endsAt?: string | null;
   /** Критерии выполнения задания */
   criteria?: string[];
   /** Что запрещено при выполнении задания */

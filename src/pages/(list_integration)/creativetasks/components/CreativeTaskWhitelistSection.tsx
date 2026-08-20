@@ -216,15 +216,7 @@ export function CreativeTaskWhitelistSection({ task }: CreativeTaskWhitelistSect
     updatePrivateCreativeTask({
       id: task.id,
       data: {
-        title: task.title,
-        description: task.description,
-        startsAt: task.startsAt,
-        endsAt: task.endsAt,
-        isDeleted: task.isDeleted,
         isWhitelistEnabled: enabled,
-        criteria: task.criteria,
-        allowedFormats: task.allowedFormats,
-        rewardInRubs: task.rewardInRubs,
       },
     });
   };

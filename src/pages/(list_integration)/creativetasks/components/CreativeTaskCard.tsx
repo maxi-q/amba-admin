@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
 import { Badge, Card, CardContent, Button } from "@senler/ui";
 import type { BaseCreativeTaskDto } from "@/api/generated/model";
-import { formatBallsReward, formatDateRange, formatTaskFormat, isTaskActive } from "../utils/creativetaskUtils";
+import { formatBallsReward, formatTaskFormat } from "../utils/creativetaskUtils";
 import { TaskSubmissionsList } from "./TaskSubmissionsList";
 
 interface CreativeTaskCardProps {
@@ -12,20 +12,18 @@ interface CreativeTaskCardProps {
 }
 
 /**
- * Карточка креативной задачи: заголовок, описание, даты, статус.
+ * Карточка креативной задачи: заголовок, описание и статус.
  * Раскрывающийся блок с заявками (useSubmissions).
  */
 export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const dateRange = formatDateRange(task.startsAt, task.endsAt ?? null);
-  const active = !task.isDeleted && isTaskActive(task.startsAt, task.endsAt ?? null);
 
   return (
     <Link
       to={`../creativetasks/${task.id}`}
       className={`block overflow-hidden rounded-xl border text-card-foreground no-underline transition-colors hover:border-primary/50 hover:bg-accent/20 ${
         task.isDeleted ? "border-border opacity-60" : "border-border"
-      } ${active ? "ring-2 ring-green-600/40 dark:ring-green-500/40" : ""}`}
+      }`}
     >
       <Card className="border-0 shadow-none">
         <CardContent className="p-4 sm:p-5">
@@ -48,17 +46,6 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
                 }`}
               >
                 {task.description || "—"}
-              </p>
-              <p
-                className={`mt-1 text-sm ${
-                  task.isDeleted
-                    ? "text-muted-foreground line-through"
-                    : active
-                      ? "font-medium text-green-700 dark:text-green-400"
-                      : "text-muted-foreground"
-                }`}
-              >
-                {dateRange}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge variant="secondary">
@@ -95,11 +82,9 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
                 e.stopPropagation();
               }}
             >
-              {!task.isDeleted ? (
-                <Badge variant={active ? "success" : "secondary"}>
-                  {active ? "Активна" : "Неактивна"}
-                </Badge>
-              ) : null}
+              <Badge variant="secondary">
+                {task.isDeleted ? "Удалена" : "В спринте"}
+              </Badge>
               <Button
                 type="button"
                 variant="ghost"

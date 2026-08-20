@@ -1,4 +1,4 @@
-export type SprintStatus = "active" | "upcoming" | "past";
+export type SprintStatus = "active" | "upcoming" | "past" | "awarding" | "completed";
 
 export type SprintStatusTone = "active" | "planned" | "ended" | "draft";
 
@@ -6,6 +6,8 @@ export const statusLabels: Record<SprintStatus, string> = {
   active: "Активный",
   upcoming: "Запланирован",
   past: "Закончился",
+  awarding: "Начисление наград",
+  completed: "Завершён",
 };
 
 /** Визуал чипа статуса по макету списка спринтов */
@@ -34,8 +36,25 @@ export const statusToneStyles: Record<
 export const checkSprintStatus = (
   startDate: string | null,
   endDate: string | null,
-  ignoreEndDate: boolean = false
+  ignoreEndDate: boolean = false,
+  status: "active" | "awarding" | "completed" = "active"
 ) => {
+  if (status === "awarding") {
+    return {
+      status,
+      label: statusLabels.awarding,
+      tone: "planned" as const,
+    };
+  }
+
+  if (status === "completed") {
+    return {
+      status,
+      label: statusLabels.completed,
+      tone: "ended" as const,
+    };
+  }
+
   if (ignoreEndDate) {
     return {
       status: "active" as const,
@@ -79,4 +98,6 @@ export const statusColors: Record<SprintStatus, "success" | "warning" | "default
   active: "success",
   upcoming: "warning",
   past: "default",
+  awarding: "warning",
+  completed: "default",
 };

@@ -1,98 +1,130 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { User } from "lucide-react";
+import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
 import { useUpdateSubmissionStatus } from "@/hooks/creativetasks/useUpdateSubmissionStatus";
-import { SubmissionApproveDialog } from "./SubmissionApproveDialog";
-import { SubmissionRejectDialog } from "./SubmissionRejectDialog";
+import { SubmissionStatusLogDialog } from "./SubmissionStatusLogDialog";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
-import { SubmissionContentPreview } from "./SubmissionContentPreview";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
-import { Badge, Button, Card, CardContent, PageLoader } from "@senler/ui";
-import {
-  SUBMISSION_REVIEW_TABS,
-  SUBMISSION_STATUS_LABELS,
-  SUBMISSION_STATUS_VARIANT,
-  isFinalApproveStatus,
-  isReviewableSubmissionStatus,
-} from "../submissionStatus";
-
-type StatusTab = BaseCreativeTaskSubmissionDto["status"];
+import { Avatar, PageLoader } from "@senler/ui";
+import { isFinalApproveStatus } from "../submissionStatus";
 
 interface TaskDetailSubmissionsListProps {
   taskId: string;
+  minimalRewardInBalls: number;
 }
 
-export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListProps) {
-  const [statusTab, setStatusTab] = useState<StatusTab>("waiting_for_review_materials");
+const SUBMISSION_PROGRESS: Record<
+  BaseCreativeTaskSubmissionDto["status"],
+  { progress: number; label: string; needsReview?: boolean }
+> = {
+  new: { progress: 0, label: "Черновик" },
+  waiting_for_review_materials: {
+    progress: 1,
+    label: "Проверьте работу",
+    needsReview: true,
+  },
+  rejected_for_materials: { progress: 1, label: "Материалы отклонены" },
+  waiting_for_publication: { progress: 2, label: "Публикация..." },
+  waiting_for_review_publication: {
+    progress: 2,
+    label: "Проверьте публикацию",
+    needsReview: true,
+  },
+  rejected_for_publication: { progress: 2, label: "Публикация отклонена" },
+  approved: { progress: 3, label: "Задание принято" },
+};
+
+function SubmissionProgress({ submission }: { submission: BaseCreativeTaskSubmissionDto }) {
+  const meta = SUBMISSION_PROGRESS[submission.status];
+  const label =
+    submission.status === "approved" && submission.rewardValue != null
+      ? `Начислено ${submission.rewardValue.toLocaleString("ru-RU")} XP`
+      : meta.label;
+
+  return (
+    <div className="flex w-[149px] shrink-0 flex-col gap-1">
+      <div className="flex w-full gap-0.5" aria-hidden>
+        {[1, 2, 3].map((step) => (
+          <span
+            key={step}
+            className={`h-1 min-w-0 flex-1 rounded-full ${
+              step <= meta.progress ? "bg-[#26c464]" : "bg-[#e4e4e4]"
+            }`}
+          />
+        ))}
+      </div>
+      <span
+        className={`flex min-w-0 items-center gap-1 truncate text-xs font-medium leading-4 ${
+          meta.needsReview ? "text-black" : "text-[#797979]"
+        }`}
+      >
+        {meta.needsReview ? (
+          <span className="size-1 shrink-0 rounded-full bg-[#26c464]" aria-hidden />
+        ) : null}
+        <span className="truncate">{label}</span>
+      </span>
+    </div>
+  );
+}
+
+export function TaskDetailSubmissionsList({
+  taskId,
+  minimalRewardInBalls,
+}: TaskDetailSubmissionsListProps) {
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const [approveSubmission, setApproveSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
-  const [rejectSubmission, setRejectSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
+  const [logSubmission, setLogSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
 
   const { submissions, isLoading, pagination } = useSubmissions(taskId, {
     page,
     size: pageSize,
-    status: statusTab,
   });
+
+  const ambassadorIds = useMemo(
+    () => Array.from(new Set(submissions.map((submission) => submission.ambassadorId))),
+    [submissions],
+  );
+  const { ambassadors } = useAmbassadors({
+    page: 1,
+    size: Math.max(ambassadorIds.length, 1),
+    ambassadorIds,
+  });
+  const ambassadorNames = useMemo(
+    () => new Map(ambassadors.map((ambassador) => [ambassador.id, ambassador.username])),
+    [ambassadors],
+  );
 
   const { updateSubmissionStatus, isPending } = useUpdateSubmissionStatus();
 
-  const handleApproveClick = (sub: BaseCreativeTaskSubmissionDto) => {
-    if (isFinalApproveStatus(sub.status)) {
-      setApproveSubmission(sub);
-      return;
-    }
+  const handleLogApprove = (
+    submission: BaseCreativeTaskSubmissionDto,
+    rewardValue?: number,
+  ) => {
     updateSubmissionStatus({
-      id: sub.id,
-      data: { decision: "approve", reviewComment: "" },
+      id: submission.id,
+      data: {
+        decision: "approve",
+        reviewComment: "",
+        ...(isFinalApproveStatus(submission.status) ? { rewardValue } : {}),
+      },
     });
+    setLogSubmission(null);
   };
 
-  const handleApproveConfirm = ({ rewardValue }: { rewardValue: number }) => {
-    if (!approveSubmission) return;
+  const handleLogReject = (
+    submission: BaseCreativeTaskSubmissionDto,
+    reviewComment: string,
+  ) => {
     updateSubmissionStatus({
-      id: approveSubmission.id,
-      data: { decision: "approve", reviewComment: "", rewardValue },
-    });
-    setApproveSubmission(null);
-  };
-
-  const handleRejectConfirm = ({ reviewComment }: { reviewComment: string }) => {
-    if (!rejectSubmission) return;
-    updateSubmissionStatus({
-      id: rejectSubmission.id,
+      id: submission.id,
       data: { decision: "reject", reviewComment },
     });
-    setRejectSubmission(null);
+    setLogSubmission(null);
   };
 
   return (
     <div>
-      <h2 className="mb-2 text-lg font-semibold">Ответы на задачу</h2>
-
-      <div className="mb-2 border-b border-border">
-        <div className="flex flex-wrap gap-2 sm:gap-4" role="tablist" aria-label="Статус заявок">
-          {SUBMISSION_REVIEW_TABS.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              role="tab"
-              className={
-                statusTab === t.value
-                  ? "relative border-0 border-b-2 border-primary bg-transparent pb-2 pt-0.5 text-[15px] font-semibold text-foreground"
-                  : "relative border-0 border-b-2 border-transparent bg-transparent pb-2 pt-0.5 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground"
-              }
-              aria-selected={statusTab === t.value}
-              onClick={() => {
-                setStatusTab(t.value);
-                setPage(1);
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {isLoading ? (
         <div className="flex justify-center py-8">
           <PageLoader label="Загрузка…" />
@@ -101,82 +133,60 @@ export function TaskDetailSubmissionsList({ taskId }: TaskDetailSubmissionsListP
         <p className="text-sm text-muted-foreground">Заявок нет</p>
       ) : (
         <>
-          <div className="flex flex-col gap-3">
-            {submissions.map((sub) => (
-              <Card key={sub.id} className="border border-border shadow-none">
-                <CardContent className="p-4">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
-                    <div className="min-w-0 flex-1">
-                      <SubmissionContentPreview submission={sub} />
-                      {sub.comment ? (
-                        <p className="mt-1.5 text-sm text-muted-foreground">
-                          Комментарий: {sub.comment}
-                        </p>
-                      ) : null}
-                      {sub.reviewComment ? (
-                        <p className="mt-1 block text-xs text-muted-foreground">
-                          Ответ модератора: {sub.reviewComment}
-                        </p>
-                      ) : null}
-                      {sub.status === "approved" && sub.rewardValue != null ? (
-                        <p className="mt-1 block text-xs text-green-700 dark:text-green-400">
-                          Награда: {sub.rewardValue}
-                        </p>
-                      ) : null}
-                    </div>
-                    <Badge variant={SUBMISSION_STATUS_VARIANT[sub.status]}>
-                      {SUBMISSION_STATUS_LABELS[sub.status]}
-                    </Badge>
-                  </div>
-                  {isReviewableSubmissionStatus(sub.status) ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button
-                        type="button"
-                        size="default"
-                        onClick={() => handleApproveClick(sub)}
-                        disabled={isPending}
-                      >
-                        Одобрить
-                      </Button>
-                      <Button
-                        type="button"
-                        size="default"
-                        variant="destructive"
-                        onClick={() => setRejectSubmission(sub)}
-                        disabled={isPending}
-                      >
-                        Отклонить
-                      </Button>
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            ))}
+          <div className="overflow-hidden">
+            {submissions.map((submission) => {
+              const ambassadorName =
+                ambassadorNames.get(submission.ambassadorId) ?? submission.ambassadorId;
+
+              return (
+                <button
+                  key={submission.id}
+                  type="button"
+                  className="flex h-12 w-full items-center gap-4 border-b border-[#e4e4e4] px-4 text-left hover:bg-[#fafafa]"
+                  onClick={() => setLogSubmission(submission)}
+                  aria-label={`Открыть статус задания: ${ambassadorName}`}
+                >
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <Avatar
+                      size="sm"
+                      shape="rounded"
+                      name={ambassadorName}
+                      colorKey={submission.ambassadorId}
+                      fallbackClassName="border border-[#e4e4e4] bg-[#f0f0f0] text-[#797979]"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 text-black">
+                      {ambassadorName}
+                    </span>
+                  </span>
+                  <SubmissionProgress submission={submission} />
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] border border-[#e4e4e4] text-[#797979]">
+                    <User className="size-4" aria-hidden />
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {pagination && pagination.totalPages > 1 ? (
-            <CreativesPaginationControls
-              page={page}
-              totalPages={pagination.totalPages}
-              onPageChange={setPage}
-              className="mt-4"
-            />
+            <div className="px-4">
+              <CreativesPaginationControls
+                page={page}
+                totalPages={pagination.totalPages}
+                onPageChange={setPage}
+                className="mt-4"
+              />
+            </div>
           ) : null}
         </>
       )}
 
-      <SubmissionApproveDialog
-        open={!!approveSubmission}
-        submission={approveSubmission}
-        onClose={() => setApproveSubmission(null)}
-        onConfirm={handleApproveConfirm}
-        isPending={isPending}
-      />
-      <SubmissionRejectDialog
-        open={!!rejectSubmission}
-        submission={rejectSubmission}
-        onClose={() => setRejectSubmission(null)}
-        onConfirm={handleRejectConfirm}
+      <SubmissionStatusLogDialog
+        open={!!logSubmission}
+        submission={logSubmission}
+        minimalRewardInBalls={minimalRewardInBalls}
+        onClose={() => setLogSubmission(null)}
+        onApprove={handleLogApprove}
+        onReject={handleLogReject}
         isPending={isPending}
       />
     </div>

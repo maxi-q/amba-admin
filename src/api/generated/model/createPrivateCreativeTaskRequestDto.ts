@@ -19,13 +19,6 @@ export interface CreatePrivateCreativeTaskRequestDto {
    * @nullable
    */
   description?: string | null;
-  /** Дата начала приёма ответов */
-  startsAt: string;
-  /**
-   * Дата окончания приёма ответов
-   * @nullable
-   */
-  endsAt?: string | null;
   /** Включён ли вайтлист доступа для амбассадоров */
   isWhitelistEnabled: boolean;
   /** Критерии выполнения задания */

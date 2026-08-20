@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { UpdateSprintResponseDtoStatus } from './updateSprintResponseDtoStatus';
 import type { UpdateSprintResponseDtoRewardType } from './updateSprintResponseDtoRewardType';
 
 export interface UpdateSprintResponseDto {
@@ -30,6 +31,8 @@ export interface UpdateSprintResponseDto {
   endDate: string | null;
   /** Игнорировать дату окончания(сделать спринт бессрочным) */
   ignoreEndDate: boolean;
+  /** Статус спринта. Не зависит от дат: active допустим и при дате начала в будущем. awarding и completed закрывают взаимодействие с заданиями; владелец может только допроверить креативы. */
+  status: UpdateSprintResponseDtoStatus;
   /** ID группы ожидания подписки */
   pendingSubscriptionId?: number;
   /** ID группы одобренных подписок */
@@ -48,8 +51,6 @@ export interface UpdateSprintResponseDto {
   promoCodeUsageLimit: number;
   /** Игнорировать ограничение по промокодам */
   ignorePromoCodeUsageLimit: boolean;
-  /** Флаг удаления */
-  isDeleted: boolean;
   /** ID комнаты */
   roomId: string;
 }
