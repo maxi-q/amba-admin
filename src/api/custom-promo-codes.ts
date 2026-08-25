@@ -1,4 +1,4 @@
-import { customInstance } from '@/api/mutator/custom-instance';
+import { customInstance } from "@/api/mutator/custom-instance";
 
 export interface CustomPromoCodeDto {
   id: string;
@@ -6,6 +6,9 @@ export interface CustomPromoCodeDto {
   updatedAt: string;
   name: string;
   promoCode: string;
+  rewardType: "fix";
+  rewardValue: number;
+  rewardUnits: string;
   promoCodeUsagesCount: number;
   promoCodeUsageLimit: number | null;
   startDate: string;
@@ -16,6 +19,9 @@ export interface CustomPromoCodeDto {
 export interface CreateCustomPromoCodeRequestDto {
   name: string;
   promoCode: string;
+  rewardType: "fix";
+  rewardValue: number;
+  rewardUnits: string;
   promoCodeUsageLimit?: number | null;
   startDate: string;
   endDate: string;
@@ -23,25 +29,28 @@ export interface CreateCustomPromoCodeRequestDto {
 }
 
 export type UpdateCustomPromoCodeRequestDto = Partial<
-  Omit<CreateCustomPromoCodeRequestDto, 'roomId'>
+  Omit<CreateCustomPromoCodeRequestDto, "roomId">
 >;
 
 export const getCustomPromoCodes = (roomId: string) =>
   customInstance<CustomPromoCodeDto[]>({
     url: `/api/promo-code/custom/${roomId}`,
-    method: 'GET',
+    method: "GET",
   });
 
 export const createCustomPromoCode = (data: CreateCustomPromoCodeRequestDto) =>
   customInstance<CustomPromoCodeDto>({
-    url: '/api/promo-code/custom',
-    method: 'POST',
+    url: "/api/promo-code/custom",
+    method: "POST",
     data,
   });
 
-export const updateCustomPromoCode = (id: string, data: UpdateCustomPromoCodeRequestDto) =>
+export const updateCustomPromoCode = (
+  id: string,
+  data: UpdateCustomPromoCodeRequestDto,
+) =>
   customInstance<CustomPromoCodeDto>({
     url: `/api/promo-code/custom/${id}`,
-    method: 'PATCH',
+    method: "PATCH",
     data,
   });

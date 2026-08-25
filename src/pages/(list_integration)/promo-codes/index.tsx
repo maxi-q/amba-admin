@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { addDays, format } from 'date-fns';
-import { BarChart3, Pencil, Plus, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { addDays, format } from "date-fns";
+import { BarChart3, Pencil, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 import {
   Alert,
   AlertDescription,
@@ -18,18 +18,20 @@ import {
   SheetHeader,
   SheetTitle,
   Switch,
-} from '@senler/ui';
-import type { CustomPromoCodeDto } from '@/api/custom-promo-codes';
-import { useGetRoomById } from '@/hooks/rooms/useGetRoomById';
-import { useCustomPromoCodes } from '@/hooks/promoCodes/useCustomPromoCodes';
+} from "@senler/ui";
+import type { CustomPromoCodeDto } from "@/api/custom-promo-codes";
+import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
+import { useCustomPromoCodes } from "@/hooks/promoCodes/useCustomPromoCodes";
 import {
   useCreateCustomPromoCode,
   useUpdateCustomPromoCode,
-} from '@/hooks/promoCodes/useCustomPromoCodeMutations';
+} from "@/hooks/promoCodes/useCustomPromoCodeMutations";
 
 type PromoCodeFormState = {
   name: string;
   promoCode: string;
+  rewardValue: string;
+  rewardUnits: string;
   startDate: string;
   endDate: string;
   hasUsageLimit: boolean;
@@ -37,18 +39,23 @@ type PromoCodeFormState = {
 };
 
 const toDateTimeInput = (value: Date | string) =>
-  format(typeof value === 'string' ? new Date(value) : value, "yyyy-MM-dd'T'HH:mm");
+  format(
+    typeof value === "string" ? new Date(value) : value,
+    "yyyy-MM-dd'T'HH:mm",
+  );
 
 const emptyForm = (): PromoCodeFormState => {
   const now = new Date();
 
   return {
-    name: '',
-    promoCode: '',
+    name: "",
+    promoCode: "",
+    rewardValue: "",
+    rewardUnits: "руб.",
     startDate: toDateTimeInput(now),
     endDate: toDateTimeInput(addDays(now, 30)),
     hasUsageLimit: false,
-    usageLimit: '1',
+    usageLimit: "1",
   };
 };
 
@@ -57,33 +64,37 @@ const getPromoCodeStatus = (promoCode: CustomPromoCodeDto) => {
   const start = new Date(promoCode.startDate).getTime();
   const end = new Date(promoCode.endDate).getTime();
 
-  if (promoCode.promoCodeUsageLimit !== null && promoCode.promoCodeUsagesCount >= promoCode.promoCodeUsageLimit) {
-    return { label: 'Лимит исчерпан', variant: 'secondary' as const };
+  if (
+    promoCode.promoCodeUsageLimit !== null &&
+    promoCode.promoCodeUsagesCount >= promoCode.promoCodeUsageLimit
+  ) {
+    return { label: "Лимит исчерпан", variant: "secondary" as const };
   }
 
   if (now < start) {
-    return { label: 'Запланирован', variant: 'warning' as const };
+    return { label: "Запланирован", variant: "warning" as const };
   }
 
   if (now > end) {
-    return { label: 'Завершён', variant: 'secondary' as const };
+    return { label: "Завершён", variant: "secondary" as const };
   }
 
-  return { label: 'Активен', variant: 'success' as const };
+  return { label: "Активен", variant: "success" as const };
 };
 
-const formatDateTime = (value: string) => format(new Date(value), 'dd.MM.yyyy HH:mm');
+const formatDateTime = (value: string) =>
+  format(new Date(value), "dd.MM.yyyy HH:mm");
 
 export default function PromoCodesPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { room, isLoading: isRoomLoading } = useGetRoomById(slug ?? '');
-  const roomId = room?.id ?? '';
+  const { room, isLoading: isRoomLoading } = useGetRoomById(slug ?? "");
+  const roomId = room?.id ?? "";
   const { promoCodes, isLoading, isError, error } = useCustomPromoCodes(roomId);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<CustomPromoCodeDto | null>(null);
   const [form, setForm] = useState<PromoCodeFormState>(emptyForm);
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
 
   const {
     createPromoCode,
@@ -106,14 +117,14 @@ export default function PromoCodesPage() {
     if (!sheetOpen) {
       setEditing(null);
       setForm(emptyForm());
-      setFormError('');
+      setFormError("");
     }
   }, [sheetOpen]);
 
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm());
-    setFormError('');
+    setFormError("");
     setSheetOpen(true);
   };
 
@@ -122,12 +133,14 @@ export default function PromoCodesPage() {
     setForm({
       name: promoCode.name,
       promoCode: promoCode.promoCode,
+      rewardValue: String(promoCode.rewardValue),
+      rewardUnits: promoCode.rewardUnits,
       startDate: toDateTimeInput(promoCode.startDate),
       endDate: toDateTimeInput(promoCode.endDate),
       hasUsageLimit: promoCode.promoCodeUsageLimit !== null,
       usageLimit: String(promoCode.promoCodeUsageLimit ?? 1),
     });
-    setFormError('');
+    setFormError("");
     setSheetOpen(true);
   };
 
@@ -136,49 +149,72 @@ export default function PromoCodesPage() {
 
     const name = form.name.trim();
     const promoCode = form.promoCode.trim();
+    const rewardValue = Number(form.rewardValue);
+    const rewardUnits = form.rewardUnits.trim();
     const startDate = new Date(form.startDate);
     const endDate = new Date(form.endDate);
     const usageLimit = form.hasUsageLimit ? Number(form.usageLimit) : null;
 
-    if (!name || !promoCode) {
-      setFormError('Заполните название и промокод.');
+    if (!name || !promoCode || !rewardUnits) {
+      setFormError("Заполните название, промокод и единицы награды.");
       return;
     }
 
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()) || startDate >= endDate) {
-      setFormError('Дата начала должна быть раньше даты окончания.');
+    if (!Number.isInteger(rewardValue) || rewardValue < 1) {
+      setFormError("Размер награды должен быть целым числом больше нуля.");
       return;
     }
 
-    if (usageLimit !== null && (!Number.isInteger(usageLimit) || usageLimit < 1)) {
-      setFormError('Лимит использований должен быть целым числом больше нуля.');
+    if (
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime()) ||
+      startDate >= endDate
+    ) {
+      setFormError("Дата начала должна быть раньше даты окончания.");
       return;
     }
 
-    if (editing && usageLimit !== null && usageLimit < editing.promoCodeUsagesCount) {
-      setFormError(`Лимит не может быть меньше уже выполненных активаций (${editing.promoCodeUsagesCount}).`);
+    if (
+      usageLimit !== null &&
+      (!Number.isInteger(usageLimit) || usageLimit < 1)
+    ) {
+      setFormError("Лимит использований должен быть целым числом больше нуля.");
+      return;
+    }
+
+    if (
+      editing &&
+      usageLimit !== null &&
+      usageLimit < editing.promoCodeUsagesCount
+    ) {
+      setFormError(
+        `Лимит не может быть меньше уже выполненных активаций (${editing.promoCodeUsagesCount}).`,
+      );
       return;
     }
 
     const data = {
       name,
       promoCode,
+      rewardType: "fix" as const,
+      rewardValue,
+      rewardUnits,
       promoCodeUsageLimit: usageLimit,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
     };
 
-    setFormError('');
+    setFormError("");
 
     if (editing) {
       updatePromoCode(
         { id: editing.id, data },
         {
           onSuccess: () => {
-            toast.success('Промокод обновлён');
+            toast.success("Промокод обновлён");
             setSheetOpen(false);
           },
-        }
+        },
       );
       return;
     }
@@ -187,10 +223,10 @@ export default function PromoCodesPage() {
       { ...data, roomId },
       {
         onSuccess: () => {
-          toast.success('Промокод создан');
+          toast.success("Промокод создан");
           setSheetOpen(false);
         },
-      }
+      },
     );
   };
 
@@ -206,9 +242,12 @@ export default function PromoCodesPage() {
     <div className="w-full px-2 py-6">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Промокоды</h1>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">
+            Промокоды
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Создавайте самостоятельные промокоды, задавайте сроки действия и ограничение активаций.
+            Создавайте самостоятельные промокоды, задавайте сроки действия и
+            ограничение активаций.
           </p>
         </div>
         <Button type="button" onClick={openCreate}>
@@ -219,14 +258,19 @@ export default function PromoCodesPage() {
 
       {isError ? (
         <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error instanceof Error ? error.message : 'Не удалось загрузить промокоды'}</AlertDescription>
+          <AlertDescription>
+            {error instanceof Error
+              ? error.message
+              : "Не удалось загрузить промокоды"}
+          </AlertDescription>
         </Alert>
       ) : null}
 
       {promoCodes.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Произвольных промокодов пока нет. Создайте первый код для этой компании.
+            Произвольных промокодов пока нет. Создайте первый код для этой
+            компании.
           </CardContent>
         </Card>
       ) : (
@@ -239,22 +283,32 @@ export default function PromoCodesPage() {
                 : `${promoCode.promoCodeUsagesCount} / ${promoCode.promoCodeUsageLimit}`;
 
             return (
-              <Card key={promoCode.id} className="border border-border shadow-none">
+              <Card
+                key={promoCode.id}
+                className="border border-border shadow-none"
+              >
                 <CardContent className="p-4">
                   <div className="flex flex-wrap items-start gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-medium text-foreground">{promoCode.name}</p>
+                        <p className="truncate font-medium text-foreground">
+                          {promoCode.name}
+                        </p>
                         <Badge variant={status.variant}>{status.label}</Badge>
                       </div>
-                      <Badge variant="outline" className="mt-2 max-w-full font-mono text-xs">
+                      <Badge
+                        variant="outline"
+                        className="mt-2 max-w-full font-mono text-xs"
+                      >
                         <span className="truncate">{promoCode.promoCode}</span>
                       </Badge>
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1">
                       <Button type="button" variant="outline" size="sm" asChild>
-                        <Link to={`/rooms/${slug}/statistics?promoCodeId=${promoCode.id}`}>
+                        <Link
+                          to={`/rooms/${slug}/statistics?promoCodeId=${promoCode.id}`}
+                        >
                           <BarChart3 className="mr-1 size-4" />
                           Статистика
                         </Link>
@@ -271,10 +325,19 @@ export default function PromoCodesPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                  <div className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
+                    <div>
+                      <p className="text-muted-foreground">Награда</p>
+                      <p className="mt-0.5 font-medium tabular-nums text-foreground">
+                        {promoCode.rewardValue.toLocaleString("ru-RU")}{" "}
+                        {promoCode.rewardUnits}
+                      </p>
+                    </div>
                     <div>
                       <p className="text-muted-foreground">Активации</p>
-                      <p className="mt-0.5 font-medium tabular-nums text-foreground">{usageText}</p>
+                      <p className="mt-0.5 font-medium tabular-nums text-foreground">
+                        {usageText}
+                      </p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Начало</p>
@@ -314,7 +377,7 @@ export default function PromoCodesPage() {
               <X className="size-5" />
             </Button>
             <SheetTitle className="flex-1 text-left text-lg font-medium text-primary-foreground">
-              {editing ? 'Изменить промокод' : 'Создать промокод'}
+              {editing ? "Изменить промокод" : "Создать промокод"}
             </SheetTitle>
           </SheetHeader>
 
@@ -330,7 +393,12 @@ export default function PromoCodesPage() {
               <InputField
                 value={form.name}
                 maxLength={100}
-                onChange={(event) => setForm((previous) => ({ ...previous, name: event.target.value }))}
+                onChange={(event) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    name: event.target.value,
+                  }))
+                }
                 error={!!validationErrors.name?.length}
                 helperText={validationErrors.name?.[0]}
                 aria-label="Название промокода"
@@ -342,32 +410,94 @@ export default function PromoCodesPage() {
               <InputField
                 value={form.promoCode}
                 maxLength={100}
-                onChange={(event) => setForm((previous) => ({ ...previous, promoCode: event.target.value }))}
+                onChange={(event) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    promoCode: event.target.value,
+                  }))
+                }
                 error={!!validationErrors.promoCode?.length}
                 helperText={validationErrors.promoCode?.[0]}
                 aria-label="Промокод"
               />
-              <p className="text-xs text-muted-foreground">От 1 до 100 символов. Код уникален внутри компании.</p>
+              <p className="text-xs text-muted-foreground">
+                От 1 до 100 символов. Код уникален внутри компании.
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Начало действия *</p>
+                <p className="text-sm font-medium text-foreground">
+                  Размер награды *
+                </p>
+                <InputField
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={form.rewardValue}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      rewardValue: event.target.value,
+                    }))
+                  }
+                  error={!!validationErrors.rewardValue?.length}
+                  helperText={validationErrors.rewardValue?.[0]}
+                  aria-label="Размер награды"
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  Единицы награды *
+                </p>
+                <InputField
+                  value={form.rewardUnits}
+                  maxLength={50}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      rewardUnits: event.target.value,
+                    }))
+                  }
+                  error={!!validationErrors.rewardUnits?.length}
+                  helperText={validationErrors.rewardUnits?.[0]}
+                  aria-label="Единицы награды"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  Начало действия *
+                </p>
                 <InputField
                   type="datetime-local"
                   value={form.startDate}
-                  onChange={(event) => setForm((previous) => ({ ...previous, startDate: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      startDate: event.target.value,
+                    }))
+                  }
                   error={!!validationErrors.startDate?.length}
                   helperText={validationErrors.startDate?.[0]}
                   aria-label="Начало действия промокода"
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Окончание действия *</p>
+                <p className="text-sm font-medium text-foreground">
+                  Окончание действия *
+                </p>
                 <InputField
                   type="datetime-local"
                   value={form.endDate}
-                  onChange={(event) => setForm((previous) => ({ ...previous, endDate: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      endDate: event.target.value,
+                    }))
+                  }
                   error={!!validationErrors.endDate?.length}
                   helperText={validationErrors.endDate?.[0]}
                   aria-label="Окончание действия промокода"
@@ -378,13 +508,20 @@ export default function PromoCodesPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Ограничить число активаций</p>
-                  <p className="text-xs text-muted-foreground">Без ограничения промокод действует до даты окончания.</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Ограничить число активаций
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Без ограничения промокод действует до даты окончания.
+                  </p>
                 </div>
                 <Switch
                   checked={form.hasUsageLimit}
                   onCheckedChange={(checked) =>
-                    setForm((previous) => ({ ...previous, hasUsageLimit: checked }))
+                    setForm((previous) => ({
+                      ...previous,
+                      hasUsageLimit: checked,
+                    }))
                   }
                   aria-label="Ограничить число активаций"
                 />
@@ -396,7 +533,12 @@ export default function PromoCodesPage() {
                   min={1}
                   step={1}
                   value={form.usageLimit}
-                  onChange={(event) => setForm((previous) => ({ ...previous, usageLimit: event.target.value }))}
+                  onChange={(event) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      usageLimit: event.target.value,
+                    }))
+                  }
                   error={!!validationErrors.promoCodeUsageLimit?.length}
                   helperText={validationErrors.promoCodeUsageLimit?.[0]}
                   aria-label="Лимит активаций"
@@ -406,15 +548,28 @@ export default function PromoCodesPage() {
           </div>
 
           <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">
-            <Button type="button" variant="outline" onClick={() => setSheetOpen(false)} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setSheetOpen(false)}
+              disabled={isPending}
+            >
               Отмена
             </Button>
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={isPending || !form.name.trim() || !form.promoCode.trim() || !form.startDate || !form.endDate}
+              disabled={
+                isPending ||
+                !form.name.trim() ||
+                !form.promoCode.trim() ||
+                !form.rewardValue ||
+                !form.rewardUnits.trim() ||
+                !form.startDate ||
+                !form.endDate
+              }
             >
-              {isPending ? 'Сохранение…' : editing ? 'Сохранить' : 'Создать'}
+              {isPending ? "Сохранение…" : editing ? "Сохранить" : "Создать"}
             </Button>
           </SheetFooter>
         </SheetContent>
