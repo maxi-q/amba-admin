@@ -10,13 +10,14 @@ import {
   Button,
   Card,
   CardContent,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
+  DialogTitle,
   InputField,
   PageLoader,
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
   Switch,
 } from "@senler/ui";
 import type { CustomPromoCodeDto } from "@/api/custom-promo-codes";
@@ -91,7 +92,7 @@ export default function PromoCodesPage() {
   const roomId = room?.id ?? "";
   const { promoCodes, isLoading, isError, error } = useCustomPromoCodes(roomId);
 
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CustomPromoCodeDto | null>(null);
   const [form, setForm] = useState<PromoCodeFormState>(emptyForm);
   const [formError, setFormError] = useState("");
@@ -114,18 +115,18 @@ export default function PromoCodesPage() {
   const validationErrors = editing ? updateErrors : createErrors;
 
   useEffect(() => {
-    if (!sheetOpen) {
+    if (!dialogOpen) {
       setEditing(null);
       setForm(emptyForm());
       setFormError("");
     }
-  }, [sheetOpen]);
+  }, [dialogOpen]);
 
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm());
     setFormError("");
-    setSheetOpen(true);
+    setDialogOpen(true);
   };
 
   const openEdit = (promoCode: CustomPromoCodeDto) => {
@@ -141,7 +142,7 @@ export default function PromoCodesPage() {
       usageLimit: String(promoCode.promoCodeUsageLimit ?? 1),
     });
     setFormError("");
-    setSheetOpen(true);
+    setDialogOpen(true);
   };
 
   const handleSubmit = () => {
@@ -212,7 +213,7 @@ export default function PromoCodesPage() {
         {
           onSuccess: () => {
             toast.success("Промокод обновлён");
-            setSheetOpen(false);
+            setDialogOpen(false);
           },
         },
       );
@@ -224,7 +225,7 @@ export default function PromoCodesPage() {
       {
         onSuccess: () => {
           toast.success("Промокод создан");
-          setSheetOpen(false);
+          setDialogOpen(false);
         },
       },
     );
@@ -359,27 +360,30 @@ export default function PromoCodesPage() {
         </div>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent
-          side="bottom"
+      <DialogRoot open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent
           showCloseButton={false}
-          className="flex !max-h-[min(100dvh,42rem)] flex-col gap-0 overflow-hidden rounded-t-2xl border-0 p-0 sm:mx-auto sm:max-w-lg"
+          className="flex max-h-[min(90dvh,42rem)] w-[min(36rem,calc(100vw-2rem))] flex-col gap-0 overflow-hidden border-0 p-0 sm:max-w-xl"
         >
-          <SheetHeader className="shrink-0 flex-row items-center gap-2 space-y-0 border-b border-border bg-primary px-3 py-3 text-primary-foreground">
+          <DialogHeader className="shrink-0 flex-row items-center gap-2 space-y-0 border-b border-border bg-primary px-3 py-3 text-primary-foreground">
             <Button
               type="button"
               variant="ghost"
               size="icon"
               className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              onClick={() => setSheetOpen(false)}
+              onClick={() => setDialogOpen(false)}
               aria-label="Закрыть"
             >
               <X className="size-5" />
             </Button>
-            <SheetTitle className="flex-1 text-left text-lg font-medium text-primary-foreground">
+            <DialogTitle className="flex-1 text-left text-lg font-medium text-primary-foreground">
               {editing ? "Изменить промокод" : "Создать промокод"}
-            </SheetTitle>
-          </SheetHeader>
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Настройка значения, награды, срока действия и лимита активаций
+              промокода
+            </DialogDescription>
+          </DialogHeader>
 
           <div className="space-y-4 overflow-y-auto px-4 py-4">
             {generalError ? (
@@ -547,11 +551,11 @@ export default function PromoCodesPage() {
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background py-4 sm:flex-row">
+          <DialogFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-background px-4 py-4 sm:flex-row">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setSheetOpen(false)}
+              onClick={() => setDialogOpen(false)}
               disabled={isPending}
             >
               Отмена
@@ -571,9 +575,9 @@ export default function PromoCodesPage() {
             >
               {isPending ? "Сохранение…" : editing ? "Сохранить" : "Создать"}
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
     </div>
   );
 }
