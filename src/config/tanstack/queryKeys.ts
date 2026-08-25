@@ -22,6 +22,7 @@ export enum QueryKeys {
   ROOM_ORD_CONTRACTS = 'roomOrdContracts',
 
   REWARDS = 'rewards',
+  CUSTOM_PROMO_CODES = 'customPromoCodes',
   SPRINT_REWARD_RULES = 'sprintRewardRules',
   SPRINT_LEADERBOARD = 'sprintLeaderboard',
 }

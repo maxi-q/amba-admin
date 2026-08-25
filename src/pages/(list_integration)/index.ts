@@ -41,6 +41,7 @@ import OrdTaskIssuanceRulePage from './creativetasks/OrdTaskIssuanceRulePage';
 import OrdCreativePage from './creativetasks/OrdCreativePage';
 import PrivateOrdCreativePage from './creativetasks/PrivateOrdCreativePage';
 import RewardsPage from './rewards';
+import PromoCodesPage from './promo-codes';
 import SprintLeaderboardPage from './sprints/leaderboard';
 
 export {
@@ -87,5 +88,6 @@ export {
     PrivateOrdCreativePage,
     EventsLayout,
     RewardsPage,
+    PromoCodesPage,
     SprintLeaderboardPage,
 };

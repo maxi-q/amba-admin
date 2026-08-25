@@ -7,19 +7,27 @@ import type {
   RoomsControllerGetRoomPromoCodeUsagesParams,
 } from '@/api/generated/model';
 
+export type RoomPromoCodeUsagesParams = RoomsControllerGetRoomPromoCodeUsagesParams & {
+  promoCodeId?: string[];
+};
+
+export type RoomPromoCodeUsageItem = GetRoomPromoCodeUsagesResponseDto['items'][number] & {
+  promoCodeId: string | null;
+};
+
 export function useGetRoomPromoCodeUsages(
   id: string,
-  data: Omit<RoomsControllerGetRoomPromoCodeUsagesParams, 'page'>
+  data: Omit<RoomPromoCodeUsagesParams, 'page'>
 ) {
   const pageSize = data.size || 5; // Размер страницы по умолчанию
 
   // Валидация: должен быть указан только один из фильтров - либо eventId, либо sprintId
   const isValid = useMemo(() => {
-    const hasEventId = !!data.eventId;
-    const hasSprintId = !!data.sprintId;
-    // Валидно если не указаны оба фильтра одновременно (можно указать один или ни одного)
-    return !(hasEventId && hasSprintId);
-  }, [data.eventId, data.sprintId]);
+    const selectedTargetTypes = [data.eventId, data.sprintId, data.promoCodeId].filter(
+      (ids) => ids && ids.length > 0
+    ).length;
+    return selectedTargetTypes <= 1;
+  }, [data.eventId, data.promoCodeId, data.sprintId]);
 
   const {
     data: infiniteData,
@@ -37,6 +45,7 @@ export function useGetRoomPromoCodeUsages(
       data.ambassadorId,
       data.eventId,
       data.sprintId,
+      data.promoCodeId,
       data.dateFrom,
       data.dateTo,
       pageSize,
@@ -61,9 +70,9 @@ export function useGetRoomPromoCodeUsages(
   });
 
   // Объединяем все элементы из всех страниц в один массив
-  const items = useMemo(() => {
+  const items = useMemo<RoomPromoCodeUsageItem[]>(() => {
     if (!infiniteData?.pages) return [];
-    return infiniteData.pages.flatMap((page) => page.items);
+    return infiniteData.pages.flatMap((page) => page.items) as RoomPromoCodeUsageItem[];
   }, [infiniteData]);
 
   // Получаем информацию о пагинации из последней страницы

@@ -47,7 +47,7 @@ export const EventChart = ({ data }: EventChartProps) => {
     <Card className="mb-6 min-h-[300px] border border-border shadow-sm">
       <CardContent className="p-4 sm:p-6">
         <h3 className="mb-3 text-lg font-semibold tracking-tight text-foreground">
-          Количество событий по дням
+          Применения промокодов по дням
         </h3>
 
         {data.length === 0 ? (
@@ -62,7 +62,7 @@ export const EventChart = ({ data }: EventChartProps) => {
               viewBox="0 0 800 300"
               preserveAspectRatio="xMidYMid meet"
               className="overflow-visible"
-              aria-label="График количества событий по дням"
+              aria-label="График применений промокодов по дням"
             >
               <g className="text-zinc-200 dark:text-zinc-700">
                 {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
@@ -128,7 +128,7 @@ export const EventChart = ({ data }: EventChartProps) => {
                   fill="currentColor"
                   transform="rotate(-90, 20, 140)"
                 >
-                  Количество событий
+                  Применения
                 </text>
               </g>
 

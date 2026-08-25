@@ -40,6 +40,9 @@ export enum MutationKeys {
   UPDATE_REWARD = 'updateReward',
   DELETE_REWARD = 'deleteReward',
 
+  CREATE_CUSTOM_PROMO_CODE = 'createCustomPromoCode',
+  UPDATE_CUSTOM_PROMO_CODE = 'updateCustomPromoCode',
+
   CREATE_SPRINT_REWARD_RULE = 'createSprintRewardRule',
   UPDATE_SPRINT_REWARD_RULE = 'updateSprintRewardRule',
   DELETE_SPRINT_REWARD_RULE = 'deleteSprintRewardRule',

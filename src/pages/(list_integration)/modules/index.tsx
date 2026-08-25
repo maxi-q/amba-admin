@@ -173,6 +173,12 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         href: `${roomBase}/rewards`,
       },
       {
+        id: "promo-codes",
+        label: "Промокоды",
+        icon: BadgePercent,
+        href: `${roomBase}/promo-codes`,
+      },
+      {
         id: "statistics",
         label: "Аналитика",
         icon: ChartPie,

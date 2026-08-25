@@ -43,6 +43,7 @@ import {
   OrdCreativePage,
   PrivateOrdCreativePage,
   RewardsPage,
+  PromoCodesPage,
   SprintLeaderboardPage,
 } from "../(list_integration)";
 
@@ -138,6 +139,7 @@ export const Navigation = () => {
         </Route>
 
         <Route path="rewards" element={<RewardsPage />} />
+        <Route path="promo-codes" element={<PromoCodesPage />} />
 
         <Route path="events" element={<EventsLayout />}>
           <Route index element={<EventsPage />} />

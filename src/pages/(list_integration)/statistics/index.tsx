@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { subDays, format } from "date-fns";
 
 import { DateRangeSelector } from "./components/DateRangeSelector";
@@ -11,19 +11,26 @@ import { useGetRoomAnalytics } from "@/hooks/rooms/useGetRoomAnalytics";
 import { useGetRoomPromoCodeUsages } from "@/hooks/rooms/useGetRoomPromoCodeUsages";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useEvents } from "@/hooks/events/useEvents";
+import { useCustomPromoCodes } from "@/hooks/promoCodes/useCustomPromoCodes";
 import type { EventData } from "./types";
 import {
   exportPromoCodeUsagesCsv,
+  getPromoCodeFromPayload,
   getPromoCodeUsageTargetName,
 } from "./helpers/promoCodeUsagesExport";
 
 export default function StatisticsPage() {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
   const [startDate, setStartDate] = useState(subDays(new Date(), 14));
   const [endDate, setEndDate] = useState(new Date());
   const [selectedAmbassadors, setSelectedAmbassadors] = useState<string[]>([]);
   const [selectedSprints, setSelectedSprints] = useState<string[]>([]);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [selectedPromoCodes, setSelectedPromoCodes] = useState<string[]>(() => {
+    const promoCodeId = searchParams.get("promoCodeId");
+    return promoCodeId ? [promoCodeId] : [];
+  });
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState("");
 
@@ -32,10 +39,11 @@ export default function StatisticsPage() {
       ambassadorId: selectedAmbassadors.length > 0 ? selectedAmbassadors : undefined,
       eventId: selectedEvents.length > 0 ? selectedEvents : undefined,
       sprintId: selectedSprints.length > 0 ? selectedSprints : undefined,
+      promoCodeId: selectedPromoCodes.length > 0 ? selectedPromoCodes : undefined,
       dateFrom: format(startDate, "yyyy-MM-dd"),
       dateTo: format(endDate, "yyyy-MM-dd"),
     }),
-    [selectedAmbassadors, selectedEvents, selectedSprints, startDate, endDate]
+    [selectedAmbassadors, selectedEvents, selectedPromoCodes, selectedSprints, startDate, endDate]
   );
 
   const { analytics } = useGetRoomAnalytics(slug || "", analyticsParams);
@@ -61,17 +69,20 @@ export default function StatisticsPage() {
 
   const { sprints } = useSprints({ page: 1, size: 100 }, slug || "");
   const { events } = useEvents({ page: 1, size: 100 }, slug || "");
+  const { promoCodes } = useCustomPromoCodes(slug || "");
 
   const isPromoCodeUsageFilterValid = useMemo(
-    () => !(analyticsParams.eventId && analyticsParams.sprintId),
-    [analyticsParams.eventId, analyticsParams.sprintId]
+    () =>
+      [analyticsParams.eventId, analyticsParams.sprintId, analyticsParams.promoCodeId].filter(Boolean).length <= 1,
+    [analyticsParams.eventId, analyticsParams.promoCodeId, analyticsParams.sprintId]
   );
 
   const filteredEvents = useMemo<EventData[]>(() => {
     if (!promoCodeUsages || promoCodeUsages.length === 0) return [];
 
     return promoCodeUsages.map((usage) => {
-      const eventName = getPromoCodeUsageTargetName(usage, sprints, events);
+      const eventName = getPromoCodeUsageTargetName(usage, sprints, events, promoCodes);
+      const promoCode = getPromoCodeFromPayload(usage.payload) || "Промокод";
 
       const date = usage.createdAt
         ? format(new Date(usage.createdAt), "dd.MM.yyyy")
@@ -79,12 +90,42 @@ export default function StatisticsPage() {
 
       return {
         id: usage.id,
-        name: eventName,
+        name: promoCode,
         event: eventName,
         date,
       };
     });
-  }, [events, promoCodeUsages, sprints]);
+  }, [events, promoCodeUsages, promoCodes, sprints]);
+
+  const handleAmbassadorsChange = (ids: string[]) => {
+    setSelectedAmbassadors(ids);
+    if (ids.length > 0) setSelectedPromoCodes([]);
+  };
+
+  const handleSprintsChange = (ids: string[]) => {
+    setSelectedSprints(ids);
+    if (ids.length > 0) {
+      setSelectedEvents([]);
+      setSelectedPromoCodes([]);
+    }
+  };
+
+  const handleEventsChange = (ids: string[]) => {
+    setSelectedEvents(ids);
+    if (ids.length > 0) {
+      setSelectedSprints([]);
+      setSelectedPromoCodes([]);
+    }
+  };
+
+  const handlePromoCodesChange = (ids: string[]) => {
+    setSelectedPromoCodes(ids);
+    if (ids.length > 0) {
+      setSelectedAmbassadors([]);
+      setSelectedSprints([]);
+      setSelectedEvents([]);
+    }
+  };
 
   const handleStartDateChange = (date: Date | null) => {
     if (date) setStartDate(date);
@@ -111,6 +152,7 @@ export default function StatisticsPage() {
         filters: analyticsParams,
         sprints,
         events,
+        promoCodes,
       });
     } catch (error) {
       setExportError(
@@ -138,9 +180,11 @@ export default function StatisticsPage() {
         selectedAmbassadors={selectedAmbassadors}
         selectedSprints={selectedSprints}
         selectedEvents={selectedEvents}
-        onAmbassadorsChange={setSelectedAmbassadors}
-        onSprintsChange={setSelectedSprints}
-        onEventsChange={setSelectedEvents}
+        selectedPromoCodes={selectedPromoCodes}
+        onAmbassadorsChange={handleAmbassadorsChange}
+        onSprintsChange={handleSprintsChange}
+        onEventsChange={handleEventsChange}
+        onPromoCodesChange={handlePromoCodesChange}
         roomId={slug || ""}
       />
 

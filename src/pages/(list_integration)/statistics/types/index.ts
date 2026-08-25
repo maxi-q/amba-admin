@@ -21,9 +21,11 @@ export interface FilterSelectorProps {
   selectedAmbassadors: string[];
   selectedSprints: string[];
   selectedEvents: string[];
+  selectedPromoCodes: string[];
   onAmbassadorsChange: (ids: string[]) => void;
   onSprintsChange: (ids: string[]) => void;
   onEventsChange: (ids: string[]) => void;
+  onPromoCodesChange: (ids: string[]) => void;
 }
 
 export interface EventChartProps {
@@ -60,6 +62,12 @@ export interface SprintAutocompleteProps {
 }
 
 export interface EventAutocompleteProps {
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+  roomId: string;
+}
+
+export interface PromoCodeAutocompleteProps {
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   roomId: string;

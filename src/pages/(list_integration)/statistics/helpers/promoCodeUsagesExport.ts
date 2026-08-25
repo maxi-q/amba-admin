@@ -1,27 +1,34 @@
 import { format } from "date-fns";
 import { roomsControllerGetRoomPromoCodeUsages } from "@/api/generated/rooms/rooms";
 import type {
-  GetRoomPromoCodeUsagesResponseDto,
-  RoomsControllerGetRoomPromoCodeUsagesParams,
-} from "@/api/generated/model";
+  RoomPromoCodeUsageItem,
+  RoomPromoCodeUsagesParams,
+} from "@/hooks/rooms/useGetRoomPromoCodeUsages";
 
 const EXPORT_PAGE_SIZE = 500;
 
-type PromoCodeUsage = GetRoomPromoCodeUsagesResponseDto["items"][number];
+type PromoCodeUsage = RoomPromoCodeUsageItem;
 type NamedEntity = { id: string; name: string };
 
 interface ExportPromoCodeUsagesCsvParams {
   roomId: string;
-  filters: Omit<RoomsControllerGetRoomPromoCodeUsagesParams, "page" | "size">;
+  filters: Omit<RoomPromoCodeUsagesParams, "page" | "size">;
   sprints: NamedEntity[];
   events: NamedEntity[];
+  promoCodes: NamedEntity[];
 }
 
 export function getPromoCodeUsageTargetName(
   usage: PromoCodeUsage,
   sprints: NamedEntity[],
-  events: NamedEntity[]
+  events: NamedEntity[],
+  promoCodes: NamedEntity[]
 ) {
+  if (usage.promoCodeId) {
+    const promoCode = promoCodes.find((item) => item.id === usage.promoCodeId);
+    return promoCode?.name || "Произвольный промокод";
+  }
+
   if (usage.sprintId) {
     const sprint = sprints.find((s) => s.id === usage.sprintId);
     return sprint?.name || "Спринт";
@@ -36,12 +43,13 @@ export function getPromoCodeUsageTargetName(
 }
 
 export function getPromoCodeUsageTargetType(usage: PromoCodeUsage) {
+  if (usage.promoCodeId) return "Промокод";
   if (usage.sprintId) return "Спринт";
   if (usage.eventId) return "Событие";
   return "";
 }
 
-function getPromoCodeFromPayload(payload: unknown) {
+export function getPromoCodeFromPayload(payload: unknown) {
   if (!payload) return "";
 
   if (typeof payload === "string") {
@@ -84,7 +92,7 @@ function downloadCsv(filename: string, rows: string[][]) {
 
 async function fetchAllPromoCodeUsages(
   roomId: string,
-  filters: Omit<RoomsControllerGetRoomPromoCodeUsagesParams, "page" | "size">
+  filters: Omit<RoomPromoCodeUsagesParams, "page" | "size">
 ) {
   const allUsages: PromoCodeUsage[] = [];
   let page = 1;
@@ -97,7 +105,7 @@ async function fetchAllPromoCodeUsages(
       size: EXPORT_PAGE_SIZE,
     });
 
-    allUsages.push(...response.items);
+    allUsages.push(...(response.items as PromoCodeUsage[]));
     totalPages = response.totalPages;
     page += 1;
   } while (page <= totalPages);
@@ -110,6 +118,7 @@ export async function exportPromoCodeUsagesCsv({
   filters,
   sprints,
   events,
+  promoCodes,
 }: ExportPromoCodeUsagesCsvParams) {
   const usages = await fetchAllPromoCodeUsages(roomId, filters);
 
@@ -130,7 +139,7 @@ export async function exportPromoCodeUsagesCsv({
     ...usages.map((usage) => [
       getPromoCodeFromPayload(usage.payload),
       getPromoCodeUsageTargetType(usage),
-      getPromoCodeUsageTargetName(usage, sprints, events),
+      getPromoCodeUsageTargetName(usage, sprints, events, promoCodes),
       usage.createdAt ? format(new Date(usage.createdAt), "dd.MM.yyyy HH:mm") : "",
       usage.ambassadorId ?? "",
       usage.uniqueId ?? "",
