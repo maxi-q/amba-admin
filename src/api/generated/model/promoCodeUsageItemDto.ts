@@ -31,6 +31,11 @@ export interface PromoCodeUsageItemDto {
    */
   eventId: string | null;
   /**
+   * ID произвольного промокода
+   * @nullable
+   */
+  promoCodeId: string | null;
+  /**
    * ID амбассадора
    * @nullable
    */

@@ -29,6 +29,14 @@ export interface CreateRewardResponseDto {
   iconUploadedAt: string | null;
   /** Дополнительные фото галереи */
   photos: RewardPhotoDto[];
+  /** Делимая награда: количество в правилах спринта можно задавать дробным, а пул при пропорциональном распределении делится с точностью divisionPrecision. У неделимой награды количество всегда целое */
+  isDivisible: boolean;
+  /**
+   * Точность деления — знаков после запятой. От 1 до 10 для делимой награды, 0 для неделимой
+   * @minimum 0
+   * @maximum 10
+   */
+  divisionPrecision: number;
   /** Флаг удаления */
   isDeleted: boolean;
   /** ID комнаты */

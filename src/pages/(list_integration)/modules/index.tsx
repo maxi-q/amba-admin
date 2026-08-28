@@ -77,6 +77,12 @@ const RoomBox = ({ children }: RoomBoxProps) => {
 
     return [
       {
+        id: "vk-profile",
+        label: "Профиль VK",
+        href: `${roomBase}/vk-profile`,
+        match: (p) => pathWithoutHash(p) === `${roomBase}/vk-profile`,
+      },
+      {
         id: "setting",
         label: "Настройки",
         href: `${roomBase}/setting`,

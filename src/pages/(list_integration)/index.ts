@@ -43,6 +43,7 @@ import PrivateOrdCreativePage from './creativetasks/PrivateOrdCreativePage';
 import RewardsPage from './rewards';
 import PromoCodesPage from './promo-codes';
 import SprintLeaderboardPage from './sprints/leaderboard';
+import VkProfilePage from './vk-profile';
 
 export {
     SettingPage,
@@ -90,4 +91,5 @@ export {
     RewardsPage,
     PromoCodesPage,
     SprintLeaderboardPage,
+    VkProfilePage,
 };

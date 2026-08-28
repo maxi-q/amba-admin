@@ -19,6 +19,7 @@ const ROOM_ID = "preview-room";
 const SPRINT_ID = "sprint-active";
 const TASK_ID = "task-review";
 const NOW = "2026-08-21T09:00:00.000Z";
+const indivisibleReward = { isDivisible: false, divisionPrecision: 0 } as const;
 
 const room: BaseRoomDto = {
   id: ROOM_ID,
@@ -171,6 +172,7 @@ const ambassadors: BaseAmbassadorDto[] = [
   promoCode: `STREAM${index + 1}`,
   channelTypeId: 1,
   subscriberId: `subscriber-${index + 1}`,
+  avatarUrl: null,
 }));
 
 const submissionItem = {
@@ -293,10 +295,10 @@ let submissions: BaseCreativeTaskSubmissionDto[] = [
 ];
 
 const rewards = {
-  money: { id: "reward-money", name: "5 000 ₽", iconUrl: rewardMoneyUrl },
-  shirt: { id: "reward-shirt", name: "Футболка", iconUrl: rewardGiftUrl },
-  pro: { id: "reward-pro", name: "Тариф Pro", iconUrl: rewardGiftUrl },
-  points: { id: "reward-points", name: "Баллы Senler", iconUrl: rewardGiftUrl },
+  money: { id: "reward-money", name: "5 000 ₽", iconUrl: rewardMoneyUrl, ...indivisibleReward },
+  shirt: { id: "reward-shirt", name: "Футболка", iconUrl: rewardGiftUrl, ...indivisibleReward },
+  pro: { id: "reward-pro", name: "Тариф Pro", iconUrl: rewardGiftUrl, ...indivisibleReward },
+  points: { id: "reward-points", name: "Баллы Senler", iconUrl: rewardGiftUrl, ...indivisibleReward },
 };
 
 const rewardRules: SprintRewardRuleDto[] = [
@@ -348,55 +350,60 @@ const leaderboard: GetLeaderboardResponseDto = {
       rank: 1,
       ambassadorId: "ambassador-1",
       username: "Алексей Попов",
+      avatarUrl: null,
       promoCode: "STREAM1",
       points: 13720,
       rewards: [
-        { rewardId: rewards.money.id, name: rewards.money.name, amount: 1 },
-        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1 },
-        { rewardId: rewards.points.id, name: rewards.points.name, amount: 1000 },
-        { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 1 },
+        { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...indivisibleReward },
+        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...indivisibleReward },
+        { rewardId: rewards.points.id, name: rewards.points.name, amount: 1000, ...indivisibleReward },
+        { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 1, ...indivisibleReward },
       ],
     },
     {
       rank: 2,
       ambassadorId: "ambassador-2",
       username: "Сергей Морозов",
+      avatarUrl: null,
       promoCode: "STREAM2",
       points: 2678,
       rewards: [
-        { rewardId: rewards.money.id, name: "2 345 ₽", amount: 1 },
-        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1 },
+        { rewardId: rewards.money.id, name: "2 345 ₽", amount: 1, ...indivisibleReward },
+        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...indivisibleReward },
       ],
     },
     {
       rank: 3,
       ambassadorId: "ambassador-3",
       username: "Анастасия Бунова",
+      avatarUrl: null,
       promoCode: "STREAM3",
       points: 1325,
-      rewards: [{ rewardId: rewards.money.id, name: "1 121 ₽", amount: 1 }],
+      rewards: [{ rewardId: rewards.money.id, name: "1 121 ₽", amount: 1, ...indivisibleReward }],
     },
     {
       rank: 4,
       ambassadorId: "ambassador-4",
       username: "Юлия Манова",
+      avatarUrl: null,
       promoCode: "STREAM4",
       points: 720,
-      rewards: [{ rewardId: rewards.money.id, name: "614 ₽", amount: 1 }],
+      rewards: [{ rewardId: rewards.money.id, name: "614 ₽", amount: 1, ...indivisibleReward }],
     },
     {
       rank: 5,
       ambassadorId: "ambassador-5",
       username: "Степан Морозов",
+      avatarUrl: null,
       promoCode: "STREAM5",
       points: 567,
       rewards: [],
     },
   ],
   manualRewards: [
-    { rewardId: rewards.money.id, name: rewards.money.name, amount: 1 },
-    { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1 },
-    { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 3 },
+    { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...indivisibleReward },
+    { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...indivisibleReward },
+    { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 3, ...indivisibleReward },
   ],
   page: 1,
   size: 50,
@@ -477,6 +484,21 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   if (method === "GET" && url === `/api/events/${ROOM_ID}`) return paginated([]);
   if (method === "GET" && url === `/api/sprints/${ROOM_ID}`) return paginated(sprints);
   if (method === "GET" && url === `/api/sprints/${ROOM_ID}/leaderboard`) return leaderboard;
+  if (method === "GET" && url === "/api/vk-auth/me") {
+    return {
+      authorized: true,
+      status: "active",
+      vkUserId: "1",
+      expiresAt: "2026-12-31T20:59:59.000Z",
+      scopes: ["wall", "photos"],
+    };
+  }
+  if (method === "GET" && url === "/api/vk-auth/url") {
+    return {
+      url: "about:blank",
+      expiresAt: "2026-08-21T09:10:00.000Z",
+    };
+  }
 
   const rewardRulesMatch = url.match(/^\/api\/sprints\/([^/]+)\/reward-rules$/);
   if (method === "GET" && rewardRulesMatch) {

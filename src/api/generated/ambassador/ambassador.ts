@@ -25,6 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AmbassadorAvatarUploadDto,
+  AmbassadorAvatarUploadRequestDto,
   AmbassadorControllerGetAmbassadorsParams,
   AmbassadorControllerGetEventApplicationsParams,
   AmbassadorControllerGetMyCreativeTasksParams,
@@ -277,6 +279,193 @@ export const useAmbassadorControllerChangePassword = <TError = unknown,
       > => {
 
       const mutationOptions = getAmbassadorControllerChangePasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Получить presigned URL для загрузки или замены аватарки
+ */
+export const ambassadorControllerCreateAvatarUploadUrl = (
+    ambassadorAvatarUploadRequestDto: AmbassadorAvatarUploadRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AmbassadorAvatarUploadDto>(
+      {url: `/api/ambassador/me/avatar/upload-url`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: ambassadorAvatarUploadRequestDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getAmbassadorControllerCreateAvatarUploadUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerCreateAvatarUploadUrl>>, TError,{data: AmbassadorAvatarUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerCreateAvatarUploadUrl>>, TError,{data: AmbassadorAvatarUploadRequestDto}, TContext> => {
+
+const mutationKey = ['ambassadorControllerCreateAvatarUploadUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ambassadorControllerCreateAvatarUploadUrl>>, {data: AmbassadorAvatarUploadRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  ambassadorControllerCreateAvatarUploadUrl(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AmbassadorControllerCreateAvatarUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof ambassadorControllerCreateAvatarUploadUrl>>>
+    export type AmbassadorControllerCreateAvatarUploadUrlMutationBody = AmbassadorAvatarUploadRequestDto
+    export type AmbassadorControllerCreateAvatarUploadUrlMutationError = unknown
+
+    /**
+ * @summary Получить presigned URL для загрузки или замены аватарки
+ */
+export const useAmbassadorControllerCreateAvatarUploadUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerCreateAvatarUploadUrl>>, TError,{data: AmbassadorAvatarUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof ambassadorControllerCreateAvatarUploadUrl>>,
+        TError,
+        {data: AmbassadorAvatarUploadRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAmbassadorControllerCreateAvatarUploadUrlMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Подтвердить загрузку аватарки в S3
+ */
+export const ambassadorControllerConfirmAvatarUpload = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<BaseAmbassadorDto>(
+      {url: `/api/ambassador/me/avatar/confirm`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getAmbassadorControllerConfirmAvatarUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerConfirmAvatarUpload>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerConfirmAvatarUpload>>, TError,void, TContext> => {
+
+const mutationKey = ['ambassadorControllerConfirmAvatarUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ambassadorControllerConfirmAvatarUpload>>, void> = () => {
+          
+
+          return  ambassadorControllerConfirmAvatarUpload(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AmbassadorControllerConfirmAvatarUploadMutationResult = NonNullable<Awaited<ReturnType<typeof ambassadorControllerConfirmAvatarUpload>>>
+    
+    export type AmbassadorControllerConfirmAvatarUploadMutationError = unknown
+
+    /**
+ * @summary Подтвердить загрузку аватарки в S3
+ */
+export const useAmbassadorControllerConfirmAvatarUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerConfirmAvatarUpload>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof ambassadorControllerConfirmAvatarUpload>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getAmbassadorControllerConfirmAvatarUploadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Удалить аватарку
+ */
+export const ambassadorControllerDeleteAvatar = (
+    
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/ambassador/me/avatar`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getAmbassadorControllerDeleteAvatarMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerDeleteAvatar>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerDeleteAvatar>>, TError,void, TContext> => {
+
+const mutationKey = ['ambassadorControllerDeleteAvatar'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ambassadorControllerDeleteAvatar>>, void> = () => {
+          
+
+          return  ambassadorControllerDeleteAvatar(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AmbassadorControllerDeleteAvatarMutationResult = NonNullable<Awaited<ReturnType<typeof ambassadorControllerDeleteAvatar>>>
+    
+    export type AmbassadorControllerDeleteAvatarMutationError = unknown
+
+    /**
+ * @summary Удалить аватарку
+ */
+export const useAmbassadorControllerDeleteAvatar = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ambassadorControllerDeleteAvatar>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof ambassadorControllerDeleteAvatar>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getAmbassadorControllerDeleteAvatarMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

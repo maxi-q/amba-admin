@@ -6,17 +6,31 @@
  * OpenAPI spec version: 1.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
-  CreatePromoCodeUsageDto
+  BaseCustomPromoCodeDto,
+  CreateCustomPromoCodeRequestDto,
+  CreateCustomPromoCodeResponseDto,
+  CreatePromoCodeUsageDto,
+  UpdateCustomPromoCodeRequestDto,
+  UpdateCustomPromoCodeResponseDto
 } from '.././model';
 
 import { customInstance } from '../../mutator/custom-instance';
@@ -27,6 +41,226 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * @summary Create a custom room promo code
+ */
+export const promoCodesControllerCreateCustomPromoCode = (
+    createCustomPromoCodeRequestDto: CreateCustomPromoCodeRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CreateCustomPromoCodeResponseDto>(
+      {url: `/api/promo-code/custom`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createCustomPromoCodeRequestDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getPromoCodesControllerCreateCustomPromoCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerCreateCustomPromoCode>>, TError,{data: CreateCustomPromoCodeRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerCreateCustomPromoCode>>, TError,{data: CreateCustomPromoCodeRequestDto}, TContext> => {
+
+const mutationKey = ['promoCodesControllerCreateCustomPromoCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof promoCodesControllerCreateCustomPromoCode>>, {data: CreateCustomPromoCodeRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  promoCodesControllerCreateCustomPromoCode(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PromoCodesControllerCreateCustomPromoCodeMutationResult = NonNullable<Awaited<ReturnType<typeof promoCodesControllerCreateCustomPromoCode>>>
+    export type PromoCodesControllerCreateCustomPromoCodeMutationBody = CreateCustomPromoCodeRequestDto
+    export type PromoCodesControllerCreateCustomPromoCodeMutationError = unknown
+
+    /**
+ * @summary Create a custom room promo code
+ */
+export const usePromoCodesControllerCreateCustomPromoCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerCreateCustomPromoCode>>, TError,{data: CreateCustomPromoCodeRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof promoCodesControllerCreateCustomPromoCode>>,
+        TError,
+        {data: CreateCustomPromoCodeRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPromoCodesControllerCreateCustomPromoCodeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Get custom promo codes for a room
+ */
+export const promoCodesControllerGetCustomPromoCodes = (
+    roomId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<BaseCustomPromoCodeDto[]>(
+      {url: `/api/promo-code/custom/${roomId}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getPromoCodesControllerGetCustomPromoCodesQueryKey = (roomId?: string,) => {
+    return [
+    `/api/promo-code/custom/${roomId}`
+    ] as const;
+    }
+
+    
+export const getPromoCodesControllerGetCustomPromoCodesQueryOptions = <TData = Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError = unknown>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPromoCodesControllerGetCustomPromoCodesQueryKey(roomId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>> = ({ signal }) => promoCodesControllerGetCustomPromoCodes(roomId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(roomId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PromoCodesControllerGetCustomPromoCodesQueryResult = NonNullable<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>>
+export type PromoCodesControllerGetCustomPromoCodesQueryError = unknown
+
+
+export function usePromoCodesControllerGetCustomPromoCodes<TData = Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError = unknown>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>,
+          TError,
+          Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePromoCodesControllerGetCustomPromoCodes<TData = Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError = unknown>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>,
+          TError,
+          Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePromoCodesControllerGetCustomPromoCodes<TData = Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError = unknown>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get custom promo codes for a room
+ */
+
+export function usePromoCodesControllerGetCustomPromoCodes<TData = Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError = unknown>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof promoCodesControllerGetCustomPromoCodes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPromoCodesControllerGetCustomPromoCodesQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update a custom room promo code
+ */
+export const promoCodesControllerUpdateCustomPromoCode = (
+    id: string,
+    updateCustomPromoCodeRequestDto: UpdateCustomPromoCodeRequestDto,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<UpdateCustomPromoCodeResponseDto>(
+      {url: `/api/promo-code/custom/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateCustomPromoCodeRequestDto
+    },
+      options);
+    }
+  
+
+
+export const getPromoCodesControllerUpdateCustomPromoCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerUpdateCustomPromoCode>>, TError,{id: string;data: UpdateCustomPromoCodeRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerUpdateCustomPromoCode>>, TError,{id: string;data: UpdateCustomPromoCodeRequestDto}, TContext> => {
+
+const mutationKey = ['promoCodesControllerUpdateCustomPromoCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof promoCodesControllerUpdateCustomPromoCode>>, {id: string;data: UpdateCustomPromoCodeRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  promoCodesControllerUpdateCustomPromoCode(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PromoCodesControllerUpdateCustomPromoCodeMutationResult = NonNullable<Awaited<ReturnType<typeof promoCodesControllerUpdateCustomPromoCode>>>
+    export type PromoCodesControllerUpdateCustomPromoCodeMutationBody = UpdateCustomPromoCodeRequestDto
+    export type PromoCodesControllerUpdateCustomPromoCodeMutationError = unknown
+
+    /**
+ * @summary Update a custom room promo code
+ */
+export const usePromoCodesControllerUpdateCustomPromoCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerUpdateCustomPromoCode>>, TError,{id: string;data: UpdateCustomPromoCodeRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof promoCodesControllerUpdateCustomPromoCode>>,
+        TError,
+        {id: string;data: UpdateCustomPromoCodeRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPromoCodesControllerUpdateCustomPromoCodeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Use promo code
  */
 export const promoCodesControllerUsePromoCode = (

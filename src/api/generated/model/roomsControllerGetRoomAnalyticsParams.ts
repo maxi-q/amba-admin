@@ -8,6 +8,10 @@
 
 export type RoomsControllerGetRoomAnalyticsParams = {
 /**
+ * ID произвольных промокодов для фильтрации
+ */
+promoCodeId?: string[];
+/**
  * ID амбассадоров для фильтрации
  */
 ambassadorId?: string[];

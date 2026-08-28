@@ -12,7 +12,7 @@ export interface SprintRewardRuleRewardDto {
   id: string;
   /** ID награды */
   rewardId: string;
-  /** Количество награды */
+  /** Количество награды (для делимой — с точностью divisionPrecision) */
   amount: number;
   /** Награда из каталога */
   reward: RewardSummaryDto;

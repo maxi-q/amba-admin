@@ -5,14 +5,11 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { SprintRewardRuleRewardInputDtoAmount } from './sprintRewardRuleRewardInputDtoAmount';
 
 export interface SprintRewardRuleRewardInputDto {
   /** ID награды из каталога комнаты */
   rewardId: string;
-  /**
-   * Количество награды. byRank — сколько получает каждый участник в диапазоне мест; byPoints — общий пул, распределяемый пропорционально баллам подходящих участников; manual — общий пул, распределяемый вручную.
-   * @minimum 1
-   * @maximum 9007199254740991
-   */
-  amount: number;
+  /** Количество награды. byRank — сколько получает каждый участник в диапазоне мест; byPoints — общий пул, распределяемый пропорционально баллам подходящих участников; manual — общий пул, распределяемый вручную. Для делимой награды допустимо дробное значение с точностью не выше divisionPrecision (например 10 или 0.085); значение можно передать строкой, чтобы не терять точность. */
+  amount: SprintRewardRuleRewardInputDtoAmount;
 }

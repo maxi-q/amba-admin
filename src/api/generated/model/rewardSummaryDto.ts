@@ -16,4 +16,8 @@ export interface RewardSummaryDto {
    * @nullable
    */
   iconUrl: string | null;
+  /** Делимая ли награда */
+  isDivisible: boolean;
+  /** Точность деления — знаков после запятой (0 — награда неделимая) */
+  divisionPrecision: number;
 }

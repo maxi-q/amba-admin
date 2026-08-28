@@ -25,4 +25,9 @@ export interface BaseAmbassadorDto {
   channelTypeId: number;
   /** ID подписчика в этом канале */
   subscriberId: string;
+  /**
+   * Presigned URL аватарки; null, если загрузка ещё не подтверждена
+   * @nullable
+   */
+  avatarUrl: string | null;
 }

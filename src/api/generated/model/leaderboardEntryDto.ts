@@ -15,6 +15,11 @@ export interface LeaderboardEntryDto {
   /** Логин амбассадора */
   username: string;
   /**
+   * Presigned URL аватарки; null, если загрузка ещё не подтверждена
+   * @nullable
+   */
+  avatarUrl: string | null;
+  /**
    * Промо-код амбассадора
    * @nullable
    */

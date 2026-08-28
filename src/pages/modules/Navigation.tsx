@@ -45,6 +45,7 @@ import {
   RewardsPage,
   PromoCodesPage,
   SprintLeaderboardPage,
+  VkProfilePage,
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -127,6 +128,7 @@ export const Navigation = () => {
         <Route path="setting" element={<SettingPage />} />
         <Route path="setting/info" element={<SettingsInfo />} />
         <Route path="code" element={<CodePage />} />
+        <Route path="vk-profile" element={<VkProfilePage />} />
 
         <Route path="sprints" element={<SprintsLayout />}>
           <Route index element={<SprintList />} />
