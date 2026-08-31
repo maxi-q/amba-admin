@@ -9,7 +9,7 @@ import { ApiError } from '@/types';
 export function useCreatePrivateCreativeTask() {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, error, isSuccess, isError } = useMutation<
+  const { mutate, mutateAsync, isPending, error, isSuccess, isError } = useMutation<
     Awaited<ReturnType<typeof privateCreativeTasksControllerCreatePrivateCreativeTask>>,
     ApiError,
     CreatePrivateCreativeTaskRequestDto
@@ -44,6 +44,7 @@ export function useCreatePrivateCreativeTask() {
 
   return {
     createPrivateCreativeTask: mutate,
+    createPrivateCreativeTaskAsync: mutateAsync,
     isPending,
     error,
     isSuccess,

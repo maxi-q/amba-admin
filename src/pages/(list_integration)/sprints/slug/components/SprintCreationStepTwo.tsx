@@ -1,6 +1,22 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Minus, Pencil, Plus, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Banknote,
+  Ellipsis,
+  Gift,
+  Minus,
+  Pencil,
+  Plus,
+  Redo2,
+  Search,
+  Trash2,
+  TriangleAlert,
+  Undo2,
+  User,
+  Users,
+  X,
+} from "lucide-react";
 import {
   Button,
   CheckBox,
@@ -10,12 +26,13 @@ import {
   DialogHeader,
   DialogRoot,
   DialogTitle,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
   Input,
   PageLoader,
-  TabsContent,
-  TabsList,
-  TabsRoot,
-  TabsTrigger,
+  Switch,
 } from "@senler/ui";
 import type { BaseRewardDto } from "@/api/generated/model";
 import { useRoomRewards } from "@/hooks/rewards/useRoomRewards";
@@ -38,6 +55,8 @@ export interface DraftRankRule {
 export interface DraftProportionalReward {
   amount: string;
   rankTo: string;
+  minPoints: string;
+  rewards: DraftRankReward[];
 }
 
 export type DraftManualReward = DraftRankReward;
@@ -58,6 +77,25 @@ interface SprintCreationStepTwoProps {
   onSaveDraft: () => void;
 }
 
+type PlaceDialogKind = "single" | "range" | "manual";
+
+interface PreviewParticipant {
+  id: string;
+  name: string;
+  points: number;
+  color: string;
+}
+
+const PREVIEW_PARTICIPANTS: PreviewParticipant[] = [
+  { id: "sergey", name: "Сергей", points: 1000, color: "#ff5420" },
+  { id: "anzhelika", name: "Анжелика", points: 500, color: "#ffb520" },
+  { id: "dmitry", name: "Дмитрий", points: 400, color: "#c020ff" },
+];
+
+const MANUAL_DIALOG_ID = "__manual__";
+const PROPORTIONAL_DIALOG_ID = "__proportional__";
+const numberFormatter = new Intl.NumberFormat("ru-RU");
+
 const ruleLabel = (rule: DraftRankRule) =>
   rule.rankFrom === rule.rankTo
     ? `${rule.rankFrom} место`
@@ -68,24 +106,81 @@ const RewardImage = ({ reward }: { reward: BaseRewardDto }) =>
     <img
       src={reward.iconUrl}
       alt=""
-      className="size-10 shrink-0 rounded-md object-cover"
+      className="size-12 shrink-0 rounded-lg border border-[#e4e4e4] object-cover"
     />
   ) : (
-    <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#f0f0f0] text-xs text-[#797979]">
-      —
+    <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-[#e4e4e4] bg-[#f0f0f0] text-xs text-[#797979]">
+      <Gift className="size-5" aria-hidden />
     </div>
   );
 
-const MANUAL_DIALOG_ID = "__manual__";
+const RewardChip = ({
+  reward,
+  amount,
+}: {
+  reward: BaseRewardDto;
+  amount: number;
+}) => {
+  const isMoney = /руб|₽/i.test(reward.name);
+
+  return (
+    <span className="inline-flex h-6 max-w-full items-center gap-0.5 rounded-[13px] bg-[#f0f0f0] px-1.5 text-[13px] font-medium leading-4">
+      {isMoney ? (
+        <Banknote className="size-3.5 shrink-0 text-[#26c464]" aria-hidden />
+      ) : (
+        <Gift className="size-3.5 shrink-0 text-[#d52094]" aria-hidden />
+      )}
+      <span className="truncate">
+        {isMoney ? numberFormatter.format(amount) : reward.name}
+      </span>
+      <span className="shrink-0 text-[#797979]">
+        {isMoney ? "₽" : numberFormatter.format(amount)}
+      </span>
+    </span>
+  );
+};
+
+const RuleActions = ({
+  editLabel,
+  deleteLabel,
+  onEdit,
+  onDelete,
+}: {
+  editLabel: string;
+  deleteLabel: string;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => (
+  <div className="flex shrink-0 gap-1">
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className="size-7 border-[#e4e4e4] bg-white shadow-none"
+      aria-label={editLabel}
+      onClick={onEdit}
+    >
+      <Pencil className="size-4" aria-hidden />
+    </Button>
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className="size-7 border-[#e4e4e4] bg-white shadow-none"
+      aria-label={deleteLabel}
+      onClick={onDelete}
+    >
+      <X className="size-4" aria-hidden />
+    </Button>
+  </div>
+);
 
 export const SprintCreationStepTwo = ({
   roomId,
   roomSlug,
-  mode,
   rankRules,
   proportional,
   manualRewards,
-  onModeChange,
   onRankRulesChange,
   onProportionalChange,
   onManualRewardsChange,
@@ -93,7 +188,12 @@ export const SprintCreationStepTwo = ({
   onContinue,
   onSaveDraft,
 }: SprintCreationStepTwoProps) => {
-  const { rewards, isLoading: isRewardsLoading } = useRoomRewards(roomId, {
+  const {
+    rewards,
+    isLoading: isRewardsLoading,
+    isError: isRewardsError,
+    refetch: refetchRewards,
+  } = useRoomRewards(roomId, {
     page: 1,
     size: 100,
     includeDeleted: false,
@@ -107,15 +207,27 @@ export const SprintCreationStepTwo = ({
     [activeRewards]
   );
 
-  const [rangeDialogOpen, setRangeDialogOpen] = useState(false);
+  const [placeDialogOpen, setPlaceDialogOpen] = useState(false);
+  const [placeDialogKind, setPlaceDialogKind] =
+    useState<PlaceDialogKind>("single");
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [rangeFrom, setRangeFrom] = useState("1");
   const [rangeTo, setRangeTo] = useState("1");
-  const [rewardDialogRuleId, setRewardDialogRuleId] = useState<string | null>(
-    null
-  );
+  const [distributeProportionally, setDistributeProportionally] =
+    useState(false);
   const [rewardDraft, setRewardDraft] = useState<DraftRankReward[]>([]);
+  const [selectedRuleIds, setSelectedRuleIds] = useState<string[]>([]);
+  const [previewTab, setPreviewTab] = useState<"distribution" | "all">(
+    "distribution"
+  );
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [previewHistory, setPreviewHistory] = useState<PreviewParticipant[][]>([
+    PREVIEW_PARTICIPANTS,
+  ]);
+  const [previewHistoryIndex, setPreviewHistoryIndex] = useState(0);
 
-  const pool = useMemo(() => {
+  const ratingPool = useMemo(() => {
     const totals = new Map<string, number>();
     for (const rule of rankRules) {
       const places = rule.rankTo - rule.rankFrom + 1;
@@ -129,34 +241,85 @@ export const SprintCreationStepTwo = ({
     return [...totals.entries()];
   }, [rankRules]);
 
-  const openRewardDialog = (rule: DraftRankRule) => {
-    setRewardDraft(rule.rewards.map((reward) => ({ ...reward })));
-    setRewardDialogRuleId(rule.id);
-  };
-
-  const openManualRewardDialog = () => {
-    setRewardDraft(manualRewards.map((reward) => ({ ...reward })));
-    setRewardDialogRuleId(MANUAL_DIALOG_ID);
-  };
-
-  const handleAddRange = () => {
-    const from = Number(rangeFrom);
-    const to = Number(rangeTo);
-    if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
-      return;
+  const proportionalRewards = proportional.rewards ?? [];
+  const allPool = useMemo(() => {
+    const totals = new Map(ratingPool);
+    for (const reward of [...proportionalRewards, ...manualRewards]) {
+      totals.set(
+        reward.rewardId,
+        (totals.get(reward.rewardId) ?? 0) + reward.amount
+      );
     }
+    return [...totals.entries()];
+  }, [manualRewards, proportionalRewards, ratingPool]);
 
-    const id = crypto.randomUUID();
-    const nextRule: DraftRankRule = {
-      id,
-      rankFrom: from,
-      rankTo: to,
-      rewards: [],
-    };
-    onRankRulesChange([...rankRules, nextRule]);
-    setRangeDialogOpen(false);
+  const participants = previewHistory[previewHistoryIndex] ?? PREVIEW_PARTICIPANTS;
+  const visibleParticipants = useMemo(
+    () =>
+      [...participants]
+        .sort((first, second) => second.points - first.points)
+        .map((participant, index) => ({ participant, rank: index + 1 }))
+        .filter(({ participant }) =>
+          participant.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+        ),
+    [participants, searchQuery]
+  );
+
+  const hasProportionalFilter =
+    Boolean(proportional.rankTo) || proportional.minPoints !== "";
+  const hasProportionalRule =
+    hasProportionalFilter && proportionalRewards.length > 0;
+  const hasManualRule = manualRewards.length > 0;
+  const ruleIds = [
+    ...rankRules.map((rule) => rule.id),
+    ...(hasProportionalRule ? [PROPORTIONAL_DIALOG_ID] : []),
+    ...(hasManualRule ? [MANUAL_DIALOG_ID] : []),
+  ];
+  const maxRewardedRank = Math.max(
+    0,
+    ...rankRules.map((rule) => rule.rankTo),
+    Number(proportional.rankTo) || 0
+  );
+
+  const allRulesSelected =
+    ruleIds.length > 0 && selectedRuleIds.length === ruleIds.length;
+
+  const openNewPlaceDialog = () => {
+    setEditingRuleId(null);
+    setPlaceDialogKind("single");
+    setDistributeProportionally(false);
+    setRangeFrom("1");
+    setRangeTo("1");
     setRewardDraft([]);
-    setRewardDialogRuleId(id);
+    setPlaceDialogOpen(true);
+  };
+
+  const openRuleDialog = (rule: DraftRankRule) => {
+    setEditingRuleId(rule.id);
+    setPlaceDialogKind(rule.rankFrom === rule.rankTo ? "single" : "range");
+    setDistributeProportionally(false);
+    setRangeFrom(String(rule.rankFrom));
+    setRangeTo(String(rule.rankTo));
+    setRewardDraft(rule.rewards.map((reward) => ({ ...reward })));
+    setPlaceDialogOpen(true);
+  };
+
+  const openManualDialog = () => {
+    setEditingRuleId(MANUAL_DIALOG_ID);
+    setPlaceDialogKind("manual");
+    setDistributeProportionally(false);
+    setRewardDraft(manualRewards.map((reward) => ({ ...reward })));
+    setPlaceDialogOpen(true);
+  };
+
+  const openProportionalDialog = () => {
+    setEditingRuleId(PROPORTIONAL_DIALOG_ID);
+    setPlaceDialogKind("range");
+    setDistributeProportionally(true);
+    setRangeFrom("1");
+    setRangeTo(proportional.rankTo || "1");
+    setRewardDraft(proportionalRewards.map((reward) => ({ ...reward })));
+    setPlaceDialogOpen(true);
   };
 
   const toggleReward = (rewardId: string, checked: boolean) => {
@@ -167,416 +330,768 @@ export const SprintCreationStepTwo = ({
     );
   };
 
-  const changeRewardAmount = (rewardId: string, delta: number) => {
+  const setRewardAmount = (reward: BaseRewardDto, amount: number) => {
+    const precision = reward.isDivisible ? reward.divisionPrecision : 0;
+    const multiplier = 10 ** precision;
+    const minimum = 1 / multiplier;
     setRewardDraft((previous) =>
-      previous.map((reward) =>
-        reward.rewardId === rewardId
-          ? { ...reward, amount: Math.max(1, reward.amount + delta) }
-          : reward
+      previous.map((item) =>
+        item.rewardId === reward.id
+          ? {
+              ...item,
+              amount: Math.max(
+                minimum,
+                Math.round((amount || minimum) * multiplier) / multiplier
+              ),
+            }
+          : item
       )
     );
   };
 
-  const changeManualAmount = (rewardId: string, nextAmount: number) => {
-    onManualRewardsChange(
-      manualRewards.map((reward) =>
-        reward.rewardId === rewardId
-          ? { ...reward, amount: Math.max(1, nextAmount) }
-          : reward
-      )
-    );
-  };
+  const savePlace = () => {
+    if (rewardDraft.length === 0) return;
 
-  const removeManualReward = (rewardId: string) => {
-    onManualRewardsChange(
-      manualRewards.filter((reward) => reward.rewardId !== rewardId)
-    );
-  };
+    const editingRankRuleId =
+      editingRuleId &&
+      editingRuleId !== MANUAL_DIALOG_ID &&
+      editingRuleId !== PROPORTIONAL_DIALOG_ID
+        ? editingRuleId
+        : null;
 
-  const saveRuleRewards = () => {
-    if (!rewardDialogRuleId) return;
-    if (rewardDialogRuleId === MANUAL_DIALOG_ID) {
+    if (placeDialogKind === "manual") {
       onManualRewardsChange(rewardDraft.map((reward) => ({ ...reward })));
-      setRewardDialogRuleId(null);
+      if (editingRankRuleId) {
+        onRankRulesChange(
+          rankRules.filter((rule) => rule.id !== editingRankRuleId)
+        );
+      }
+      if (editingRuleId === PROPORTIONAL_DIALOG_ID) {
+        onProportionalChange({
+          amount: "",
+          rankTo: "",
+          minPoints: "",
+          rewards: [],
+        });
+      }
+      if (editingRuleId && editingRuleId !== MANUAL_DIALOG_ID) {
+        setSelectedRuleIds((selected) =>
+          selected.filter((id) => id !== editingRuleId)
+        );
+      }
+      setPlaceDialogOpen(false);
       return;
     }
+
+    const from = Number(rangeFrom);
+    const to = placeDialogKind === "single" ? from : Number(rangeTo);
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+      return;
+    }
+
+    if (distributeProportionally) {
+      onProportionalChange({
+        amount: String(
+          rewardDraft.reduce((total, reward) => total + reward.amount, 0)
+        ),
+        rankTo: String(to),
+        minPoints:
+          editingRuleId === PROPORTIONAL_DIALOG_ID
+            ? proportional.minPoints
+            : "",
+        rewards: rewardDraft.map((reward) => ({ ...reward })),
+      });
+      if (editingRankRuleId) {
+        onRankRulesChange(
+          rankRules.filter((rule) => rule.id !== editingRankRuleId)
+        );
+      }
+      if (editingRuleId === MANUAL_DIALOG_ID) onManualRewardsChange([]);
+      if (editingRuleId && editingRuleId !== PROPORTIONAL_DIALOG_ID) {
+        setSelectedRuleIds((selected) =>
+          selected.filter((id) => id !== editingRuleId)
+        );
+      }
+      setPlaceDialogOpen(false);
+      return;
+    }
+
+    const nextRule: DraftRankRule = {
+      id: editingRankRuleId ?? crypto.randomUUID(),
+      rankFrom: from,
+      rankTo: to,
+      rewards: rewardDraft.map((reward) => ({ ...reward })),
+    };
+
     onRankRulesChange(
-      rankRules.map((rule) =>
-        rule.id === rewardDialogRuleId
-          ? { ...rule, rewards: rewardDraft }
-          : rule
-      )
+      editingRankRuleId
+        ? rankRules.map((rule) => (rule.id === editingRuleId ? nextRule : rule))
+        : [...rankRules, nextRule]
     );
-    setRewardDialogRuleId(null);
+    if (editingRuleId === MANUAL_DIALOG_ID) onManualRewardsChange([]);
+    if (editingRuleId === PROPORTIONAL_DIALOG_ID) {
+      onProportionalChange({
+        amount: "",
+        rankTo: "",
+        minPoints: "",
+        rewards: [],
+      });
+    }
+    if (
+      editingRuleId === MANUAL_DIALOG_ID ||
+      editingRuleId === PROPORTIONAL_DIALOG_ID
+    ) {
+      setSelectedRuleIds((selected) =>
+        selected.filter((id) => id !== editingRuleId)
+      );
+    }
+    setPlaceDialogOpen(false);
   };
 
-  const ratingValid =
-    rankRules.length > 0 && rankRules.every((rule) => rule.rewards.length > 0);
-  const manualValid = manualRewards.length > 0;
-  const proportionalValid =
-    Number(proportional.amount) > 0 &&
-    Number.isInteger(Number(proportional.rankTo)) &&
-    Number(proportional.rankTo) > 0;
+  const removeRules = (ids: string[]) => {
+    onRankRulesChange(rankRules.filter((rule) => !ids.includes(rule.id)));
+    if (ids.includes(PROPORTIONAL_DIALOG_ID)) {
+      onProportionalChange({
+        amount: "",
+        rankTo: "",
+        minPoints: "",
+        rewards: [],
+      });
+    }
+    if (ids.includes(MANUAL_DIALOG_ID)) onManualRewardsChange([]);
+    setSelectedRuleIds((selected) => selected.filter((id) => !ids.includes(id)));
+  };
+
+  const updateParticipantPoints = (participantId: string, points: number) => {
+    const nextParticipants = participants.map((participant) =>
+      participant.id === participantId
+        ? { ...participant, points: Math.max(0, Math.trunc(points || 0)) }
+        : participant
+    );
+    const nextHistory = [
+      ...previewHistory.slice(0, previewHistoryIndex + 1),
+      nextParticipants,
+    ];
+    setPreviewHistory(nextHistory);
+    setPreviewHistoryIndex(nextHistory.length - 1);
+  };
+
   const canContinue =
-    mode === "rating"
-      ? ratingValid
-      : mode === "manual"
-        ? manualValid
-        : proportionalValid;
-  const isManualDialog = rewardDialogRuleId === MANUAL_DIALOG_ID;
+    ruleIds.length > 0 &&
+    rankRules.every((rule) => rule.rewards.length > 0) &&
+    (!hasProportionalRule || hasProportionalFilter);
+
+  const rewardsForParticipant = (
+    participant: PreviewParticipant,
+    rank: number
+  ) => {
+    const fixedRewards =
+      rankRules.find((rule) => rank >= rule.rankFrom && rank <= rule.rankTo)
+        ?.rewards ?? [];
+    const proportionalRankTo = Number(proportional.rankTo) || 0;
+    const proportionalMinPoints =
+      proportional.minPoints === "" ? null : Number(proportional.minPoints);
+    if (
+      !hasProportionalRule ||
+      (proportionalRankTo > 0 && rank > proportionalRankTo) ||
+      (proportionalMinPoints !== null &&
+        participant.points < proportionalMinPoints)
+    ) {
+      return fixedRewards;
+    }
+
+    const eligibleParticipants = [...participants]
+      .sort((first, second) => second.points - first.points)
+      .filter(
+        (item, index) =>
+          (proportionalRankTo === 0 || index < proportionalRankTo) &&
+          (proportionalMinPoints === null ||
+            item.points >= proportionalMinPoints)
+      );
+    const totalPoints = eligibleParticipants.reduce(
+      (total, item) => total + item.points,
+      0
+    );
+    if (totalPoints === 0) return fixedRewards;
+
+    return [
+      ...fixedRewards,
+      ...proportionalRewards.map((reward) => {
+        const rewardData = rewardById.get(reward.rewardId);
+        const precision = rewardData?.isDivisible
+          ? rewardData.divisionPrecision
+          : 0;
+        const multiplier = 10 ** precision;
+        return {
+          ...reward,
+          amount:
+            Math.round(
+              reward.amount * (participant.points / totalPoints) * multiplier
+            ) / multiplier,
+        };
+      }),
+    ];
+  };
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
       <SprintCreationHeader activeStep={2} onSaveDraft={onSaveDraft} />
 
-      <div className="mx-auto mt-9 flex w-full max-w-[700px] flex-col gap-3">
-        <TabsRoot
-          value={mode}
-          onValueChange={(value) => onModeChange(value as SprintRewardMode)}
-        >
-          <div className="rounded-lg border border-[#e4e4e4] bg-white p-4">
-            <h2 className="text-[15px] font-medium leading-5 tracking-[-0.135px]">
-              Вознаграждение
-            </h2>
-            <TabsList className="mt-3 w-fit" size="medium">
-              <TabsTrigger value="rating">Рейтинг</TabsTrigger>
-              <TabsTrigger value="manual">Ручной выбор</TabsTrigger>
-              <TabsTrigger value="proportional">Пропорционально</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="rating" className="mt-2">
-              <p className="text-[13px] font-medium leading-4 text-[#797979]">
-                Награды распределяются по заданным вами местам
+      <div className="flex min-h-[664px] min-w-0 flex-1">
+        <main className="min-w-0 flex-1 px-4 py-4">
+          <div className="mx-auto w-full max-w-[648px]">
+            <div className="rounded-lg border border-[#e4e4e4] bg-white p-4">
+              <h2 className="text-[15px] font-medium leading-5 tracking-[-0.135px]">
+                Призовые места
+              </h2>
+              <p className="mt-1 text-[13px] font-medium leading-4 text-[#797979]">
+                Какие награды получит конкретное место в рейтинге
               </p>
 
-              <div className="mt-4">
-                <p className="text-[13px] font-medium leading-4">Таблица лидеров</p>
-                {rankRules.length === 0 ? (
+              {ruleIds.length > 0 ? (
+                <div className="mt-3 overflow-hidden rounded-lg border border-[#e4e4e4]">
+                  <div className="flex h-12 items-center gap-3 border-b border-[#e4e4e4] px-3">
+                    <CheckBox
+                      checked={
+                        allRulesSelected
+                          ? true
+                          : selectedRuleIds.length > 0
+                            ? "indeterminate"
+                            : false
+                      }
+                      onCheckedChange={(checked) =>
+                        setSelectedRuleIds(checked === true ? ruleIds : [])
+                      }
+                      aria-label="Выбрать все места"
+                    />
+                    <span className="min-w-0 flex-1 text-[13px] font-medium leading-4">
+                      Выбрано: {selectedRuleIds.length}
+                    </span>
+                    <DropdownMenuRoot>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="size-7 border-[#e4e4e4] bg-white shadow-none"
+                          aria-label="Действия с выбранными местами"
+                        >
+                          <Ellipsis className="size-4" aria-hidden />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          disabled={selectedRuleIds.length === 0}
+                          onClick={() => removeRules(selectedRuleIds)}
+                        >
+                          <Trash2 className="size-4" aria-hidden />
+                          Удалить
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenuRoot>
+                  </div>
+
+                  {rankRules.map((rule) => (
+                    <div
+                      key={rule.id}
+                      className="flex min-h-12 items-center gap-3 border-b border-[#e4e4e4] px-3 py-2 last:border-b-0"
+                    >
+                      <CheckBox
+                        checked={selectedRuleIds.includes(rule.id)}
+                        onCheckedChange={(checked) =>
+                          setSelectedRuleIds((selected) =>
+                            checked === true
+                              ? [...selected, rule.id]
+                              : selected.filter((id) => id !== rule.id)
+                          )
+                        }
+                        aria-label={`Выбрать ${ruleLabel(rule)}`}
+                      />
+                      <span className="w-[110px] shrink-0 text-[13px] font-medium leading-4">
+                        {ruleLabel(rule)}
+                      </span>
+                      <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                        {rule.rewards.map((item) => {
+                          const reward = rewardById.get(item.rewardId);
+                          return reward ? (
+                            <RewardChip
+                              key={item.rewardId}
+                              reward={reward}
+                              amount={item.amount}
+                            />
+                          ) : null;
+                        })}
+                      </div>
+                      <RuleActions
+                        editLabel={`Изменить ${ruleLabel(rule)}`}
+                        deleteLabel={`Удалить ${ruleLabel(rule)}`}
+                        onEdit={() => openRuleDialog(rule)}
+                        onDelete={() => removeRules([rule.id])}
+                      />
+                    </div>
+                  ))}
+
+                  {hasProportionalRule ? (
+                    <div className="flex min-h-12 items-center gap-3 border-b border-[#e4e4e4] px-3 py-2 last:border-b-0">
+                      <CheckBox
+                        checked={selectedRuleIds.includes(PROPORTIONAL_DIALOG_ID)}
+                        onCheckedChange={(checked) =>
+                          setSelectedRuleIds((selected) =>
+                            checked === true
+                              ? [...selected, PROPORTIONAL_DIALOG_ID]
+                              : selected.filter(
+                                  (id) => id !== PROPORTIONAL_DIALOG_ID
+                                )
+                          )
+                        }
+                        aria-label="Выбрать пропорциональное распределение"
+                      />
+                      <div className="w-[110px] shrink-0">
+                        <p className="text-[13px] font-medium leading-4">
+                          {proportional.rankTo
+                            ? `1–${proportional.rankTo} место`
+                            : `от ${proportional.minPoints} XP`}
+                        </p>
+                        <p className="text-[13px] font-medium leading-4 text-[#797979]">
+                          Пропорционально
+                        </p>
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                        {proportionalRewards.map((item) => {
+                          const reward = rewardById.get(item.rewardId);
+                          return reward ? (
+                            <RewardChip
+                              key={item.rewardId}
+                              reward={reward}
+                              amount={item.amount}
+                            />
+                          ) : null;
+                        })}
+                      </div>
+                      <RuleActions
+                        editLabel="Изменить пропорциональное распределение"
+                        deleteLabel="Удалить пропорциональное распределение"
+                        onEdit={openProportionalDialog}
+                        onDelete={() => removeRules([PROPORTIONAL_DIALOG_ID])}
+                      />
+                    </div>
+                  ) : null}
+
+                  {hasManualRule ? (
+                    <div className="flex min-h-12 items-center gap-3 border-b border-[#e4e4e4] px-3 py-2 last:border-b-0">
+                      <CheckBox
+                        checked={selectedRuleIds.includes(MANUAL_DIALOG_ID)}
+                        onCheckedChange={(checked) =>
+                          setSelectedRuleIds((selected) =>
+                            checked === true
+                              ? [...selected, MANUAL_DIALOG_ID]
+                              : selected.filter((id) => id !== MANUAL_DIALOG_ID)
+                          )
+                        }
+                        aria-label="Выбрать ручной отбор"
+                      />
+                      <span className="w-[110px] shrink-0 text-[13px] font-medium leading-4">
+                        Ручной отбор
+                      </span>
+                      <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                        {manualRewards.map((item) => {
+                          const reward = rewardById.get(item.rewardId);
+                          return reward ? (
+                            <RewardChip
+                              key={item.rewardId}
+                              reward={reward}
+                              amount={item.amount}
+                            />
+                          ) : null;
+                        })}
+                      </div>
+                      <RuleActions
+                        editLabel="Изменить ручной отбор"
+                        deleteLabel="Удалить ручной отбор"
+                        onEdit={openManualDialog}
+                        onDelete={() => removeRules([MANUAL_DIALOG_ID])}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 h-7 border-[#e4e4e4] bg-white px-2 text-[13px] shadow-none"
+                onClick={openNewPlaceDialog}
+              >
+                <Plus className="size-4" aria-hidden />
+                Добавить место
+              </Button>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 border-[#e4e4e4] bg-white px-3 text-[13px] shadow-none"
+                onClick={onBack}
+              >
+                <ArrowLeft className="size-4" aria-hidden />
+                Назад
+              </Button>
+              <Button
+                type="button"
+                className="h-10 bg-[#2563eb] px-3 text-[13px] font-medium hover:bg-[#2563eb]/90"
+                disabled={!canContinue}
+                onClick={onContinue}
+              >
+                Продолжить
+              </Button>
+            </div>
+          </div>
+        </main>
+
+        <aside className="block w-[260px] shrink-0 border-l border-[#e4e4e4] bg-white">
+          {ruleIds.length === 0 ? (
+            <div className="flex h-full items-center justify-center p-4 text-center text-[13px] font-medium leading-4 text-[#797979]">
+              Здесь будут отображаться
+              <br />
+              все награды
+            </div>
+          ) : (
+            <>
+              <div className="border-b border-[#e4e4e4] p-4">
+            <div
+              className="flex rounded-md bg-[#f0f0f0] p-0.5"
+              role="group"
+              aria-label="Режим предпросмотра наград"
+            >
+              <button
+                type="button"
+                aria-pressed={previewTab === "distribution"}
+                className={`flex-1 rounded px-1.5 py-1 text-[13px] font-medium leading-4 ${
+                  previewTab === "distribution" ? "bg-white" : ""
+                }`}
+                onClick={() => setPreviewTab("distribution")}
+              >
+                Как делятся
+              </button>
+              <button
+                type="button"
+                aria-pressed={previewTab === "all"}
+                className={`flex-1 rounded px-1.5 py-1 text-[13px] font-medium leading-4 ${
+                  previewTab === "all" ? "bg-white" : ""
+                }`}
+                onClick={() => setPreviewTab("all")}
+              >
+                Все награды
+              </button>
+            </div>
+            {previewTab === "distribution" ? (
+              <p className="mt-2 text-[13px] font-medium leading-4 text-[#797979]">
+                Посмотрите, как награды будут распределяться относительно набранных XP
+              </p>
+            ) : null}
+          </div>
+
+              {previewTab === "distribution" ? (
+            <>
+              <div className="flex h-16 items-center gap-2 px-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  disabled={previewHistoryIndex === 0}
+                  onClick={() => setPreviewHistoryIndex((index) => index - 1)}
+                  aria-label="Отменить изменение XP"
+                >
+                  <Undo2 className="size-4" aria-hidden />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  disabled={previewHistoryIndex === previewHistory.length - 1}
+                  onClick={() => setPreviewHistoryIndex((index) => index + 1)}
+                  aria-label="Вернуть изменение XP"
+                >
+                  <Redo2 className="size-4" aria-hidden />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => setIsSearchOpen((open) => !open)}
+                  aria-label="Поиск участника"
+                  aria-pressed={isSearchOpen}
+                >
+                  <Search className="size-4" aria-hidden />
+                </Button>
+                <span className="flex-1" />
+                <span className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#e4e4e4] px-1.5 text-[13px] font-medium">
+                  <Users className="size-4" aria-hidden />
+                  {participants.length}
+                </span>
+              </div>
+
+              {isSearchOpen ? (
+                <div className="flex items-center gap-2 px-4 pb-3">
+                  <Input
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Имя участника"
+                    className="h-8 text-[13px]"
+                  />
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 h-7 border-[#e4e4e4] bg-white px-2 text-[13px] shadow-none"
-                    onClick={() => setRangeDialogOpen(true)}
+                    variant="ghost"
+                    size="icon"
+                    className="size-7"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setIsSearchOpen(false);
+                    }}
+                    aria-label="Закрыть поиск"
                   >
-                    <Plus className="size-4" aria-hidden />
-                    Добавить место
+                    <X className="size-4" aria-hidden />
                   </Button>
-                ) : (
-                  <div className="mt-3">
-                    <div className="overflow-hidden rounded-md bg-[#fafafa]">
-                      {rankRules.map((rule) => (
-                        <div
-                          key={rule.id}
-                          className="flex min-h-12 items-center gap-4 border-b border-[#e4e4e4] px-3 last:border-b-0"
-                        >
-                          <span className="w-[105px] shrink-0 text-[13px] font-medium">
-                            {ruleLabel(rule)}
-                          </span>
-                          <div className="flex min-w-0 flex-1 flex-wrap gap-1">
-                            {rule.rewards.length ? (
-                              rule.rewards.map((item) => {
-                                const reward = rewardById.get(item.rewardId);
-                                if (!reward) return null;
-                                return (
-                                  <span
-                                    key={item.rewardId}
-                                    className="inline-flex h-6 items-center gap-1 rounded-md bg-[#f0f0f0] px-1.5 text-[13px]"
-                                  >
-                                    {reward.name}
-                                    {item.amount > 1 ? ` ×${item.amount}` : ""}
-                                  </span>
-                                );
-                              })
-                            ) : (
-                              <span className="text-[13px] text-[#797979]">
-                                Укажите награду
-                              </span>
-                            )}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="size-7 shrink-0 border-[#e4e4e4] bg-white shadow-none"
-                            aria-label="Изменить награды"
-                            onClick={() => openRewardDialog(rule)}
-                          >
-                            <Pencil className="size-4" aria-hidden />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                </div>
+              ) : null}
 
-                    {pool.length > 0 ? (
-                      <div className="flex min-h-12 items-center gap-4 px-3">
-                        <span className="w-[105px] shrink-0 text-[13px] font-medium">
-                          Итоговый пул
+              {maxRewardedRank > participants.length ? (
+                <div className="mx-4 mb-3 flex gap-2 rounded-[10px] bg-[#f0f0f0] p-2 text-[13px] font-medium leading-4">
+                  <TriangleAlert
+                    className="size-4 shrink-0 text-[#ff8a00]"
+                    aria-hidden
+                  />
+                  <span>
+                    Участников меньше, чем диапазон победителей. Превью будет отображаться некорректно
+                  </span>
+                </div>
+              ) : null}
+
+              <div>
+                {visibleParticipants.map(({ participant, rank }) => {
+                  const participantRewards = rewardsForParticipant(
+                    participant,
+                    rank
+                  );
+                  return (
+                    <div
+                      key={participant.id}
+                      className="border-b border-[#e4e4e4] p-4 last:border-b-0"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium">{rank}.</span>
+                        <span
+                          className="flex size-6 shrink-0 items-center justify-center rounded-lg text-white"
+                          style={{ backgroundColor: participant.color }}
+                        >
+                          <User className="size-4" aria-hidden />
                         </span>
-                        <div className="flex flex-wrap gap-1">
-                          {pool.map(([rewardId, amount]) => {
-                            const reward = rewardById.get(rewardId);
+                        <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
+                          {participant.name}
+                        </span>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={participant.points}
+                          onChange={(event) =>
+                            updateParticipantPoints(
+                              participant.id,
+                              Number(event.target.value)
+                            )
+                          }
+                          aria-label={`XP: ${participant.name}`}
+                          className="h-7 w-[60px] rounded-lg px-1.5 text-center text-[13px] shadow-none"
+                        />
+                      </div>
+                      {participantRewards.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {participantRewards.map((item, rewardIndex) => {
+                            const reward = rewardById.get(item.rewardId);
                             return reward ? (
-                              <span
-                                key={rewardId}
-                                className="inline-flex h-6 items-center rounded-md bg-[#f0f0f0] px-1.5 text-[13px]"
-                              >
-                                {reward.name} ×{amount}
-                              </span>
+                              <RewardChip
+                                key={`${item.rewardId}-${rewardIndex}`}
+                                reward={reward}
+                                amount={item.amount}
+                              />
                             ) : null;
                           })}
                         </div>
-                      </div>
-                    ) : null}
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 h-7 border-[#e4e4e4] bg-white px-2 text-[13px] shadow-none"
-                      onClick={() => setRangeDialogOpen(true)}
-                    >
-                      <Plus className="size-4" aria-hidden />
-                      Добавить место
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="manual" className="mt-2">
-              <p className="text-[13px] font-medium leading-4 text-[#797979]">
-                Награды распределяются вами самостоятельно
-              </p>
-
-              <div className="mt-4">
-                <p className="text-[13px] font-medium leading-4">Награды</p>
-
-                {manualRewards.length === 0 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 h-7 border-[#e4e4e4] bg-white px-2 text-[13px] shadow-none"
-                    onClick={openManualRewardDialog}
-                  >
-                    <Plus className="size-4" aria-hidden />
-                    Добавить
-                  </Button>
-                ) : (
-                  <div className="mt-3 space-y-2">
-                    <div className="flex flex-col gap-2">
-                      {manualRewards.map((item) => {
-                        const reward = rewardById.get(item.rewardId);
-                        if (!reward) return null;
-                        return (
-                          <div
-                            key={item.rewardId}
-                            className="flex min-h-12 items-center gap-1.5"
-                          >
-                            <RewardImage reward={reward} />
-                            <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4">
-                              {reward.name}
-                            </span>
-                            <div className="flex h-7 items-center overflow-hidden rounded-md border border-[#e4e4e4]">
-                              <button
-                                type="button"
-                                className="flex size-7 items-center justify-center border-r border-[#e4e4e4]"
-                                onClick={() =>
-                                  changeManualAmount(item.rewardId, item.amount - 1)
-                                }
-                                aria-label="Уменьшить количество"
-                              >
-                                <Minus className="size-3" />
-                              </button>
-                              <Input
-                                type="number"
-                                min={1}
-                                value={item.amount}
-                                onChange={(event) =>
-                                  changeManualAmount(
-                                    item.rewardId,
-                                    Number(event.target.value) || 1
-                                  )
-                                }
-                                aria-label={`Количество: ${reward.name}`}
-                                className="h-7 w-12 rounded-none border-0 px-1 text-center text-[13px] shadow-none"
-                              />
-                              <button
-                                type="button"
-                                className="flex size-7 items-center justify-center border-l border-[#e4e4e4]"
-                                onClick={() =>
-                                  changeManualAmount(item.rewardId, item.amount + 1)
-                                }
-                                aria-label="Увеличить количество"
-                              >
-                                <Plus className="size-3" />
-                              </button>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="size-7 shrink-0 border-[#e4e4e4] bg-white shadow-none"
-                              aria-label={`Удалить ${reward.name}`}
-                              onClick={() => removeManualReward(item.rewardId)}
-                            >
-                              <X className="size-4" aria-hidden />
-                            </Button>
-                          </div>
-                        );
-                      })}
+                      ) : null}
                     </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-7 border-[#e4e4e4] bg-white px-2 text-[13px] shadow-none"
-                      onClick={openManualRewardDialog}
-                    >
-                      <Plus className="size-4" aria-hidden />
-                      Добавить
-                    </Button>
-                  </div>
-                )}
+                  );
+                })}
               </div>
-            </TabsContent>
-
-            <TabsContent value="proportional" className="mt-2">
-              <p className="max-w-[668px] text-[13px] font-medium leading-4 text-[#797979]">
-                Награды распределяются пропорционально заработанным очкам
-              </p>
-              <div className="mt-4 grid gap-3">
-                <label className="grid gap-2 text-[13px] font-medium leading-4">
-                  Общая сумма
-                  <Input
-                    type="number"
-                    min={1}
-                    value={proportional.amount}
-                    onChange={(event) =>
-                      onProportionalChange({
-                        ...proportional,
-                        amount: event.target.value,
-                      })
-                    }
-                    className="h-10 border-[#e4e4e4] bg-white text-[13px] shadow-none"
-                  />
-                </label>
-                <label className="grid gap-2 text-[13px] font-medium leading-4">
-                  Зона вознаграждений
-                  <Input
-                    type="number"
-                    min={1}
-                    value={proportional.rankTo}
-                    onChange={(event) =>
-                      onProportionalChange({
-                        ...proportional,
-                        rankTo: event.target.value,
-                      })
-                    }
-                    className="h-10 border-[#e4e4e4] bg-white text-[13px] shadow-none"
-                  />
-                  <span className="text-[13px] font-medium leading-4 text-[#797979]">
-                    До какого места распределяется сумма. Например, до 10 места
-                  </span>
-                </label>
-              </div>
-            </TabsContent>
-          </div>
-        </TabsRoot>
-
-        <div className="flex items-center justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 border-[#e4e4e4] bg-white px-3 text-[13px] shadow-none"
-            onClick={onBack}
-          >
-            <ArrowLeft className="size-4" aria-hidden />
-            Назад
-          </Button>
-          <Button
-            type="button"
-            className="h-10 bg-[#2563eb] px-3 text-[13px] font-medium hover:bg-[#2563eb]/90"
-            disabled={!canContinue}
-            onClick={onContinue}
-          >
-            Продолжить
-          </Button>
-        </div>
+            </>
+              ) : (
+                <div className="p-4">
+              <p className="text-[13px] font-medium leading-4">Награды рейтинга</p>
+              {allPool.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {allPool.map(([rewardId, amount]) => {
+                    const reward = rewardById.get(rewardId);
+                    return reward ? (
+                      <RewardChip key={rewardId} reward={reward} amount={amount} />
+                    ) : null;
+                  })}
+                </div>
+              ) : (
+                <p className="mt-2 text-[13px] font-medium leading-4 text-[#797979]">
+                  Награды ещё не добавлены
+                </p>
+              )}
+              {hasManualRule ? (
+                <>
+                  <p className="mt-4 text-[13px] font-medium leading-4">
+                    Ручной отбор
+                  </p>
+                  <p className="mt-1 text-[13px] font-medium leading-4 text-[#797979]">
+                    Распределяются вручную
+                  </p>
+                </>
+              ) : null}
+                </div>
+              )}
+            </>
+          )}
+        </aside>
       </div>
 
-      <DialogRoot open={rangeDialogOpen} onOpenChange={setRangeDialogOpen}>
-        <DialogContent className="max-w-[358px]" showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Добавить место</DialogTitle>
-            <DialogDescription>
-              Укажите диапазон мест в таблице лидеров.
+      <DialogRoot open={placeDialogOpen} onOpenChange={setPlaceDialogOpen}>
+        <DialogContent className="!max-w-[358px] gap-0 p-0" showCloseButton>
+          <DialogHeader className="px-4 pb-0 pt-2.5">
+            <DialogTitle>Место</DialogTitle>
+            <DialogDescription className="sr-only">
+              Настройте место и количество наград
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2 py-2">
-            <Input
-              type="number"
-              min={1}
-              value={rangeFrom}
-              onChange={(event) => setRangeFrom(event.target.value)}
-              aria-label="Место от"
-              className="h-10"
-            />
-            <span className="text-[13px] text-[#797979]">до</span>
-            <Input
-              type="number"
-              min={1}
-              value={rangeTo}
-              onChange={(event) => setRangeTo(event.target.value)}
-              aria-label="Место до"
-              className="h-10"
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" size="sm" onClick={handleAddRange}>
-              Добавить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
 
-      <DialogRoot
-        open={Boolean(rewardDialogRuleId)}
-        onOpenChange={(open) => {
-          if (!open) setRewardDialogRuleId(null);
-        }}
-      >
-        <DialogContent className="max-w-[358px]" showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Награды</DialogTitle>
-            <DialogDescription>
-              {isManualDialog
-                ? "Выберите награды для ручного пула и укажите количество."
-                : "Выберите награды и укажите количество для каждого участника."}
-            </DialogDescription>
-          </DialogHeader>
+          <div className="px-4 py-1.5">
+            <div
+              className="flex rounded-md bg-[#f0f0f0] p-0.5"
+              role="group"
+              aria-label="Тип распределения наград"
+            >
+              {(
+                [
+                  ["single", "Одиночное"],
+                  ["range", "Диапазон"],
+                  ["manual", "Ручной отбор"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={placeDialogKind === value}
+                  className={`flex-1 rounded px-1.5 py-1 text-[13px] font-medium leading-4 ${
+                    placeDialogKind === value ? "bg-white" : ""
+                  }`}
+                  onClick={() => {
+                    setPlaceDialogKind(value);
+                    if (value !== "range") setDistributeProportionally(false);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {placeDialogKind === "manual" ? (
+              <p className="mt-3 text-[13px] font-medium leading-4 text-[#797979]">
+                Награды будут распределяться вами самостоятельно
+              </p>
+            ) : placeDialogKind === "single" ? (
+              <Input
+                type="number"
+                min={1}
+                value={rangeFrom}
+                onChange={(event) => setRangeFrom(event.target.value)}
+                aria-label="Место"
+                className="mt-3 h-10"
+              />
+            ) : (
+              <div className="mt-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    value={rangeFrom}
+                    onChange={(event) => setRangeFrom(event.target.value)}
+                    aria-label="Место от"
+                    className="h-10"
+                  />
+                  <span className="text-[13px] text-[#797979]">до</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={rangeTo}
+                    onChange={(event) => setRangeTo(event.target.value)}
+                    aria-label="Место до"
+                    className="h-10"
+                  />
+                </div>
+                <label className="mt-2 flex items-center gap-2.5 text-[13px] font-medium leading-4">
+                  <Switch
+                    checked={distributeProportionally}
+                    onCheckedChange={setDistributeProportionally}
+                  />
+                  Распределить пропорционально XP
+                </label>
+              </div>
+            )}
+          </div>
 
           {isRewardsLoading ? (
-            <PageLoader label="Загрузка наград…" />
+            <div className="px-4 py-4">
+              <PageLoader label="Загрузка наград…" />
+            </div>
+          ) : isRewardsError ? (
+            <div
+              className="px-4 py-5 text-center text-[13px] text-[#797979]"
+              role="alert"
+            >
+              <p className="text-[15px] font-medium leading-5 text-black">
+                Не удалось загрузить награды
+              </p>
+              <p className="mt-1">Проверьте соединение и попробуйте ещё раз</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => void refetchRewards()}
+              >
+                Повторить
+              </Button>
+            </div>
           ) : activeRewards.length === 0 ? (
-            <div className="py-3 text-center text-[13px] text-[#797979]">
-              <p>Наград нет. Создайте их в разделе «Награды».</p>
+            <div className="px-4 py-5 text-center text-[13px] text-[#797979]">
+              <p className="text-[15px] font-medium leading-5 text-black">
+                Нужно добавить награды
+              </p>
+              <p className="mt-1">Это можно сделать в разделе «Награды»</p>
               <Button variant="outline" size="sm" className="mt-3" asChild>
                 <Link to={`/rooms/${roomSlug}/rewards`}>Перейти</Link>
               </Button>
             </div>
           ) : (
-            <div className="max-h-[336px] overflow-y-auto">
+            <div className="max-h-[336px] overflow-y-auto px-2.5 pt-1.5">
               {activeRewards.map((reward) => {
                 const selected = rewardDraft.find(
                   (item) => item.rewardId === reward.id
                 );
+                const step = reward.isDivisible
+                  ? 1 / 10 ** reward.divisionPrecision
+                  : 1;
                 return (
                   <div
                     key={reward.id}
-                    className="flex min-h-14 items-center gap-2 border-b border-[#e4e4e4] py-1 last:border-b-0"
+                    className="flex min-h-14 items-center gap-1.5 rounded-lg px-1.5 py-1"
                   >
                     <CheckBox
                       checked={Boolean(selected)}
@@ -586,46 +1101,67 @@ export const SprintCreationStepTwo = ({
                       aria-label={`Выбрать ${reward.name}`}
                     />
                     <RewardImage reward={reward} />
-                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4">
                       {reward.name}
                     </span>
-                    {selected ? (
-                      <div className="flex h-7 items-center overflow-hidden rounded-md border border-[#e4e4e4]">
-                        <button
-                          type="button"
-                          className="flex size-7 items-center justify-center border-r border-[#e4e4e4]"
-                          onClick={() => changeRewardAmount(reward.id, -1)}
-                          aria-label="Уменьшить количество"
-                        >
-                          <Minus className="size-3" />
-                        </button>
-                        <span className="w-8 text-center text-[13px]">
-                          {selected.amount}
-                        </span>
-                        <button
-                          type="button"
-                          className="flex size-7 items-center justify-center border-l border-[#e4e4e4]"
-                          onClick={() => changeRewardAmount(reward.id, 1)}
-                          aria-label="Увеличить количество"
-                        >
-                          <Plus className="size-3" />
-                        </button>
-                      </div>
-                    ) : null}
+                    <div
+                      className={`flex h-7 items-center overflow-hidden rounded-lg border border-[#e4e4e4] ${
+                        selected ? "" : "opacity-50"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        className="flex size-7 items-center justify-center border-r border-[#e4e4e4]"
+                        disabled={!selected}
+                        onClick={() =>
+                          setRewardAmount(reward, (selected?.amount ?? step) - step)
+                        }
+                        aria-label="Уменьшить количество"
+                      >
+                        <Minus className="size-4" aria-hidden />
+                      </button>
+                      <Input
+                        type="number"
+                        min={step}
+                        step={step}
+                        disabled={!selected}
+                        value={selected?.amount ?? 0}
+                        onChange={(event) =>
+                          setRewardAmount(reward, Number(event.target.value))
+                        }
+                        aria-label={`Количество: ${reward.name}`}
+                        className="h-7 w-12 rounded-none border-0 px-1 text-center text-[13px] shadow-none"
+                      />
+                      <button
+                        type="button"
+                        className="flex size-7 items-center justify-center border-l border-[#e4e4e4]"
+                        disabled={!selected}
+                        onClick={() =>
+                          setRewardAmount(reward, (selected?.amount ?? 0) + step)
+                        }
+                        aria-label="Увеличить количество"
+                      >
+                        <Plus className="size-4" aria-hidden />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="px-4 py-2.5">
             <Button
               type="button"
               size="sm"
-              disabled={activeRewards.length > 0 && rewardDraft.length === 0}
-              onClick={saveRuleRewards}
+              disabled={
+                isRewardsError ||
+                activeRewards.length === 0 ||
+                rewardDraft.length === 0
+              }
+              onClick={savePlace}
             >
-              Добавить
+              Сохранить
             </Button>
           </DialogFooter>
         </DialogContent>

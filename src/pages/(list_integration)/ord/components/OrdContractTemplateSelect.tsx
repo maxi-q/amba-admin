@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { PageLoader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@senler/ui";
 import { useOrdContractTemplatesControllerGetTemplates } from "@/api/generated/ord-contract-templates/ord-contract-templates";
@@ -11,6 +12,7 @@ interface OrdContractTemplateSelectProps {
   disabled?: boolean;
   error?: string;
   required?: boolean;
+  autoSelectSingle?: boolean;
 }
 
 export function OrdContractTemplateSelect({
@@ -21,6 +23,7 @@ export function OrdContractTemplateSelect({
   disabled = false,
   error,
   required = false,
+  autoSelectSingle = false,
 }: OrdContractTemplateSelectProps) {
   const templatesQuery = useOrdContractTemplatesControllerGetTemplates(
     roomId,
@@ -31,9 +34,15 @@ export function OrdContractTemplateSelect({
   const templates = templatesQuery.data?.items ?? [];
   const label = required ? "Шаблон ОРД-договора *" : "Шаблон ОРД-договора";
 
+  useEffect(() => {
+    if (autoSelectSingle && !value && templates.length === 1) {
+      onChange(templates[0].id);
+    }
+  }, [autoSelectSingle, onChange, templates, value]);
+
   if (templatesQuery.isLoading) {
     return (
-      <div className="space-y-2">
+      <div className="ord-contract-template-select space-y-2">
         <p className="text-sm font-medium text-foreground">{label}</p>
         <div className="flex justify-center py-4">
           <PageLoader label="Загрузка шаблонов…" />
@@ -44,7 +53,7 @@ export function OrdContractTemplateSelect({
 
   if (templates.length === 0) {
     return (
-      <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
+      <div className="ord-contract-template-select space-y-2 rounded-md border border-border bg-muted/20 p-3">
         <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="text-sm text-muted-foreground">
           Сначала создайте шаблон ОРД-договора в разделе ОРД.
@@ -62,8 +71,10 @@ export function OrdContractTemplateSelect({
     );
   }
 
+  if (autoSelectSingle && templates.length === 1) return null;
+
   return (
-    <div className="space-y-2">
+    <div className="ord-contract-template-select space-y-2">
       <p className="text-sm font-medium text-foreground">{label}</p>
       <Select value={value || undefined} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger aria-label={label}>

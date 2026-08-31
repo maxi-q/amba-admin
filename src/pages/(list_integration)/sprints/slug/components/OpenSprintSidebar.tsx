@@ -85,7 +85,9 @@ function RewardItem({ reward }: { reward: SidebarReward }) {
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 text-[13px] font-medium leading-4 tracking-[-0.25px]">
         <p className="truncate text-foreground">{reward.name}</p>
         {!amountIsPartOfName ? (
-          <p className="text-[#797979]">{reward.amount} шт.</p>
+          <p className="text-[#797979]">
+            {reward.amount.toLocaleString("ru-RU")} шт.
+          </p>
         ) : null}
       </div>
     </div>
@@ -143,11 +145,15 @@ export function OpenSprintSidebar({ sprint, rules }: OpenSprintSidebarProps) {
         ? "Завершен"
         : label;
   const statusClassName =
-    tone === "active"
-      ? "text-[#22c55e]"
-      : tone === "planned"
-        ? "text-[#f97316]"
-        : "text-[#797979]";
+    sprint.status === "awarding"
+      ? "text-[#26c464]"
+      : sprint.status === "completed"
+        ? "text-[#797979]"
+        : tone === "active"
+          ? "text-[#26c464]"
+          : tone === "planned"
+            ? "text-[#f97316]"
+            : "text-[#797979]";
 
   return (
     <aside className="flex w-full shrink-0 flex-col border-l border-[#e4e4e4] bg-white lg:w-[260px]">

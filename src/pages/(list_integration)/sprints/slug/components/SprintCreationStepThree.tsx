@@ -15,6 +15,7 @@ interface SprintCreationStepThreeProps {
   roomSlug: string;
   tasks: DraftSprintTask[];
   isLaunching?: boolean;
+  submitLabel?: string;
   onTasksChange: (tasks: DraftSprintTask[]) => void;
   onBack: () => void;
   onLaunch: () => void;
@@ -26,6 +27,7 @@ export function SprintCreationStepThree({
   roomSlug,
   tasks,
   isLaunching = false,
+  submitLabel,
   onTasksChange,
   onBack,
   onLaunch,
@@ -168,9 +170,11 @@ export function SprintCreationStepThree({
             onClick={onLaunch}
           >
             {isLaunching
-              ? "Запуск…"
+              ? submitLabel
+                ? "Сохранение…"
+                : "Запуск…"
               : tasks.length > 0
-                ? "Запустить спринт"
+                ? submitLabel ?? "Запустить спринт"
                 : "Продолжить"}
           </Button>
         </div>

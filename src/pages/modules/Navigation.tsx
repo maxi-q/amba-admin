@@ -23,6 +23,7 @@ import {
   ApplicationsPage,
   CreativeTasksPage,
   PrivateCreativeTasksPage,
+  CreatePrivateCreativeTaskPage,
   CreativeTaskDetailLayout,
   PrivateCreativeTaskDetailLayout,
   CreativeTaskDescriptionPage,
@@ -164,6 +165,7 @@ export const Navigation = () => {
         </Route>
         <Route path="creativetasks" element={<CreativeTasksPage />} />
         <Route path="creativetasks/private" element={<PrivateCreativeTasksPage />} />
+        <Route path="creativetasks/private/new" element={<CreatePrivateCreativeTaskPage />} />
         <Route path="private-creativetasks" element={<Navigate to="../creativetasks/private" replace />} />
         <Route path="creativetasks/private/:privateTaskId" element={<PrivateCreativeTaskDetailLayout />}>
           <Route index element={<PrivateCreativeTaskDescriptionPage />} />

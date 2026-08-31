@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ChevronDown, ChevronUp, Pencil, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Check, Pencil, Plus, Trash2, Users, X } from "lucide-react";
 import {
   Alert,
   AlertDescription,
   Badge,
   Button,
-  Card,
-  CardContent,
   InputField,
   PageLoader,
   Select,
@@ -36,15 +34,13 @@ import { useRoomPrivateCreativeTasks } from "@/hooks/creativetasks/useRoomPrivat
 import { usePrivateCreativeTask } from "@/hooks/creativetasks/usePrivateCreativeTask";
 import { useCreatePrivateCreativeTask } from "@/hooks/creativetasks/useCreatePrivateCreativeTask";
 import { useUpdatePrivateCreativeTask } from "@/hooks/creativetasks/useUpdatePrivateCreativeTask";
+import { usePrivateSubmissions } from "@/hooks/creativetasks/usePrivateSubmissions";
+import { useCreativeTaskWhitelist } from "@/hooks/creativetasks/useCreativeTaskWhitelist";
 import { CreativeTasksErrorState } from "./components/CreativeTasksErrorState";
 import { CreativeTasksEmptyState } from "./components/CreativeTasksEmptyState";
-import { CreativeTasksHeader } from "./components/CreativeTasksHeader";
 import { CreativesPaginationControls } from "./components/CreativesPaginationControls";
-import { CreativeTaskWhitelistSection } from "./components/CreativeTaskWhitelistSection";
 import {
   CREATIVE_TASK_FORMAT_OPTIONS,
-  formatRubReward,
-  formatTaskFormat,
   formatMultilineList,
   parseMultilineList,
   parseRewardBalls,
@@ -52,7 +48,6 @@ import {
 } from "./utils/creativetaskUtils";
 import { OrdContractTemplateSelect } from "../ord/components/OrdContractTemplateSelect";
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const TEXTAREA_CLASS =
   "min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -246,7 +241,7 @@ function PrivateTaskFields({
   );
 }
 
-function CreatePrivateTaskDialog({
+export function CreatePrivateTaskDialog({
   open,
   onClose,
   roomId,
@@ -456,85 +451,109 @@ export function EditPrivateTaskDialog({
   );
 }
 
-function PrivateTaskCard({
+function formatDeadline(value?: string | null) {
+  if (!value) return "Без срока";
+  return `до ${new Date(value).toLocaleDateString("ru-RU")}`;
+}
+
+function PrivateTaskRow({
   task,
   onEdit,
+  onDelete,
+  deadline,
 }: {
   task: BasePrivateCreativeTaskDto;
   onEdit: (task: BasePrivateCreativeTaskDto) => void;
+  onDelete: (task: BasePrivateCreativeTaskDto) => void;
+  deadline?: string | null;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const { slug } = useParams<{ slug: string }>();
   const detailPath = `/rooms/${slug ?? ""}/creativetasks/private/${task.id}`;
+  const { submissions, pagination: submissionsPagination } = usePrivateSubmissions(task.id, {
+    page: 1,
+    size: 100,
+  });
+  const { pagination: performersPagination } = useCreativeTaskWhitelist(task.id, {
+    page: 1,
+    size: 1,
+  });
+  const waitingForReview = submissions.filter(
+    (submission) =>
+      submission.status === "waiting_for_review_materials" ||
+      submission.status === "waiting_for_review_publication"
+  ).length;
+  const answersTotal = submissionsPagination?.total ?? 0;
 
   return (
-    <Card className={`border border-border shadow-sm ${task.isDeleted ? "opacity-60" : ""}`}>
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h3 className={`mb-1 text-lg font-medium leading-snug ${task.isDeleted ? "text-muted-foreground line-through" : "text-foreground"}`}>
-              <Link to={detailPath} className="text-inherit underline-offset-4 hover:underline">
-                {task.title}
-              </Link>
-            </h3>
-            <p className={`line-clamp-2 text-sm ${task.isDeleted ? "text-muted-foreground line-through" : "text-muted-foreground"}`}>
-              {task.description || "—"}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge variant="secondary">{formatRubReward(task.rewardInRubs)}</Badge>
-              {task.allowedFormats?.length ? (
-                task.allowedFormats.map((format) => (
-                  <Badge key={format} variant="outline" className="font-normal">
-                    {formatTaskFormat(format)}
-                  </Badge>
-                ))
-              ) : (
-                <Badge variant="outline" className="font-normal">Любой формат</Badge>
-              )}
-              <Badge variant={task.isWhitelistEnabled ? "secondary" : "outline"}>
-                {task.isWhitelistEnabled ? "По приглашениям" : "Без ограничения"}
-              </Badge>
-            </div>
-            {task.criteria?.length ? (
-              <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">
-                Критерии: {task.criteria.join("; ")}
-              </p>
-            ) : null}
-            <div className="mt-4">
-              <Link to={detailPath} className="inline-flex no-underline">
-                <Button type="button" variant="outline" size="sm">
-                  Открыть задачу
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <Badge variant="secondary">
-              {task.isDeleted ? "Удалена" : "В спринте"}
-            </Badge>
-            <Button type="button" variant="ghost" size="icon" className="size-9" onClick={() => setExpanded((prev) => !prev)} aria-label={expanded ? "Свернуть" : "Развернуть"}>
-              {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-            </Button>
-            <Button type="button" variant="ghost" size="icon" className="size-9 text-primary" onClick={() => onEdit(task)} aria-label="Редактировать">
-              <Pencil className="size-4" />
-            </Button>
-          </div>
-        </div>
-        {expanded ? (
-          <div className="mt-4">
-            <CreativeTaskWhitelistSection task={task} />
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
+    <div className="flex min-h-12 flex-wrap items-center gap-3 border-b border-border px-4 py-2 text-[13px] font-medium leading-4 sm:flex-nowrap sm:gap-4">
+      <Link
+        to={detailPath}
+        className="min-w-0 flex-1 truncate text-foreground no-underline hover:underline"
+      >
+        {task.title}
+      </Link>
+
+      <div className="flex shrink-0 items-center gap-2">
+        {task.isDeleted ? (
+          <Badge variant="outline" className="gap-1 rounded-full px-1.5 py-1 font-medium">
+            <span className="size-1.5 rounded-full bg-muted-foreground" aria-hidden />
+            Удалено
+          </Badge>
+        ) : waitingForReview > 0 ? (
+          <Badge className="rounded-full bg-[#d52094]/15 px-1.5 py-1 font-medium text-[#d52094] hover:bg-[#d52094]/15">
+            {waitingForReview} {waitingForReview === 1 ? "ответ" : "ответа"}
+          </Badge>
+        ) : answersTotal > 0 ? (
+          <Badge variant="secondary" className="gap-1 rounded-full px-1.5 py-1 font-medium">
+            <Check className="size-3" aria-hidden />
+            Все проверено
+          </Badge>
+        ) : (
+          <Badge variant="secondary" className="rounded-full px-1.5 py-1 font-medium">
+            Ответов нет
+          </Badge>
+        )}
+
+        <Badge variant="outline" className="gap-0.5 rounded-full px-1.5 py-1 font-medium">
+          <Users className="size-4" aria-hidden />
+          {performersPagination?.total ?? 0}
+        </Badge>
+      </div>
+
+      <span className="w-[104px] shrink-0 text-right text-muted-foreground">
+        {formatDeadline(deadline)}
+      </span>
+
+      <div className="flex shrink-0 items-center gap-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="size-7 shadow-none"
+          onClick={() => onEdit(task)}
+          aria-label={`Редактировать «${task.title}»`}
+        >
+          <Pencil className="size-4" aria-hidden />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="size-7 shadow-none"
+          onClick={() => onDelete(task)}
+          aria-label={`Удалить «${task.title}»`}
+        >
+          <Trash2 className="size-4" aria-hidden />
+        </Button>
+      </div>
+    </div>
   );
 }
 
 export default function PrivateCreativeTasksPage() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editTask, setEditTask] = useState<BasePrivateCreativeTaskDto | null>(null);
 
   const { room, isLoading: isLoadingRoom, isError: isRoomError, error: roomError } =
@@ -542,10 +561,27 @@ export default function PrivateCreativeTasksPage() {
   const roomId = room?.id ?? "";
   const { tasks, isLoading, isError, error, refetch, pagination } = useRoomPrivateCreativeTasks(roomId, {
     page,
-    size: pageSize,
+    size: 100,
   });
+  const { sprints } = useSprints({ page: 1, size: 100 }, slug ?? "");
+  const { updatePrivateCreativeTask, isPending: isDeleting } =
+    useUpdatePrivateCreativeTask();
 
-  const sortedTasks = useMemo(() => tasks, [tasks]);
+  const activeSprintId = sprints.find((sprint) => sprint.status === "active")?.id;
+  const createPath = `/rooms/${slug ?? ""}/creativetasks/private/new${
+    activeSprintId ? `?sprintId=${encodeURIComponent(activeSprintId)}` : ""
+  }`;
+  const sprintDeadlineById = new Map(
+    sprints.map((sprint) => [sprint.id, sprint.ignoreEndDate ? null : sprint.endDate])
+  );
+
+  const handleDelete = (task: BasePrivateCreativeTaskDto) => {
+    if (!window.confirm(`Удалить задание «${task.title}»?`)) return;
+    updatePrivateCreativeTask(
+      { id: task.id, data: { isDeleted: true } },
+      { onSuccess: () => void refetch() }
+    );
+  };
 
   if (isLoadingRoom) {
     return (
@@ -560,68 +596,54 @@ export default function PrivateCreativeTasksPage() {
   }
 
   return (
-    <div className="w-full px-2 py-3">
-      <CreativeTasksHeader />
-      <div className="mb-4 flex flex-col gap-1">
-        <h1 className="text-lg font-semibold tracking-tight">Индивидуальные задачи</h1>
-        <p className="text-sm text-muted-foreground">
-          Приватные задания с рублёвой наградой и доступом для выбранных амбассадоров.
-        </p>
+    <div className="-m-4 min-h-dvh w-[calc(100%+2rem)] bg-white md:-m-6 md:w-[calc(100%+3rem)]">
+      <div className="flex min-h-12 items-center gap-2 border-b border-border px-4 py-2.5">
+        <h1 className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 text-foreground">
+          Индивидуальные задания
+        </h1>
+        <Button
+          type="button"
+          size="sm"
+          className="h-7 gap-1 bg-[#2563eb] px-2 text-[13px] hover:bg-[#2563eb]/90"
+          onClick={() => navigate(createPath)}
+        >
+          <Plus className="size-4" aria-hidden />
+          Добавить
+        </Button>
       </div>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Button type="button" size="lg" onClick={() => setCreateDialogOpen(true)}>
-            Создать индивидуальную задачу
-          </Button>
-          {pagination && pagination.totalPages > 0 ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">На странице</span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(value) => {
-                  setPageSize(Number(value));
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="h-9 w-[120px]"><SelectValue placeholder="Размер" /></SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZE_OPTIONS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
-        </div>
+
+      <div>
 
         {isLoading ? (
           <div className="flex justify-center py-8"><PageLoader label="Загрузка задач…" /></div>
         ) : isError ? (
           <CreativeTasksErrorState errorMessage={(error as Error)?.message} />
-        ) : sortedTasks.length === 0 && !pagination?.total ? (
-          <CreativeTasksEmptyState onCreateClick={() => setCreateDialogOpen(true)} />
+        ) : tasks.length === 0 && !pagination?.total ? (
+          <div className="p-4">
+            <CreativeTasksEmptyState onCreateClick={() => navigate(createPath)} />
+          </div>
         ) : (
           <>
-            {pagination ? <p className="text-sm text-muted-foreground">Всего: {pagination.total}</p> : null}
-            <div className="flex flex-col gap-3">
-              {sortedTasks.map((task) => (
-                <PrivateTaskCard key={task.id} task={task} onEdit={setEditTask} />
+            <div>
+              {tasks.map((task) => (
+                <PrivateTaskRow
+                  key={task.id}
+                  task={task}
+                  deadline={sprintDeadlineById.get(task.sprintId)}
+                  onEdit={setEditTask}
+                  onDelete={handleDelete}
+                />
               ))}
             </div>
             {pagination && pagination.totalPages > 1 ? (
-              <CreativesPaginationControls page={page} totalPages={pagination.totalPages} onPageChange={setPage} className="mt-2" />
+              <div className="p-4">
+                <CreativesPaginationControls page={page} totalPages={pagination.totalPages} onPageChange={setPage} />
+              </div>
             ) : null}
           </>
         )}
       </div>
 
-      <CreatePrivateTaskDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        roomId={roomId}
-        roomSlug={slug}
-        onSuccess={() => void refetch()}
-      />
       <EditPrivateTaskDialog
         open={!!editTask}
         onClose={() => setEditTask(null)}
@@ -631,6 +653,7 @@ export default function PrivateCreativeTasksPage() {
           void refetch();
         }}
       />
+      {isDeleting ? <span className="sr-only" role="status">Удаление задания…</span> : null}
     </div>
   );
 }

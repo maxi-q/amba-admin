@@ -28,12 +28,12 @@ export const SprintCard = ({ sprint }: SprintCardProps) => {
         : label;
   const statusDotClass =
     sprint.status === "awarding"
-      ? "border-[#22c55e]"
+      ? "border-[#26c464]"
       : sprint.status === "completed" || tone === "ended"
         ? "border-[#a3a3a3]"
         : tone === "planned"
           ? "border-[#f97316]"
-          : "border-[#22c55e]";
+          : "border-[#26c464]";
 
   return (
     <Link
@@ -53,7 +53,7 @@ export const SprintCard = ({ sprint }: SprintCardProps) => {
         {statusLabel}
       </span>
 
-      <span className="w-[147px] shrink-0 text-right text-[13px] font-medium leading-4 text-[#797979]">
+      <span className="w-[147px] shrink-0 whitespace-nowrap text-right text-[13px] font-medium leading-4 text-[#797979]">
         {dateRange}
       </span>
 
@@ -61,7 +61,7 @@ export const SprintCard = ({ sprint }: SprintCardProps) => {
         className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#e4e4e4] bg-white"
         aria-hidden
       >
-        <Pencil className="size-4" strokeWidth={1.5} />
+        <Pencil className="size-4 text-[#707070]" strokeWidth={1.5} />
       </span>
     </Link>
   );

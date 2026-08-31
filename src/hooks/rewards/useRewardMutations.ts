@@ -4,12 +4,16 @@ import { QueryKeys } from "@/config/tanstack/queryKeys";
 import { MutationKeys } from "@/config/tanstack/mutationKeys";
 import {
   rewardsControllerConfirmIconUpload,
+  rewardsControllerConfirmPhotoUpload,
   rewardsControllerCreateIconUploadUrl,
+  rewardsControllerCreatePhoto,
   rewardsControllerCreateReward,
+  rewardsControllerDeletePhoto,
   rewardsControllerDeleteReward,
   rewardsControllerUpdateReward,
 } from "@/api/generated/rewards/rewards";
 import type {
+  CreateRewardPhotoRequestDto,
   CreateRewardRequestDto,
   RewardImageUploadDto,
   RewardImageUploadRequestDto,
@@ -32,12 +36,17 @@ export interface CreateRewardInput {
   name: string;
   roomId: string;
   iconFile: File;
+  photoFiles?: File[];
+  isDivisible: boolean;
+  divisionPrecision: number;
 }
 
 export interface UpdateRewardInput {
   id: string;
   data: UpdateRewardRequestDto;
   iconFile?: File | null;
+  photoFiles?: File[];
+  photoIdsToDelete?: string[];
 }
 
 const supportedImageTypes = new Set([
@@ -76,17 +85,35 @@ export function useCreateReward() {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationKey: [MutationKeys.CREATE_REWARD],
-    mutationFn: async ({ name, roomId, iconFile }: CreateRewardInput) => {
+    mutationFn: async ({
+      name,
+      roomId,
+      iconFile,
+      photoFiles = [],
+      isDivisible,
+      divisionPrecision,
+    }: CreateRewardInput) => {
       const contentType = getContentType(iconFile);
       const reward = await rewardsControllerCreateReward({
         name,
         roomId,
         contentType,
+        isDivisible,
+        divisionPrecision,
       });
 
       try {
         await uploadImage(iconFile, reward.iconUpload);
-        return await rewardsControllerConfirmIconUpload(reward.id);
+        let result = await rewardsControllerConfirmIconUpload(reward.id);
+        for (const [sortOrder, file] of photoFiles.entries()) {
+          const photo = await rewardsControllerCreatePhoto(reward.id, {
+            contentType: getContentType(file) as CreateRewardPhotoRequestDto["contentType"],
+            sortOrder,
+          });
+          await uploadImage(file, photo.upload);
+          result = await rewardsControllerConfirmPhotoUpload(reward.id, photo.photoId);
+        }
+        return result;
       } catch (error) {
         await rewardsControllerDeleteReward(reward.id).catch(() => undefined);
         throw error;
@@ -100,6 +127,7 @@ export function useCreateReward() {
   return {
     createReward: mutation.mutate,
     isPending: mutation.isPending,
+    resetCreateReward: mutation.reset,
     ...getErrorState(mutation.error),
   };
 }
@@ -108,16 +136,52 @@ export function useUpdateReward() {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationKey: [MutationKeys.UPDATE_REWARD],
-    mutationFn: async ({ id, data, iconFile }: UpdateRewardInput) => {
-      const reward = await rewardsControllerUpdateReward(id, data);
-      if (!iconFile) return reward;
+    mutationFn: async ({
+      id,
+      data,
+      iconFile,
+      photoFiles = [],
+      photoIdsToDelete = [],
+    }: UpdateRewardInput) => {
+      const iconContentType = iconFile ? getContentType(iconFile) : null;
+      const photoContentTypes = photoFiles.map(
+        (file) => getContentType(file) as CreateRewardPhotoRequestDto["contentType"]
+      );
+      let reward = await rewardsControllerUpdateReward(id, data);
 
-      const contentType = getContentType(iconFile);
-      const upload = await rewardsControllerCreateIconUploadUrl(id, {
-        contentType: contentType as RewardImageUploadRequestDto["contentType"],
-      });
-      await uploadImage(iconFile, upload);
-      return rewardsControllerConfirmIconUpload(id);
+      if (iconFile && iconContentType) {
+        const upload = await rewardsControllerCreateIconUploadUrl(id, {
+          contentType: iconContentType as RewardImageUploadRequestDto["contentType"],
+        });
+        await uploadImage(iconFile, upload);
+        reward = await rewardsControllerConfirmIconUpload(id);
+      }
+
+      const firstNewSortOrder =
+        reward.photos.reduce(
+          (highest, photo) => Math.max(highest, photo.sortOrder),
+          -1
+        ) + 1;
+
+      for (const [sortOrder, file] of photoFiles.entries()) {
+        const photo = await rewardsControllerCreatePhoto(id, {
+          contentType: photoContentTypes[sortOrder],
+          sortOrder: firstNewSortOrder + sortOrder,
+        });
+        try {
+          await uploadImage(file, photo.upload);
+          reward = await rewardsControllerConfirmPhotoUpload(id, photo.photoId);
+        } catch (error) {
+          await rewardsControllerDeletePhoto(id, photo.photoId).catch(() => undefined);
+          throw error;
+        }
+      }
+
+      for (const photoId of photoIdsToDelete) {
+        await rewardsControllerDeletePhoto(id, photoId);
+      }
+
+      return reward;
     },
     onSuccess: (reward) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.REWARDS, reward.roomId], exact: false });
@@ -127,6 +191,7 @@ export function useUpdateReward() {
   return {
     updateReward: mutation.mutate,
     isPending: mutation.isPending,
+    resetUpdateReward: mutation.reset,
     ...getErrorState(mutation.error),
   };
 }

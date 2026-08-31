@@ -1,4 +1,7 @@
-import type { CreateCreativeTaskRequestDto } from "@/api/generated/model";
+import type {
+  CreateCreativeTaskRequestDto,
+  UpdateCreativeTaskRequestDto,
+} from "@/api/generated/model";
 import { CreateCreativeTaskRequestDtoTargetPlatform } from "@/api/generated/model";
 import type { CreativeTaskFormat } from "../../../creativetasks/utils/creativetaskUtils";
 import { parseRewardBalls } from "../../../creativetasks/utils/creativetaskUtils";
@@ -8,6 +11,7 @@ export type DraftSprintTaskPlatform =
 
 export interface DraftSprintTask {
   id: string;
+  isPersisted: boolean;
   title: string;
   description: string;
   prohibited: string;
@@ -22,6 +26,7 @@ export interface DraftSprintTask {
   allowAmbassadorText: boolean;
   defaultMediaIds: string[];
   allowAmbassadorMedia: boolean;
+  publicationsCount: number;
   requireMaterialsReview: boolean;
   requirePublicationReview: boolean;
   minimalRewardInBalls: string;
@@ -36,6 +41,7 @@ export const PLATFORM_OPTIONS: { value: DraftSprintTaskPlatform; label: string }
 
 export const emptyDraftSprintTask = (): DraftSprintTask => ({
   id: crypto.randomUUID(),
+  isPersisted: false,
   title: "",
   description: "",
   prohibited: "",
@@ -50,6 +56,7 @@ export const emptyDraftSprintTask = (): DraftSprintTask => ({
   allowAmbassadorText: false,
   defaultMediaIds: [],
   allowAmbassadorMedia: false,
+  publicationsCount: 1,
   requireMaterialsReview: true,
   requirePublicationReview: true,
   minimalRewardInBalls: "500",
@@ -102,13 +109,30 @@ export function draftTaskToCreatePayload(
     allowAmbassadorMedia: task.allowAmbassadorMedia,
     allowAmbassadorText: task.allowAmbassadorText,
     allowAmbassadorTargetUrl: task.allowAmbassadorTargetUrl,
-    publicationsCount: 1,
+    publicationsCount: task.publicationsCount,
     requireMaterialsReview: task.requireMaterialsReview,
     requirePublicationReview: task.requirePublicationReview,
     ordContractTemplateId: task.ordContractTemplateId,
     defaultMediaIds: task.defaultMediaIds,
     defaultTexts: defaultTexts.length ? defaultTexts : undefined,
     defaultTargetUrls: defaultTargetUrls.length ? defaultTargetUrls : undefined,
+  };
+}
+
+export function draftTaskToUpdatePayload(
+  task: DraftSprintTask,
+  sprintId: string
+): UpdateCreativeTaskRequestDto {
+  const { roomId: _roomId, ordContractTemplateId, ...payload } =
+    draftTaskToCreatePayload(task, "", sprintId);
+  void _roomId;
+
+  return {
+    ...payload,
+    ...(ordContractTemplateId ? { ordContractTemplateId } : {}),
+    defaultMediaIds: [...task.defaultMediaIds],
+    defaultTexts: cleanList(task.defaultTexts),
+    defaultTargetUrls: cleanList(task.targetUrls),
   };
 }
 

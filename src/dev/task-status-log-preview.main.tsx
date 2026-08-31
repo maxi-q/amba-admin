@@ -38,7 +38,7 @@ export function PreviewHost() {
           <X className="size-5 text-[#797979]" strokeWidth={1.5} aria-hidden />
         </header>
         <iframe
-          src="/sprint-flow-preview.html"
+          src={`/sprint-flow-preview.html${window.location.search}`}
           title="Production-приложение с мок-данными"
           className="block w-[1200px] border-0 bg-white"
           style={{ height: height - 44 }}

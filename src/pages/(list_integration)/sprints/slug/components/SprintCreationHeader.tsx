@@ -7,7 +7,7 @@ interface SprintCreationHeaderProps {
   onSaveDraft: () => void;
 }
 
-const steps = ["Настройка спринта", "Вознаграждение", "Задания"];
+const steps = ["Настройка спринта", "Награды", "Задания"];
 
 export const SprintCreationHeader = ({
   activeStep,
@@ -15,7 +15,12 @@ export const SprintCreationHeader = ({
   onSaveDraft,
 }: SprintCreationHeaderProps) => (
   <div className="border-b border-[#e4e4e4]">
-    <div className="mx-auto flex min-h-11 w-full max-w-[700px] items-center justify-between gap-4 py-2">
+    <div
+      className={[
+        "flex min-h-11 w-full items-center justify-between gap-4 py-2",
+        activeStep === 2 ? "px-4" : "mx-auto max-w-[700px]",
+      ].join(" ")}
+    >
       <ol
         className="flex min-w-0 items-center gap-3 overflow-x-auto"
         aria-label="Этапы создания спринта"

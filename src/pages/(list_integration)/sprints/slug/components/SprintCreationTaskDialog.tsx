@@ -132,7 +132,7 @@ export function SprintCreationTaskDialog({
       setClientError("Укажите название задания (минимум 3 символа)");
       return;
     }
-    if (!form.ordContractTemplateId) {
+    if (!form.isPersisted && !form.ordContractTemplateId) {
       setClientError("Выберите шаблон ОРД-договора");
       return;
     }

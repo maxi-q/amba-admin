@@ -44,6 +44,7 @@ interface CreateCreativeTaskDialogProps {
   onClose: () => void;
   roomId: string;
   roomSlug?: string;
+  initialSprintId?: string;
   onSuccess?: () => void;
 }
 
@@ -52,6 +53,7 @@ export function CreateCreativeTaskDialog({
   onClose,
   roomId,
   roomSlug,
+  initialSprintId,
   onSuccess,
 }: CreateCreativeTaskDialogProps) {
   const { slug: slugParam } = useParams();
@@ -76,17 +78,20 @@ export function CreateCreativeTaskDialog({
   } = useCreateCreativeTask();
 
   useEffect(() => {
-    if (!open) {
-      setTitle("");
-      setDescription("");
-      setMinimalRewardInBalls("0");
-      setAllowedFormats([]);
-      setCriteria("");
-      setRestrictions("");
-      setSprintId("");
-      setOrdContractTemplateId("");
+    if (open) {
+      setSprintId(initialSprintId ?? "");
+      return;
     }
-  }, [open]);
+
+    setTitle("");
+    setDescription("");
+    setMinimalRewardInBalls("0");
+    setAllowedFormats([]);
+    setCriteria("");
+    setRestrictions("");
+    setSprintId("");
+    setOrdContractTemplateId("");
+  }, [initialSprintId, open]);
 
   const toggleFormat = (format: CreativeTaskFormat) => {
     setAllowedFormats((current) =>

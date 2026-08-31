@@ -7,18 +7,27 @@ import {
 } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Alert, AlertDescription, PageLoader } from "@senler/ui";
+import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
 import { useCreateSprint } from "@/hooks/sprints/useCreateSprint";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { useSprints } from "@/hooks/sprints/useSprints";
-import { creativeTasksControllerCreateCreativeTask } from "@/api/generated/creative-tasks/creative-tasks";
+import {
+  creativeTasksControllerCreateCreativeTask,
+  creativeTasksControllerGetCreativeTaskById,
+  creativeTasksControllerUpdateCreativeTask,
+} from "@/api/generated/creative-tasks/creative-tasks";
 import {
   sprintsControllerCreate,
   sprintsControllerCreateRewardRule,
+  sprintsControllerDeleteRewardRule,
+  sprintsControllerUpdate,
+  sprintsControllerUpdateRewardRule,
 } from "@/api/generated/sprints/sprints";
 import type {
   BaseSprintDto,
+  CreateRewardRuleRequestDto,
   CreateSprintRequestDto,
+  CreativeTaskWithDefaultsDto,
   UpdateSprintRequestDto,
 } from "@/api/generated/model";
 import { QueryKeys } from "@/config/tanstack/queryKeys";
@@ -41,8 +50,13 @@ import {
 import { SprintCreationStepThree } from "./components/SprintCreationStepThree";
 import { SprintUnsavedLeaveDialog } from "./components/SprintUnsavedLeaveDialog";
 import type { DraftSprintTask } from "./components/draftSprintTask";
-import { draftTaskToCreatePayload } from "./components/draftSprintTask";
+import {
+  draftTaskToCreatePayload,
+  draftTaskToUpdatePayload,
+} from "./components/draftSprintTask";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
+import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
+import { useSprintRewardRules } from "@/hooks/sprints/useSprintRewardRules";
 
 const SprintSetting = () => {
   const { sprintId, slug } = useParams();
@@ -52,6 +66,8 @@ const SprintSetting = () => {
   // Маршрут `sprints/new` не объявляет `:sprintId`, поэтому смотрим и path
   const isNewSprint =
     sprintId === "new" || /\/sprints\/new\/?$/.test(pathname);
+  const isEditSprint =
+    !isNewSprint && /\/sprints\/[^/]+\/edit\/?$/.test(pathname);
 
   const {
     createSprint,
@@ -69,13 +85,30 @@ const SprintSetting = () => {
     generalError: updateGeneralError,
   } = usePatchSprint();
 
-  const { room } = useGetRoomById(slug || "");
-  const roomId = room?.id ?? slug ?? "";
+  const {
+    room,
+    isLoading: isLoadingRoom,
+    isError: isRoomError,
+  } = useGetRoomById(slug || "");
+  const roomId = room?.id ?? "";
 
   const { sprints, isLoading: isLoadingSprints } = useSprints(
     { page: 1, size: 100 },
     slug || ""
   );
+  const {
+    rules: existingRewardRules,
+    isLoading: isLoadingRewardRules,
+    isError: isRewardRulesError,
+  } = useSprintRewardRules(isEditSprint ? sprintId ?? "" : "");
+  const {
+    tasks: roomTasks,
+    isLoading: isLoadingRoomTasks,
+    isError: isRoomTasksError,
+  } = useRoomCreativeTasks(isEditSprint ? roomId : "", {
+    page: 1,
+    size: 100,
+  });
 
   const [sprint, setSprint] = useState<BaseSprintDto | null>(null);
   const [description, setDescription] = useState("");
@@ -86,15 +119,26 @@ const SprintSetting = () => {
     useState<DraftProportionalReward>({
       amount: "",
       rankTo: "",
+      minPoints: "",
+      rewards: [],
     });
   const [draftManualRewards, setDraftManualRewards] = useState<
     DraftManualReward[]
   >([]);
   const [draftTasks, setDraftTasks] = useState<DraftSprintTask[]>([]);
+  const [editBaseline, setEditBaseline] = useState<{
+    sprintId: string;
+    ruleIds: string[];
+    taskIds: string[];
+    proportionalRuleId?: string;
+    manualRuleId?: string;
+  } | null>(null);
+  const [editHydrationError, setEditHydrationError] = useState("");
   const [isLaunching, setIsLaunching] = useState(false);
   const [allowLeave, setAllowLeave] = useState(false);
 
-  const shouldBlockLeave = isNewSprint && !allowLeave && !isLaunching;
+  const shouldBlockLeave =
+    (isNewSprint || isEditSprint) && !allowLeave && !isLaunching;
   const leaveBlocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       shouldBlockLeave && currentLocation.pathname !== nextLocation.pathname
@@ -136,6 +180,160 @@ const SprintSetting = () => {
       }
     }
   }, [sprintId, sprints]);
+
+  useEffect(() => {
+    if (
+      !isEditSprint ||
+      !sprint ||
+      !roomId ||
+      isLoadingRewardRules ||
+      isLoadingRoomTasks ||
+      isRewardRulesError ||
+      isRoomTasksError ||
+      editBaseline?.sprintId === sprint.id
+    ) {
+      return;
+    }
+
+    const proportionalRules = existingRewardRules.filter(
+      (rule) => rule.type === "byPoints"
+    );
+    const manualRules = existingRewardRules.filter(
+      (rule) => rule.type === "manual"
+    );
+    const hasInvalidRankRule = existingRewardRules.some(
+      (rule) =>
+        rule.type === "byRank" &&
+        (rule.rankFrom == null || rule.rankTo == null)
+    );
+    if (
+      hasInvalidRankRule ||
+      proportionalRules.length > 1 ||
+      manualRules.length > 1
+    ) {
+      setEditHydrationError(
+        "Конфигурацию наград этого спринта нельзя безопасно открыть в редакторе"
+      );
+      return;
+    }
+
+    const rankRules = existingRewardRules
+      .filter(
+        (rule) =>
+          rule.type === "byRank" &&
+          rule.rankFrom != null &&
+          rule.rankTo != null
+      )
+      .map((rule) => ({
+        id: rule.id,
+        rankFrom: rule.rankFrom as number,
+        rankTo: rule.rankTo as number,
+        rewards: rule.rewards.map((reward) => ({
+          rewardId: reward.rewardId,
+          amount: Number(reward.amount),
+        })),
+      }));
+    const proportionalRule = proportionalRules[0];
+    const manualRule = manualRules[0];
+    const sprintTasks = roomTasks.filter(
+      (task) => task.sprintId === sprint.id && !task.isDeleted
+    );
+
+    let cancelled = false;
+    void Promise.all(
+      sprintTasks.map((task) =>
+        creativeTasksControllerGetCreativeTaskById(task.id)
+      )
+    ).then((detailedTasks) => {
+      if (cancelled) return;
+
+      setEditHydrationError("");
+      setDraftRankRules(rankRules);
+      setDraftProportional(
+        proportionalRule
+          ? {
+              amount: String(
+                proportionalRule.rewards.reduce(
+                  (total, reward) => total + Number(reward.amount),
+                  0
+                )
+              ),
+              rankTo: String(proportionalRule.rankTo ?? ""),
+              minPoints: String(proportionalRule.minPoints ?? ""),
+              rewards: proportionalRule.rewards.map((reward) => ({
+                rewardId: reward.rewardId,
+                amount: Number(reward.amount),
+              })),
+            }
+          : { amount: "", rankTo: "", minPoints: "", rewards: [] }
+      );
+      setDraftManualRewards(
+        manualRule?.rewards.map((reward) => ({
+          rewardId: reward.rewardId,
+          amount: Number(reward.amount),
+        })) ?? []
+      );
+      setDraftTasks(
+        detailedTasks.map((task) => {
+          const details = task as Partial<CreativeTaskWithDefaultsDto>;
+          const defaultTargetUrls = details.defaultTargetUrls ?? [];
+          const defaultTexts = details.defaultTexts ?? [];
+          const defaultMediaIds = details.defaultMediaIds ?? [];
+
+          return {
+            id: task.id,
+            isPersisted: true,
+            title: task.title,
+            description: task.description ?? "",
+            prohibited: task.restrictions?.join("\n") ?? "",
+            criteria: task.criteria?.length ? [...task.criteria] : [""],
+            allowedFormats: (task.allowedFormats ?? []) as DraftSprintTask["allowedFormats"],
+            targetPlatform: task.targetPlatform as DraftSprintTask["targetPlatform"],
+            ordKktus: [...(task.ordKktus ?? [])],
+            ordContractTemplateId: "",
+            targetUrls: defaultTargetUrls.length ? [...defaultTargetUrls] : [""],
+            allowAmbassadorTargetUrl: task.allowAmbassadorTargetUrl,
+            defaultTexts: defaultTexts.length ? [...defaultTexts] : [""],
+            allowAmbassadorText: task.allowAmbassadorText,
+            defaultMediaIds: [...defaultMediaIds],
+            allowAmbassadorMedia: task.allowAmbassadorMedia,
+            publicationsCount: task.publicationsCount,
+            requireMaterialsReview: task.requireMaterialsReview,
+            requirePublicationReview: task.requirePublicationReview,
+            minimalRewardInBalls: String(task.minimalRewardInBalls),
+          };
+        })
+      );
+      setEditBaseline({
+        sprintId: sprint.id,
+        ruleIds: existingRewardRules.map((rule) => rule.id),
+        taskIds: sprintTasks.map((task) => task.id),
+        proportionalRuleId: proportionalRule?.id,
+        manualRuleId: manualRule?.id,
+      });
+    }).catch(() => {
+      if (!cancelled) {
+        setEditHydrationError(
+          "Не удалось загрузить все данные заданий. Сохранение отключено, чтобы не потерять вложения"
+        );
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    editBaseline?.sprintId,
+    existingRewardRules,
+    isEditSprint,
+    isLoadingRewardRules,
+    isLoadingRoomTasks,
+    isRewardRulesError,
+    isRoomTasksError,
+    roomTasks,
+    roomId,
+    sprint,
+  ]);
 
   useEffect(() => {
     if (
@@ -288,7 +486,7 @@ const SprintSetting = () => {
     if (!formData.startDate) {
       errors.startDate = ["Выберите дату начала"];
     }
-    if (!formData.endDate) {
+    if (!formData.ignoreEndDate && !formData.endDate) {
       errors.endDate = ["Выберите дату окончания"];
     }
     setFieldErrors(errors);
@@ -318,11 +516,6 @@ const SprintSetting = () => {
 
   const handleSaveDraftAndLeave = () => {
     handleDraftClick();
-    if (leaveBlocker.state === "blocked") {
-      leaveBlocker.proceed();
-      return;
-    }
-    setAllowLeave(true);
   };
 
   useEffect(() => {
@@ -337,22 +530,89 @@ const SprintSetting = () => {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [shouldBlockLeave]);
 
+  const buildRewardRules = () => {
+    const rules: Array<{
+      id?: string;
+      data: CreateRewardRuleRequestDto;
+    }> = draftRankRules
+      .filter((rule) => rule.rewards.length > 0)
+      .map((rule) => ({
+        id: editBaseline?.ruleIds.includes(rule.id) ? rule.id : undefined,
+        data: {
+          type: "byRank",
+          rankFrom: rule.rankFrom,
+          rankTo: rule.rankTo,
+          minPoints: null,
+          rewards: rule.rewards,
+        },
+      }));
+
+    const hasProportionalFilter =
+      Number(draftProportional.rankTo) > 0 ||
+      (draftProportional.minPoints !== "" &&
+        Number(draftProportional.minPoints) >= 0);
+    if (draftProportional.rewards.length > 0 && hasProportionalFilter) {
+      rules.push({
+        id: editBaseline?.proportionalRuleId,
+        data: {
+          type: "byPoints",
+          rankFrom: null,
+          rankTo: draftProportional.rankTo
+            ? Number(draftProportional.rankTo)
+            : null,
+          minPoints: draftProportional.minPoints
+            ? Number(draftProportional.minPoints)
+            : null,
+          rewards: draftProportional.rewards,
+        },
+      });
+    }
+
+    if (draftManualRewards.length > 0) {
+      rules.push({
+        id: editBaseline?.manualRuleId,
+        data: {
+          type: "manual",
+          rankFrom: null,
+          rankTo: null,
+          minPoints: null,
+          rewards: draftManualRewards,
+        },
+      });
+    }
+
+    return rules;
+  };
+
   const handleLaunchSprint = async () => {
     if (!slug || draftTasks.length === 0) return;
 
-    const targetRoomId = room?.id || roomId || slug;
-    const startDate = (
-      formData.startDate ? new Date(formData.startDate) : new Date()
-    ).toISOString();
-    const endDate = formData.endDate
-      ? new Date(formData.endDate).toISOString()
-      : null;
+    const targetRoomId = roomId || sprint?.roomId || slug;
+    const startDate =
+      isEditSprint &&
+      sprint?.startDate &&
+      dateToInput(sprint.startDate) === formData.startDate
+        ? sprint.startDate
+        : new Date(
+            formData.startDate
+              ? `${formData.startDate}T00:00:00`
+              : Date.now()
+          ).toISOString();
+    const endDate = formData.ignoreEndDate
+      ? null
+      : formData.endDate
+        ? isEditSprint &&
+          sprint?.endDate &&
+          dateToInput(sprint.endDate) === formData.endDate
+          ? sprint.endDate
+          : new Date(`${formData.endDate}T00:00:00`).toISOString()
+        : null;
 
     setIsLaunching(true);
     setGeneralError("");
 
     try {
-      const createData: CreateSprintRequestDto = {
+      const sprintData: UpdateSprintRequestDto = {
         name: formData.name,
         description: description.trim() || null,
         startDate,
@@ -363,60 +623,88 @@ const SprintSetting = () => {
         rewardValue: formData.rewardValue,
         promoCodeUsageLimit: formData.promoCodeUsageLimit,
         ignorePromoCodeUsageLimit: formData.ignorePromoCodeUsageLimit,
-        roomId: targetRoomId,
       };
 
-      const createdSprint = await sprintsControllerCreate(createData);
+      const savedSprint = isEditSprint && sprintId
+        ? await sprintsControllerUpdate(sprintId, sprintData)
+        : await sprintsControllerCreate({
+            ...sprintData,
+            roomId: targetRoomId,
+          } as CreateSprintRequestDto);
 
-      if (rewardMode === "rating") {
-        for (const rule of draftRankRules) {
-          if (rule.rewards.length === 0) continue;
-          await sprintsControllerCreateRewardRule(createdSprint.id, {
-            type: "byRank",
-            rankFrom: rule.rankFrom,
-            rankTo: rule.rankTo,
-            minPoints: null,
-            rewards: rule.rewards.map((reward) => ({
-              rewardId: reward.rewardId,
-              amount: reward.amount,
-            })),
-          });
+      const rewardRules = buildRewardRules();
+      for (const rule of rewardRules) {
+        if (rule.id) {
+          await sprintsControllerUpdateRewardRule(rule.id, rule.data);
+        } else {
+          await sprintsControllerCreateRewardRule(savedSprint.id, rule.data);
         }
-      } else if (rewardMode === "manual" && draftManualRewards.length > 0) {
-        await sprintsControllerCreateRewardRule(createdSprint.id, {
-          type: "manual",
-          rankFrom: null,
-          rankTo: null,
-          minPoints: null,
-          rewards: draftManualRewards.map((reward) => ({
-            rewardId: reward.rewardId,
-            amount: reward.amount,
-          })),
-        });
       }
 
-      for (const task of draftTasks) {
-        await creativeTasksControllerCreateCreativeTask(
-          draftTaskToCreatePayload(task, targetRoomId, createdSprint.id)
+      if (isEditSprint && editBaseline) {
+        const keptRuleIds = new Set(
+          rewardRules.flatMap((rule) => (rule.id ? [rule.id] : []))
         );
+        for (const ruleId of editBaseline.ruleIds) {
+          if (!keptRuleIds.has(ruleId)) {
+            await sprintsControllerDeleteRewardRule(ruleId);
+          }
+        }
+      }
+
+      const originalTaskIds = new Set(editBaseline?.taskIds ?? []);
+      const keptTaskIds = new Set(
+        draftTasks
+          .filter((task) => originalTaskIds.has(task.id))
+          .map((task) => task.id)
+      );
+
+      for (const task of draftTasks) {
+        if (originalTaskIds.has(task.id)) {
+          await creativeTasksControllerUpdateCreativeTask(
+            task.id,
+            draftTaskToUpdatePayload(task, savedSprint.id)
+          );
+        } else {
+          await creativeTasksControllerCreateCreativeTask(
+            draftTaskToCreatePayload(task, targetRoomId, savedSprint.id)
+          );
+        }
+      }
+
+      for (const taskId of originalTaskIds) {
+        if (!keptTaskIds.has(taskId)) {
+          await creativeTasksControllerUpdateCreativeTask(taskId, {
+            isDeleted: true,
+          });
+        }
       }
 
       await queryClient.invalidateQueries({
-        queryKey: [QueryKeys.SPRINTS, createdSprint.roomId],
+        queryKey: [QueryKeys.SPRINTS, savedSprint.roomId],
       });
       await queryClient.invalidateQueries({
         queryKey: [QueryKeys.CREATIVE_TASKS, targetRoomId],
         exact: false,
       });
+      await queryClient.invalidateQueries({
+        queryKey: [QueryKeys.SPRINT_REWARD_RULES, savedSprint.id],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [QueryKeys.SPRINT_LEADERBOARD],
+        exact: false,
+      });
 
-      toast.success("Спринт запущен");
+      toast.success(isEditSprint ? "Спринт сохранён" : "Спринт запущен");
       setAllowLeave(true);
-      navigate(`/rooms/${slug}/sprints/${createdSprint.id}`);
+      navigate(`/rooms/${slug}/sprints/${savedSprint.id}`);
     } catch (error) {
       const message =
         error instanceof ApiError
           ? error.message
-          : "Не удалось запустить спринт";
+          : isEditSprint
+            ? "Не удалось сохранить спринт"
+            : "Не удалось запустить спринт";
       setGeneralError(message);
       toast.error(message);
     } finally {
@@ -424,7 +712,7 @@ const SprintSetting = () => {
     }
   };
 
-  if (isLoadingSprints) {
+  if (isLoadingSprints || ((isNewSprint || isEditSprint) && isLoadingRoom)) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center">
         <PageLoader label="Загрузка…" />
@@ -432,11 +720,48 @@ const SprintSetting = () => {
     );
   }
 
-  if (!isNewSprint && sprints.length > 0 && !sprint) {
+  if (!isNewSprint && !sprint) {
     return <SprintNotFoundState />;
   }
 
-  if (isNewSprint) {
+  if (
+    isEditSprint &&
+    (isRoomError || isRewardRulesError || isRoomTasksError || editHydrationError)
+  ) {
+    return (
+      <div className="mx-auto flex min-h-[420px] w-full max-w-[700px] items-center px-4">
+        <Alert variant="destructive">
+          <AlertDescription className="space-y-3">
+            <p>
+              {editHydrationError ||
+                "Не удалось загрузить данные спринта. Сохранение отключено, чтобы не потерять изменения"}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+            >
+              Повторить
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (
+    isEditSprint &&
+    (isLoadingRewardRules || isLoadingRoomTasks || !editBaseline)
+  ) {
+    return (
+      <div className="flex min-h-dvh w-full items-center justify-center">
+        <PageLoader label="Загрузка…" />
+      </div>
+    );
+  }
+
+  if (isNewSprint || isEditSprint) {
     return (
       <div className="flex min-h-full w-full flex-col py-6">
         <SprintUnsavedLeaveDialog
@@ -491,6 +816,7 @@ const SprintSetting = () => {
             onLaunch={() => {
               void handleLaunchSprint();
             }}
+            submitLabel={isEditSprint ? "Сохранить спринт" : undefined}
             onSaveDraft={handleDraftClick}
           />
         ) : null}

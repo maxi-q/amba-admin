@@ -9,7 +9,7 @@ import { ApiError } from '@/types';
 export function useAddToCreativeTaskWhitelist() {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, error, isSuccess, isError } = useMutation({
+  const { mutate, mutateAsync, isPending, error, isSuccess, isError } = useMutation({
     mutationKey: [MutationKeys.ADD_CREATIVE_TASK_WHITELIST],
     mutationFn: ({
       taskId,
@@ -47,6 +47,7 @@ export function useAddToCreativeTaskWhitelist() {
 
   return {
     addToWhitelist: mutate,
+    addToWhitelistAsync: mutateAsync,
     isPending,
     error,
     isSuccess,

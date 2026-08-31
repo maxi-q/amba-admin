@@ -21,6 +21,7 @@ import CodePage from './code';
 import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
 import PrivateCreativeTasksPage from './creativetasks/PrivateCreativeTasksPage';
+import CreatePrivateCreativeTaskPage from './creativetasks/CreatePrivateCreativeTaskPage';
 import CreativeTaskDetailLayout from './creativetasks/CreativeTaskDetailLayout';
 import PrivateCreativeTaskDetailLayout from './creativetasks/PrivateCreativeTaskDetailLayout';
 import CreativeTaskDescriptionPage from './creativetasks/CreativeTaskDescriptionPage';
@@ -68,6 +69,7 @@ export {
     ApplicationsPage,
     CreativeTasksPage,
     PrivateCreativeTasksPage,
+    CreatePrivateCreativeTaskPage,
     CreativeTaskDetailLayout,
     PrivateCreativeTaskDetailLayout,
     CreativeTaskDescriptionPage,
