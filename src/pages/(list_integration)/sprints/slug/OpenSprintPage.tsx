@@ -8,7 +8,6 @@ import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
 import { useSprintRewardRules } from "@/hooks/sprints/useSprintRewardRules";
 import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
-import { CreateCreativeTaskDialog } from "../../creativetasks/components/CreateCreativeTaskDialog";
 import { SprintNotFoundState } from "./components/SprintNotFoundState";
 import { OpenSprintQuestRow } from "./components/OpenSprintQuestRow";
 import { OpenSprintSidebar } from "./components/OpenSprintSidebar";
@@ -26,7 +25,6 @@ export default function OpenSprintPage() {
   } | null>(null);
   const [searchState, setSearchState] = useState({ sprintId: "", value: "" });
   const [confirmedSprintId, setConfirmedSprintId] = useState<string | null>(null);
-  const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const { patchSprint, isPending: isCompleting } = usePatchSprint();
 
   const isCreatePath = sprintId === "new";
@@ -44,11 +42,10 @@ export default function OpenSprintPage() {
 
   const { rules, isLoading: isLoadingRules } =
     useSprintRewardRules(effectiveSprintId);
-  const {
-    tasks,
-    isLoading: isLoadingTasks,
-    refetch: refetchTasks,
-  } = useRoomCreativeTasks(roomId, { page: 1, size: 100 });
+  const { tasks, isLoading: isLoadingTasks } = useRoomCreativeTasks(roomId, {
+    page: 1,
+    size: 100,
+  });
 
   if (isCreatePath) {
     return <SprintSetting />;
@@ -175,7 +172,11 @@ export default function OpenSprintPage() {
                   size="icon"
                   className="size-7 border-[#e4e4e4] shadow-none"
                   aria-label="Добавить задание"
-                  onClick={() => setCreateTaskOpen(true)}
+                  onClick={() =>
+                    navigate(
+                      `/rooms/${slug}/creativetasks/private/new?sprintId=${encodeURIComponent(sprint.id)}`
+                    )
+                  }
                 >
                   <Plus
                     className="size-4 text-[#9a9a9a]"
@@ -302,15 +303,6 @@ export default function OpenSprintPage() {
             search={search}
           />
         )}
-
-        <CreateCreativeTaskDialog
-          open={createTaskOpen}
-          onClose={() => setCreateTaskOpen(false)}
-          roomId={roomId}
-          roomSlug={slug}
-          initialSprintId={sprint.id}
-          onSuccess={() => void refetchTasks()}
-        />
       </div>
 
       {isLoadingRules ? (
