@@ -38,8 +38,6 @@ import type { BaseRewardDto } from "@/api/generated/model";
 import { useRoomRewards } from "@/hooks/rewards/useRoomRewards";
 import { SprintCreationHeader } from "./SprintCreationHeader";
 
-export type SprintRewardMode = "rating" | "manual" | "proportional";
-
 export interface DraftRankReward {
   rewardId: string;
   amount: number;
@@ -64,17 +62,16 @@ export type DraftManualReward = DraftRankReward;
 interface SprintCreationStepTwoProps {
   roomId: string;
   roomSlug: string;
-  mode: SprintRewardMode;
   rankRules: DraftRankRule[];
   proportional: DraftProportionalReward;
   manualRewards: DraftManualReward[];
-  onModeChange: (mode: SprintRewardMode) => void;
   onRankRulesChange: (rules: DraftRankRule[]) => void;
   onProportionalChange: (value: DraftProportionalReward) => void;
   onManualRewardsChange: (rewards: DraftManualReward[]) => void;
   onBack: () => void;
   onContinue: () => void;
   onSaveDraft: () => void;
+  showWizardControls?: boolean;
 }
 
 type PlaceDialogKind = "single" | "range" | "manual";
@@ -187,6 +184,7 @@ export const SprintCreationStepTwo = ({
   onBack,
   onContinue,
   onSaveDraft,
+  showWizardControls = true,
 }: SprintCreationStepTwoProps) => {
   const {
     rewards,
@@ -535,9 +533,15 @@ export const SprintCreationStepTwo = ({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <SprintCreationHeader activeStep={2} onSaveDraft={onSaveDraft} />
+      {showWizardControls ? (
+        <SprintCreationHeader activeStep={2} onSaveDraft={onSaveDraft} />
+      ) : null}
 
-      <div className="flex min-h-[664px] min-w-0 flex-1">
+      <div
+        className={`flex min-w-0 flex-1 ${
+          showWizardControls ? "min-h-[664px]" : "min-h-0"
+        }`}
+      >
         <main className="min-w-0 flex-1 px-4 py-4">
           <div className="mx-auto w-full max-w-[648px]">
             <div className="rounded-lg border border-[#e4e4e4] bg-white p-4">
@@ -728,25 +732,27 @@ export const SprintCreationStepTwo = ({
               </Button>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 border-[#e4e4e4] bg-white px-3 text-[13px] shadow-none"
-                onClick={onBack}
-              >
-                <ArrowLeft className="size-4" aria-hidden />
-                Назад
-              </Button>
-              <Button
-                type="button"
-                className="h-10 bg-[#2563eb] px-3 text-[13px] font-medium hover:bg-[#2563eb]/90"
-                disabled={!canContinue}
-                onClick={onContinue}
-              >
-                Продолжить
-              </Button>
-            </div>
+            {showWizardControls ? (
+              <div className="mt-3 flex items-center justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 border-[#e4e4e4] bg-white px-3 text-[13px] shadow-none"
+                  onClick={onBack}
+                >
+                  <ArrowLeft className="size-4" aria-hidden />
+                  Назад
+                </Button>
+                <Button
+                  type="button"
+                  className="h-10 bg-[#2563eb] px-3 text-[13px] font-medium hover:bg-[#2563eb]/90"
+                  disabled={!canContinue}
+                  onClick={onContinue}
+                >
+                  Продолжить
+                </Button>
+              </div>
+            ) : null}
           </div>
         </main>
 

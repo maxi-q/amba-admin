@@ -45,7 +45,6 @@ import {
   type DraftManualReward,
   type DraftProportionalReward,
   type DraftRankRule,
-  type SprintRewardMode,
 } from "./components/SprintCreationStepTwo";
 import { SprintCreationStepThree } from "./components/SprintCreationStepThree";
 import { SprintUnsavedLeaveDialog } from "./components/SprintUnsavedLeaveDialog";
@@ -113,7 +112,6 @@ const SprintSetting = () => {
   const [sprint, setSprint] = useState<BaseSprintDto | null>(null);
   const [description, setDescription] = useState("");
   const [creationStep, setCreationStep] = useState<1 | 2 | 3>(1);
-  const [rewardMode, setRewardMode] = useState<SprintRewardMode>("rating");
   const [draftRankRules, setDraftRankRules] = useState<DraftRankRule[]>([]);
   const [draftProportional, setDraftProportional] =
     useState<DraftProportionalReward>({
@@ -792,11 +790,9 @@ const SprintSetting = () => {
           <SprintCreationStepTwo
             roomId={roomId}
             roomSlug={slug ?? ""}
-            mode={rewardMode}
             rankRules={draftRankRules}
             proportional={draftProportional}
             manualRewards={draftManualRewards}
-            onModeChange={setRewardMode}
             onRankRulesChange={setDraftRankRules}
             onProportionalChange={setDraftProportional}
             onManualRewardsChange={setDraftManualRewards}

@@ -54,6 +54,12 @@ import {
   useDeleteReward,
   useUpdateReward,
 } from "@/hooks/rewards/useRewardMutations";
+import {
+  SprintCreationStepTwo,
+  type DraftManualReward,
+  type DraftProportionalReward,
+  type DraftRankRule,
+} from "../sprints/slug/components/SprintCreationStepTwo";
 
 type RewardFormState = {
   name: string;
@@ -253,12 +259,30 @@ function RewardImagePicker({
   );
 }
 
-function RewardsPreview({ onExit }: { onExit: () => void }) {
+function RewardsPreview({
+  roomId,
+  roomSlug,
+  onExit,
+}: {
+  roomId: string;
+  roomSlug: string;
+  onExit: () => void;
+}) {
+  const [rankRules, setRankRules] = useState<DraftRankRule[]>([]);
+  const [proportional, setProportional] =
+    useState<DraftProportionalReward>({
+      amount: "",
+      rankTo: "",
+      minPoints: "",
+      rewards: [],
+    });
+  const [manualRewards, setManualRewards] = useState<DraftManualReward[]>([]);
+
   return (
     <div className="flex min-h-dvh min-w-0 flex-col bg-white">
-      <div className="flex min-h-12 items-center gap-2 border-b border-[#e4e4e4] bg-[#fff7ed] px-4 py-2 text-[13px] font-medium leading-4 tracking-[-0.25px] text-black">
+      <div className="flex min-h-12 items-start gap-2 bg-[#fff4e8] px-4 py-2 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black">
         <TriangleAlert className="size-4 shrink-0 text-[#f97316]" strokeWidth={1.5} />
-        <p className="max-w-[850px]">
+        <p className="min-w-0 flex-1 break-words">
           Вы находитесь в режиме превью, где можно посмотреть, как награды будут распределяться в режиме спринта. Чтобы применить награды, необходимо создать спринт
         </p>
       </div>
@@ -275,31 +299,20 @@ function RewardsPreview({ onExit }: { onExit: () => void }) {
           Выйти
         </Button>
       </header>
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,680px)_260px]">
-        <div className="p-4">
-          <div className="rounded-lg border border-[#e4e4e4] p-4">
-            <h2 className="text-[15px] font-medium leading-5 tracking-[-0.9px]">Призовые места</h2>
-            <p className="mt-1 text-[13px] font-medium leading-4 tracking-[-0.25px] text-[#797979]">
-              Какие награды получит конкретное место в рейтинге
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-3 h-7 gap-1 border-[#e4e4e4] bg-white px-2 text-[13px] font-medium shadow-none"
-              onClick={() => toast.message("Настройте призовые места при создании спринта")}
-            >
-              <Plus className="size-4" strokeWidth={1.5} />
-              Добавить место
-            </Button>
-          </div>
-        </div>
-        <aside className="flex min-h-[300px] items-center justify-center border-l border-[#e4e4e4] p-6 text-center text-[13px] font-medium leading-4 text-[#797979]">
-          Здесь будут отображаться
-          <br />
-          все награды
-        </aside>
-      </div>
+      <SprintCreationStepTwo
+        roomId={roomId}
+        roomSlug={roomSlug}
+        rankRules={rankRules}
+        proportional={proportional}
+        manualRewards={manualRewards}
+        onRankRulesChange={setRankRules}
+        onProportionalChange={setProportional}
+        onManualRewardsChange={setManualRewards}
+        onBack={() => undefined}
+        onContinue={() => undefined}
+        onSaveDraft={() => undefined}
+        showWizardControls={false}
+      />
     </div>
   );
 }
@@ -442,7 +455,11 @@ export default function RewardsPage() {
   return (
     <div className="-m-4 min-h-dvh w-[calc(100%+2rem)] min-w-0 bg-white md:-m-6 md:w-[calc(100%+3rem)]">
       {previewOpen ? (
-        <RewardsPreview onExit={() => setPreviewOpen(false)} />
+        <RewardsPreview
+          roomId={roomId}
+          roomSlug={slug ?? ""}
+          onExit={() => setPreviewOpen(false)}
+        />
       ) : (
         <div className="flex min-h-dvh min-w-0 flex-col">
           <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-[#e4e4e4] px-4">
