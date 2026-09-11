@@ -10,7 +10,7 @@ export function useAuth() {
   const { login, logout } = useAuthStore();
 
   return useMutation({
-    mutationFn: (data: LoginBySignRequestDto) => authControllerLogin(data),
+    mutationFn: (data: LoginBySignRequestDto) => authControllerLogin(data, { skipAuth: true }),
     onSuccess: (response) => {
       if (response?.token) {
         login(response.token);

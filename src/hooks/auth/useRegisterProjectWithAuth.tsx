@@ -18,9 +18,9 @@ export function useRegisterProjectWithAuth() {
       authData: LoginBySignRequestDto; 
     }) => {
       // Сначала регистрируем проект
-      await authControllerCreateProject(registerData);
+      await authControllerCreateProject(registerData, { skipAuth: true });
 
-      const authResponse = await authControllerLogin(authData);
+      const authResponse = await authControllerLogin(authData, { skipAuth: true });
       return authResponse;
     },
     onSuccess: (response) => {

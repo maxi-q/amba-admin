@@ -7,10 +7,12 @@ import { useAuth } from "@/hooks/auth/useAuth";
 import { useRegisterProjectWithAuth } from "@/hooks/auth/useRegisterProjectWithAuth";
 import { useAuthStore } from "@store/index";
 import { MessageTypes } from "@/messages/types/messages.enum";
-import { API_URL } from "@/constants";
+import { getApiEndpointUrl } from "@/constants";
+import { prepareSenlerIoLogin, SENLER_IO_START_URL } from '@/services/auth/senler-io-auth';
 
 export const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
+  const hasSenlerRuParams = Boolean(sign && senlerGroupId && senlerUserId && context && senlerChannelTypeId);
   const { message } = useMessage();
   const { auth } = useAuthStore();
   const navigate = useNavigate();
@@ -110,7 +112,7 @@ export const AuthPage = () => {
     setError(null);
 
     try {
-      const url = `${API_URL}auth/start?groupId=${Number(senlerGroupId)}`;
+      const url = `${getApiEndpointUrl('auth/start')}?groupId=${Number(senlerGroupId)}`;
       window.open(url, '_blank', 'width=600,height=700');
     } catch {
       setError("Ошибка открытия popup");
@@ -141,15 +143,20 @@ export const AuthPage = () => {
         </p>
 
         {!isLoading && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
-          <Button
-            type="button"
-            className="w-full"
-            size="lg"
-            onClick={openAuthPopup}
-            disabled={authMutation.isPending || registerProjectWithAuthMutation.isPending}
-          >
-            Войти
-          </Button>
+          <div className="space-y-3">
+            {hasSenlerRuParams ? (
+              <Button type="button" className="w-full" size="lg" onClick={openAuthPopup}>
+                Войти через Senler.ru
+              </Button>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">
+                Для входа через Senler.ru откройте амбассадорку из кабинета Senler.ru.
+              </p>
+            )}
+            <Button asChild className="w-full" size="lg" variant={hasSenlerRuParams ? 'outline' : 'default'}>
+              <a href={SENLER_IO_START_URL} target="_top" onClick={prepareSenlerIoLogin}>Войти через Senler.io</a>
+            </Button>
+          </div>
         )}
         </CardContent>
       </Card>

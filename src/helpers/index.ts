@@ -1,3 +1,9 @@
+export const clearSenlerRuAuthContext = () => {
+  for (const key of ['sign', 'senlerGroupId', 'senlerUserId', 'context', 'senlerChannelTypeId']) {
+    localStorage.removeItem(key);
+  }
+};
+
 export const getUrlParams = () => {
   const url = window.location.href;
   const params = new URLSearchParams(new URL(url).search);
