@@ -8,7 +8,7 @@ import { useRegisterProjectWithAuth } from "@/hooks/auth/useRegisterProjectWithA
 import { useAuthStore } from "@store/index";
 import { MessageTypes } from "@/messages/types/messages.enum";
 import { getApiEndpointUrl } from "@/constants";
-import { prepareSenlerIoLogin, SENLER_IO_START_URL } from '@/services/auth/senler-io-auth';
+import { useSenlerIoLogin } from '@/hooks/auth/useSenlerIoLogin';
 
 export const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
@@ -22,6 +22,7 @@ export const AuthPage = () => {
 
   const authMutation = useAuth();
   const registerProjectWithAuthMutation = useRegisterProjectWithAuth();
+  const senlerIoLogin = useSenlerIoLogin();
 
   useEffect(() => {
     if (!message) return;
@@ -129,14 +130,14 @@ export const AuthPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-        {error && (
+        {(error || senlerIoLogin.error) && (
           <Alert variant="destructive" className="text-left">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{senlerIoLogin.error || error}</AlertDescription>
           </Alert>
         )}
 
         <p className="text-center text-sm text-muted-foreground">
-          {isLoading
+          {isLoading || senlerIoLogin.isPending
             ? "Выполняется авторизация…"
             : "Для доступа к системе необходимо авторизоваться через Senler"
           }
@@ -145,7 +146,7 @@ export const AuthPage = () => {
         {!isLoading && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
           <div className="space-y-3">
             {hasSenlerRuParams ? (
-              <Button type="button" className="w-full" size="lg" onClick={openAuthPopup}>
+              <Button type="button" className="w-full" size="lg" onClick={openAuthPopup} disabled={senlerIoLogin.isPending}>
                 Войти через Senler.ru
               </Button>
             ) : (
@@ -153,8 +154,9 @@ export const AuthPage = () => {
                 Для входа через Senler.ru откройте амбассадорку из кабинета Senler.ru.
               </p>
             )}
-            <Button asChild className="w-full" size="lg" variant={hasSenlerRuParams ? 'outline' : 'default'}>
-              <a href={SENLER_IO_START_URL} target="_top" onClick={prepareSenlerIoLogin}>Войти через Senler.io</a>
+            <Button type="button" className="w-full" size="lg" variant={hasSenlerRuParams ? 'outline' : 'default'}
+              onClick={() => void senlerIoLogin.start()} disabled={senlerIoLogin.isPending}>
+              {senlerIoLogin.isPending ? 'Ожидание авторизации…' : 'Войти через Senler.io'}
             </Button>
           </div>
         )}

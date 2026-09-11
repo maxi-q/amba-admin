@@ -1,3 +1,5 @@
+import { senlerIoLaunch } from '@/services/auth/senler-io-launch';
+
 export const clearSenlerRuAuthContext = () => {
   for (const key of ['sign', 'senlerGroupId', 'senlerUserId', 'context', 'senlerChannelTypeId']) {
     localStorage.removeItem(key);
@@ -5,6 +7,9 @@ export const clearSenlerRuAuthContext = () => {
 };
 
 export const getUrlParams = () => {
+  if (senlerIoLaunch.embedded) {
+    return { sign: '', senlerGroupId: '', senlerUserId: '', context: '', senlerChannelTypeId: '' };
+  }
   const url = window.location.href;
   const params = new URLSearchParams(new URL(url).search);
 

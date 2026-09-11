@@ -1,62 +1,72 @@
 # Вход через Senler.io
 
-Страница `/auth` предлагает вход через Senler.io. Браузер открывает API
-`/api/auth/senler-io/start` в верхнем окне (в том числе при запуске из iframe).
-После выбора проекта бэкенд перенаправляет на `/auth/senler-io/callback` фронтенда
-с одноразовым кодом в URL fragment. Страница удаляет fragment и однократно
-обменивает код на JWT амбассадорки, без старого Authorization. Автоматических
-повторов нет; повторное выполнение эффекта React StrictMode не дублирует обмен.
-
-При успешном входе очищаются данные предыдущего проекта в React Query и контекст
-Senler.ru. JWT амбассадорки сохраняется как в существующем входе; сессия Senler.io
-восстанавливается при обновлении страницы. Ответ API 401 возвращает на вход.
-Запуск Senler.ru с `sign`/`group_id` авторизует свой проект как прежде.
-Настройки ботов и ссылки на группы Senler.ru для проектов Senler.io недоступны.
-
-## Переменные и деплой
-
-**Фронтенд — этап сборки**, перед `npm run build`:
-
-```dotenv
-# Общий домен фронтенда и API:
-VITE_API_URL=/api/
-# Либо абсолютный URL API с /api/ в конце:
-# VITE_API_URL=https://api.example.com/api/
-```
-
-Vite подставляет `import.meta.env.VITE_API_URL` в JS при сборке. Переменная только
-в runtime уже собранного контейнера не изменит адрес API. В Docker значение надо
-передать в build stage (ARG/ENV до `RUN npm run build`); при прямой сборке в CI —
-в окружение команды сборки. После изменения нужна новая сборка.
-
-`.gitlab-ci.yml` этого репозитория запускает отдельный проект
-`integrations/ambassador-system/deployment/ambassador-admin-frontend`.
-Настраивать передачу `VITE_API_URL` нужно там, где фактически выполняется сборка,
-а не только в окружении контейнера со статикой.
-
-**Бэкенд — runtime**, дополнительно к Client ID, Client Secret и callback Senler:
-
-```dotenv
-SENLER_IO_FRONTEND_URL=https://admin.ambassador.sen.collabox.dev/auth/senler-io/callback
-```
-
-Это URL страницы фронтенда, без `/api`. Он отличается от зарегистрированного
-в приложении Senler `SENLER_IO_CALLBACK_URI`, который указывает на бэкенд:
-`https://admin.ambassador.sen.collabox.dev/api/auth/senler-io/callback`. Домен начала OAuth (из
-`VITE_API_URL`) должен совпадать с доменом backend callback, чтобы вернулась cookie.
-Client ID/Secret, refresh token и access token Senler фронтенду не нужны;
-никаких новых `VITE_SENLER_*` переменных добавлять не требуется.
-
-Сервер статики должен отдавать `index.html` для `/auth/senler-io/callback` (обычный
-SPA fallback). Если домены фронтенда и API отличаются, API должен разрешать origin
-фронтенда в CORS. При отказе непосредственно в Senler.io ошибку показывает backend
-callback; повторный вход начинается со страницы `/auth`.
-
-Выкладывать вместе с поддержкой OAuth Senler.io на бэкенде и его миграцией.
-После деплоя проверить вход с реальным проектом, создание комнаты, обновление
-страницы и прежний вход через Senler.ru. Шаги и синхронизация групп Senler.io
-в этот этап не входят.
-
-Этот репозиторий — `admin-frontend`, кабинет владельцев комнат на
+Репозиторий `admin-frontend` — кабинет владельцев комнат на
 `admin.ambassador.sen.collabox.dev`. Кабинет амбассадоров на
-`admin2.ambassador.sen.collabox.dev` в данном OAuth-потоке не участвует.
+`admin2.ambassador.sen.collabox.dev` в этом OAuth-потоке не участвует.
+
+В приложении Senler.io типа «Плагин» указать основной URL встроенной страницы:
+`https://admin.ambassador.sen.collabox.dev/auth`.
+
+## Поток входа внутри кабинета
+
+Senler.io открывает админку во фрейме с подписанным `launch_code`. Фронтенд
+сохраняет код в памяти и удаляет из URL. Сохранённая сессия другого проекта и
+параметры прежнего запуска Senler.ru для такого входа не используются.
+
+Кнопка «Войти через Senler.io» открывает popup. Форма отправляет `launchCode`
+на `POST /api/auth/senler-io/start` в этом popup; iframe остаётся на месте.
+Бэкенд проверяет подпись, срок и однократность запуска, а затем начинает OAuth
+именно для подписанного проекта. Сам launch_code не выдаёт прав администратора:
+требуемые разрешения подтверждаются через OAuth.
+
+После OAuth бэкенд возвращает HTML, который передаёт одноразовый код амбассадорки
+через `postMessage` открывшему окну того же origin. Фронтенд проверяет origin,
+ссылку на конкретный popup и формат сообщения, подтверждает получение и один раз
+вызывает `/api/auth/senler-io/exchange` без старого Authorization. Popup закрывается,
+а iframe показывает комнаты подключённого проекта. JWT и токены Senler в сообщении
+не передаются. Общий обработчик сообщений не сохраняет и не логирует этот код.
+
+При отказе, закрытии или блокировке popup ошибка отображается в iframe. Если
+launch_code уже использован или истёк, нужно закрыть и заново открыть плагин.
+Ручной вход с `/auth` без контекста запуска тоже работает через popup, с выбором
+проекта в Senler.io. Старый вход Senler.ru сохраняется.
+
+## Окружение
+
+**Фронтенд — при сборке**, перед `npm run build`:
+
+```dotenv
+VITE_API_URL=/api/
+```
+
+Фронтенд, API и OAuth callback должны быть на одном публичном origin (протокол,
+домен и порт). Абсолютный VITE_API_URL допустим, если указывает на тот же origin.
+Для локальной разработки можно проксировать `/api` через сервер фронтенда.
+
+Vite подставляет переменную в JS при сборке. Значение только в runtime готового
+контейнера ничего не изменит. `.gitlab-ci.yml` запускает отдельный проект
+`integrations/ambassador-system/deployment/ambassador-admin-frontend`; переменная
+должна попасть в job или Docker build stage, где выполняется сборка.
+
+**Бэкенд — runtime**:
+
+```dotenv
+SENLER_IO_CLIENT_ID=<Client ID>
+SENLER_IO_CLIENT_SECRET=<Client Secret>
+SENLER_IO_CALLBACK_URI=https://admin.ambassador.sen.collabox.dev/api/auth/senler-io/callback
+```
+
+Этот callback регистрируется в OAuth-настройках Senler.io. Переменная
+`SENLER_IO_FRONTEND_URL` больше не используется, её можно удалить. Отдельная
+страница `/auth/senler-io/callback` на фронтенде не нужна. Секреты и OAuth-токены
+Senler хранятся на бэкенде; новые `VITE_SENLER_*` переменные не требуются.
+
+Выкладывать вместе с backend popup-потоком и миграцией
+`20260911160000_bind_senler_io_embedded_launch`. На прокси исключить launch_code,
+OAuth code и state из access-логов. На страницах OAuth не должно быть политики
+Cross-Origin-Opener-Policy, разрывающей связь с окном админки. Настройки ботов,
+шаги и отслеживание групп Senler.io в этот этап не входят.
+
+После деплоя проверить настоящий запуск плагина из Senler.io, первый вход,
+создание комнаты, повторное открытие плагина и прежний вход через Senler.ru.
+Протокол запуска: https://senler.io/help/ru/developer/embedded-page.

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ProjectProvider } from '@/services/projects/projects.types';
+import { senlerIoLaunch } from '@/services/auth/senler-io-launch';
 
 interface StoreState {
   auth: boolean
@@ -13,6 +14,7 @@ interface StoreState {
 // unrelated Senler.io session was previously saved in this browser.
 const launchParams = new URLSearchParams(window.location.search);
 const savedIoToken = localStorage.getItem('authProvider') === 'SENLER_IO' &&
+  !senlerIoLaunch.embedded &&
   !launchParams.has('sign') && !launchParams.has('group_id')
   ? localStorage.getItem('token') || ''
   : '';

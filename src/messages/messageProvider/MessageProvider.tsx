@@ -5,6 +5,9 @@ import { ignoreSource } from './source.ignore';
 const messageBuffer: MessageEvent[] = [];
 
 const bufferMessages = (event: MessageEvent) => {
+  // OAuth results have a dedicated origin/source-checked listener. Do not keep
+  // their one-time codes in the shared message buffer or console logs.
+  if (event.data?.type === 'SenlerIoOAuthResult') return;
   if (!ignoreSource.includes(event.data.source)) {
     messageBuffer.push(event);
   }
@@ -27,6 +30,7 @@ export const MessageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'SenlerIoOAuthResult') return;
       if (ignoreSource.includes(event.data.source)) return;
       console.log(
         `(in parent) message from ${event.origin} with data: `,

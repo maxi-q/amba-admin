@@ -55,14 +55,14 @@ import { RoomLayout } from "./RoomLayout";
 import { SelectActionPage } from "../(Bot_step)/main";
 import { RoomRedirect } from "..";
 import { AuthPage } from "../auth";
-import { SenlerIoCallbackPage } from "../auth/SenlerIoCallbackPage";
 import { RedirectAuthPage } from "../redirect_auth";
 import { useEffect } from "react";
 import { useMessage } from "@messages/messageProvider";
 
 
 export const Navigation = () => {
-  const { pathname } = useLocation();
+  // Re-evaluate the legacy context after login removes the old URL parameters.
+  useLocation();
   const { context } = getUrlParams()
   const { sendMessage } = useMessage()
 
@@ -82,10 +82,9 @@ export const Navigation = () => {
     }
   }, []);
 
-  if (context === 'Bot_step' && pathname !== '/auth/senler-io/callback') {
+  if (context === 'Bot_step') {
     return (
       <Routes>
-        <Route path="/auth/senler-io/callback" element={<SenlerIoCallbackPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/redirect_auth" element={<RedirectAuthPage />} />
 
@@ -96,7 +95,6 @@ export const Navigation = () => {
 
   return (
     <Routes>
-      <Route path="/auth/senler-io/callback" element={<SenlerIoCallbackPage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/redirect_auth" element={<RedirectAuthPage />} />
 
