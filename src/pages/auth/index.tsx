@@ -137,13 +137,13 @@ export const AuthPage = () => {
         )}
 
         <p className="text-center text-sm text-muted-foreground">
-          {isLoading || senlerIoLogin.isPending
+          {senlerIoLogin.isRestoring ? "Восстанавливаем вход…" : isLoading || senlerIoLogin.isPending
             ? "Выполняется авторизация…"
             : "Для доступа к системе необходимо авторизоваться через Senler"
           }
         </p>
 
-        {!isLoading && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
+        {!isLoading && !senlerIoLogin.isRestoring && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
           <div className="space-y-3">
             {hasSenlerRuParams ? (
               <Button type="button" className="w-full" size="lg" onClick={openAuthPopup} disabled={senlerIoLogin.isPending}>
@@ -155,7 +155,7 @@ export const AuthPage = () => {
               </p>
             )}
             <Button type="button" className="w-full" size="lg" variant={hasSenlerRuParams ? 'outline' : 'default'}
-              onClick={() => void senlerIoLogin.start()} disabled={senlerIoLogin.isPending}>
+              onClick={() => void senlerIoLogin.start()} disabled={senlerIoLogin.isPending || senlerIoLogin.isBlocked}>
               {senlerIoLogin.isPending ? 'Ожидание авторизации…' : 'Войти через Senler.io'}
             </Button>
           </div>

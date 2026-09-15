@@ -12,6 +12,8 @@ interface StoreState {
 
 // Signed Senler.ru launches always authenticate their own project, even if an
 // unrelated Senler.io session was previously saved in this browser.
+// Embedded IO launches stay unauthenticated until /senler-io/resume verifies
+// that the saved session and signed launch refer to the same project.
 const launchParams = new URLSearchParams(window.location.search);
 const savedIoToken = localStorage.getItem('authProvider') === 'SENLER_IO' &&
   !senlerIoLaunch.embedded &&
