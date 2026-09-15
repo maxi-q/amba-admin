@@ -11,9 +11,6 @@ export const SENLER_IO_START_URL = getApiEndpointUrl('auth/senler-io/start');
 
 export function openSenlerIoPopup(launchCode?: string) {
   const apiOrigin = new URL(SENLER_IO_START_URL, window.location.href).origin;
-  if (apiOrigin !== window.location.origin) {
-    throw new Error('Вход через Senler.io не настроен. Обратитесь к администратору.');
-  }
   const target = `senler-io-${crypto.randomUUID()}`;
   const popup = window.open('', target, 'popup,width=600,height=700');
   if (!popup) throw new Error('Разрешите всплывающие окна для входа через Senler.io.');

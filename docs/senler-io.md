@@ -20,7 +20,7 @@ Senler.io открывает админку во фрейме с подписа�
 требуемые разрешения подтверждаются через OAuth.
 
 После OAuth бэкенд возвращает HTML, который передаёт одноразовый код амбассадорки
-через `postMessage` открывшему окну того же origin. Фронтенд проверяет origin,
+через `postMessage` открывшему окну с разрешённым origin фронтенда. Фронтенд проверяет origin API,
 ссылку на конкретный popup и формат сообщения, подтверждает получение и один раз
 вызывает `/api/auth/senler-io/exchange` без старого Authorization. Popup закрывается,
 а iframe показывает комнаты подключённого проекта. JWT и токены Senler в сообщении
@@ -36,12 +36,13 @@ launch_code уже использован или истёк, нужно закр
 **Фронтенд — при сборке**, перед `npm run build`:
 
 ```dotenv
-VITE_API_URL=/api/
+VITE_API_URL=https://api-ambassador.senler.ru/api/
 ```
 
-Фронтенд, API и OAuth callback должны быть на одном публичном origin (протокол,
-домен и порт). Абсолютный VITE_API_URL допустим, если указывает на тот же origin.
-Для локальной разработки можно проксировать `/api` через сервер фронтенда.
+API может находиться на другом домене. Фронтенд принимает результат только от
+конкретного popup с origin API из `VITE_API_URL`. Начало OAuth и callback должны
+использовать один origin API для cookie. Прокси через домен фронтенда не требуется.
+Относительный `/api/` также поддерживается, если он действительно ведёт на API.
 
 Vite подставляет переменную в JS при сборке. Значение только в runtime готового
 контейнера ничего не изменит. `.gitlab-ci.yml` запускает отдельный проект
@@ -53,10 +54,15 @@ Vite подставляет переменную в JS при сборке. Зн
 ```dotenv
 SENLER_IO_CLIENT_ID=<Client ID>
 SENLER_IO_CLIENT_SECRET=<Client Secret>
-SENLER_IO_CALLBACK_URI=https://admin.ambassador.sen.collabox.dev/api/auth/senler-io/callback
+SENLER_IO_CALLBACK_URI=https://api-ambassador.senler.ru/api/auth/senler-io/callback
+SENLER_IO_FRONTEND_ORIGIN=https://admin.ambassador.sen.collabox.dev
 ```
 
-Этот callback регистрируется в OAuth-настройках Senler.io. Переменная
+Этот callback регистрируется в OAuth-настройках Senler.io. `SENLER_IO_FRONTEND_ORIGIN`
+разрешает отправку результата входа только окну админки с этим origin; это адрес
+без пути, он не используется для перенаправления. Если фронт и API имеют один
+origin, эту переменную можно не задавать. Для отдельных доменов она обязательна.
+На API должен быть разрешён CORS для запросов фронтенда без cookie. Переменная
 `SENLER_IO_FRONTEND_URL` больше не используется, её можно удалить. Отдельная
 страница `/auth/senler-io/callback` на фронтенде не нужна. Секреты и OAuth-токены
 Senler хранятся на бэкенде; новые `VITE_SENLER_*` переменные не требуются.
