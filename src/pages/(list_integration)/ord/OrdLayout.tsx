@@ -1,12 +1,13 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { OrdHeader } from "./components/OrdHeader";
 
 export default function OrdLayout() {
+  const isProfile = useLocation().pathname.replace(/\/$/, "").endsWith("/ord/profile");
   return (
     <div className="w-full">
-      <div className="px-2 pt-3">
+      {!isProfile && <div className="px-2 pt-3">
         <OrdHeader />
-      </div>
+      </div>}
       <Outlet />
     </div>
   );

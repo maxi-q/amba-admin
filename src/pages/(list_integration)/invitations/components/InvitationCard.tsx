@@ -4,7 +4,6 @@ import type { BaseAfterRegistrationInvitationDto } from "@/api/generated/model";
 
 interface InvitationCardProps {
   invitation: BaseAfterRegistrationInvitationDto;
-  resolveTaskLabel: (id: string) => string;
   resolveEventLabel: (id: string) => string;
   onDelete: (invitation: BaseAfterRegistrationInvitationDto) => void;
   showLinkedEntities?: boolean;
@@ -39,13 +38,11 @@ function IdLine({
 
 export function InvitationCard({
   invitation,
-  resolveTaskLabel,
   resolveEventLabel,
   onDelete,
   showLinkedEntities = true,
 }: InvitationCardProps) {
   const vkTargets = invitation.targets ?? [];
-  const privateTaskIds = invitation.privateTaskIds ?? [];
   const eventIds = invitation.eventIds ?? [];
 
   return (
@@ -82,7 +79,6 @@ export function InvitationCard({
             </p>
             {showLinkedEntities ? (
               <div className="mt-3 flex flex-col gap-3">
-                <IdLine label="Индивидуальные задачи" ids={privateTaskIds} resolve={resolveTaskLabel} />
                 <IdLine label="События" ids={eventIds} resolve={resolveEventLabel} />
               </div>
             ) : null}

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { NavLink, useParams, useLocation } from "react-router-dom";
+import { Link, NavLink, useParams, useLocation } from "react-router-dom";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import {
@@ -31,7 +31,6 @@ import {
   Gift,
   Users,
 } from "lucide-react";
-import { IndividualTasksIcon } from "@/assets/icons/IndividualTasksIcon";
 import tokenIcon from "@/assets/sprint-flow/token.svg";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 
@@ -107,8 +106,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
           const pt = pathWithoutHash(p);
           return (
             pt === `${roomBase}/creativetasks` ||
-            (pt.startsWith(`${roomBase}/creativetasks/`) &&
-              !pt.startsWith(`${roomBase}/creativetasks/private`))
+            pt.startsWith(`${roomBase}/creativetasks/`)
           );
         },
       },
@@ -159,18 +157,9 @@ const RoomBox = ({ children }: RoomBoxProps) => {
           return (
             pt === `${roomBase}/sprints` ||
             pt.startsWith(`${roomBase}/sprints/`) ||
-            (pt.startsWith(creativeTaskBase) &&
-              !pt.startsWith(`${creativeTaskBase}private`))
+            pt.startsWith(creativeTaskBase)
           );
         },
-      },
-      {
-        id: "private-tasks",
-        label: "Индивидуальные задания",
-        icon: IndividualTasksIcon,
-        href: `${roomBase}/creativetasks/private`,
-        match: (p) =>
-          pathWithoutHash(p).startsWith(`${roomBase}/creativetasks/private`),
       },
       {
         id: "rewards",
@@ -221,9 +210,9 @@ const RoomBox = ({ children }: RoomBoxProps) => {
     title,
     ...props
   }) => (
-    <NavLink to={href} className={className} title={title} {...props}>
+    <Link to={href} className={className} title={title} {...props}>
       {children}
-    </NavLink>
+    </Link>
   );
 
   if (isLoading) {

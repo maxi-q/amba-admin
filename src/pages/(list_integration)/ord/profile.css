@@ -1,0 +1,44 @@
+/* Figma 16879:75765. Keep this palette local: other ORD pages use their existing theme. */
+.ord-profile-page,
+.ord-profile-select,
+[data-ord-profile-dialog] {
+  --foreground: #000;
+  --card-foreground: #000;
+  --background: #fff;
+  --border: #e4e4e4;
+  --input: #e4e4e4;
+  --muted: #f0f0f0;
+  --muted-foreground: #797979;
+  --primary: #2563eb;
+  --primary-foreground: #fff;
+  color: #000;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: -0.0325px;
+}
+
+main:has(.ord-profile-page) { padding: 0; }
+.ord-profile-page [data-slot="field"] { gap: 8px; }
+.ord-profile-page [data-slot="field-label"] {
+  color: #797979;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.ord-profile-page [data-slot="input"],
+.ord-profile-page [data-slot="select-trigger"] {
+  height: 40px;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+  box-shadow: none;
+}
+.ord-profile-page [data-slot="switch"] { width: 28px; border: 0; box-shadow: none; }
+.ord-profile-page [data-slot="switch-thumb"][data-state="checked"] { translate: 12px 0; }
+.ord-profile-page button[type="submit"]:disabled { background: #f0f0f0; color: #b2b2b2; }
+[data-ord-profile-dialog] > div { align-items: flex-start; padding-top: 30px; }
+body:has([data-ord-profile-dialog]) [data-slot="dialog-overlay"] { background: rgb(0 0 0 / 40%) !important; }

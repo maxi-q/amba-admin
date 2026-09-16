@@ -67,6 +67,15 @@ export default function OpenSprintPage() {
     return <SprintNotFoundState />;
   }
 
+  if (sprint.isDraft) {
+    return (
+      <Navigate
+        to={`/rooms/${slug}/sprints/${sprint.id}/edit`}
+        replace
+      />
+    );
+  }
+
   const isAwarding = sprint.status === "awarding";
   const defaultTab: OpenSprintTab =
     sprint.status === "active" ? "quests" : "leaderboard";
@@ -81,19 +90,7 @@ export default function OpenSprintPage() {
     patchSprint(
       {
         sprintId: sprint.id,
-        data: {
-          name: sprint.name,
-          description: sprint.description,
-          startDate: sprint.startDate,
-          endDate: sprint.endDate,
-          ignoreEndDate: sprint.ignoreEndDate,
-          rewardType: sprint.rewardType,
-          rewardUnits: sprint.rewardUnits,
-          rewardValue: sprint.rewardValue,
-          promoCodeUsageLimit: sprint.promoCodeUsageLimit,
-          ignorePromoCodeUsageLimit: sprint.ignorePromoCodeUsageLimit,
-          status: "completed",
-        },
+        data: { status: "completed" },
       },
       {
         onSuccess: () => toast.success("Спринт завершён"),
@@ -174,7 +171,7 @@ export default function OpenSprintPage() {
                   aria-label="Добавить задание"
                   onClick={() =>
                     navigate(
-                      `/rooms/${slug}/creativetasks/private/new?sprintId=${encodeURIComponent(sprint.id)}`
+                      `/rooms/${slug}/sprints/${sprint.id}/edit?step=tasks`
                     )
                   }
                 >
@@ -290,6 +287,7 @@ export default function OpenSprintPage() {
                     taskId={task.id}
                     title={task.title}
                     roomSlug={slug}
+                    isFrozen={task.isFrozen}
                   />
                 ))}
               </div>
@@ -300,6 +298,7 @@ export default function OpenSprintPage() {
             key={sprint.id}
             roomId={roomId}
             sprintId={sprint.id}
+            rules={rules}
             search={search}
           />
         )}

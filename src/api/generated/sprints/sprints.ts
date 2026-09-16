@@ -38,7 +38,9 @@ import type {
   UpdateRewardRuleRequestDto,
   UpdateRewardRuleResponseDto,
   UpdateSprintRequestDto,
-  UpdateSprintResponseDto
+  UpdateSprintResponseDto,
+  UpdateSprintRewardVersionsRequestDto,
+  UpdateSprintRewardVersionsResponseDto
 } from '.././model';
 
 import { customInstance } from '../../mutator/custom-instance';
@@ -531,6 +533,71 @@ export const useSprintsControllerDeleteRewardRule = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Обновляет версии выбранных наград во всех правилах указанного спринта. Для прошедших, завершённых и находящихся на выдаче наград спринтов операция запрещена.
+ * @summary Обновить выбранные награды спринта до актуальных версий
+ */
+export const sprintsControllerUpdateRewardVersions = (
+    sprintId: string,
+    updateSprintRewardVersionsRequestDto: UpdateSprintRewardVersionsRequestDto,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<UpdateSprintRewardVersionsResponseDto>(
+      {url: `/api/sprints/${sprintId}/reward-versions`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateSprintRewardVersionsRequestDto
+    },
+      options);
+    }
+  
+
+
+export const getSprintsControllerUpdateRewardVersionsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerUpdateRewardVersions>>, TError,{sprintId: string;data: UpdateSprintRewardVersionsRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerUpdateRewardVersions>>, TError,{sprintId: string;data: UpdateSprintRewardVersionsRequestDto}, TContext> => {
+
+const mutationKey = ['sprintsControllerUpdateRewardVersions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sprintsControllerUpdateRewardVersions>>, {sprintId: string;data: UpdateSprintRewardVersionsRequestDto}> = (props) => {
+          const {sprintId,data} = props ?? {};
+
+          return  sprintsControllerUpdateRewardVersions(sprintId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SprintsControllerUpdateRewardVersionsMutationResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerUpdateRewardVersions>>>
+    export type SprintsControllerUpdateRewardVersionsMutationBody = UpdateSprintRewardVersionsRequestDto
+    export type SprintsControllerUpdateRewardVersionsMutationError = void
+
+    /**
+ * @summary Обновить выбранные награды спринта до актуальных версий
+ */
+export const useSprintsControllerUpdateRewardVersions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerUpdateRewardVersions>>, TError,{sprintId: string;data: UpdateSprintRewardVersionsRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sprintsControllerUpdateRewardVersions>>,
+        TError,
+        {sprintId: string;data: UpdateSprintRewardVersionsRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getSprintsControllerUpdateRewardVersionsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Get my sprints from room
  */
 export const sprintsControllerGetMySprints = (
@@ -631,6 +698,7 @@ export function useSprintsControllerGetMySprints<TData = Awaited<ReturnType<type
 
 
 /**
+ * Для пустого черновика достаточно roomId и isDraft: true. Поля содержимого можно не передавать или передать null. При создании опубликованного спринта обязательны name, startDate, rewardType, rewardUnits и rewardValue.
  * @summary Create sprint
  */
 export const sprintsControllerCreate = (
@@ -695,6 +763,7 @@ export const useSprintsControllerCreate = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Частичное обновление: пропущенные поля сохраняют прежние значения, null очищает поле черновика. isDraft: false публикует черновик после проверки всех сохранённых полей. Для публикации обязательны name, startDate, rewardType, rewardUnits и rewardValue.
  * @summary Update sprint
  */
 export const sprintsControllerUpdate = (
@@ -755,6 +824,67 @@ export const useSprintsControllerUpdate = <TError = unknown,
       > => {
 
       const mutationOptions = getSprintsControllerUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Удалить черновик или мягко удалить ещё не начавшийся запланированный спринт вместе с заданиями
+ */
+export const sprintsControllerDelete = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/sprints/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getSprintsControllerDeleteMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerDelete>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerDelete>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['sprintsControllerDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sprintsControllerDelete>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  sprintsControllerDelete(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SprintsControllerDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerDelete>>>
+    
+    export type SprintsControllerDeleteMutationError = void
+
+    /**
+ * @summary Удалить черновик или мягко удалить ещё не начавшийся запланированный спринт вместе с заданиями
+ */
+export const useSprintsControllerDelete = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerDelete>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sprintsControllerDelete>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSprintsControllerDeleteMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

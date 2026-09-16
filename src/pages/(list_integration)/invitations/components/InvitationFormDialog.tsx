@@ -11,12 +11,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@senler/ui";
-import { useRoomPrivateCreativeTasks } from "@/hooks/creativetasks/useRoomPrivateCreativeTasks";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
-import { resolveVkProfileId } from "@/utils/vkProfile";
+import { useParseVkUserId } from "@/hooks/invitations/useParseVkUserId";
 
-const INVITATION_CHANNEL_TYPE_VK = 0;
+const INVITATION_CHANNEL_TYPE_VK = 1;
 const SUBSCRIBER_TEXTAREA_CLASS =
   "min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
@@ -35,12 +34,6 @@ interface InvitationFormDialogProps {
   mode?: "create";
   roomId: string;
   slug: string;
-  /**
-   * Если задано — селектор задач скрывается, а указанные privateTaskIds
-   * автоматически подставляются в новое приглашение.
-   * При редактировании существующие privateTaskIds сохраняются как есть.
-   */
-  lockedPrivateTaskIds?: string[];
   /**
    * Если задано — селектор событий скрывается, а указанные eventIds
    * автоматически подставляются в новое приглашение.
@@ -61,7 +54,6 @@ export function InvitationFormDialog({
   mode = "create",
   roomId,
   slug,
-  lockedPrivateTaskIds,
   lockedEventIds,
   titleOverride,
   useVkProfileLink = false,
@@ -72,15 +64,12 @@ export function InvitationFormDialog({
   const [vkProfileUrl, setVkProfileUrl] = useState("");
   const [vkProfileError, setVkProfileError] = useState("");
   const [isResolvingVk, setIsResolvingVk] = useState(false);
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
-  const [taskSearch, setTaskSearch] = useState("");
   const [eventSearch, setEventSearch] = useState("");
 
-  const isTaskPickerHidden = !!lockedPrivateTaskIds;
   const isEventPickerHidden = !!lockedEventIds;
 
-  const { tasks } = useRoomPrivateCreativeTasks(roomId, { page: 1, size: 100 });
+  const { mutateAsync: parseVkUserId } = useParseVkUserId();
   const { events } = useEvents({ page: 1, size: 100 }, slug);
 
   const {
@@ -103,12 +92,10 @@ export function InvitationFormDialog({
       setSubscriberInput("");
       setVkProfileUrl("");
       setVkProfileError("");
-      setSelectedTaskIds(lockedPrivateTaskIds ?? []);
       setSelectedEventIds(lockedEventIds ?? []);
-      setTaskSearch("");
       setEventSearch("");
     }
-  }, [open, mode, lockedPrivateTaskIds, lockedEventIds]);
+  }, [open, mode, lockedEventIds]);
 
   const isPending = isCreatePending || isResolvingVk;
   const generalError = createGeneralError;
@@ -130,23 +117,11 @@ export function InvitationFormDialog({
 
   const canSubmit = useVkProfileLink ? !!vkProfileUrl.trim() : targetsPayload.length > 0;
 
-  const filteredTasks = useMemo(() => {
-    const q = taskSearch.toLowerCase().trim();
-    if (!q) return tasks;
-    return tasks.filter((t) => t.title.toLowerCase().includes(q));
-  }, [tasks, taskSearch]);
-
   const filteredEvents = useMemo(() => {
     const q = eventSearch.toLowerCase().trim();
     if (!q) return events;
     return events.filter((e) => e.name.toLowerCase().includes(q));
   }, [events, eventSearch]);
-
-  const toggleTaskId = (id: string) => {
-    setSelectedTaskIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
 
   const toggleEventId = (id: string) => {
     setSelectedEventIds((prev) =>
@@ -162,7 +137,6 @@ export function InvitationFormDialog({
     "По одному ID на строку; можно вставить список из нескольких строк.";
 
   const handleSubmit = async () => {
-    const privateTaskIds = selectedTaskIds;
     const eventIds = selectedEventIds;
     let submitTargets = targetsPayload;
 
@@ -171,7 +145,7 @@ export function InvitationFormDialog({
       setIsResolvingVk(true);
 
       try {
-        const subscriberId = await resolveVkProfileId(vkProfileUrl);
+        const { vkUserId: subscriberId } = await parseVkUserId(vkProfileUrl.trim());
         submitTargets = [
           {
             channelTypeId: INVITATION_CHANNEL_TYPE_VK,
@@ -195,7 +169,6 @@ export function InvitationFormDialog({
       {
         roomId,
         targets: submitTargets,
-        privateTaskIds,
         eventIds,
       },
       {
@@ -276,38 +249,6 @@ export function InvitationFormDialog({
               ) : (
                 <p className="text-sm text-muted-foreground">{targetHint}</p>
               )}
-            </div>
-          )}
-
-          {isTaskPickerHidden ? null : (
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Индивидуальные задачи</p>
-              <InputField
-                value={taskSearch}
-                onChange={(e) => setTaskSearch(e.target.value)}
-                placeholder="Поиск по названию"
-                aria-label="Поиск креативных задач"
-              />
-              <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border p-2">
-                {filteredTasks.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Нет задач</p>
-                ) : (
-                  filteredTasks.map((task) => (
-                    <label
-                      key={task.id}
-                      className="flex cursor-pointer items-start gap-2 rounded px-1 py-1.5 text-sm hover:bg-muted/60"
-                    >
-                      <input
-                        type="checkbox"
-                        className="border-input text-primary focus-visible:ring-ring mt-0.5 size-4 shrink-0 rounded border shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                        checked={selectedTaskIds.includes(task.id)}
-                        onChange={() => toggleTaskId(task.id)}
-                      />
-                      <span className="min-w-0 leading-snug">{task.title}</span>
-                    </label>
-                  ))
-                )}
-              </div>
             </div>
           )}
 

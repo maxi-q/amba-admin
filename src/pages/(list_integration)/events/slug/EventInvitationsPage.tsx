@@ -3,19 +3,19 @@ import { useParams } from "react-router-dom";
 import { Alert, AlertDescription, Button, InputField, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useEvents } from "@/hooks/events/useEvents";
-import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
 import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
 import { useGetProject } from "@/hooks/projects/useGetProject";
+import { getProjectVkCommunityId } from "@/utils/projectLinks";
 import { InvitationCard } from "../../invitations/components/InvitationCard";
 import { DeleteInvitationDialog } from "../../invitations/components/DeleteInvitationDialog";
 import { InvitationSuccessDialog } from "../../invitations/components/InvitationSuccessDialog";
 import { EventNotFoundState } from "./components/EventNotFoundState";
 import type { BaseAfterRegistrationInvitationDto } from "@/api/generated/model";
-import { resolveVkProfileId } from "@/utils/vkProfile";
+import { useParseVkUserId } from "@/hooks/invitations/useParseVkUserId";
 
-const INVITATION_CHANNEL_TYPE_VK = 0;
+const INVITATION_CHANNEL_TYPE_VK = 1;
 const getFirstFieldError = (fieldErrors: Record<string, string[]>, fieldName: string) =>
   fieldErrors[fieldName]?.[0] || "";
 
@@ -50,7 +50,7 @@ const EventInvitationsPage = () => {
     [events, eventId]
   );
 
-  const { tasks } = useRoomCreativeTasks(roomId, { page: 1, size: 100 });
+  const { mutateAsync: parseVkUserId } = useParseVkUserId();
 
   const { invitations, isLoading, isError, error } = useRoomInvitations(roomId);
   const { project } = useGetProject();
@@ -79,14 +79,6 @@ const EventInvitationsPage = () => {
       );
   }, [invitations, eventId]);
 
-  const resolveTaskLabel = useCallback(
-    (id: string) => {
-      const t = tasks.find((x) => x.id === id);
-      return t ? t.title : id;
-    },
-    [tasks]
-  );
-
   const resolveEventLabel = useCallback(
     (id: string) => {
       const e = events.find((x) => x.id === id);
@@ -109,7 +101,7 @@ const EventInvitationsPage = () => {
     setIsResolvingVk(true);
 
     try {
-      const subscriberId = await resolveVkProfileId(vkProfileUrl);
+      const { vkUserId: subscriberId } = await parseVkUserId(vkProfileUrl.trim());
 
       createInvitation(
         {
@@ -120,7 +112,6 @@ const EventInvitationsPage = () => {
               subscriberId,
             },
           ],
-          privateTaskIds: [],
           eventIds: [eventId],
         },
         {
@@ -246,7 +237,6 @@ const EventInvitationsPage = () => {
             <InvitationCard
               key={inv.id}
               invitation={inv}
-              resolveTaskLabel={resolveTaskLabel}
               resolveEventLabel={resolveEventLabel}
               onDelete={setDeletingInvitation}
             />
@@ -269,7 +259,7 @@ const EventInvitationsPage = () => {
       <InvitationSuccessDialog
         open={successDialogOpen}
         onClose={() => setSuccessDialogOpen(false)}
-        channelExternalId={project?.channelExternalId}
+        channelExternalId={getProjectVkCommunityId(project)}
       />
     </div>
   );

@@ -8,32 +8,58 @@
 import type { CreateSprintRequestDtoRewardType } from './createSprintRequestDtoRewardType';
 
 export interface CreateSprintRequestDto {
-  /** Название спринта */
-  name: string;
+  /**
+   * Название спринта. Может отсутствовать у черновика
+   * @nullable
+   */
+  name?: string | null;
   /**
    * Описание спринта
    * @nullable
    */
   description?: string | null;
-  /** Дата начала */
-  startDate: string;
+  /**
+   * Дата начала. Может отсутствовать у черновика
+   * @nullable
+   */
+  startDate?: string | null;
   /**
    * Дата окончания
    * @nullable
    */
-  endDate: string | null;
-  /** Игнорировать дату окончания(сделать спринт бессрочным) */
-  ignoreEndDate: boolean;
-  /** Тип награды */
-  rewardType: CreateSprintRequestDtoRewardType;
-  /** Единицы награды */
-  rewardUnits: string;
-  /** Значение награды */
-  rewardValue: number;
-  /** Лимит промокодов */
-  promoCodeUsageLimit: number;
-  /** Игнорировать ограничение по промокодам */
-  ignorePromoCodeUsageLimit: boolean;
+  endDate?: string | null;
+  /**
+   * Бессрочный спринт. null означает false
+   * @nullable
+   */
+  ignoreEndDate?: boolean | null;
+  /**
+   * Тип награды. Может отсутствовать у черновика
+   * @nullable
+   */
+  rewardType?: CreateSprintRequestDtoRewardType;
+  /**
+   * Единицы награды. Могут отсутствовать у черновика
+   * @nullable
+   */
+  rewardUnits?: string | null;
+  /**
+   * Значение награды. Может отсутствовать у черновика
+   * @nullable
+   */
+  rewardValue?: number | null;
+  /**
+   * Лимит промокодов
+   * @nullable
+   */
+  promoCodeUsageLimit?: number | null;
+  /**
+   * Игнорировать лимит промокодов. null означает false
+   * @nullable
+   */
+  ignorePromoCodeUsageLimit?: boolean | null;
   /** ID комнаты */
   roomId: string;
+  /** Создать спринт как черновик */
+  isDraft?: boolean;
 }

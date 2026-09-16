@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { PageLoader } from "@senler/ui";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useGetProject } from "@/hooks/projects/useGetProject";
+import { getProjectVkCommunityId } from "@/utils/projectLinks";
 import { SubscriberGroupsSection } from "./components/SubscriberGroupsSection";
 import { EventErrorState } from "./components/EventErrorState";
 import { EventNotFoundState } from "./components/EventNotFoundState";
@@ -53,7 +54,7 @@ const EventSubscribersPage = () => {
     <div className="w-full px-2 py-6">
       <SubscriberGroupsSection
         event={event}
-        channelExternalId={project?.channelExternalId}
+        channelExternalId={getProjectVkCommunityId(project)}
       />
     </div>
   );

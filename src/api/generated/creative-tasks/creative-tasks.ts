@@ -375,6 +375,129 @@ export const useCreativeTasksControllerCreateCreativeTask = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Задание остаётся видимым, но новые ответы и модерация блокируются
+ * @summary Заморозить задание
+ */
+export const creativeTasksControllerFreezeCreativeTask = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<UpdateCreativeTaskResponseDto>(
+      {url: `/api/creative-tasks/${id}/freeze`, method: 'PATCH'
+    },
+      options);
+    }
+  
+
+
+export const getCreativeTasksControllerFreezeCreativeTaskMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerFreezeCreativeTask>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerFreezeCreativeTask>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['creativeTasksControllerFreezeCreativeTask'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creativeTasksControllerFreezeCreativeTask>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  creativeTasksControllerFreezeCreativeTask(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreativeTasksControllerFreezeCreativeTaskMutationResult = NonNullable<Awaited<ReturnType<typeof creativeTasksControllerFreezeCreativeTask>>>
+    
+    export type CreativeTasksControllerFreezeCreativeTaskMutationError = unknown
+
+    /**
+ * @summary Заморозить задание
+ */
+export const useCreativeTasksControllerFreezeCreativeTask = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerFreezeCreativeTask>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creativeTasksControllerFreezeCreativeTask>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getCreativeTasksControllerFreezeCreativeTaskMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Разморозить задание и снова разрешить ответы и модерацию
+ */
+export const creativeTasksControllerUnfreezeCreativeTask = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<UpdateCreativeTaskResponseDto>(
+      {url: `/api/creative-tasks/${id}/unfreeze`, method: 'PATCH'
+    },
+      options);
+    }
+  
+
+
+export const getCreativeTasksControllerUnfreezeCreativeTaskMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerUnfreezeCreativeTask>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerUnfreezeCreativeTask>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['creativeTasksControllerUnfreezeCreativeTask'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof creativeTasksControllerUnfreezeCreativeTask>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  creativeTasksControllerUnfreezeCreativeTask(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreativeTasksControllerUnfreezeCreativeTaskMutationResult = NonNullable<Awaited<ReturnType<typeof creativeTasksControllerUnfreezeCreativeTask>>>
+    
+    export type CreativeTasksControllerUnfreezeCreativeTaskMutationError = unknown
+
+    /**
+ * @summary Разморозить задание и снова разрешить ответы и модерацию
+ */
+export const useCreativeTasksControllerUnfreezeCreativeTask = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof creativeTasksControllerUnfreezeCreativeTask>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof creativeTasksControllerUnfreezeCreativeTask>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getCreativeTasksControllerUnfreezeCreativeTaskMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Отправить ответ на задание (для амбассадоров)
  */
 export const creativeTasksControllerCreateSubmission = (

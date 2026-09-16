@@ -20,16 +20,9 @@ import { EventsLayout } from './events/EventsLayout';
 import CodePage from './code';
 import ApplicationsPage from './applications';
 import CreativeTasksPage from './creativetasks';
-import PrivateCreativeTasksPage from './creativetasks/PrivateCreativeTasksPage';
-import CreatePrivateCreativeTaskPage from './creativetasks/CreatePrivateCreativeTaskPage';
 import CreativeTaskDetailLayout from './creativetasks/CreativeTaskDetailLayout';
-import PrivateCreativeTaskDetailLayout from './creativetasks/PrivateCreativeTaskDetailLayout';
 import CreativeTaskDescriptionPage from './creativetasks/CreativeTaskDescriptionPage';
-import PrivateCreativeTaskDescriptionPage from './creativetasks/PrivateCreativeTaskDescriptionPage';
 import CreativeTaskAnswersPage from './creativetasks/CreativeTaskAnswersPage';
-import PrivateCreativeTaskAnswersPage from './creativetasks/PrivateCreativeTaskAnswersPage';
-import CreativeTaskInvitationsPage from './creativetasks/CreativeTaskInvitationsPage';
-import PrivateCreativeTaskInvitationsPage from './creativetasks/PrivateCreativeTaskInvitationsPage';
 import InvitationsPage from './invitations';
 import OrdLayout from './ord/OrdLayout';
 import OrdContractsPage from './ord/contracts';
@@ -40,7 +33,6 @@ import OrdAutoIssuancePage from './ord/auto-issuance';
 import OrdRoomFilesPage from './ord/files';
 import OrdTaskIssuanceRulePage from './creativetasks/OrdTaskIssuanceRulePage';
 import OrdCreativePage from './creativetasks/OrdCreativePage';
-import PrivateOrdCreativePage from './creativetasks/PrivateOrdCreativePage';
 import RewardsPage from './rewards';
 import PromoCodesPage from './promo-codes';
 import SprintLeaderboardPage from './sprints/leaderboard';
@@ -68,16 +60,9 @@ export {
     CodePage,
     ApplicationsPage,
     CreativeTasksPage,
-    PrivateCreativeTasksPage,
-    CreatePrivateCreativeTaskPage,
     CreativeTaskDetailLayout,
-    PrivateCreativeTaskDetailLayout,
     CreativeTaskDescriptionPage,
-    PrivateCreativeTaskDescriptionPage,
     CreativeTaskAnswersPage,
-    PrivateCreativeTaskAnswersPage,
-    CreativeTaskInvitationsPage,
-    PrivateCreativeTaskInvitationsPage,
     InvitationsPage,
     OrdLayout,
     OrdContractsPage,
@@ -88,7 +73,6 @@ export {
     OrdRoomFilesPage,
     OrdTaskIssuanceRulePage,
     OrdCreativePage,
-    PrivateOrdCreativePage,
     EventsLayout,
     RewardsPage,
     PromoCodesPage,

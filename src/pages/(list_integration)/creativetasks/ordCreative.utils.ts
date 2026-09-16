@@ -168,6 +168,7 @@ export function getOrdPayTypeLabel(
 
 export function getOrdCreativeSummaryLines(task: CreativeTaskWithDefaultsDto): string[] {
   const lines: string[] = [];
+  lines.push(`Шаблон договора: ${task.ordContractTemplate?.name ?? "не выбран"}`);
   lines.push(`Тип креатива: ${getOrdFormLabel(task.ordForm)}`);
   lines.push(`Тип оплаты: ${getOrdPayTypeLabel(task.ordPayType)}`);
 

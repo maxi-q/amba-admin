@@ -7,7 +7,7 @@ interface OutletCtx {
 }
 
 /**
- * Подпункт «Ответы на задачу»: список заявок и фильтры по статусу.
+ * Подпункт «Выполнение»: список выполнений задания.
  */
 export default function CreativeTaskAnswersPage() {
   const { task } = useOutletContext<OutletCtx>();
@@ -16,6 +16,7 @@ export default function CreativeTaskAnswersPage() {
     <TaskDetailSubmissionsList
       taskId={task.id}
       minimalRewardInBalls={task.minimalRewardInBalls}
+      isFrozen={task.isFrozen}
     />
   );
 }

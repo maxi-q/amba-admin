@@ -15,15 +15,21 @@ export interface BaseSprintDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
-  /** Название спринта */
-  name: string;
+  /**
+   * Название спринта. Может отсутствовать у черновика
+   * @nullable
+   */
+  name: string | null;
   /**
    * Описание спринта
    * @nullable
    */
   description?: string | null;
-  /** Дата начала */
-  startDate: string;
+  /**
+   * Дата начала. Может отсутствовать у черновика
+   * @nullable
+   */
+  startDate: string | null;
   /**
    * Дата окончания
    * @nullable
@@ -31,24 +37,38 @@ export interface BaseSprintDto {
   endDate: string | null;
   /** Игнорировать дату окончания(сделать спринт бессрочным) */
   ignoreEndDate: boolean;
-  /** Статус спринта. Не зависит от дат: active допустим и при дате начала в будущем. awarding и completed закрывают взаимодействие с заданиями; владелец может только допроверить креативы. */
+  /** Статус опубликованного спринта. active допустим и при дате начала в будущем. awarding и completed закрывают взаимодействие с заданиями; владелец может только допроверить креативы. */
   status: BaseSprintDtoStatus;
+  /** Черновик ли это. После публикации вернуть спринт в черновик нельзя */
+  isDraft: boolean;
   /** ID группы ожидания подписки */
   pendingSubscriptionId?: number;
   /** ID группы одобренных подписок */
   approvedSubscriptionId?: number;
   /** ID группы отклонённых подписок */
   rejectedSubscriptionId?: number;
-  /** Тип награды */
+  /**
+   * Тип награды. Может отсутствовать у черновика
+   * @nullable
+   */
   rewardType: BaseSprintDtoRewardType;
-  /** Единицы награды */
-  rewardUnits: string;
-  /** Значение награды */
-  rewardValue: number;
+  /**
+   * Единицы награды. Могут отсутствовать у черновика
+   * @nullable
+   */
+  rewardUnits: string | null;
+  /**
+   * Значение награды. Может отсутствовать у черновика
+   * @nullable
+   */
+  rewardValue: number | null;
   /** Сколько промокодов использовано */
   promoCodeUsagesCount: number;
-  /** Лимит промокодов */
-  promoCodeUsageLimit: number;
+  /**
+   * Лимит промокодов
+   * @nullable
+   */
+  promoCodeUsageLimit: number | null;
   /** Игнорировать ограничение по промокодам */
   ignorePromoCodeUsageLimit: boolean;
   /** ID комнаты */

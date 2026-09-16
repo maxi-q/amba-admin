@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { MutationKeys } from '@/config/tanstack/mutationKeys';
@@ -11,9 +10,14 @@ import { ApiError } from "@/types";
 
 export function useCreateSprint() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
-  const { mutate: createSprint, isPending, error, isSuccess } = useMutation({
+  const {
+    mutate: createSprint,
+    mutateAsync: createSprintAsync,
+    isPending,
+    error,
+    isSuccess,
+  } = useMutation({
     mutationKey: [MutationKeys.CREATE_SPRINT],
     mutationFn: (data: CreateSprintRequestDto) => sprintsControllerCreate(data),
     onSuccess: (createdSprint) => {
@@ -21,8 +25,6 @@ export function useCreateSprint() {
         queryClient.invalidateQueries({
           queryKey: [QueryKeys.SPRINTS, createdSprint.roomId]
         });
-        // Навигация к созданному спринту
-        navigate(`/rooms/${createdSprint.roomId}/sprints/${createdSprint.id}`);
       }
     }
   });
@@ -44,6 +46,7 @@ export function useCreateSprint() {
 
   return {
     createSprint,
+    createSprintAsync,
     isPending,
     error,
     isSuccess,

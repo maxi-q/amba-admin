@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { RegisterProjectResponseDtoProvider } from './registerProjectResponseDtoProvider';
 
 export interface RegisterProjectResponseDto {
   /** Unique identifier */
@@ -13,10 +14,22 @@ export interface RegisterProjectResponseDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
-  /** ID канала в Сенлере */
-  groupId: number;
-  /** Тип канала в Сенлере (ID) */
-  channelTypeId: number;
-  /** Внешний ID канала в Сенлере */
-  channelExternalId: string;
+  provider: RegisterProjectResponseDtoProvider;
+  /** @nullable */
+  senlerIoProjectId: string | null;
+  /**
+   * ID канала в Senler.ru; null для Senler.io
+   * @nullable
+   */
+  groupId: number | null;
+  /**
+   * Тип канала в Senler.ru (ID)
+   * @nullable
+   */
+  channelTypeId: number | null;
+  /**
+   * Внешний ID канала в Senler.ru
+   * @nullable
+   */
+  channelExternalId: string | null;
 }

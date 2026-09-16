@@ -8,6 +8,9 @@ import { parseRewardBalls } from "../../../creativetasks/utils/creativetaskUtils
 
 export type DraftSprintTaskPlatform =
   (typeof CreateCreativeTaskRequestDtoTargetPlatform)[keyof typeof CreateCreativeTaskRequestDtoTargetPlatform];
+export type DraftSprintTaskOrdForm = NonNullable<
+  CreateCreativeTaskRequestDto["ordForm"]
+>;
 
 export interface DraftSprintTask {
   id: string;
@@ -18,6 +21,7 @@ export interface DraftSprintTask {
   criteria: string[];
   allowedFormats: CreativeTaskFormat[];
   targetPlatform: DraftSprintTaskPlatform;
+  ordForm: DraftSprintTaskOrdForm | "";
   ordKktus: string[];
   ordContractTemplateId: string;
   targetUrls: string[];
@@ -48,6 +52,7 @@ export const emptyDraftSprintTask = (): DraftSprintTask => ({
   criteria: [""],
   allowedFormats: ["POST"],
   targetPlatform: CreateCreativeTaskRequestDtoTargetPlatform.YOUTUBE_CHANNEL,
+  ordForm: "",
   ordKktus: [],
   ordContractTemplateId: "",
   targetUrls: [""],
@@ -105,6 +110,8 @@ export function draftTaskToCreatePayload(
     allowedFormats: task.allowedFormats,
     targetPlatform: task.targetPlatform,
     minimalRewardInBalls: parseRewardBalls(task.minimalRewardInBalls),
+    ordForm: task.ordForm || null,
+    ordPayType: "other",
     ordKktus: task.ordKktus,
     allowAmbassadorMedia: task.allowAmbassadorMedia,
     allowAmbassadorText: task.allowAmbassadorText,
@@ -123,9 +130,10 @@ export function draftTaskToUpdatePayload(
   task: DraftSprintTask,
   sprintId: string
 ): UpdateCreativeTaskRequestDto {
-  const { roomId: _roomId, ordContractTemplateId, ...payload } =
+  const { roomId: _roomId, ordContractTemplateId, ordPayType: _ordPayType, ...payload } =
     draftTaskToCreatePayload(task, "", sprintId);
   void _roomId;
+  void _ordPayType;
 
   return {
     ...payload,

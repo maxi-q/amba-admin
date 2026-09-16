@@ -84,6 +84,13 @@ export default function OrdCreativePage() {
 
       <Card>
         <CardContent className="space-y-6 p-4 sm:p-6">
+          <div className="space-y-1 border-b border-border pb-4">
+            <p className="text-sm font-medium text-foreground">Шаблон договора</p>
+            <p className="text-sm text-muted-foreground">
+              {task.ordContractTemplate?.name ?? "Не выбран"}
+            </p>
+          </div>
+
           <OrdCreativeFormFields
             form={form}
             setForm={setForm}

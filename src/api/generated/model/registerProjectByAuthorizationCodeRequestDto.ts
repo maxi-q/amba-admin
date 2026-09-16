@@ -7,7 +7,9 @@
  */
 
 export interface RegisterProjectByAuthorizationCodeRequestDto {
-  /** ID канала в Сенлере */
+  /**
+   * Числовой ID канала Senler.ru
+   */
   groupId: number;
   /** Наименование проекта */
   code: string;

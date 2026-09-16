@@ -137,6 +137,32 @@ const RewardChip = ({
   );
 };
 
+const RewardPreviewItem = ({
+  reward,
+  amount,
+}: {
+  reward: BaseRewardDto;
+  amount: number;
+}) => {
+  const isMoney = /руб|₽/i.test(reward.name);
+
+  return (
+    <div className="flex h-12 items-center gap-1.5">
+      <RewardImage reward={reward} />
+      {isMoney ? (
+        <p className="min-w-0 flex-1 text-[13px] font-medium leading-4">
+          {numberFormatter.format(amount)} ₽
+        </p>
+      ) : (
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 text-[13px] font-medium leading-4">
+          <p className="truncate">{reward.name}</p>
+          <p className="text-[#797979]">{numberFormatter.format(amount)} шт.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const RuleActions = ({
   editLabel,
   deleteLabel,
@@ -242,14 +268,14 @@ export const SprintCreationStepTwo = ({
   const proportionalRewards = proportional.rewards ?? [];
   const allPool = useMemo(() => {
     const totals = new Map(ratingPool);
-    for (const reward of [...proportionalRewards, ...manualRewards]) {
+    for (const reward of proportionalRewards) {
       totals.set(
         reward.rewardId,
         (totals.get(reward.rewardId) ?? 0) + reward.amount
       );
     }
     return [...totals.entries()];
-  }, [manualRewards, proportionalRewards, ratingPool]);
+  }, [proportionalRewards, ratingPool]);
 
   const participants = previewHistory[previewHistoryIndex] ?? PREVIEW_PARTICIPANTS;
   const visibleParticipants = useMemo(
@@ -765,7 +791,7 @@ export const SprintCreationStepTwo = ({
             </div>
           ) : (
             <>
-              <div className="border-b border-[#e4e4e4] p-4">
+              <div className="p-4 pb-0">
             <div
               className="flex rounded-md bg-[#f0f0f0] p-0.5"
               role="group"
@@ -935,14 +961,23 @@ export const SprintCreationStepTwo = ({
               </div>
             </>
               ) : (
-                <div className="p-4">
-              <p className="text-[13px] font-medium leading-4">Награды рейтинга</p>
+                <div className="p-4 pt-3">
+              <div className="flex flex-col gap-1 text-[13px] font-medium leading-4">
+                <p>Награды рейтинга</p>
+                <p className="text-[#797979]">
+                  Распределяются по количеству XP
+                </p>
+              </div>
               {allPool.length > 0 ? (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-col gap-2">
                   {allPool.map(([rewardId, amount]) => {
                     const reward = rewardById.get(rewardId);
                     return reward ? (
-                      <RewardChip key={rewardId} reward={reward} amount={amount} />
+                      <RewardPreviewItem
+                        key={rewardId}
+                        reward={reward}
+                        amount={amount}
+                      />
                     ) : null;
                   })}
                 </div>
@@ -952,14 +987,24 @@ export const SprintCreationStepTwo = ({
                 </p>
               )}
               {hasManualRule ? (
-                <>
-                  <p className="mt-4 text-[13px] font-medium leading-4">
-                    Ручной отбор
-                  </p>
-                  <p className="mt-1 text-[13px] font-medium leading-4 text-[#797979]">
-                    Распределяются вручную
-                  </p>
-                </>
+                <div className="mt-4">
+                  <div className="flex flex-col gap-1 text-[13px] font-medium leading-4">
+                    <p>Ручной отбор</p>
+                    <p className="text-[#797979]">Распределяются вручную</p>
+                  </div>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {manualRewards.map((item) => {
+                      const reward = rewardById.get(item.rewardId);
+                      return reward ? (
+                        <RewardPreviewItem
+                          key={item.rewardId}
+                          reward={reward}
+                          amount={item.amount}
+                        />
+                      ) : null;
+                    })}
+                  </div>
+                </div>
               ) : null}
                 </div>
               )}

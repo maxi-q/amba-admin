@@ -18,6 +18,8 @@ export interface BaseAmbassadorEventApplicationDto {
   status: BaseAmbassadorEventApplicationDtoStatus;
   /** ID амбассадора */
   ambassadorId: string;
+  /** ID членства амбассадора в комнате события */
+  ambassadorRoomId: string;
   /** ID события */
   eventId: string;
 }

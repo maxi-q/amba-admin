@@ -1,11 +1,24 @@
+import { useState } from "react";
 import { Calendar, Gift } from "lucide-react";
-import type { BaseSprintDto, SprintRewardRuleDto } from "@/api/generated/model";
+import {
+  DialogContent,
+  DialogDescription,
+  DialogRoot,
+  DialogTitle,
+} from "@senler/ui";
+import type {
+  BaseRewardDto,
+  BaseSprintDto,
+  SprintRewardRuleDto,
+} from "@/api/generated/model";
+import { useRewardsByIds } from "@/hooks/rewards/useRoomRewards";
 import { checkSprintStatus } from "../../constants/sprintStatus";
 
 type SidebarReward = {
   rewardId: string;
   name: string;
   iconUrl: string | null;
+  version: number;
   amount: number;
 };
 
@@ -58,6 +71,7 @@ function collectRewards(
         rewardId: item.rewardId,
         name: item.reward.name,
         iconUrl: item.reward.iconUrl,
+        version: item.reward.version,
         amount: (previous?.amount ?? 0) + item.amount,
       });
     }
@@ -66,12 +80,23 @@ function collectRewards(
   return Array.from(rewards.values());
 }
 
-function RewardItem({ reward }: { reward: SidebarReward }) {
+function RewardItem({
+  reward,
+  onSelect,
+}: {
+  reward: SidebarReward;
+  onSelect: (reward: SidebarReward) => void;
+}) {
   const amountIsPartOfName = /[₽$€]/.test(reward.name);
 
   return (
     <div className="flex h-12 items-center gap-1.5">
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e4e4e4] bg-[#f0f0f0]">
+      <button
+        type="button"
+        className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e4e4e4] bg-[#f0f0f0] outline-none focus-visible:ring-2 focus-visible:ring-[#07f]"
+        aria-label={`Открыть информацию о награде «${reward.name}»`}
+        onClick={() => onSelect(reward)}
+      >
         {reward.iconUrl ? (
           <img
             src={reward.iconUrl}
@@ -81,7 +106,7 @@ function RewardItem({ reward }: { reward: SidebarReward }) {
         ) : (
           <Gift className="size-5 text-[#797979]" aria-hidden />
         )}
-      </div>
+      </button>
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 text-[13px] font-medium leading-4 tracking-[-0.25px]">
         <p className="truncate text-foreground">{reward.name}</p>
         {!amountIsPartOfName ? (
@@ -98,10 +123,12 @@ function RewardGroup({
   title,
   description,
   rewards,
+  onRewardSelect,
 }: {
   title: string;
   description: string;
   rewards: SidebarReward[];
+  onRewardSelect: (reward: SidebarReward) => void;
 }) {
   return (
     <section className="flex flex-col gap-2">
@@ -112,7 +139,11 @@ function RewardGroup({
       {rewards.length > 0 ? (
         <div className="flex flex-col gap-2">
           {rewards.map((reward) => (
-            <RewardItem key={reward.rewardId} reward={reward} />
+            <RewardItem
+              key={reward.rewardId}
+              reward={reward}
+              onSelect={onRewardSelect}
+            />
           ))}
         </div>
       ) : (
@@ -130,8 +161,42 @@ interface OpenSprintSidebarProps {
 }
 
 export function OpenSprintSidebar({ sprint, rules }: OpenSprintSidebarProps) {
+  const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const rewardIds = [
+    ...new Set(
+      rules.flatMap((rule) => rule.rewards.map((reward) => reward.rewardId))
+    ),
+  ];
+  const { rewards: catalogRewards } = useRewardsByIds(sprint.roomId, rewardIds);
   const ratingRewards = collectRewards(rules, false);
   const manualRewards = collectRewards(rules, true);
+  const selectedReward = [...ratingRewards, ...manualRewards].find(
+    (reward) => reward.rewardId === selectedRewardId
+  );
+  const selectedCatalogReward: BaseRewardDto | undefined = catalogRewards.find(
+    (reward) => reward.id === selectedRewardId
+  );
+  const catalogMatchesPinnedVersion =
+    selectedCatalogReward?.version === selectedReward?.version;
+  const selectedImages = Array.from(
+    new Set(
+      [
+        selectedReward?.iconUrl,
+        ...(catalogMatchesPinnedVersion && selectedCatalogReward
+          ? selectedCatalogReward.photos
+              .slice()
+              .sort((first, second) => first.sortOrder - second.sortOrder)
+              .map((photo) => photo.url)
+          : []),
+      ].filter((url): url is string => Boolean(url))
+    )
+  );
+  const selectedImage = selectedImages[selectedImageIndex] ?? null;
+  const openReward = (reward: SidebarReward) => {
+    setSelectedRewardId(reward.rewardId);
+    setSelectedImageIndex(0);
+  };
   const { label, tone } = checkSprintStatus(
     sprint.startDate,
     sprint.endDate,
@@ -179,13 +244,79 @@ export function OpenSprintSidebar({ sprint, rules }: OpenSprintSidebarProps) {
           title="Награды рейтинга"
           description="Распределяются по количеству XP"
           rewards={ratingRewards}
+          onRewardSelect={openReward}
         />
         <RewardGroup
           title="Ручной отбор"
           description="Распределяются вручную"
           rewards={manualRewards}
+          onRewardSelect={openReward}
         />
       </div>
+
+      <DialogRoot
+        open={Boolean(selectedReward)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRewardId(null);
+        }}
+      >
+        <DialogContent
+          className="-translate-y-[109.5px] !max-w-[358px] gap-0 overflow-hidden p-0"
+          showCloseButton
+        >
+          {selectedReward ? (
+            <div className="px-4 pb-4 pt-11">
+              <div className="flex gap-3">
+                <div className="flex size-[241px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#efefef]">
+                  {selectedImage ? (
+                    <img
+                      src={selectedImage}
+                      alt=""
+                      className="size-[164px] object-contain"
+                    />
+                  ) : (
+                    <Gift className="size-16 text-[#797979]" aria-hidden />
+                  )}
+                </div>
+                <div className="flex max-h-[241px] w-[73px] shrink-0 flex-col gap-2 overflow-y-auto">
+                  {selectedImages.length > 0 ? (
+                    selectedImages.map((imageUrl, index) => (
+                      <button
+                        key={imageUrl}
+                        type="button"
+                        className={`flex size-[73px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#efefef] outline-none ${
+                          index === selectedImageIndex
+                            ? "border-2 border-[#07f]"
+                            : "border border-[#e4e4e4]"
+                        }`}
+                        aria-label={`Показать изображение ${index + 1}`}
+                        aria-pressed={index === selectedImageIndex}
+                        onClick={() => setSelectedImageIndex(index)}
+                      >
+                        <img
+                          src={imageUrl}
+                          alt=""
+                          className="size-14 object-contain"
+                        />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="flex size-[73px] items-center justify-center rounded-lg border-2 border-[#07f] bg-[#efefef]">
+                      <Gift className="size-7 text-[#797979]" aria-hidden />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <DialogTitle className="mt-4 text-[15px] font-medium leading-5 tracking-[-0.14px]">
+                {selectedReward.name}
+              </DialogTitle>
+              <DialogDescription className="mt-1 text-[13px] font-medium leading-4 tracking-[-0.25px] text-[#797979]">
+                Описание награды пока не указано
+              </DialogDescription>
+            </div>
+          ) : null}
+        </DialogContent>
+      </DialogRoot>
     </aside>
   );
 }

@@ -1,5 +1,6 @@
 import { InputField } from "@senler/ui";
 import type { GetMyEventsResponseItemDto } from "@/api/generated/model";
+import { getSenlerSubscriptionUrl } from "@/utils/projectLinks";
 
 type EventWithSubscriptionGroups = GetMyEventsResponseItemDto & {
   pendingSubscriptionId?: number;
@@ -13,7 +14,9 @@ interface SubscriberGroupsSectionProps {
 }
 
 export const SubscriberGroupsSection = ({ event, channelExternalId }: SubscriberGroupsSectionProps) => {
-  const baseUrl = `https://vk.com/app5898182_-${channelExternalId}`;
+  if (!channelExternalId) {
+    return <p className="text-sm text-muted-foreground">Ссылки на группы подписчиков доступны только для проекта Senler.ru с подключённым VK-сообществом.</p>;
+  }
 
   return (
     <div className="space-y-4">
@@ -26,7 +29,6 @@ export const SubscriberGroupsSection = ({ event, channelExternalId }: Subscriber
         />
         <div>
           <p className="text-sm font-medium">Группа подписчиков в Senler для подачи заявки участие в событии</p>
-          <p className="text-sm text-muted-foreground">ID: 2353</p>
         </div>
       </div>
 
@@ -34,21 +36,24 @@ export const SubscriberGroupsSection = ({ event, channelExternalId }: Subscriber
         <div className="space-y-1.5">
           <p className="text-sm font-medium">Ссылка для вступления в группу для подачи заявки:</p>
           <InputField
-            value={`${baseUrl}#s=${event.pendingSubscriptionId}&force=1`}
+            value={getSenlerSubscriptionUrl(channelExternalId, event.pendingSubscriptionId)}
+            placeholder="Ссылка недоступна"
             readOnly
           />
         </div>
         <div className="space-y-1.5">
           <p className="text-sm font-medium">Ссылка для вступления в группу для одобренных участников:</p>
           <InputField
-            value={`${baseUrl}#s=${event.approvedSubscriptionId}&force=1`}
+            value={getSenlerSubscriptionUrl(channelExternalId, event.approvedSubscriptionId)}
+            placeholder="Ссылка недоступна"
             readOnly
           />
         </div>
         <div className="space-y-1.5">
           <p className="text-sm font-medium">Ссылка для вступления в группу для исключенных участников:</p>
           <InputField
-            value={`${baseUrl}#s=${event.rejectedSubscriptionId}&force=1`}
+            value={getSenlerSubscriptionUrl(channelExternalId, event.rejectedSubscriptionId)}
+            placeholder="Ссылка недоступна"
             readOnly
           />
         </div>

@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { SprintsControllerGetMySprintsInclude } from './sprintsControllerGetMySprintsInclude';
 
 export type SprintsControllerGetMySprintsParams = {
 /**
@@ -15,4 +16,8 @@ page: number;
  * Размер страницы
  */
 size: number;
+/**
+ * tasksToReviewCount — добавить количество заданий, ожидающих проверки владельцем комнаты
+ */
+include?: SprintsControllerGetMySprintsInclude;
 };

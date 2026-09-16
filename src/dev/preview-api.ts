@@ -5,10 +5,12 @@ import type {
   BaseRewardDto,
   BaseRoomDto,
   BaseSprintDto,
+  CreateCreativeTaskRequestDto,
+  CreateSprintRequestDto,
   CreativeTaskWithDefaultsDto,
   GetLeaderboardResponseDto,
   GetProjectResponseDto,
-  PrivateCreativeTaskWithDefaultsDto,
+  OrdContractTemplateItemDto,
   SprintRewardRuleDto,
   UpdateSubmissionStatusRequestDto,
 } from "@/api/generated/model";
@@ -16,6 +18,9 @@ import { setCustomInstanceMock } from "@/api/mutator/custom-instance";
 import { useAuthStore } from "@/store";
 import rewardGiftUrl from "@/assets/sprint-flow/reward-gift.png";
 import rewardMoneyUrl from "@/assets/sprint-flow/reward-money.png";
+import { createParticipantsPreview } from "./preview-participants";
+import { createOrdProfilePreview } from "./preview-ord-profile";
+import participantAvatar from "./participant-avatar.png";
 
 const ROOM_ID = "preview-room";
 const SPRINT_ID = "sprint-active";
@@ -51,14 +56,39 @@ const room: BaseRoomDto = {
   projectId: "preview-project",
 };
 
+const ordProfilePreview = createOrdProfilePreview(room, new URLSearchParams(window.location.search).get("ord-profile") === "new");
+
+const isSenlerIoPreview = new URLSearchParams(window.location.search).get("provider") === "senler-io";
 const project: GetProjectResponseDto = {
+  provider: isSenlerIoPreview ? "SENLER_IO" : "SENLER_RU",
+  senlerIoProjectId: isSenlerIoPreview ? "preview-senler-io-project" : null,
+  groupId: isSenlerIoPreview ? null : 12345,
   id: "preview-project",
   createdAt: NOW,
   updatedAt: NOW,
   name: "Амбассадор",
-  channelTypeId: 1,
-  channelExternalId: "preview",
-  avatarUrl: "",
+  channelTypeId: isSenlerIoPreview ? null : 1,
+  channelExternalId: isSenlerIoPreview ? null : "12345",
+  avatarUrl: null,
+};
+
+const ordContractTemplate: OrdContractTemplateItemDto = {
+  id: "ord-template-preview",
+  createdAt: NOW,
+  updatedAt: NOW,
+  name: "Основной договор",
+  roomId: ROOM_ID,
+  type: "service",
+  dateStrategy: "today",
+  fixedDate: null,
+  dateEndStrategy: "none",
+  fixedDateEnd: null,
+  dateEndOffsetDays: null,
+  fixedAmount: null,
+  autoGetCid: true,
+  actionType: null,
+  subjectType: null,
+  flags: [],
 };
 
 const sprint = (
@@ -79,6 +109,7 @@ const sprint = (
   endDate,
   ignoreEndDate,
   status,
+  isDraft: false,
   pendingSubscriptionId: 201,
   approvedSubscriptionId: 202,
   rejectedSubscriptionId: 203,
@@ -126,6 +157,17 @@ let sprints: BaseSprintDto[] = [
     "active",
     true,
   ),
+  {
+    ...sprint("sprint-draft", "", NOW, null),
+    name: null,
+    description: null,
+    startDate: null,
+    rewardType: null,
+    rewardUnits: null,
+    rewardValue: null,
+    promoCodeUsageLimit: null,
+    isDraft: true,
+  },
 ];
 let selectedSprintId =
   new URLSearchParams(window.location.search).get("sprint") ?? SPRINT_ID;
@@ -138,9 +180,12 @@ const task = (
   id,
   createdAt: NOW,
   updatedAt: NOW,
+  ordContractTemplateId: ordContractTemplate.id,
+  ordContractTemplate,
   title,
   description,
   isDeleted: false,
+  isFrozen: false,
   criteria: [
     "Покажите подключение канала",
     "Расскажите о первом запуске рассылки",
@@ -154,6 +199,7 @@ const task = (
   minimalRewardInBalls: 500,
   roomId: ROOM_ID,
   sprintId: SPRINT_ID,
+  ordForm: "video",
   allowAmbassadorMedia: true,
   allowAmbassadorText: true,
   allowAmbassadorTargetUrl: true,
@@ -177,29 +223,13 @@ let tasks: CreativeTaskWithDefaultsDto[] = [
     ),
     publicationsCount: 3,
   },
-  task("task-reviewed", "Расскажите о первой трансляции", "Опишите подготовку и результат первой трансляции."),
+  {
+    ...task("task-reviewed", "Расскажите о первой трансляции", "Опишите подготовку и результат первой трансляции."),
+    isFrozen: true,
+  },
   task("task-empty", "Покажите любимую функцию", "Продемонстрируйте функцию, которой пользуетесь чаще всего."),
 ];
 
-const privateTask = (
-  id: string,
-  title: string,
-  rewardInRubs: number,
-  isDeleted = false,
-): PrivateCreativeTaskWithDefaultsDto => ({
-  ...task(id, title, "Подготовьте публикацию по индивидуальному заданию."),
-  isDeleted,
-  isWhitelistEnabled: true,
-  rewardInRubs,
-  sprintId: SPRINT_ID,
-});
-
-let privateTasks: PrivateCreativeTaskWithDefaultsDto[] = [
-  privateTask("private-task-review", "Обзор на сервис", 5_000),
-  privateTask("private-task-approved", "Расскажите о StreamVi", 3_000),
-  privateTask("private-task-empty", "Покажите любимую функцию", 2_000),
-  privateTask("private-task-draft", "Подготовьте анонс трансляции", 1_000),
-];
 
 const ambassadors: BaseAmbassadorDto[] = [
   "Алексей Попов",
@@ -214,9 +244,11 @@ const ambassadors: BaseAmbassadorDto[] = [
   username,
   promoCode: `STREAM${index + 1}`,
   channelTypeId: 1,
-  subscriberId: `subscriber-${index + 1}`,
+  subscriberId: String(10001 + index),
   avatarUrl: ambassadorAvatarUrl,
 }));
+
+const participantsPreview = createParticipantsPreview(ambassadors, participantAvatar);
 
 const submissionItem = {
   id: "submission-item",
@@ -338,15 +370,27 @@ let submissions: BaseCreativeTaskSubmissionDto[] = [
 ];
 
 const rewards = {
-  money: { id: "reward-money", name: "5 000 ₽", iconUrl: rewardMoneyUrl, ...indivisibleReward },
-  shirt: { id: "reward-shirt", name: "Футболка", iconUrl: rewardGiftUrl, ...indivisibleReward },
-  pro: { id: "reward-pro", name: "Тариф Pro", iconUrl: rewardGiftUrl, ...indivisibleReward },
-  points: { id: "reward-points", name: "Баллы Senler", iconUrl: rewardGiftUrl, ...indivisibleReward },
+  money: { id: "reward-money", versionId: "reward-money-v1", version: 1, name: "5 000 ₽", iconUrl: rewardMoneyUrl, ...indivisibleReward },
+  shirt: { id: "reward-shirt", versionId: "reward-shirt-v1", version: 1, name: "Футболка", iconUrl: rewardGiftUrl, ...indivisibleReward },
+  pro: { id: "reward-pro", versionId: "reward-pro-v1", version: 1, name: "Тариф Pro", iconUrl: rewardGiftUrl, ...indivisibleReward },
+  points: { id: "reward-points", versionId: "reward-points-v1", version: 1, name: "Баллы Senler", iconUrl: rewardGiftUrl, ...indivisibleReward },
 };
+
+const sprintReward = (
+  id: string,
+  reward: (typeof rewards)[keyof typeof rewards],
+  amount: number,
+) => ({ id, rewardId: reward.id, rewardVersionId: reward.versionId, amount, reward });
+
+const leaderboardRewardVersion = (reward: (typeof rewards)[keyof typeof rewards]) => ({
+  rewardVersionId: reward.versionId,
+  rewardVersion: reward.version,
+});
 
 let catalogRewards: BaseRewardDto[] = [
   {
     id: rewards.money.id,
+    version: 2,
     createdAt: NOW,
     updatedAt: NOW,
     name: "Рубли",
@@ -360,6 +404,7 @@ let catalogRewards: BaseRewardDto[] = [
   },
   {
     id: rewards.points.id,
+    version: 1,
     createdAt: NOW,
     updatedAt: NOW,
     name: "Баллы Senler",
@@ -373,6 +418,7 @@ let catalogRewards: BaseRewardDto[] = [
   },
   {
     id: rewards.shirt.id,
+    version: 1,
     createdAt: NOW,
     updatedAt: NOW,
     name: "Футболка",
@@ -386,6 +432,7 @@ let catalogRewards: BaseRewardDto[] = [
   },
   {
     id: rewards.pro.id,
+    version: 1,
     createdAt: NOW,
     updatedAt: NOW,
     name: "Тариф Pro",
@@ -399,6 +446,16 @@ let catalogRewards: BaseRewardDto[] = [
   },
 ];
 
+const currentRewardSummary = (reward: BaseRewardDto) => ({
+  id: reward.id,
+  versionId: `${reward.id}-v${reward.version}`,
+  version: reward.version,
+  name: reward.name,
+  iconUrl: reward.iconUrl,
+  isDivisible: reward.isDivisible,
+  divisionPrecision: reward.divisionPrecision,
+});
+
 let rewardRules: SprintRewardRuleDto[] = [
   {
     id: "rule-rating",
@@ -410,9 +467,9 @@ let rewardRules: SprintRewardRuleDto[] = [
     rankTo: 1,
     minPoints: null,
     rewards: [
-      { id: "rule-money", rewardId: rewards.money.id, amount: 5_000, reward: rewards.money },
-      { id: "rule-shirt", rewardId: rewards.shirt.id, amount: 1, reward: rewards.shirt },
-      { id: "rule-pro", rewardId: rewards.pro.id, amount: 1, reward: rewards.pro },
+      sprintReward("rule-money", rewards.money, 5_000),
+      sprintReward("rule-shirt", rewards.shirt, 1),
+      sprintReward("rule-pro", rewards.pro, 1),
     ],
   },
   {
@@ -425,8 +482,8 @@ let rewardRules: SprintRewardRuleDto[] = [
     rankTo: 3,
     minPoints: null,
     rewards: [
-      { id: "rule-money-secondary", rewardId: rewards.money.id, amount: 1_000, reward: rewards.money },
-      { id: "rule-points-secondary", rewardId: rewards.points.id, amount: 500, reward: rewards.points },
+      sprintReward("rule-money-secondary", rewards.money, 1_000),
+      sprintReward("rule-points-secondary", rewards.points, 500),
     ],
   },
   {
@@ -439,8 +496,8 @@ let rewardRules: SprintRewardRuleDto[] = [
     rankTo: 10,
     minPoints: null,
     rewards: [
-      { id: "rule-money-proportional", rewardId: rewards.money.id, amount: 5_000, reward: rewards.money },
-      { id: "rule-points-proportional", rewardId: rewards.points.id, amount: 1_000, reward: rewards.points },
+      sprintReward("rule-money-proportional", rewards.money, 5_000),
+      sprintReward("rule-points-proportional", rewards.points, 1_000),
     ],
   },
   {
@@ -453,8 +510,8 @@ let rewardRules: SprintRewardRuleDto[] = [
     rankTo: null,
     minPoints: null,
     rewards: [
-      { id: "manual-money", rewardId: rewards.money.id, amount: 5_000, reward: rewards.money },
-      { id: "manual-points", rewardId: rewards.points.id, amount: 1_000, reward: rewards.points },
+      sprintReward("manual-money", rewards.money, 5_000),
+      sprintReward("manual-points", rewards.points, 1_000),
     ],
   },
 ];
@@ -462,8 +519,8 @@ let rewardRules: SprintRewardRuleDto[] = [
 const leaderboard: GetLeaderboardResponseDto = {
   sprint: {
     id: SPRINT_ID,
-    name: sprints[0].name,
-    startDate: sprints[0].startDate,
+    name: sprints[0].name ?? "Черновик спринта",
+    startDate: sprints[0].startDate ?? NOW,
     endDate: sprints[0].endDate,
     ignoreEndDate: false,
     status: "active",
@@ -478,10 +535,10 @@ const leaderboard: GetLeaderboardResponseDto = {
       promoCode: "STREAM1",
       points: 13720,
       rewards: [
-        { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...indivisibleReward },
-        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...indivisibleReward },
-        { rewardId: rewards.points.id, name: rewards.points.name, amount: 1000, ...indivisibleReward },
-        { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 1, ...indivisibleReward },
+        { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
+        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
+        { rewardId: rewards.points.id, name: rewards.points.name, amount: 1000, ...leaderboardRewardVersion(rewards.points), ...indivisibleReward },
+        { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 1, ...leaderboardRewardVersion(rewards.pro), ...indivisibleReward },
       ],
     },
     {
@@ -492,8 +549,8 @@ const leaderboard: GetLeaderboardResponseDto = {
       promoCode: "STREAM2",
       points: 2678,
       rewards: [
-        { rewardId: rewards.money.id, name: "2 345 ₽", amount: 1, ...divisibleReward },
-        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...indivisibleReward },
+        { rewardId: rewards.money.id, name: "2 345 ₽", amount: 1, ...leaderboardRewardVersion(rewards.money), ...divisibleReward },
+        { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
       ],
     },
     {
@@ -503,7 +560,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM3",
       points: 1325,
-      rewards: [{ rewardId: rewards.money.id, name: "1 121 ₽", amount: 1, ...divisibleReward }],
+      rewards: [{ rewardId: rewards.money.id, name: "1 121 ₽", amount: 1, ...leaderboardRewardVersion(rewards.money), ...divisibleReward }],
     },
     {
       rank: 4,
@@ -512,7 +569,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM4",
       points: 720,
-      rewards: [{ rewardId: rewards.money.id, name: "614 ₽", amount: 1, ...divisibleReward }],
+      rewards: [{ rewardId: rewards.money.id, name: "614 ₽", amount: 1, ...leaderboardRewardVersion(rewards.money), ...divisibleReward }],
     },
     {
       rank: 5,
@@ -525,9 +582,9 @@ const leaderboard: GetLeaderboardResponseDto = {
     },
   ],
   manualRewards: [
-    { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...indivisibleReward },
-    { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...indivisibleReward },
-    { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 3, ...indivisibleReward },
+    { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
+    { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
+    { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 3, ...leaderboardRewardVersion(rewards.pro), ...indivisibleReward },
   ],
   page: 1,
   size: 50,
@@ -543,8 +600,8 @@ function getSelectedLeaderboard(): GetLeaderboardResponseDto {
     ...leaderboard,
     sprint: {
       id: selectedSprint.id,
-      name: selectedSprint.name,
-      startDate: selectedSprint.startDate,
+      name: selectedSprint.name ?? "Черновик спринта",
+      startDate: selectedSprint.startDate ?? NOW,
       endDate: selectedSprint.endDate,
       ignoreEndDate: selectedSprint.ignoreEndDate,
       status: selectedSprint.status,
@@ -629,22 +686,12 @@ const previewUpload = {
 };
 
 const rewardPhotoDrafts = new Map<string, { rewardId: string; sortOrder: number }>();
-const privateTaskWhitelist = new Map<string, Set<string>>(
-  privateTasks.map((item) => [item.id, new Set(ambassadors.map((ambassador) => ambassador.id))]),
-);
-
-const privateSubmissions: BaseCreativeTaskSubmissionDto[] = [
-  submission("private-review-1", "private-task-review", "ambassador-1", "waiting_for_review_materials"),
-  submission("private-review-2", "private-task-review", "ambassador-2", "waiting_for_review_publication"),
-  submission("private-review-3", "private-task-review", "ambassador-3", "waiting_for_review_materials"),
-  submission("private-approved-1", "private-task-approved", "ambassador-1", "approved", 3_000),
-  submission("private-approved-2", "private-task-approved", "ambassador-2", "approved", 3_000),
-];
 
 async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   const method = (config.method ?? "GET").toUpperCase();
   const url = config.url ?? "";
   const rewardRulesMatch = url.match(/^\/api\/sprints\/([^/]+)\/reward-rules$/);
+  const rewardVersionsMatch = url.match(/^\/api\/sprints\/([^/]+)\/reward-versions$/);
 
   if (method === "GET" && rewardRulesMatch) {
     selectedSprintId = rewardRulesMatch[1];
@@ -652,31 +699,33 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
 
   await new Promise((resolve) => window.setTimeout(resolve, 60));
 
-  if (method === "GET" && url === `/api/rooms/${ROOM_ID}`) return room;
+  const participantResponse = participantsPreview(config);
+  if (participantResponse !== undefined) return participantResponse;
+
+  const ordProfileResponse = ordProfilePreview(config);
+  if (ordProfileResponse !== undefined) return ordProfileResponse;
+  if (method === "GET" && url === "/api/rooms/my") return [room];
   if (method === "GET" && url === "/api/projects/my") return project;
   if (method === "GET" && url === `/api/events/${ROOM_ID}`) return paginated([]);
-  if (method === "GET" && url === `/api/sprints/${ROOM_ID}`) return paginated(sprints);
+  if (method === "GET" && url === `/api/sprints/${ROOM_ID}`) {
+    const reviewTaskIds = new Set(
+      submissions
+        .filter((item) => item.status.startsWith("waiting_for_review"))
+        .map((item) => item.taskId),
+    );
+    return paginated(sprints.map((item) => ({
+      ...item,
+      ...(config.params?.include === "tasksToReviewCount"
+        ? {
+            tasksToReviewCount: tasks.filter(
+              (taskItem) => taskItem.sprintId === item.id && reviewTaskIds.has(taskItem.id),
+            ).length,
+          }
+        : {}),
+    })));
+  }
   if (method === "GET" && url === `/api/rooms/${ROOM_ID}/ord-contract-templates`) {
-    return paginated([
-      {
-        id: "ord-template-preview",
-        createdAt: NOW,
-        updatedAt: NOW,
-        name: "Основной договор",
-        roomId: ROOM_ID,
-        type: "service",
-        dateStrategy: "issueDate",
-        fixedDate: null,
-        dateEndStrategy: "none",
-        fixedDateEnd: null,
-        dateEndOffsetDays: null,
-        fixedAmount: null,
-        autoGetCid: true,
-        actionType: null,
-        subjectType: null,
-        flags: [],
-      },
-    ]);
+    return paginated([ordContractTemplate]);
   }
   if (method === "GET" && url === `/api/rooms/${ROOM_ID}/ord-files`) {
     return paginated([
@@ -718,6 +767,43 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     };
   }
 
+  if (method === "PATCH" && rewardVersionsMatch) {
+    const rewardIds = new Set(requestData<{ rewardIds: string[] }>(config).rewardIds);
+    let updatedCount = 0;
+    rewardRules = rewardRules.map((rule) => {
+      if (rule.sprintId !== rewardVersionsMatch[1]) return rule;
+      return {
+        ...rule,
+        rewards: rule.rewards.map((item) => {
+          const catalogReward = catalogRewards.find((reward) => reward.id === item.rewardId);
+          if (!rewardIds.has(item.rewardId) || !catalogReward) return item;
+          updatedCount += 1;
+          const reward = currentRewardSummary(catalogReward);
+          return { ...item, rewardVersionId: reward.versionId, reward };
+        }),
+      };
+    });
+    const updateLeaderboardReward = (item: GetLeaderboardResponseDto["manualRewards"][number]) => {
+      const catalogReward = catalogRewards.find((reward) => reward.id === item.rewardId);
+      return rewardIds.has(item.rewardId) && catalogReward
+        ? {
+            ...item,
+            rewardVersionId: `${catalogReward.id}-v${catalogReward.version}`,
+            rewardVersion: catalogReward.version,
+          }
+        : item;
+    };
+    leaderboard.items = leaderboard.items.map((item) => ({
+      ...item,
+      rewards: item.rewards.map(updateLeaderboardReward),
+    }));
+    leaderboard.manualRewards = leaderboard.manualRewards.map(updateLeaderboardReward);
+    return {
+      updatedCount,
+      items: rewardRules.filter((rule) => rule.sprintId === rewardVersionsMatch[1]),
+    };
+  }
+
   if (method === "POST" && rewardRulesMatch) {
     const data = requestData<Pick<SprintRewardRuleDto, "type" | "rankFrom" | "rankTo" | "minPoints"> & {
       rewards: Array<{ rewardId: string; amount: number | string }>;
@@ -734,14 +820,11 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
       rewards: data.rewards.map((item) => ({
         id: `rule-reward-${crypto.randomUUID()}`,
         rewardId: item.rewardId,
+        rewardVersionId: `${item.rewardId}-v${catalogRewards.find((reward) => reward.id === item.rewardId)?.version ?? 1}`,
         amount: Number(item.amount),
-        reward: catalogRewards.find((reward) => reward.id === item.rewardId) ?? {
-          id: item.rewardId,
-          name: "Награда",
-          iconUrl: null,
-          isDivisible: false,
-          divisionPrecision: 0,
-        },
+        reward: catalogRewards.find((reward) => reward.id === item.rewardId)
+          ? currentRewardSummary(catalogRewards.find((reward) => reward.id === item.rewardId)!)
+          : { id: item.rewardId, versionId: null, version: 1, name: "Награда", iconUrl: null, isDivisible: false, divisionPrecision: 0 },
       })),
     };
     rewardRules = [...rewardRules, created];
@@ -762,14 +845,11 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
       rewards: data.rewards.map((item) => ({
         id: `rule-reward-${crypto.randomUUID()}`,
         rewardId: item.rewardId,
+        rewardVersionId: `${item.rewardId}-v${catalogRewards.find((reward) => reward.id === item.rewardId)?.version ?? 1}`,
         amount: Number(item.amount),
-        reward: catalogRewards.find((reward) => reward.id === item.rewardId) ?? {
-          id: item.rewardId,
-          name: "Награда",
-          iconUrl: null,
-          isDivisible: false,
-          divisionPrecision: 0,
-        },
+        reward: catalogRewards.find((reward) => reward.id === item.rewardId)
+          ? currentRewardSummary(catalogRewards.find((reward) => reward.id === item.rewardId)!)
+          : { id: item.rewardId, versionId: null, version: 1, name: "Награда", iconUrl: null, isDivisible: false, divisionPrecision: 0 },
       })),
     };
     return rewardRules[index];
@@ -799,6 +879,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     const id = `reward-${crypto.randomUUID()}`;
     const created: BaseRewardDto = {
       id,
+      version: 1,
       createdAt: NOW,
       updatedAt: NOW,
       name: data.name,
@@ -892,6 +973,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     catalogRewards[index] = {
       ...catalogRewards[index],
       ...requestData<Partial<BaseRewardDto>>(config),
+      version: catalogRewards[index].version + 1,
       updatedAt: NOW,
     };
     return catalogRewards[index];
@@ -915,17 +997,17 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   }
 
   if (method === "POST" && url === "/api/creative-tasks") {
-    const data = requestData<Omit<CreativeTaskWithDefaultsDto, "id" | "createdAt" | "updatedAt" | "isDeleted" | "defaultMediaIds" | "defaultTexts" | "defaultTargetUrls"> & {
-      defaultMediaIds?: string[];
-      defaultTexts?: string[];
-      defaultTargetUrls?: string[];
-    }>(config);
+    const data = requestData<CreateCreativeTaskRequestDto>(config);
     const created: CreativeTaskWithDefaultsDto = {
       ...data,
       id: `task-${crypto.randomUUID()}`,
       createdAt: NOW,
       updatedAt: NOW,
+      ordContractTemplate: data.ordContractTemplateId === ordContractTemplate.id
+        ? ordContractTemplate
+        : null,
       isDeleted: false,
+      isFrozen: false,
       defaultMediaIds: data.defaultMediaIds ?? [],
       defaultTexts: data.defaultTexts ?? [],
       defaultTargetUrls: data.defaultTargetUrls ?? [],
@@ -934,87 +1016,24 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     return created;
   }
 
-  if (method === "GET" && url === `/api/private-creative-tasks/room/${ROOM_ID}`) {
-    return paginated(privateTasks);
-  }
-
-  if (method === "POST" && url === "/api/private-creative-tasks") {
-    const data = requestData<Omit<PrivateCreativeTaskWithDefaultsDto, "id" | "createdAt" | "updatedAt" | "isDeleted" | "defaultMediaIds" | "defaultTexts" | "defaultTargetUrls"> & {
-      defaultMediaIds?: string[];
-      defaultTexts?: string[];
-      defaultTargetUrls?: string[];
-    }>(config);
-    const created: PrivateCreativeTaskWithDefaultsDto = {
-      ...data,
-      id: `private-task-${crypto.randomUUID()}`,
-      createdAt: NOW,
-      updatedAt: NOW,
-      isDeleted: false,
-      defaultMediaIds: data.defaultMediaIds ?? [],
-      defaultTexts: data.defaultTexts ?? [],
-      defaultTargetUrls: data.defaultTargetUrls ?? [],
-    };
-    privateTasks = [...privateTasks, created];
-    privateTaskWhitelist.set(created.id, new Set());
-    return created;
-  }
-
-  const privateWhitelistMatch = url.match(
-    /^\/api\/private-creative-tasks\/([^/]+)\/whitelist$/,
-  );
-  if (method === "GET" && privateWhitelistMatch) {
-    const ids = privateTaskWhitelist.get(privateWhitelistMatch[1]) ?? new Set<string>();
-    return paginated(
-      ambassadors
-        .filter((item) => ids.has(item.id))
-        .map((item) => ({ ambassadorId: item.id, promoCode: item.promoCode })),
-    );
-  }
-  if (method === "POST" && privateWhitelistMatch) {
-    const data = requestData<{ ambassadorId: string }>(config);
-    const ids = privateTaskWhitelist.get(privateWhitelistMatch[1]) ?? new Set<string>();
-    ids.add(data.ambassadorId);
-    privateTaskWhitelist.set(privateWhitelistMatch[1], ids);
-    return { success: true };
-  }
-
-  const privateWhitelistItemMatch = url.match(
-    /^\/api\/private-creative-tasks\/([^/]+)\/whitelist\/([^/]+)$/,
-  );
-  if (method === "DELETE" && privateWhitelistItemMatch) {
-    privateTaskWhitelist.get(privateWhitelistItemMatch[1])?.delete(privateWhitelistItemMatch[2]);
-    return undefined;
-  }
-
-  const privateSubmissionsMatch = url.match(
-    /^\/api\/private-creative-tasks\/([^/]+)\/submissions$/,
-  );
-  if (method === "GET" && privateSubmissionsMatch) {
-    return paginated(
-      privateSubmissions.filter((item) => item.taskId === privateSubmissionsMatch[1]),
-    );
-  }
-
-  const privateTaskMatch = url.match(/^\/api\/private-creative-tasks\/([^/]+)$/);
-  if (method === "GET" && privateTaskMatch) {
-    const item = privateTasks.find((candidate) => candidate.id === privateTaskMatch[1]);
-    if (!item) throw new Error(`Mock private task not found: ${privateTaskMatch[1]}`);
-    return item;
-  }
-  if (method === "PATCH" && privateTaskMatch) {
-    const index = privateTasks.findIndex((item) => item.id === privateTaskMatch[1]);
-    if (index < 0) throw new Error(`Mock private task not found: ${privateTaskMatch[1]}`);
-    privateTasks[index] = {
-      ...privateTasks[index],
-      ...requestData<Partial<PrivateCreativeTaskWithDefaultsDto>>(config),
-      updatedAt: NOW,
-    };
-    return privateTasks[index];
-  }
 
   const submissionsMatch = url.match(/^\/api\/creative-tasks\/([^/]+)\/submissions$/);
   if (method === "GET" && submissionsMatch) {
     return paginated(submissions.filter((item) => item.taskId === submissionsMatch[1]));
+  }
+
+  const taskFreezeMatch = url.match(
+    /^\/api\/creative-tasks\/([^/]+)\/(freeze|unfreeze)$/,
+  );
+  if (method === "PATCH" && taskFreezeMatch) {
+    const index = tasks.findIndex((item) => item.id === taskFreezeMatch[1]);
+    if (index < 0) throw new Error(`Mock task not found: ${taskFreezeMatch[1]}`);
+    tasks[index] = {
+      ...tasks[index],
+      isFrozen: taskFreezeMatch[2] === "freeze",
+      updatedAt: NOW,
+    };
+    return tasks[index];
   }
 
   const taskMatch = url.match(/^\/api\/creative-tasks\/([^/]+)$/);
@@ -1024,7 +1043,9 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     return item;
   }
 
-  if (method === "GET" && url === "/api/ambassador") return paginated(ambassadors);
+  if (method === "GET" && url === "/api/ambassador") {
+    return paginated(ambassadors.filter((item) => !config.params?.ambassadorIds?.length || config.params.ambassadorIds.includes(item.id)));
+  }
 
   const submissionStatusMatch = url.match(
     /^\/api\/creative-tasks\/submissions\/([^/]+)\/status$/,
@@ -1039,22 +1060,45 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   if (method === "PATCH" && taskMatch) {
     const index = tasks.findIndex((item) => item.id === taskMatch[1]);
     if (index < 0) throw new Error(`Mock task not found: ${taskMatch[1]}`);
-    tasks[index] = { ...tasks[index], ...(config.data as Partial<CreativeTaskWithDefaultsDto>) };
+    const data = requestData<Partial<CreativeTaskWithDefaultsDto>>(config);
+    tasks[index] = {
+      ...tasks[index],
+      ...data,
+      ...(data.ordContractTemplateId
+        ? {
+            ordContractTemplate: data.ordContractTemplateId === ordContractTemplate.id
+              ? ordContractTemplate
+              : null,
+          }
+        : {}),
+      updatedAt: NOW,
+    };
     return tasks[index];
   }
 
   if (method === "POST" && url === "/api/sprints") {
-    const data = requestData<Omit<BaseSprintDto, "id" | "createdAt" | "updatedAt" | "status" | "promoCodeUsagesCount" | "pendingSubscriptionId" | "approvedSubscriptionId" | "rejectedSubscriptionId">>(config);
+    const data = requestData<CreateSprintRequestDto>(config);
     const created: BaseSprintDto = {
-      ...data,
       id: `sprint-${crypto.randomUUID()}`,
       createdAt: NOW,
       updatedAt: NOW,
+      name: data.name ?? null,
+      description: data.description ?? null,
+      startDate: data.startDate ?? null,
+      endDate: data.endDate ?? null,
+      ignoreEndDate: data.ignoreEndDate ?? false,
       status: "active",
+      isDraft: data.isDraft ?? false,
+      rewardType: data.rewardType ?? null,
+      rewardUnits: data.rewardUnits ?? null,
+      rewardValue: data.rewardValue ?? null,
       promoCodeUsagesCount: 0,
+      promoCodeUsageLimit: data.promoCodeUsageLimit ?? null,
+      ignorePromoCodeUsageLimit: data.ignorePromoCodeUsageLimit ?? false,
       pendingSubscriptionId: 201,
       approvedSubscriptionId: 202,
       rejectedSubscriptionId: 203,
+      roomId: data.roomId,
     };
     sprints = [...sprints, created];
     selectedSprintId = created.id;
@@ -1062,11 +1106,21 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   }
 
   const sprintMatch = url.match(/^\/api\/sprints\/([^/]+)$/);
+  if (method === "DELETE" && sprintMatch) {
+    sprints = sprints.filter((item) => item.id !== sprintMatch[1]);
+    tasks = tasks.filter((item) => item.sprintId !== sprintMatch[1]);
+    rewardRules = rewardRules.filter((item) => item.sprintId !== sprintMatch[1]);
+    return undefined;
+  }
   if (method === "PATCH" && sprintMatch) {
     const index = sprints.findIndex((item) => item.id === sprintMatch[1]);
     if (index < 0) throw new Error(`Mock sprint not found: ${sprintMatch[1]}`);
     selectedSprintId = sprintMatch[1];
-    sprints[index] = { ...sprints[index], ...(config.data as Partial<BaseSprintDto>) };
+    sprints[index] = {
+      ...sprints[index],
+      ...requestData<Partial<BaseSprintDto>>(config),
+      updatedAt: NOW,
+    };
     return sprints[index];
   }
 

@@ -59,7 +59,9 @@ export function CreateCreativeTaskDialog({
   const { slug: slugParam } = useParams();
   const sprintRoomKey = roomSlug || slugParam || "";
   const { sprints } = useSprints({ page: 1, size: 100 }, sprintRoomKey);
-  const activeSprints = sprints.filter((sprint) => sprint.status === "active");
+  const activeSprints = sprints.filter(
+    (sprint) => !sprint.isDraft && sprint.status === "active"
+  );
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -182,7 +184,7 @@ export function CreateCreativeTaskDialog({
               <SelectContent>
                 {activeSprints.map((sprint) => (
                   <SelectItem key={sprint.id} value={sprint.id}>
-                    {sprint.name}
+                    {sprint.name ?? "Спринт без названия"}
                   </SelectItem>
                 ))}
               </SelectContent>

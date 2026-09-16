@@ -9,6 +9,16 @@
 export interface RewardSummaryDto {
   /** ID награды */
   id: string;
+  /**
+   * ID версии награды, закреплённой за спринтом
+   * @nullable
+   */
+  versionId: string | null;
+  /**
+   * Номер версии награды, закреплённой за спринтом
+   * @minimum 1
+   */
+  version: number;
   /** Наименование награды */
   name: string;
   /**

@@ -6,6 +6,7 @@ import {
   sprintsControllerDeleteRewardRule,
   sprintsControllerGetRewardRules,
   sprintsControllerUpdateRewardRule,
+  sprintsControllerUpdateRewardVersions,
 } from "@/api/generated/sprints/sprints";
 import type {
   CreateRewardRuleRequestDto,
@@ -16,7 +17,14 @@ import { ApiError } from "@/types";
 const getErrorState = (error: unknown) => ({
   isValidationError: error instanceof ApiError && error.statusCode === 422,
   validationErrors: error instanceof ApiError && error.fieldErrors ? error.fieldErrors : {},
-  generalError: error instanceof ApiError && error.statusCode !== 422 ? error.message : "",
+  generalError:
+    error instanceof ApiError
+      ? error.statusCode !== 422
+        ? error.message
+        : ""
+      : error instanceof Error
+        ? error.message
+        : "",
 });
 
 export function useSprintRewardRules(sprintId: string) {
@@ -42,10 +50,16 @@ export function useCreateSprintRewardRule(sprintId: string) {
     mutationKey: [MutationKeys.CREATE_SPRINT_REWARD_RULE],
     mutationFn: (data: CreateRewardRuleRequestDto) =>
       sprintsControllerCreateRewardRule(sprintId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.SPRINT_REWARD_RULES, sprintId] });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.SPRINT_LEADERBOARD], exact: false });
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.SPRINT_REWARD_RULES, sprintId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.SPRINT_LEADERBOARD],
+          exact: false,
+        }),
+      ]),
   });
 
   return {
@@ -69,6 +83,30 @@ export function useUpdateSprintRewardRule(sprintId: string) {
 
   return {
     updateRule: mutation.mutate,
+    isPending: mutation.isPending,
+    ...getErrorState(mutation.error),
+  };
+}
+
+export function useUpdateSprintRewardVersions(sprintId: string) {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (rewardIds: string[]) =>
+      sprintsControllerUpdateRewardVersions(sprintId, { rewardIds }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.SPRINT_REWARD_RULES, sprintId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.SPRINT_LEADERBOARD],
+          exact: false,
+        }),
+      ]),
+  });
+
+  return {
+    updateRewardVersions: mutation.mutate,
     isPending: mutation.isPending,
     ...getErrorState(mutation.error),
   };

@@ -1,11 +1,18 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, CirclePause } from "lucide-react";
+import { Check, CirclePause, CirclePlay } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@senler/ui";
+import { useFreezeCreativeTask } from "@/hooks/creativetasks/useFreezeCreativeTask";
+import { useUnfreezeCreativeTask } from "@/hooks/creativetasks/useUnfreezeCreativeTask";
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
+import { StopCreativeTaskDialog } from "@/pages/(list_integration)/creativetasks/components/StopCreativeTaskDialog";
 
 interface OpenSprintQuestRowProps {
   taskId: string;
   title: string;
   roomSlug: string;
+  isFrozen: boolean;
 }
 
 function answersLabel(count: number): string {
@@ -22,7 +29,20 @@ export function OpenSprintQuestRow({
   taskId,
   title,
   roomSlug,
+  isFrozen,
 }: OpenSprintQuestRowProps) {
+  const [stopOpen, setStopOpen] = useState(false);
+  const [frozen, setFrozen] = useState(isFrozen);
+  const {
+    freezeCreativeTask,
+    isPending: isFreezing,
+    generalError: freezeError,
+  } = useFreezeCreativeTask();
+  const {
+    unfreezeCreativeTask,
+    isPending: isUnfreezing,
+    generalError: unfreezeError,
+  } = useUnfreezeCreativeTask();
   const { submissions, pagination, isLoading } = useSubmissions(taskId, {
     page: 1,
     size: 100,
@@ -35,9 +55,32 @@ export function OpenSprintQuestRow({
       item.status === "waiting_for_review_publication"
   ).length;
   const allReviewed = total > 0 && pending === 0;
+  const isChangingFrozenState = isFreezing || isUnfreezing;
+
+  useEffect(() => setFrozen(isFrozen), [isFrozen]);
+
+  const handleFrozenStateChange = () => {
+    const mutation = frozen ? unfreezeCreativeTask : freezeCreativeTask;
+    mutation(
+      { id: taskId },
+      {
+        onSuccess: () => {
+          setFrozen(!frozen);
+          setStopOpen(false);
+          toast.success(frozen ? "Задание возобновлено" : "Задание остановлено");
+        },
+      },
+    );
+  };
 
   let badge: React.ReactNode;
-  if (isLoading) {
+  if (frozen) {
+    badge = (
+      <span className="inline-flex items-center rounded-[28px] border border-[#e4e4e4] bg-white px-1.5 py-1 text-[13px] font-medium leading-4 text-[#797979]">
+        Остановлено
+      </span>
+    );
+  } else if (isLoading) {
     badge = (
       <span className="text-[13px] font-medium text-[#797979]">…</span>
     );
@@ -63,20 +106,42 @@ export function OpenSprintQuestRow({
   }
 
   return (
-    <Link
-      to={`/rooms/${roomSlug}/creativetasks/${taskId}/answers`}
-      className="flex h-12 items-center gap-4 border-b border-[#e4e4e4] px-4 transition-colors hover:bg-[#fafafa]"
-    >
-      <p className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 tracking-[-0.25px] text-foreground">
-        {title}
-      </p>
-      {badge}
-      <span
-        className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#e4e4e4] bg-white"
-        aria-hidden
-      >
-        <CirclePause className="size-4" strokeWidth={1.5} />
-      </span>
-    </Link>
+    <>
+      <div className="flex h-12 items-center gap-4 border-b border-[#e4e4e4] px-4 transition-colors hover:bg-[#fafafa]">
+        <Link
+          to={`/rooms/${roomSlug}/creativetasks/${taskId}/answers`}
+          className="flex min-w-0 flex-1 items-center gap-4 self-stretch"
+        >
+          <p className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 tracking-[-0.25px] text-foreground">
+            {title}
+          </p>
+          {badge}
+        </Link>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="size-7 shrink-0 border-[#e4e4e4] bg-white shadow-none"
+          onClick={() => setStopOpen(true)}
+          disabled={isChangingFrozenState}
+          aria-label={`${frozen ? "Возобновить" : "Остановить"} задание «${title}»`}
+          title={frozen ? "Возобновить задание" : "Остановить задание"}
+        >
+          {frozen ? (
+            <CirclePlay className="size-4" strokeWidth={1.5} aria-hidden />
+          ) : (
+            <CirclePause className="size-4" strokeWidth={1.5} aria-hidden />
+          )}
+        </Button>
+      </div>
+      <StopCreativeTaskDialog
+        open={stopOpen}
+        onOpenChange={setStopOpen}
+        isFrozen={frozen}
+        isPending={isChangingFrozenState}
+        errorMessage={frozen ? unfreezeError : freezeError}
+        onConfirm={handleFrozenStateChange}
+      />
+    </>
   );
 }

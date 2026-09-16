@@ -7,7 +7,7 @@
  */
 
 /**
- * Статус спринта задания. Взаимодействие доступно только если спринт active и его дата начала уже наступила
+ * Статус спринта задания. Взаимодействие доступно только если спринт active, дата начала наступила и задание не заморожено
  */
 export type AmbassadorCreativeTaskDtoSprintStatus = typeof AmbassadorCreativeTaskDtoSprintStatus[keyof typeof AmbassadorCreativeTaskDtoSprintStatus];
 

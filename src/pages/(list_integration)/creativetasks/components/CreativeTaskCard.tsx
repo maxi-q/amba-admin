@@ -82,8 +82,8 @@ export function CreativeTaskCard({ task, onEdit }: CreativeTaskCardProps) {
                 e.stopPropagation();
               }}
             >
-              <Badge variant="secondary">
-                {task.isDeleted ? "Удалена" : "В спринте"}
+              <Badge variant={task.isFrozen ? "outline" : "secondary"}>
+                {task.isDeleted ? "Удалена" : task.isFrozen ? "Остановлено" : "В спринте"}
               </Badge>
               <Button
                 type="button"

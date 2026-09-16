@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Link, Outlet, useParams } from "react-router-dom";
-import { ChevronLeft, CirclePause, Pencil } from "lucide-react";
+import { ChevronLeft, CirclePause, CirclePlay, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { useCreativeTask } from "@/hooks/creativetasks/useCreativeTask";
+import { useFreezeCreativeTask } from "@/hooks/creativetasks/useFreezeCreativeTask";
+import { useUnfreezeCreativeTask } from "@/hooks/creativetasks/useUnfreezeCreativeTask";
 import { CreativeTasksErrorState } from "./components/CreativeTasksErrorState";
 import { CreativeTaskDetailHeader } from "./components/CreativeTaskDetailHeader";
 import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
+import { StopCreativeTaskDialog } from "./components/StopCreativeTaskDialog";
 import { formatTaskFormat } from "./utils/creativetaskUtils";
-import { Button, PageLoader } from "@senler/ui";
+import { Badge, Button, PageLoader } from "@senler/ui";
 import xpStarUrl from "@/pages/(list_integration)/sprints/slug/assets/xp-star.svg";
 
 function getReviewLabel(materials: boolean, publication: boolean) {
@@ -35,6 +39,17 @@ export default function CreativeTaskDetailLayout() {
   const { slug, taskId } = useParams<{ slug: string; taskId: string }>();
   const { task, isLoading, isError, error } = useCreativeTask(taskId ?? "");
   const [editOpen, setEditOpen] = useState(false);
+  const [stopOpen, setStopOpen] = useState(false);
+  const {
+    freezeCreativeTask,
+    isPending: isFreezing,
+    generalError: freezeError,
+  } = useFreezeCreativeTask();
+  const {
+    unfreezeCreativeTask,
+    isPending: isUnfreezing,
+    generalError: unfreezeError,
+  } = useUnfreezeCreativeTask();
 
   if (isLoading) {
     return (
@@ -61,10 +76,25 @@ export default function CreativeTaskDetailLayout() {
     ? task.allowedFormats.map(formatTaskFormat).join(", ")
     : "Любой формат";
   const platformLabel = getPlatformLabel(task.targetPlatform);
+  const isChangingFrozenState = isFreezing || isUnfreezing;
+  const frozenStateError = task.isFrozen ? unfreezeError : freezeError;
+
+  const handleFrozenStateChange = () => {
+    const mutation = task.isFrozen ? unfreezeCreativeTask : freezeCreativeTask;
+    mutation(
+      { id: task.id },
+      {
+        onSuccess: () => {
+          setStopOpen(false);
+          toast.success(task.isFrozen ? "Задание возобновлено" : "Задание остановлено");
+        },
+      },
+    );
+  };
 
   return (
     <>
-      <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] overflow-hidden bg-white md:-m-6 md:w-[calc(100%+3rem)]">
+      <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] overflow-hidden bg-white">
         <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           <div className="px-4 pt-4">
             <div className="flex h-8 min-w-0 items-center gap-3">
@@ -88,6 +118,12 @@ export default function CreativeTaskDetailLayout() {
                 {task.title}
               </h1>
 
+              {task.isFrozen ? (
+                <Badge variant="outline" className="shrink-0">
+                  Остановлено
+                </Badge>
+              ) : null}
+
               <div className="flex shrink-0 items-center gap-1.5">
                 <Button
                   type="button"
@@ -100,13 +136,22 @@ export default function CreativeTaskDetailLayout() {
                 >
                   <Pencil className="size-4" strokeWidth={1.5} aria-hidden />
                 </Button>
-                <span
-                  className="flex size-7 items-center justify-center rounded-[6px] border border-[#e4e4e4] text-black"
-                  title="Остановка задания пока недоступна"
-                  aria-hidden
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="size-7 border-[#e4e4e4] shadow-none"
+                  onClick={() => setStopOpen(true)}
+                  disabled={task.isDeleted || isChangingFrozenState}
+                  aria-label={task.isFrozen ? "Возобновить задание" : "Остановить задание"}
+                  title={task.isFrozen ? "Возобновить задание" : "Остановить задание"}
                 >
-                  <CirclePause className="size-4" strokeWidth={1.5} />
-                </span>
+                  {task.isFrozen ? (
+                    <CirclePlay className="size-4" strokeWidth={1.5} aria-hidden />
+                  ) : (
+                    <CirclePause className="size-4" strokeWidth={1.5} aria-hidden />
+                  )}
+                </Button>
               </div>
             </div>
           </div>
@@ -115,7 +160,7 @@ export default function CreativeTaskDetailLayout() {
           <Outlet context={{ task }} />
         </main>
 
-        <aside className="hidden w-[260px] shrink-0 overflow-y-auto border-l border-[#e4e4e4] bg-white lg:block">
+        <aside className="hidden w-[260px] shrink-0 overflow-y-auto border-l border-[#e4e4e4] bg-white lg:!block">
           <div className="flex h-[68px] flex-col gap-1 border-b border-[#e4e4e4] p-4 text-[13px] font-medium leading-4 tracking-[-0.0325px]">
             <p className="text-black">Вид задания</p>
             <p className="truncate text-[#797979]">{formatLabel}</p>
@@ -154,6 +199,14 @@ export default function CreativeTaskDetailLayout() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         task={task}
+      />
+      <StopCreativeTaskDialog
+        open={stopOpen}
+        onOpenChange={setStopOpen}
+        isFrozen={task.isFrozen}
+        isPending={isChangingFrozenState}
+        errorMessage={frozenStateError}
+        onConfirm={handleFrozenStateChange}
       />
     </>
   );

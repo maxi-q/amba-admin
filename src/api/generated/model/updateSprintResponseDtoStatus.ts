@@ -7,7 +7,7 @@
  */
 
 /**
- * Статус спринта. Не зависит от дат: active допустим и при дате начала в будущем. awarding и completed закрывают взаимодействие с заданиями; владелец может только допроверить креативы.
+ * Статус опубликованного спринта. active допустим и при дате начала в будущем. awarding и completed закрывают взаимодействие с заданиями; владелец может только допроверить креативы.
  */
 export type UpdateSprintResponseDtoStatus = typeof UpdateSprintResponseDtoStatus[keyof typeof UpdateSprintResponseDtoStatus];
 

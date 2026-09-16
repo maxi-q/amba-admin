@@ -18,8 +18,6 @@ export interface BaseAfterRegistrationInvitationDto {
   roomId: string;
   /** Список целей приглашения */
   targets: InvitationTargetDto[];
-  /** ID приватных заданий */
-  privateTaskIds: string[];
   /** ID событий */
   eventIds: string[];
 }

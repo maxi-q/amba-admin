@@ -1,429 +1,142 @@
+import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, Check, Plus, Trash2, User, X } from "lucide-react";
+import { Avatar, Button, Input, PageLoader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@senler/ui";
 import { toast } from "sonner";
-import {
-  Alert,
-  AlertDescription,
-  Button,
-  PageLoader,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@senler/ui";
-import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
-import { useRoomApplications } from "@/hooks/ambassador/useRoomApplications";
-import { useEventApplications } from "@/hooks/ambassador/useEventApplications";
+import { useParticipantList } from "@/hooks/ambassador/useParticipantList";
+import { filterParticipants } from "@/hooks/ambassador/participants";
+import type { Participant, ParticipantSection } from "@/hooks/ambassador/participants";
 import { useApproveRoomApplications } from "@/hooks/ambassador/useApproveRoomApplications";
-import { useApproveEventApplications } from "@/hooks/ambassador/useApproveEventApplications";
-import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
-import { useEvents } from "@/hooks/events/useEvents";
-import { SettingsLoadingState } from "../settings/components/SettingsLoadingState";
-import { SettingsErrorState } from "../settings/components/SettingsErrorState";
-import { ApplicationCard } from "./components/ApplicationCard";
-import { EventAutocomplete } from "../statistics/components/EventAutocomplete";
-import { useApproveAllPendingRoomApplications } from "@/hooks/ambassador/useApproveAllPendingRoomApplications";
+import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
+import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
+import { useParseVkUserId } from "@/hooks/invitations/useParseVkUserId";
 import { CreativesPaginationControls } from "../creativetasks/components/CreativesPaginationControls";
+import LegacyApplicationsPage from "./LegacyApplicationsPage";
+import { AddParticipantDialog, RemoveParticipantDialog, participantPrimaryClass, participantSecondaryClass } from "./ParticipantDialogs";
+import { TeamPreviewContext, teamRoleLabels } from "./TeamPreviewContext";
+import type { TeamRole } from "./TeamPreviewContext";
 
-const tabInactive =
-  "relative border-0 bg-transparent px-0 pb-3 pt-0 text-left text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
-const tabActive =
-  "relative border-0 bg-transparent px-0 pb-3 pt-0 text-left text-[15px] font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary";
-
-type TabType = "room" | "event";
-type StatusType = "pending" | "approved" | "rejected";
-
-const STATUS_OPTIONS: { value: StatusType; label: string }[] = [
-  { value: "pending", label: "Ожидает рассмотрения" },
-  { value: "approved", label: "Одобрено" },
-  { value: "rejected", label: "Отклонено" },
-];
-
-const PAGE_SIZES = [10, 25, 50, 100] as const;
+const sections = [ ["active", "Активные"], ["applications", "Заявки"], ["invitations", "Приглашения"] ] as const;
+const iconButtonClass = `${participantSecondaryClass} size-7 shrink-0 p-0 text-[#707070]`;
+const PAGE_SIZE = 25;
 
 export default function ApplicationsPage() {
-  const { slug } = useParams();
-  const [activeTab, setActiveTab] = useState<TabType>("room");
+  const { slug = "" } = useParams();
+  const [team, setTeam] = useState(useContext(TeamPreviewContext));
+  const [tab, setTab] = useState<"team" | "performers">("performers");
+  const [section, setSection] = useState<ParticipantSection>("active");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [legacy, setLegacy] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [removeTarget, setRemoveTarget] = useState<(Participant & { isTeam?: boolean }) | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const list = useParticipantList(slug, section, tab === "performers" && !legacy);
+  const approval = useApproveRoomApplications();
+  const creation = useCreateInvitation();
+  const removal = useDeleteInvitation();
+  const parseVk = useParseVkUserId();
+  const isAdding = creation.isPending || parseVk.isPending;
+  const matches = filterParticipants(tab === "team" ? team ?? [] : list.participants, search);
+  const totalPages = Math.ceil(matches.length / PAGE_SIZE);
+  const currentPage = Math.min(page, Math.max(1, totalPages));
+  const visible = matches.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const [roomStatus, setRoomStatus] = useState<StatusType>("pending");
-  const [eventStatus, setEventStatus] = useState<StatusType>("pending");
-  const [selectedEventIds, setSelectedEventIds] = useState<string[]>([]);
-
-  const [appliedRoomStatus, setAppliedRoomStatus] = useState<StatusType>("pending");
-  const [appliedEventStatus, setAppliedEventStatus] = useState<StatusType>("pending");
-  const [appliedEventIds, setAppliedEventIds] = useState<string[]>([]);
-
-  const [roomPage, setRoomPage] = useState(1);
-  const [eventPage, setEventPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
-  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
-  const [isApprovingAll, setIsApprovingAll] = useState(false);
-
-  const {
-    room: roomData,
-    isLoading: isLoadingRoomData,
-    isError: isRoomDataError,
-    error: roomDataError
-  } = useGetRoomById(slug || "");
-
-  const { events } = useEvents({ page: 1, size: 100 }, slug || "");
-  const { ambassadors } = useAmbassadors({ page: 1, size: 100 });
-
-  const eventNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    events.forEach((event) => {
-      map.set(event.id, event.name);
+  const moderate = (participant: Participant, status: "approved" | "rejected") => {
+    setProcessingId(participant.id);
+    approval.approveRoomApplications({ ids: [participant.id], status }, {
+      onSuccess: () => toast.success(status === "approved" ? "Заявка одобрена" : "Заявка отклонена"),
+      onSettled: () => setProcessingId(null),
     });
-    return map;
-  }, [events]);
-
-  const ambassadorNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    ambassadors.forEach((amb) => {
-      const name = (amb as { name?: string }).name || amb.promoCode || amb.id;
-      map.set(amb.id, name);
-    });
-    return map;
-  }, [ambassadors]);
-
-  const {
-    applications: roomApplications,
-    isLoading: isLoadingRoom,
-    refetch: refetchRoom,
-    pagination: roomPagination
-  } = useRoomApplications({
-    status: appliedRoomStatus,
-    roomIds: roomData?.id ? [roomData.id] : [],
-    page: roomPage,
-    size: pageSize
-  });
-
-  const {
-    applications: eventApplications,
-    isLoading: isLoadingEvent,
-    refetch: refetchEvent,
-    pagination: eventPagination
-  } = useEventApplications({
-    status: appliedEventStatus,
-    eventIds: appliedEventIds,
-    page: eventPage,
-    size: pageSize
-  });
-
-  const {
-    approveRoomApplications,
-    isSuccess: isRoomApproveSuccess,
-    isError: isRoomApproveError,
-    generalError: roomApproveError
-  } = useApproveRoomApplications();
-
-  const {
-    approveEventApplications,
-    isSuccess: isEventApproveSuccess,
-    isError: isEventApproveError,
-    generalError: eventApproveError
-  } = useApproveEventApplications();
-
-  const {
-    approveAllPendingRoomApplications,
-    isSuccess: isAllPendingApproveSuccess,
-    isError: isAllPendingApproveError,
-    generalError: allPendingApproveError,
-  } = useApproveAllPendingRoomApplications();
-
-  useEffect(() => {
-    if (isRoomApproveSuccess || isEventApproveSuccess || isAllPendingApproveSuccess) {
-      toast.success("Заявки одобрены");
-      setApprovedIds((prev) => new Set([...prev, ...approvingIds]));
-      setApprovingIds(new Set());
-      setIsApprovingAll(false);
-    }
-  }, [isRoomApproveSuccess, isEventApproveSuccess, isAllPendingApproveSuccess]);
-
-  useEffect(() => {
-    if (isRoomApproveError || isEventApproveError || isAllPendingApproveError) {
-      setApprovingIds(new Set());
-      setIsApprovingAll(false);
-    }
-  }, [isRoomApproveError, isEventApproveError, isAllPendingApproveError]);
-
-  const handleTabChange = (newValue: TabType) => {
-    setActiveTab(newValue);
-    setApprovedIds(new Set());
   };
 
-  const handlePaginationPageChange = (page: number) => {
-    setApprovedIds(new Set());
-    if (activeTab === "room") {
-      setRoomPage(page);
-    } else {
-      setEventPage(page);
+  const addParticipant = async (input: string, targetTab: "team" | "performers", role: Exclude<TeamRole, "owner">) => {
+    setAddError("");
+    try {
+      const { vkUserId } = await parseVk.mutateAsync(input);
+      if (targetTab === "team") {
+        if (team === null) return;
+        setTeam([...team, { id: crypto.randomUUID(), name: `VK · ${vkUserId}`, profileUrl: `https://vk.com/id${vkUserId}`, role }]);
+        setTab("team");
+        setAddOpen(false);
+        setSearch("");
+        toast.success("Пользователь добавлен в демо-команду; на сервере ничего не изменено");
+        return;
+      }
+      creation.createInvitation({ roomId: slug, targets: [{ channelTypeId: 1, subscriberId: vkUserId }] }, {
+        onSuccess: () => {
+          setAddOpen(false);
+          setTab("performers");
+          setSection("invitations");
+          setSearch("");
+          setPage(1);
+          toast.success("Приглашение создано");
+        },
+        onError: (error) => setAddError(error.message || "Не удалось создать приглашение"),
+      });
+    } catch (error) {
+      setAddError(error instanceof Error ? error.message : "Не удалось определить профиль VK");
     }
   };
 
-  const handlePageSizeChange = (newSize: number) => {
-    setPageSize(newSize);
-    setRoomPage(1);
-    setEventPage(1);
-    setApprovedIds(new Set());
-  };
+  if (legacy) return <div className="space-y-4"><Button variant="outline" onClick={() => setLegacy(false)}><ArrowLeft className="size-4" />Участники</Button><LegacyApplicationsPage /></div>;
 
-  const handleRoomStatusChange = (status: StatusType) => {
-    setRoomStatus(status);
-  };
-
-  const handleEventStatusChange = (status: StatusType) => {
-    setEventStatus(status);
-  };
-
-  const handleApplyFilters = () => {
-    setApprovedIds(new Set());
-    if (activeTab === "room") {
-      setAppliedRoomStatus(roomStatus);
-      setRoomPage(1);
-      void refetchRoom();
-    } else {
-      setAppliedEventStatus(eventStatus);
-      setAppliedEventIds(selectedEventIds);
-      setEventPage(1);
-      void refetchEvent();
-    }
-  };
-
-  const handleResetFilters = () => {
-    if (activeTab === "room") {
-      setRoomStatus("pending");
-      setAppliedRoomStatus("pending");
-    } else {
-      setEventStatus("pending");
-      setSelectedEventIds([]);
-      setAppliedEventStatus("pending");
-      setAppliedEventIds([]);
-    }
-  };
-
-  const handleApprove = (id: string) => {
-    setApprovingIds((prev) => new Set(prev).add(id));
-    if (activeTab === "room") {
-      approveRoomApplications({ ids: [id], status: "approved" });
-    } else {
-      approveEventApplications({ ids: [id] });
-    }
-  };
-
-  const handleReject = (id: string) => {
-    setApprovingIds((prev) => new Set(prev).add(id));
-    if (activeTab === "room") {
-      approveRoomApplications({ ids: [id], status: "rejected" });
-    }
-  };
-
-  const handleApproveAll = () => {
-    const ids = applications.map((app) => app.id);
-    if (ids.length === 0 || !slug) return;
-
-    setIsApprovingAll(true);
-    setApprovingIds(new Set(ids));
-    approveAllPendingRoomApplications({ roomId: slug });
-  };
-
-  const isLoading = isLoadingRoomData || (activeTab === "room" ? isLoadingRoom : isLoadingEvent);
-  const rawApplications = activeTab === "room" ? roomApplications : eventApplications;
-
-  const applications = rawApplications.filter((app) => !approvedIds.has(app.id));
-  const activeApproveError = activeTab === "room" ? roomApproveError : eventApproveError;
-  const currentStatus = activeTab === "room" ? roomStatus : eventStatus;
-  const appliedStatus = activeTab === "room" ? appliedRoomStatus : appliedEventStatus;
-  const currentPage = activeTab === "room" ? roomPage : eventPage;
-  const pagination = activeTab === "room" ? roomPagination : eventPagination;
-  const totalPages = pagination?.totalPages ?? 0;
-
-  if (isLoadingRoomData) {
-    return <SettingsLoadingState />;
-  }
-
-  if (isRoomDataError) {
-    return <SettingsErrorState errorMessage={(roomDataError as Error)?.message} />;
-  }
-
-  return (
-    <div className="w-full px-2 pb-6">
-      <div className="mb-4 border-b border-border">
-        <div className="flex flex-wrap gap-6" role="tablist" aria-label="Тип заявок">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "room"}
-            className={activeTab === "room" ? tabActive : tabInactive}
-            onClick={() => handleTabChange("room")}
-          >
-            Заявки по комнате
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "event"}
-            className={activeTab === "event" ? tabActive : tabInactive}
-            onClick={() => handleTabChange("event")}
-          >
-            Заявки по событиям
-          </button>
-        </div>
+  return <div className="participants-page min-h-full w-full bg-white text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black">
+    <header className={`flex items-center border-b border-[#e4e4e4] px-4 ${tab === "team" ? "h-12" : "h-9"}`}><h1 className="text-[13px] font-medium leading-4">Участники</h1></header>
+    <div className="-mt-px flex min-h-12 flex-wrap items-center gap-2 border-y border-[#e4e4e4] px-4 py-[9px]">
+      <div role="tablist" aria-label="Участники" className="flex h-7 shrink-0 gap-0.5 rounded-md bg-[#f0f0f0] p-0.5">
+        {([['team', 'Команда'], ['performers', 'Исполнители']] as const).map(([value, label]) => <Button type="button" key={value} role="tab" aria-selected={tab === value} variant="ghost" onClick={() => { setTab(value); setSearch(""); setPage(1); }} className={`h-6 rounded-sm px-1.5 py-1 text-[13px] font-medium leading-4 shadow-none ${tab === value ? "bg-white hover:bg-white" : "hover:bg-white/50"}`}>{label}</Button>)}
       </div>
-
-      <div className="mb-4 grid gap-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-          <div className="w-full min-w-0 sm:w-56">
-            <p className="mb-1.5 text-sm font-medium text-foreground">Статус</p>
-            <Select
-              value={currentStatus}
-              onValueChange={(v) => {
-                const s = v as StatusType;
-                if (activeTab === "room") handleRoomStatusChange(s);
-                else handleEventStatusChange(s);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {activeTab === "event" ? (
-          <EventAutocomplete
-            selectedIds={selectedEventIds}
-            onChange={setSelectedEventIds}
-            roomId={slug || ""}
-          />
-        ) : null}
-
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={handleApplyFilters}>
-            Применить
-          </Button>
-          <Button type="button" variant="outline" onClick={handleResetFilters}>
-            Сбросить
-          </Button>
-        </div>
-      </div>
-
-      {isLoading && !isLoadingRoomData ? (
-        <div className="flex min-h-[200px] w-full items-center justify-center">
-          <PageLoader label="Загрузка…" />
-        </div>
-      ) : null}
-
-      {activeApproveError ? (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{activeApproveError}</AlertDescription>
-        </Alert>
-      ) : null}
-      {allPendingApproveError ? (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{allPendingApproveError}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      {!isLoading ? (
-        <>
-          {applications.length === 0 && !pagination?.total ? (
-            <Alert>
-              <AlertDescription>
-                {appliedStatus === "pending" && "Нет заявок на рассмотрение"}
-                {appliedStatus === "approved" && "Нет одобренных заявок"}
-                {appliedStatus === "rejected" && "Нет отклонённых заявок"}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
-                <p className="text-sm text-muted-foreground">
-                  Всего: {pagination?.total ?? 0}
-                </p>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                  {appliedStatus === "pending" && applications.length > 0 && activeTab === "room" ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleApproveAll}
-                      disabled={isApprovingAll || approvingIds.size > 0}
-                    >
-                      {isApprovingAll
-                        ? "Одобрение…"
-                        : `Одобрить всех на странице (${applications.length})`}
-                    </Button>
-                  ) : null}
-                  <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
-                    <span className="shrink-0 text-sm text-muted-foreground">На странице</span>
-                    <Select
-                      value={String(pageSize)}
-                      onValueChange={(v) => handlePageSizeChange(Number(v))}
-                    >
-                      <SelectTrigger className="w-full sm:w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAGE_SIZES.map((n) => (
-                          <SelectItem key={n} value={String(n)}>
-                            {n}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                {applications.map((application) => (
-                  <li key={application.id}>
-                    <ApplicationCard
-                      application={application}
-                      type={activeTab}
-                      onApprove={handleApprove}
-                      onReject={activeTab === "room" ? handleReject : () => {}}
-                      isProcessedThis={approvingIds.has(application.id)}
-                      showActions={appliedStatus === "pending"}
-                      eventName={
-                        activeTab === "event"
-                          ? eventNameMap.get(
-                              (application as { eventId: string }).eventId
-                            )
-                          : undefined
-                      }
-                      ambassadorName={
-                        activeTab === "event"
-                          ? ambassadorNameMap.get(application.ambassadorId)
-                          : undefined
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-
-              {totalPages > 1 ? (
-                <CreativesPaginationControls
-                  className="mt-2"
-                  page={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePaginationPageChange}
-                />
-              ) : null}
-            </div>
-          )}
-        </>
-      ) : null}
+      <Input type="search" aria-label="Поиск участников" placeholder="Поиск..." value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} disabled={tab === "team" && !team} className="h-7 min-w-32 flex-1 rounded-md border-0 bg-[#f0f0f0] px-2 py-1.5 text-[13px] font-medium leading-4 placeholder:text-[#636c72] shadow-none" />
+      <Button className={`${participantPrimaryClass} gap-1`} onClick={() => { setAddError(""); creation.reset(); setAddOpen(true); }}><Plus className="size-4" strokeWidth={1.5} />Добавить</Button>
     </div>
-  );
+    <div className="flex flex-col items-start gap-3 p-4 lg:!flex-row">
+      {tab === "performers" && <nav aria-label="Статусы исполнителей" className="flex w-full shrink-0 flex-row gap-px rounded-lg border border-[#e4e4e4] p-3 lg:!w-[260px] lg:!flex-col">
+        {sections.map(([value, label]) => <Button key={value} variant="ghost" aria-current={section === value ? "page" : undefined} className={`h-8 flex-1 justify-start rounded-lg px-2 text-[13px] font-medium leading-4 lg:!flex-none ${section === value ? "bg-[#f0f0f0] hover:bg-[#f0f0f0]" : "hover:bg-[#f0f0f0]/60"}`} onClick={() => { setSection(value); setSearch(""); setPage(1); }}>{label}</Button>)}
+      </nav>}
+      <div className="min-w-0 w-full flex-1">
+        {tab === "team" && team === null ? <div className="rounded-lg border border-[#e4e4e4] p-4 text-[#797979]">
+          <p>Управление командой пока недоступно.</p>
+          <p className="mt-2">Для списка участников и ролей требуется поддержка API.</p>
+          <Button variant="link" className="mt-3 h-auto p-0 text-[13px]" onClick={() => setLegacy(true)}>Ранее созданные заявки по компании и событиям</Button>
+        </div> : tab === "performers" && list.isPending ? <div className="flex min-h-32 items-center justify-center"><PageLoader label="Загрузка участников…" /></div>
+        : tab === "performers" && list.isError ? <div role="alert" className="rounded-lg border border-[#e4e4e4] p-4"><p className="text-destructive">Не удалось загрузить участников: {list.error?.message}</p><Button variant="outline" className={`${participantSecondaryClass} mt-3`} onClick={() => void list.refetch()}>Повторить</Button></div>
+        : <>
+          {approval.error && <p role="alert" className="mb-3 text-destructive">{approval.error.message || "Не удалось изменить статус заявки"}</p>}
+          <ul aria-label={tab === "team" ? "Демонстрационная команда" : sections.find(([value]) => value === section)?.[1]} className="m-0 list-none rounded-lg border border-[#e4e4e4] px-3">
+            {visible.length === 0 ? <li className="py-4 text-[#797979]">{search.trim() ? "Никого не найдено" : section === "active" ? "Пока нет активных исполнителей" : section === "applications" ? "Нет заявок на рассмотрение" : "Пока нет приглашений"}</li> : visible.map((participant) => <li key={participant.id} className="flex h-12 items-center gap-3 border-b border-[#e4e4e4] last:border-b-0">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5"><Avatar src={participant.avatarUrl} name={participant.name} size="sm" shape="rounded" className="size-6 rounded-lg border border-[#e4e4e4]" /><span className="truncate" title={participant.name}>{participant.name}</span></div>
+              {tab === "team" && (participant.role === "owner" ? <span className="text-[#797979]">Владелец</span> : <Select value={participant.role} onValueChange={(value) => { setTeam(team?.map((item) => item.id === participant.id ? { ...item, role: value as TeamRole } : item) ?? null); toast.success("Роль изменена только на мок-стенде"); }}>
+                  <SelectTrigger aria-label={`Роль: ${participant.name}`} className={`${participantSecondaryClass} h-7 w-auto gap-1 py-1.5`}><SelectValue /></SelectTrigger>
+                  <SelectContent>{(["admin", "editor", "viewer"] as const).map((role) => <SelectItem key={role} value={role}>{teamRoleLabels[role]}</SelectItem>)}</SelectContent>
+                </Select>)}
+              <div className={`flex shrink-0 items-center ${tab === "performers" && section === "applications" ? "gap-3" : "gap-1"}`}>
+                {participant.profileUrl ? <Button asChild variant="outline" className={iconButtonClass}><a href={participant.profileUrl} target="_blank" rel="noopener noreferrer" aria-label={`Профиль VK: ${participant.name}`} title="Открыть профиль VK"><User className="size-4" strokeWidth={1.5} /></a></Button> : <span title="API не вернул ссылку на профиль"><Button disabled variant="outline" className={iconButtonClass} aria-label={`Профиль недоступен: ${participant.name}`}><User className="size-4" strokeWidth={1.5} /></Button></span>}
+                {tab === "team" ? <Button variant="outline" className={iconButtonClass} disabled={participant.role === "owner"} aria-label={`Удалить: ${participant.name}`} title="Удалить из демо-команды" onClick={() => { removal.reset(); setRemoveTarget({ ...participant, isTeam: true }); }}><Trash2 className="size-4" strokeWidth={1.5} /></Button> : section === "applications" ? <div className="flex gap-1" aria-busy={processingId === participant.id}>
+                  <Button aria-label={`Одобрить: ${participant.name}`} title="Одобрить" disabled={approval.isPending} className={`${participantPrimaryClass} size-7 p-0`} onClick={() => moderate(participant, "approved")}><Check className="size-4" strokeWidth={1.5} /></Button>
+                  <Button aria-label={`Отклонить: ${participant.name}`} title="Отклонить" disabled={approval.isPending} variant="outline" className={iconButtonClass} onClick={() => moderate(participant, "rejected")}><X className="size-4" strokeWidth={1.5} /></Button>
+                </div> : <span title={section === "active" ? "Удаление действующего участника пока не поддерживается API" : participant.cancellationUnavailable ?? "Отменить приглашение"}>
+                  <Button aria-label={`${section === "active" ? "Удалить" : "Отменить приглашение"}: ${participant.name}`} disabled={section === "active" || !!participant.cancellationUnavailable} variant="outline" className={iconButtonClass} onClick={() => { removal.reset(); setRemoveTarget(participant); }}>{section === "active" ? <Trash2 className="size-4" strokeWidth={1.5} /> : <X className="size-4" strokeWidth={1.5} />}</Button>
+                </span>}
+              </div>
+            </li>)}
+          </ul>
+          {totalPages > 1 && <CreativesPaginationControls className="mt-4" page={currentPage} totalPages={totalPages} onPageChange={setPage} />}
+          {tab === "team" && <p className="mt-3 text-[12px] text-[#797979]">Демо-команда: изменения только на стенде, API команды пока нет. <Button variant="link" className="h-auto p-0 text-[12px]" onClick={() => setLegacy(true)}>Ранее созданные заявки</Button></p>}
+        </>}
+      </div>
+    </div>
+    {addOpen && <AddParticipantDialog open initialTab={tab} teamPreview={team !== null} onClose={() => setAddOpen(false)} onSubmit={(input, targetTab, role) => void addParticipant(input, targetTab, role)} isPending={isAdding} error={addError} />}
+    <RemoveParticipantDialog open={!!removeTarget} onClose={() => setRemoveTarget(null)} isPending={removal.isPending} error={removal.generalError} onConfirm={() => {
+      if (removeTarget?.isTeam) {
+        setTeam(team?.filter((item) => item.id !== removeTarget.id || item.role === "owner") ?? null);
+        setRemoveTarget(null);
+        toast.success("Пользователь удалён только из демо-команды");
+        return;
+      }
+      if (!removeTarget?.invitationId || removeTarget.cancellationUnavailable) return;
+      removal.deleteInvitation({ id: removeTarget.invitationId, roomId: slug }, { onSuccess: () => { setRemoveTarget(null); toast.success("Приглашение отменено"); } });
+    }} />
+  </div>;
 }

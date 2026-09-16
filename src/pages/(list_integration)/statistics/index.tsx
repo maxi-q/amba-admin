@@ -70,6 +70,15 @@ export default function StatisticsPage() {
   const { sprints } = useSprints({ page: 1, size: 100 }, slug || "");
   const { events } = useEvents({ page: 1, size: 100 }, slug || "");
   const { promoCodes } = useCustomPromoCodes(slug || "");
+  const publishedSprints = useMemo(
+    () =>
+      sprints.flatMap((sprint) =>
+        !sprint.isDraft && sprint.name
+          ? [{ ...sprint, name: sprint.name }]
+          : []
+      ),
+    [sprints]
+  );
 
   const isPromoCodeUsageFilterValid = useMemo(
     () =>
@@ -81,7 +90,12 @@ export default function StatisticsPage() {
     if (!promoCodeUsages || promoCodeUsages.length === 0) return [];
 
     return promoCodeUsages.map((usage) => {
-      const eventName = getPromoCodeUsageTargetName(usage, sprints, events, promoCodes);
+      const eventName = getPromoCodeUsageTargetName(
+        usage,
+        publishedSprints,
+        events,
+        promoCodes
+      );
       const promoCode = getPromoCodeFromPayload(usage.payload) || "Промокод";
 
       const date = usage.createdAt
@@ -95,7 +109,7 @@ export default function StatisticsPage() {
         date,
       };
     });
-  }, [events, promoCodeUsages, promoCodes, sprints]);
+  }, [events, promoCodeUsages, promoCodes, publishedSprints]);
 
   const handleAmbassadorsChange = (ids: string[]) => {
     setSelectedAmbassadors(ids);
@@ -150,7 +164,7 @@ export default function StatisticsPage() {
       await exportPromoCodeUsagesCsv({
         roomId: slug,
         filters: analyticsParams,
-        sprints,
+        sprints: publishedSprints,
         events,
         promoCodes,
       });

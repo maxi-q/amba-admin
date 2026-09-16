@@ -26,11 +26,7 @@ export enum MutationKeys {
 
   CREATE_CREATIVE_TASK = 'createCreativeTask',
   UPDATE_CREATIVE_TASK = 'updateCreativeTask',
-  CREATE_PRIVATE_CREATIVE_TASK = 'createPrivateCreativeTask',
-  UPDATE_PRIVATE_CREATIVE_TASK = 'updatePrivateCreativeTask',
   UPDATE_SUBMISSION_STATUS = 'updateSubmissionStatus',
-  ADD_CREATIVE_TASK_WHITELIST = 'addCreativeTaskWhitelist',
-  REMOVE_CREATIVE_TASK_WHITELIST = 'removeCreativeTaskWhitelist',
 
   CREATE_INVITATION = 'createInvitation',
   UPDATE_INVITATION = 'updateInvitation',

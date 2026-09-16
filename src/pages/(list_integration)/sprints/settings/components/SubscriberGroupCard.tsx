@@ -53,6 +53,7 @@ export const SubscriberGroupCard = ({
             <InputField
               readOnly
               value={link}
+              placeholder="Ссылка недоступна"
               aria-label="Ссылка"
               className="[&_input]:text-sm"
             />
@@ -64,6 +65,7 @@ export const SubscriberGroupCard = ({
             className="size-10 shrink-0"
             title="Копировать"
             onClick={() => onCopy(link)}
+            disabled={!link}
           >
             <Copy className="size-4" />
           </Button>

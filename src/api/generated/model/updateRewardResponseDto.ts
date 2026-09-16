@@ -14,6 +14,11 @@ export interface UpdateRewardResponseDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  /**
+   * Номер актуальной версии награды
+   * @minimum 1
+   */
+  version: number;
   /** Наименование награды */
   name: string;
   /**

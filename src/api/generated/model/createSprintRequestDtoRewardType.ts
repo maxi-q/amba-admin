@@ -7,9 +7,10 @@
  */
 
 /**
- * Тип награды
+ * Тип награды. Может отсутствовать у черновика
+ * @nullable
  */
-export type CreateSprintRequestDtoRewardType = typeof CreateSprintRequestDtoRewardType[keyof typeof CreateSprintRequestDtoRewardType];
+export type CreateSprintRequestDtoRewardType = typeof CreateSprintRequestDtoRewardType[keyof typeof CreateSprintRequestDtoRewardType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare

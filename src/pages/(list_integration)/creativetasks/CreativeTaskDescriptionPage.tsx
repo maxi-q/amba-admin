@@ -1,7 +1,8 @@
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import { CircleAlert, FileImage } from "lucide-react";
 import { Card, CardContent } from "@senler/ui";
 import type { CreativeTaskWithDefaultsDto } from "@/api/generated/model";
+import { OrdCreativeSummaryCard } from "./components/OrdCreativeSummaryCard";
 
 interface OutletCtx {
   task: CreativeTaskWithDefaultsDto;
@@ -9,6 +10,10 @@ interface OutletCtx {
 
 export default function CreativeTaskDescriptionPage() {
   const { task } = useOutletContext<OutletCtx>();
+  const { slug = "", taskId = "" } = useParams<{
+    slug: string;
+    taskId: string;
+  }>();
   const hasMedia =
     task.defaultTargetUrls.length > 0 ||
     task.defaultMediaIds.length > 0 ||
@@ -131,6 +136,8 @@ export default function CreativeTaskDescriptionPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <OrdCreativeSummaryCard task={task} slug={slug} taskId={taskId} />
     </div>
   );
 }

@@ -5,17 +5,25 @@ import {
   Button,
   Calendar,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Textarea,
 } from "@senler/ui";
-import type { UpdateSprintRequestDto } from "@/api/generated/model";
+import type { SprintFormData } from "../helpers";
+import { rewardUnits } from "../constants/rewardUnits";
 import { SprintCreationHeader } from "./SprintCreationHeader";
 
 interface SprintCreationStepOneProps {
-  formData: UpdateSprintRequestDto;
+  formData: SprintFormData;
   description: string;
   fieldErrors?: Record<string, string[]>;
   isSaving: boolean;
   onNameChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRewardValueChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRewardUnitsChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onDateRangeChange: (from?: Date, to?: Date) => void;
   onSaveDraft: () => void;
@@ -55,6 +63,8 @@ export const SprintCreationStepOne = ({
   fieldErrors,
   isSaving,
   onNameChange,
+  onRewardValueChange,
+  onRewardUnitsChange,
   onDescriptionChange,
   onDateRangeChange,
   onSaveDraft,
@@ -69,6 +79,8 @@ export const SprintCreationStepOne = ({
     [formData.endDate, formData.startDate]
   );
   const nameError = fieldErrors?.name?.[0];
+  const rewardValueError = fieldErrors?.rewardValue?.[0];
+  const rewardUnitsError = fieldErrors?.rewardUnits?.[0];
   const startDateError = fieldErrors?.startDate?.[0];
   const endDateError = fieldErrors?.endDate?.[0];
 
@@ -126,6 +138,67 @@ export const SprintCreationStepOne = ({
               className="min-h-[72px] border-[#e4e4e4] bg-white text-[13px] shadow-none"
               aria-label="Описание спринта"
             />
+          </div>
+
+          <div className="grid gap-4 border-b border-[#e4e4e4] p-4 md:grid-cols-[224px_minmax(0,1fr)] md:items-center">
+            <label
+              htmlFor="sprint-reward-value"
+              className="text-[15px] font-medium leading-5 tracking-[-0.135px] text-foreground"
+            >
+              Значение награды
+            </label>
+            <div>
+              <Input
+                id="sprint-reward-value"
+                type="number"
+                min={1}
+                value={
+                  Number.isFinite(formData.rewardValue)
+                    ? formData.rewardValue
+                    : ""
+                }
+                onChange={onRewardValueChange}
+                aria-invalid={Boolean(rewardValueError)}
+                className="h-10 border-[#e4e4e4] bg-white text-[13px] shadow-none"
+              />
+              {rewardValueError ? (
+                <p className="mt-1 text-xs text-destructive">
+                  {rewardValueError}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-4 border-b border-[#e4e4e4] p-4 md:grid-cols-[224px_minmax(0,1fr)] md:items-center">
+            <label className="text-[15px] font-medium leading-5 tracking-[-0.135px] text-foreground">
+              Единицы награды
+            </label>
+            <div>
+              <Select
+                value={formData.rewardUnits}
+                onValueChange={onRewardUnitsChange}
+              >
+                <SelectTrigger
+                  aria-label="Единицы награды"
+                  aria-invalid={Boolean(rewardUnitsError)}
+                  className="h-10 w-full border-[#e4e4e4] bg-white text-[13px] shadow-none"
+                >
+                  <SelectValue placeholder="Выберите единицу" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rewardUnits.map((unit) => (
+                    <SelectItem key={unit.value} value={unit.value}>
+                      {unit.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {rewardUnitsError ? (
+                <p className="mt-1 text-xs text-destructive">
+                  {rewardUnitsError}
+                </p>
+              ) : null}
+            </div>
           </div>
 
           <div className="grid gap-4 p-4 md:grid-cols-[224px_minmax(0,1fr)] md:items-start">

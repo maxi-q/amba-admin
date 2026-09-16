@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { BaseProjectDtoProvider } from './baseProjectDtoProvider';
 
 export interface BaseProjectDto {
   /** Unique identifier */
@@ -13,18 +14,36 @@ export interface BaseProjectDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  provider: BaseProjectDtoProvider;
+  /** @nullable */
+  senlerIoProjectId: string | null;
   /** Токен API Сенлера */
   apiToken: string;
   /** Наименование проекта */
   name: string;
-  /** ID канала в Сенлере */
-  groupId: number;
-  /** Внешний ID группы в ВК */
-  vkGroupId: number;
-  /** Тип канала в Сенлере (ID) */
-  channelTypeId: number;
-  /** Внешний ID канала в Сенлере */
-  channelExternalId: string;
-  /** Ссылка на аватар */
-  avatarUrl: string;
+  /**
+   * ID канала в Senler.ru; null для Senler.io
+   * @nullable
+   */
+  groupId: number | null;
+  /**
+   * Внешний ID группы в ВК
+   * @nullable
+   */
+  vkGroupId: number | null;
+  /**
+   * Тип канала в Senler.ru (ID)
+   * @nullable
+   */
+  channelTypeId: number | null;
+  /**
+   * Внешний ID канала в Senler.ru
+   * @nullable
+   */
+  channelExternalId: string | null;
+  /**
+   * Ссылка на аватар
+   * @nullable
+   */
+  avatarUrl: string | null;
 }

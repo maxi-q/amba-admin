@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreativeTaskWithDefaultsDtoOrdContractTemplate } from './creativeTaskWithDefaultsDtoOrdContractTemplate';
 import type { CreativeTaskWithDefaultsDtoAllowedFormatsItem } from './creativeTaskWithDefaultsDtoAllowedFormatsItem';
 import type { CreativeTaskWithDefaultsDtoTargetPlatform } from './creativeTaskWithDefaultsDtoTargetPlatform';
 import type { CreativeTaskWithDefaultsDtoOrdForm } from './creativeTaskWithDefaultsDtoOrdForm';
@@ -18,6 +19,16 @@ export interface CreativeTaskWithDefaultsDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  /**
+   * ID шаблона ОРД-договора
+   * @nullable
+   */
+  ordContractTemplateId: string | null;
+  /**
+   * Шаблон ОРД-договора задания
+   * @nullable
+   */
+  ordContractTemplate: CreativeTaskWithDefaultsDtoOrdContractTemplate;
   /** Название задания */
   title: string;
   /**
@@ -27,6 +38,8 @@ export interface CreativeTaskWithDefaultsDto {
   description?: string | null;
   /** Флаг удаления */
   isDeleted: boolean;
+  /** Заморожено ли задание владельцем комнаты */
+  isFrozen: boolean;
   /** Критерии выполнения задания */
   criteria?: string[];
   /** Что запрещено при выполнении задания */

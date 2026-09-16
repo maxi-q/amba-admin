@@ -4,6 +4,7 @@ import { Alert, AlertDescription, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetProject } from "@/hooks/projects/useGetProject";
+import { getProjectVkCommunityId, getSenlerSubscriptionUrl } from "@/utils/projectLinks";
 import { SprintSettingsHeader } from "./components/SprintSettingsHeader";
 import { SubscriberGroupCard } from "./components/SubscriberGroupCard";
 import { SprintSettingsErrorState } from "./components/SprintSettingsErrorState";
@@ -77,13 +78,14 @@ export default function SprintSettingsPage() {
     );
   }
 
+  const communityId = getProjectVkCommunityId(project);
   const groups = [
     {
       id: 1,
       title: "Группа подписчиков в Senler для подачи заявки в амбассадорку",
       name: "Заявки амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${room.pendingSubscriptionId}&force=1`,
+      link: getSenlerSubscriptionUrl(communityId, room.pendingSubscriptionId),
       instructions: [
         "Отправить прямую ссылку на группу подписчиков:",
         "Сделать рассылку через бота с предложением об участии и кнопкой \"Принять\" (при нажатии на которую вызвать действие добавления в группу)",
@@ -96,7 +98,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для одобренных амбассадоров",
       name: "Одобренные амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${room.approvedSubscriptionId}&force=1`,
+      link: getSenlerSubscriptionUrl(communityId, room.approvedSubscriptionId),
       instructions: [
         "Добавляйте в данную группу одобренных амбассадоров, чтобы они смогли принять участие.",
         "Если вы хотите принимать без амбассадоров без процесса одобрения, организуйте подписку на данную группу минуя группу с заявками.",
@@ -108,7 +110,7 @@ export default function SprintSettingsPage() {
       title: "Группа подписчиков в Senler для исключенных амбассадоров",
       name: "Исключенные амбассадоры: Конференция суровый маркетинг 2025",
       senlerId: 123456,
-      link: `https://vk.com/app5898182_-${project?.channelExternalId}#s=${room.rejectedSubscriptionId}&force=1`,
+      link: getSenlerSubscriptionUrl(communityId, room.rejectedSubscriptionId),
       instructions: [
         "В данной группе можно сохранять исключенных амбассадоров, чтобы автоматически отключать их участие в комнате.",
         "Вступление будет отключаться из группы с заявками и одобренными амбассадорами.",
@@ -116,8 +118,11 @@ export default function SprintSettingsPage() {
     },
   ];
 
-  const activeSprints = sprints.filter((sprint) => sprint.status === "active").length;
-  const totalSprints = sprints.length;
+  const publishedSprints = sprints.filter((sprint) => !sprint.isDraft);
+  const activeSprints = publishedSprints.filter(
+    (sprint) => sprint.status === "active"
+  ).length;
+  const totalSprints = publishedSprints.length;
 
   return (
     <div className="w-full px-2 py-6">
@@ -126,7 +131,9 @@ export default function SprintSettingsPage() {
         totalSprints={totalSprints}
       />
       <div className="flex flex-col gap-4">
-        {groups.map((group) => (
+        {!communityId ? (
+          <Alert><AlertDescription>Ссылки на группы подписчиков доступны только для проекта Senler.ru с подключённым VK-сообществом.</AlertDescription></Alert>
+        ) : groups.map((group) => (
           <SubscriberGroupCard
             key={group.id}
             title={group.title}

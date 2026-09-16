@@ -65,12 +65,13 @@ export function InvitationSuccessDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Успешно приглашён</AlertDialogTitle>
           <AlertDialogDescription className="text-left">
-            Отправьте ссылку вашему амбассадору на вступление, если он ещё не
-            зарегистрирован.
+            {communityUrl
+              ? "Отправьте ссылку вашему амбассадору на вступление, если он ещё не зарегистрирован."
+              : "Приглашение создано. Ссылка на VK-сообщество для этого проекта недоступна."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-2">
+        {communityUrl ? <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Ссылка на сообщество</p>
           <InputField
             value={communityUrl || "Не удалось получить ссылку на сообщество"}
@@ -91,7 +92,7 @@ export function InvitationSuccessDialog({
           {copyError ? (
             <p className="text-sm text-destructive">{copyError}</p>
           ) : null}
-        </div>
+        </div> : null}
 
         <AlertDialogFooter>
           <AlertDialogAction onClick={onClose}>Понятно</AlertDialogAction>

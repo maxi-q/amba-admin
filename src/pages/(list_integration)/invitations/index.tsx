@@ -2,11 +2,11 @@ import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
-import { useRoomPrivateCreativeTasks } from "@/hooks/creativetasks/useRoomPrivateCreativeTasks";
 import { useEvents } from "@/hooks/events/useEvents";
 import { useRoomInvitations } from "@/hooks/invitations/useRoomInvitations";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
 import { useGetProject } from "@/hooks/projects/useGetProject";
+import { getProjectVkCommunityId } from "@/utils/projectLinks";
 import { InvitationsHeader } from "./components/InvitationsHeader";
 import { InvitationCard } from "./components/InvitationCard";
 import { InvitationFormDialog } from "./components/InvitationFormDialog";
@@ -31,7 +31,6 @@ export default function InvitationsPage() {
 
   const roomId = room?.id ?? "";
 
-  const { tasks } = useRoomPrivateCreativeTasks(roomId, { page: 1, size: 100 });
   const { events } = useEvents({ page: 1, size: 100 }, slug ?? "");
 
   const { invitations, isLoading, isError, error } = useRoomInvitations(roomId);
@@ -44,14 +43,6 @@ export default function InvitationsPage() {
     reset: resetDelete,
   } = useDeleteInvitation();
 
-  const resolveTaskLabel = useCallback(
-    (id: string) => {
-      const t = tasks.find((x) => x.id === id);
-      return t ? t.title : id;
-    },
-    [tasks]
-  );
-
   const resolveEventLabel = useCallback(
     (id: string) => {
       const e = events.find((x) => x.id === id);
@@ -62,7 +53,7 @@ export default function InvitationsPage() {
 
   const roomInvitations = useMemo(() => {
     return invitations.filter(
-      (inv) => (inv.privateTaskIds ?? []).length === 0 && (inv.eventIds ?? []).length === 0
+      (inv) => (inv.eventIds ?? []).length === 0
     );
   }, [invitations]);
 
@@ -106,7 +97,7 @@ export default function InvitationsPage() {
       <div className="w-full px-2 py-6">
         <Alert variant="destructive">
           <AlertDescription>
-            {(roomError as Error)?.message ?? "Комната не найдена"}
+            {(roomError as Error)?.message ?? "Компания не найдена"}
           </AlertDescription>
         </Alert>
       </div>
@@ -119,10 +110,10 @@ export default function InvitationsPage() {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          Подписчики ВК (id в ВК), которые будут приглашены в комнату после регистрации.
+          Подписчики ВК (id в ВК), которые будут приглашены в компанию после регистрации.
         </p>
         <Button type="button" size="lg" className="shrink-0" onClick={openCreate} disabled={!roomId}>
-          Создать приглашение в комнату
+          Создать приглашение в компанию
         </Button>
       </div>
 
@@ -140,7 +131,7 @@ export default function InvitationsPage() {
         </div>
       ) : sortedInvitations.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Пока нет приглашений в эту комнату. Создайте запись с subscriberId ВК.
+          Пока нет приглашений в эту компанию. Создайте запись с subscriberId ВК.
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -148,7 +139,6 @@ export default function InvitationsPage() {
             <InvitationCard
               key={inv.id}
               invitation={inv}
-              resolveTaskLabel={resolveTaskLabel}
               resolveEventLabel={resolveEventLabel}
               onDelete={setDeletingInvitation}
               showLinkedEntities={false}
@@ -162,13 +152,12 @@ export default function InvitationsPage() {
         onClose={handleCloseForm}
         roomId={roomId}
         slug={slug ?? ""}
-        lockedPrivateTaskIds={ROOM_INVITATION_LINK_IDS}
         lockedEventIds={ROOM_INVITATION_LINK_IDS}
         titleOverride={{
-          create: "Создать приглашение в комнату",
+          create: "Создать приглашение в компанию",
         }}
         useVkProfileLink
-        submitLabel="Пригласить в комнату"
+        submitLabel="Пригласить в компанию"
         onInvitationSuccess={() => setSuccessDialogOpen(true)}
       />
 
@@ -187,7 +176,7 @@ export default function InvitationsPage() {
       <InvitationSuccessDialog
         open={successDialogOpen}
         onClose={() => setSuccessDialogOpen(false)}
-        channelExternalId={project?.channelExternalId}
+        channelExternalId={getProjectVkCommunityId(project)}
       />
     </div>
   );

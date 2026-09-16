@@ -22,16 +22,9 @@ import {
   CodePage,
   ApplicationsPage,
   CreativeTasksPage,
-  PrivateCreativeTasksPage,
-  CreatePrivateCreativeTaskPage,
   CreativeTaskDetailLayout,
-  PrivateCreativeTaskDetailLayout,
   CreativeTaskDescriptionPage,
-  PrivateCreativeTaskDescriptionPage,
   CreativeTaskAnswersPage,
-  PrivateCreativeTaskAnswersPage,
-  CreativeTaskInvitationsPage,
-  PrivateCreativeTaskInvitationsPage,
   InvitationsPage,
   OrdLayout,
   OrdContractsPage,
@@ -42,7 +35,6 @@ import {
   OrdRoomFilesPage,
   OrdTaskIssuanceRulePage,
   OrdCreativePage,
-  PrivateOrdCreativePage,
   RewardsPage,
   PromoCodesPage,
   SprintLeaderboardPage,
@@ -164,19 +156,12 @@ export const Navigation = () => {
           <Route path=":contractId" element={<OrdContractDetailPage />} />
         </Route>
         <Route path="creativetasks" element={<CreativeTasksPage />} />
-        <Route path="creativetasks/private" element={<PrivateCreativeTasksPage />} />
-        <Route path="creativetasks/private/new" element={<CreatePrivateCreativeTaskPage />} />
-        <Route path="private-creativetasks" element={<Navigate to="../creativetasks/private" replace />} />
-        <Route path="creativetasks/private/:privateTaskId" element={<PrivateCreativeTaskDetailLayout />}>
-          <Route index element={<PrivateCreativeTaskDescriptionPage />} />
-          <Route path="answers" element={<PrivateCreativeTaskAnswersPage />} />
-          <Route path="invitations" element={<PrivateCreativeTaskInvitationsPage />} />
-          <Route path="ord-creative" element={<PrivateOrdCreativePage />} />
-        </Route>
+        <Route path="creativetasks/private/*" element={<Navigate to="../creativetasks" replace />} />
+        <Route path="private-creativetasks/*" element={<Navigate to="../creativetasks" replace />} />
         <Route path="creativetasks/:taskId" element={<CreativeTaskDetailLayout />}>
           <Route index element={<CreativeTaskDescriptionPage />} />
           <Route path="answers" element={<CreativeTaskAnswersPage />} />
-          <Route path="invitations" element={<CreativeTaskInvitationsPage />} />
+          <Route path="invitations" element={<Navigate to=".." replace />} />
           <Route path="ord-creative" element={<OrdCreativePage />} />
           <Route path="ord-auto-issuance" element={<OrdTaskIssuanceRulePage />} />
         </Route>

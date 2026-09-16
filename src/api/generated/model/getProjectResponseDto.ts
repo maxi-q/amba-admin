@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { GetProjectResponseDtoProvider } from './getProjectResponseDtoProvider';
 
 export interface GetProjectResponseDto {
   /** Unique identifier */
@@ -13,12 +14,29 @@ export interface GetProjectResponseDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  provider: GetProjectResponseDtoProvider;
+  /** @nullable */
+  senlerIoProjectId: string | null;
   /** Наименование проекта */
   name: string;
-  /** Тип канала в Сенлере (ID) */
-  channelTypeId: number;
-  /** Внешний ID канала в Сенлере */
-  channelExternalId: string;
-  /** Ссылка на аватар */
-  avatarUrl: string;
+  /**
+   * ID канала в Senler.ru; null для Senler.io
+   * @nullable
+   */
+  groupId: number | null;
+  /**
+   * Тип канала в Senler.ru (ID)
+   * @nullable
+   */
+  channelTypeId: number | null;
+  /**
+   * Внешний ID канала в Senler.ru
+   * @nullable
+   */
+  channelExternalId: string | null;
+  /**
+   * Ссылка на аватар
+   * @nullable
+   */
+  avatarUrl: string | null;
 }

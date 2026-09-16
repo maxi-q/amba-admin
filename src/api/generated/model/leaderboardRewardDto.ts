@@ -9,6 +9,16 @@
 export interface LeaderboardRewardDto {
   /** ID награды */
   rewardId: string;
+  /**
+   * ID версии награды, закреплённой за спринтом
+   * @nullable
+   */
+  rewardVersionId: string | null;
+  /**
+   * Номер версии награды, закреплённой за спринтом
+   * @minimum 1
+   */
+  rewardVersion: number;
   /** Наименование награды */
   name: string;
   /** Итоговое количество награды у участника (сумма по всем правилам). У делимой награды может быть дробным — с точностью divisionPrecision */

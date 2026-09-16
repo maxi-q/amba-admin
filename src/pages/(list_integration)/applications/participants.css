@@ -1,0 +1,21 @@
+main:has(> .participants-page) {
+  padding: 0;
+}
+
+[data-participant-dialog] > div {
+  align-items: flex-start;
+  padding-top: 30px;
+}
+
+body:has([data-participant-dialog]) [data-slot="dialog-overlay"] {
+  background-color: rgb(0 0 0 / 40%) !important;
+}
+
+[data-participant-dialog] [role="radio"][data-state="checked"] {
+  border-width: 4px;
+  background: white;
+}
+
+[data-participant-dialog] [role="radio"] > span {
+  display: none;
+}

@@ -9,32 +9,58 @@ import type { UpdateSprintRequestDtoRewardType } from './updateSprintRequestDtoR
 import type { UpdateSprintRequestDtoStatus } from './updateSprintRequestDtoStatus';
 
 export interface UpdateSprintRequestDto {
-  /** Название спринта */
-  name: string;
+  /**
+   * Название спринта. Может отсутствовать у черновика
+   * @nullable
+   */
+  name?: string | null;
   /**
    * Описание спринта
    * @nullable
    */
   description?: string | null;
-  /** Дата начала */
-  startDate: string;
+  /**
+   * Дата начала. Может отсутствовать у черновика
+   * @nullable
+   */
+  startDate?: string | null;
   /**
    * Дата окончания
    * @nullable
    */
-  endDate: string | null;
-  /** Игнорировать дату окончания(сделать спринт бессрочным) */
-  ignoreEndDate: boolean;
-  /** Тип награды */
-  rewardType: UpdateSprintRequestDtoRewardType;
-  /** Единицы награды */
-  rewardUnits: string;
-  /** Значение награды */
-  rewardValue: number;
-  /** Лимит промокодов */
-  promoCodeUsageLimit: number;
-  /** Игнорировать ограничение по промокодам */
-  ignorePromoCodeUsageLimit: boolean;
+  endDate?: string | null;
+  /**
+   * Бессрочный спринт. null означает false
+   * @nullable
+   */
+  ignoreEndDate?: boolean | null;
+  /**
+   * Тип награды. Может отсутствовать у черновика
+   * @nullable
+   */
+  rewardType?: UpdateSprintRequestDtoRewardType;
+  /**
+   * Единицы награды. Могут отсутствовать у черновика
+   * @nullable
+   */
+  rewardUnits?: string | null;
+  /**
+   * Значение награды. Может отсутствовать у черновика
+   * @nullable
+   */
+  rewardValue?: number | null;
+  /**
+   * Лимит промокодов
+   * @nullable
+   */
+  promoCodeUsageLimit?: number | null;
+  /**
+   * Игнорировать лимит промокодов. null означает false
+   * @nullable
+   */
+  ignorePromoCodeUsageLimit?: boolean | null;
+  /** Флаг черновика. false публикует спринт */
+  isDraft?: boolean;
   /** Статус спринта. Если не передан — текущий статус не меняется */
   status?: UpdateSprintRequestDtoStatus;
 }

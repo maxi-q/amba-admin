@@ -11,7 +11,7 @@ export default function SprintList() {
   const navigate = useNavigate();
 
   const { sprints, isLoading, isError, error } = useSprints(
-    { page: 1, size: 100 },
+    { page: 1, size: 100, include: "tasksToReviewCount" },
     slug || ""
   );
 

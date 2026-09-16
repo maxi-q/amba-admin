@@ -13,7 +13,10 @@ export const SprintAutocomplete = ({ selectedIds, onChange, roomId }: SprintAuto
   const { sprints, isLoading } = useSprints({ page: 1, size: 100 }, roomId);
 
   const allOptions = useMemo<AutocompleteOption[]>(
-    () => sprints.map((s: BaseSprintDto) => ({ id: s.id, label: s.name })),
+    () =>
+      sprints.flatMap((s: BaseSprintDto) =>
+        !s.isDraft && s.name ? [{ id: s.id, label: s.name }] : []
+      ),
     [sprints]
   );
 

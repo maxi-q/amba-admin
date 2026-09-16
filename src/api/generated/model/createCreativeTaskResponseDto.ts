@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreateCreativeTaskResponseDtoOrdContractTemplate } from './createCreativeTaskResponseDtoOrdContractTemplate';
 import type { CreateCreativeTaskResponseDtoAllowedFormatsItem } from './createCreativeTaskResponseDtoAllowedFormatsItem';
 import type { CreateCreativeTaskResponseDtoTargetPlatform } from './createCreativeTaskResponseDtoTargetPlatform';
 import type { CreateCreativeTaskResponseDtoOrdForm } from './createCreativeTaskResponseDtoOrdForm';
@@ -18,6 +19,16 @@ export interface CreateCreativeTaskResponseDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  /**
+   * ID шаблона ОРД-договора
+   * @nullable
+   */
+  ordContractTemplateId: string | null;
+  /**
+   * Шаблон ОРД-договора задания
+   * @nullable
+   */
+  ordContractTemplate: CreateCreativeTaskResponseDtoOrdContractTemplate;
   /** Название задания */
   title: string;
   /**
@@ -27,6 +38,8 @@ export interface CreateCreativeTaskResponseDto {
   description?: string | null;
   /** Флаг удаления */
   isDeleted: boolean;
+  /** Заморожено ли задание владельцем комнаты */
+  isFrozen: boolean;
   /** Критерии выполнения задания */
   criteria?: string[];
   /** Что запрещено при выполнении задания */

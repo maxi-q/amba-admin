@@ -7,16 +7,16 @@ import {
   SelectValue,
   Switch,
 } from "@senler/ui";
-import type { UpdateSprintRequestDto } from "@/api/generated/model";
+import type { SprintFormData } from "../helpers";
 import { rewardUnits, getRewardUnitShortName } from "../constants/rewardUnits";
 
 interface SprintPromoCodesSectionProps {
-  formData: UpdateSprintRequestDto;
+  formData: SprintFormData;
   onInputChange: (
-    field: keyof UpdateSprintRequestDto
+    field: keyof SprintFormData
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectChange: (
-    field: keyof UpdateSprintRequestDto
+    field: keyof SprintFormData
   ) => (event: { target: { value: string } }) => void;
   fieldErrors?: Record<string, string[]>;
   onIgnorePromoCodeUsageLimitChange: (value: boolean) => void;
@@ -72,7 +72,7 @@ export const SprintPromoCodesSection = ({
           <div className="min-w-0 flex-1 sm:max-w-xs">
             <InputField
               type="number"
-              value={String(formData.rewardValue)}
+              value={Number.isFinite(formData.rewardValue) ? formData.rewardValue : ""}
               onChange={onInputChange("rewardValue")}
               error={hasError("rewardValue")}
               helperText={getFirstError("rewardValue") ?? undefined}
@@ -103,7 +103,11 @@ export const SprintPromoCodesSection = ({
             <div className="min-w-0 flex-1 sm:max-w-xs">
               <InputField
                 type="number"
-                value={String(formData.promoCodeUsageLimit)}
+                value={
+                  Number.isFinite(formData.promoCodeUsageLimit)
+                    ? formData.promoCodeUsageLimit
+                    : ""
+                }
                 onChange={onInputChange("promoCodeUsageLimit")}
                 error={hasError("promoCodeUsageLimit")}
                 helperText={getFirstError("promoCodeUsageLimit") ?? undefined}

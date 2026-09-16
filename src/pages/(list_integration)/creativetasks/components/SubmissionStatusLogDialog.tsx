@@ -78,6 +78,7 @@ interface SubmissionStatusLogDialogProps {
   onApprove: (submission: BaseCreativeTaskSubmissionDto, rewardValue?: number) => void;
   onReject: (submission: BaseCreativeTaskSubmissionDto, reviewComment: string) => void;
   isPending: boolean;
+  reviewDisabled?: boolean;
 }
 
 function formatEventDate(value: string) {
@@ -163,6 +164,7 @@ function ReviewStep({
   onApprove,
   onReject,
   isPending,
+  reviewDisabled,
 }: {
   submission: BaseCreativeTaskSubmissionDto;
   minimalRewardInBalls: number;
@@ -175,8 +177,23 @@ function ReviewStep({
   onApprove: (submission: BaseCreativeTaskSubmissionDto, rewardValue?: number) => void;
   onReject: (submission: BaseCreativeTaskSubmissionDto, reviewComment: string) => void;
   isPending: boolean;
+  reviewDisabled: boolean;
 }) {
   if (!isReviewableSubmissionStatus(submission.status)) return null;
+
+  if (reviewDisabled) {
+    return (
+      <div className="relative flex items-start gap-3">
+        <StatusIcon src={loaderIcon} />
+        <div className="min-w-0 flex-1 text-[13px] font-medium leading-4 tracking-[-0.0325px]">
+          <p className="text-black">Проверка приостановлена</p>
+          <p className="mt-1 text-[#797979]">
+            Возобновите задание, чтобы принять или отклонить выполнение.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const isPublicationReview = submission.status === "waiting_for_review_publication";
   const publicationUrls = submission.items
@@ -318,6 +335,7 @@ export function SubmissionStatusLogDialog({
   onApprove,
   onReject,
   isPending,
+  reviewDisabled = false,
 }: SubmissionStatusLogDialogProps) {
   const [actionMode, setActionMode] = useState<ActionMode>("idle");
   const [reviewComment, setReviewComment] = useState("");
@@ -327,7 +345,7 @@ export function SubmissionStatusLogDialog({
     setActionMode("idle");
     setReviewComment("");
     setRewardValue("");
-  }, [open, submission?.id, submission?.status]);
+  }, [open, reviewDisabled, submission?.id, submission?.status]);
 
   const events = [...(submission?.events ?? [])].sort(
     (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
@@ -396,6 +414,7 @@ export function SubmissionStatusLogDialog({
                 onApprove={onApprove}
                 onReject={onReject}
                 isPending={isPending}
+                reviewDisabled={reviewDisabled}
               />
             </div>
           ) : (

@@ -1,10 +1,10 @@
 import { InputField, Switch, Textarea } from "@senler/ui";
-import type { UpdateSprintRequestDto } from "@/api/generated/model";
+import type { SprintFormData } from "../helpers";
 
 interface SprintSettingsSectionProps {
-  formData: UpdateSprintRequestDto;
+  formData: SprintFormData;
   onInputChange: (
-    field: keyof UpdateSprintRequestDto
+    field: keyof SprintFormData
   ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
   fieldErrors?: Record<string, string[]>;
   onIgnoreEndDateChange: (value: boolean) => void;

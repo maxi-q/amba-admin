@@ -7,9 +7,10 @@
  */
 
 /**
- * Тип награды
+ * Тип награды. Может отсутствовать у черновика
+ * @nullable
  */
-export type BaseSprintDtoRewardType = typeof BaseSprintDtoRewardType[keyof typeof BaseSprintDtoRewardType];
+export type BaseSprintDtoRewardType = typeof BaseSprintDtoRewardType[keyof typeof BaseSprintDtoRewardType] | null;
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare

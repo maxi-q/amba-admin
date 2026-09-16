@@ -11,7 +11,13 @@ import { ApiError } from "@/types";
 export function usePatchSprint() {
   const queryClient = useQueryClient();
 
-  const { mutate: patchSprint, isPending, error, isSuccess } = useMutation({
+  const {
+    mutate: patchSprint,
+    mutateAsync: patchSprintAsync,
+    isPending,
+    error,
+    isSuccess,
+  } = useMutation({
     mutationKey: [MutationKeys.PATCH_SPRINT],
     mutationFn: ({ data, sprintId }: { data: UpdateSprintRequestDto; sprintId: string }) => 
       sprintsControllerUpdate(sprintId, data),
@@ -42,6 +48,7 @@ export function usePatchSprint() {
 
   return {
     patchSprint,
+    patchSprintAsync,
     isPending,
     error,
     isSuccess,

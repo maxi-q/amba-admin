@@ -1,0 +1,34 @@
+import assert from "node:assert/strict";
+import { applicationParticipants, collectParticipantPages, filterParticipants, invitationParticipants, vkProfileUrl } from "../src/hooks/ambassador/participants.ts";
+import { createParticipantsPreview } from "../src/dev/preview-participants.ts";
+
+const pages = [];
+assert.deepEqual(await collectParticipantPages(async (page) => { pages.push(page); return { items: [page], totalPages: 3 }; }), [1, 2, 3]);
+assert.deepEqual(pages, [1, 2, 3]);
+assert.equal(vkProfileUrl(1, "123"), "https://vk.com/id123");
+assert.equal(vkProfileUrl(2, "123"), undefined);
+assert.equal(vkProfileUrl(1, "javascript:alert(1)"), undefined);
+const ambassadors = [{ id: "a", username: "alex", channelTypeId: 1, subscriberId: "123", avatarUrl: "avatar.png" }];
+const people = applicationParticipants([{ id: "application", ambassadorId: "a", name: "Алексей Попов" }], ambassadors);
+assert.equal(people[0].avatarUrl, "avatar.png");
+assert.equal(filterParticipants(people, " ПОПОВ ").length, 1);
+assert.equal(filterParticipants(people, "id123").length, 1);
+const invitation = { id: "invite", targets: [{ id: "one", processed: false, channelTypeId: 1, subscriberId: "123" }, { id: "two", processed: true, channelTypeId: 1, subscriberId: "456" }] };
+const rows = invitationParticipants([invitation]);
+assert.equal(rows.length, 1);
+assert.ok(rows[0].cancellationUnavailable);
+assert.equal(invitationParticipants([{ ...invitation, targets: [invitation.targets[0]] }])[0].cancellationUnavailable, undefined);
+
+const mock = createParticipantsPreview(ambassadors);
+const request = (method, url, data, params) => mock({ method, url, data, params });
+const pending = request("GET", "/api/ambassador/room-applications", undefined, { status: "pending", roomIds: ["preview-room"] });
+request("PATCH", "/api/ambassador/room-applications/status", { ids: [pending.items[0].id], status: "rejected" });
+assert.equal(request("GET", "/api/ambassador/room-applications", undefined, { status: "pending" }).total, pending.total - 1);
+const created = request("POST", "/api/invitations", { roomId: "preview-room", targets: [{ channelTypeId: 1, subscriberId: "987" }] });
+assert.equal("privateTaskIds" in created, false);
+assert.deepEqual(created.eventIds, []);
+assert.ok(request("GET", "/api/invitations/room/preview-room").items.some((item) => item.id === created.id));
+request("DELETE", `/api/invitations/${created.id}`);
+assert.ok(!request("GET", "/api/invitations/room/preview-room").items.some((item) => item.id === created.id));
+assert.deepEqual(request("POST", "/api/invitations/parse-vk-user-id", { input: "https://vk.com/id987" }), { vkUserId: "987" });
+console.log("Participants: pagination, search, mapping, safe cancellation and mock actions passed.");

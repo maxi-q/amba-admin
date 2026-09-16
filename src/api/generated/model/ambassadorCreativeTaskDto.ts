@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { AmbassadorCreativeTaskDtoOrdContractTemplate } from './ambassadorCreativeTaskDtoOrdContractTemplate';
 import type { AmbassadorCreativeTaskDtoAllowedFormatsItem } from './ambassadorCreativeTaskDtoAllowedFormatsItem';
 import type { AmbassadorCreativeTaskDtoTargetPlatform } from './ambassadorCreativeTaskDtoTargetPlatform';
 import type { AmbassadorCreativeTaskDtoOrdForm } from './ambassadorCreativeTaskDtoOrdForm';
@@ -19,6 +20,16 @@ export interface AmbassadorCreativeTaskDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  /**
+   * ID шаблона ОРД-договора
+   * @nullable
+   */
+  ordContractTemplateId: string | null;
+  /**
+   * Шаблон ОРД-договора задания
+   * @nullable
+   */
+  ordContractTemplate: AmbassadorCreativeTaskDtoOrdContractTemplate;
   /** Название задания */
   title: string;
   /**
@@ -28,6 +39,8 @@ export interface AmbassadorCreativeTaskDto {
   description?: string | null;
   /** Флаг удаления */
   isDeleted: boolean;
+  /** Заморожено ли задание владельцем комнаты */
+  isFrozen: boolean;
   /** Критерии выполнения задания */
   criteria?: string[];
   /** Что запрещено при выполнении задания */
@@ -95,6 +108,6 @@ export interface AmbassadorCreativeTaskDto {
   requireMaterialsReview: boolean;
   /** Требуется ли этап проверки опубликованного контента перед начислением награды. false — после отчёта о публикации ответ сразу одобряется. */
   requirePublicationReview: boolean;
-  /** Статус спринта задания. Взаимодействие доступно только если спринт active и его дата начала уже наступила */
+  /** Статус спринта задания. Взаимодействие доступно только если спринт active, дата начала наступила и задание не заморожено */
   sprintStatus: AmbassadorCreativeTaskDtoSprintStatus;
 }

@@ -22,6 +22,7 @@ import {
 import { OrdContractTemplateSelect } from "../../../ord/components/OrdContractTemplateSelect";
 import { OrdKktuPicker } from "../../../creativetasks/components/OrdKktuPicker";
 import { OrdRoomFilesPicker } from "../../../creativetasks/components/OrdRoomFilesPicker";
+import { ORD_CREATIVE_FORM_OPTIONS } from "../../../creativetasks/ordCreative.utils";
 import type { CreativeTaskFormat } from "../../../creativetasks/utils/creativetaskUtils";
 import {
   cloneDraftSprintTask,
@@ -132,6 +133,10 @@ export function SprintCreationTaskDialog({
       setClientError("Укажите название задания (минимум 3 символа)");
       return;
     }
+    if (!form.ordForm) {
+      setClientError("Выберите форму распространения креатива");
+      return;
+    }
     if (!form.isPersisted && !form.ordContractTemplateId) {
       setClientError("Выберите шаблон ОРД-договора");
       return;
@@ -197,6 +202,37 @@ export function SprintCreationTaskDialog({
               selectedCodes={form.ordKktus}
               onChange={(ordKktus) => setForm((prev) => ({ ...prev, ordKktus }))}
             />
+          </FieldRow>
+
+          <FieldRow
+            label="Форма распространения"
+            hint="Выберите тип креатива для ОРД"
+            alignTop
+          >
+            <Select
+              value={form.ordForm || undefined}
+              onValueChange={(ordForm) =>
+                setForm((prev) => ({
+                  ...prev,
+                  ordForm: ordForm as DraftSprintTask["ordForm"],
+                }))
+              }
+            >
+              <SelectTrigger
+                aria-label="Форма распространения"
+                aria-required="true"
+                className="h-10 border-[#e4e4e4] bg-white text-[13px] shadow-none"
+              >
+                <SelectValue placeholder="Выберите тип креатива" />
+              </SelectTrigger>
+              <SelectContent>
+                {ORD_CREATIVE_FORM_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </FieldRow>
 
           <FieldRow label="Шаблон ОРД-договора" hint="Обязателен для создания задания" alignTop>

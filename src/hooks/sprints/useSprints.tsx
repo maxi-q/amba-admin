@@ -5,7 +5,7 @@ import type { SprintsControllerGetMySprintsParams } from '@/api/generated/model'
 
 export function useSprints(data: SprintsControllerGetMySprintsParams, roomId: string) {
   const { data: sprintsData, isLoading, isError, error } = useQuery({
-    queryKey: [QueryKeys.SPRINTS, roomId, data.page, data.size],
+    queryKey: [QueryKeys.SPRINTS, roomId, data.page, data.size, data.include],
     queryFn: () => sprintsControllerGetMySprints(roomId, data),
     enabled: !!roomId, // Only run query if roomId is provided
     staleTime: 30 * 60 * 1000,

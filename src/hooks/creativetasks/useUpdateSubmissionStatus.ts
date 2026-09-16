@@ -28,6 +28,10 @@ export function useUpdateSubmissionStatus() {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.SUBMISSION, id]
       });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.SPRINTS],
+        exact: false,
+      });
     },
   });
 

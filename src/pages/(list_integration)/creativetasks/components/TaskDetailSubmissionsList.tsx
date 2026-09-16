@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { User } from "lucide-react";
 import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
@@ -6,12 +7,13 @@ import { useUpdateSubmissionStatus } from "@/hooks/creativetasks/useUpdateSubmis
 import { SubmissionStatusLogDialog } from "./SubmissionStatusLogDialog";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
-import { Avatar, PageLoader } from "@senler/ui";
+import { Alert, AlertDescription, Avatar, PageLoader } from "@senler/ui";
 import { isFinalApproveStatus } from "../submissionStatus";
 
 interface TaskDetailSubmissionsListProps {
   taskId: string;
   minimalRewardInBalls: number;
+  isFrozen?: boolean;
 }
 
 const SUBMISSION_PROGRESS: Record<
@@ -71,10 +73,15 @@ function SubmissionProgress({ submission }: { submission: BaseCreativeTaskSubmis
 export function TaskDetailSubmissionsList({
   taskId,
   minimalRewardInBalls,
+  isFrozen = false,
 }: TaskDetailSubmissionsListProps) {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [logSubmission, setLogSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get("search")?.trim().toLocaleLowerCase("ru-RU") ?? "";
+
+  useEffect(() => setPage(1), [search]);
 
   const { submissions, isLoading, pagination } = useSubmissions(taskId, {
     page,
@@ -85,14 +92,26 @@ export function TaskDetailSubmissionsList({
     () => Array.from(new Set(submissions.map((submission) => submission.ambassadorId))),
     [submissions],
   );
-  const { ambassadors } = useAmbassadors({
+  const { ambassadors, isLoading: isLoadingAmbassadors } = useAmbassadors({
     page: 1,
     size: Math.max(ambassadorIds.length, 1),
     ambassadorIds,
   });
-  const ambassadorNames = useMemo(
-    () => new Map(ambassadors.map((ambassador) => [ambassador.id, ambassador.username])),
+  const ambassadorsById = useMemo(
+    () => new Map(ambassadors.map((ambassador) => [ambassador.id, ambassador])),
     [ambassadors],
+  );
+  const visibleSubmissions = useMemo(
+    () =>
+      search
+        ? submissions.filter((submission) => {
+            const ambassador = ambassadorsById.get(submission.ambassadorId);
+            return `${ambassador?.username ?? ""} ${submission.ambassadorId}`
+              .toLocaleLowerCase("ru-RU")
+              .includes(search);
+          })
+        : submissions,
+    [ambassadorsById, search, submissions],
   );
 
   const { updateSubmissionStatus, isPending } = useUpdateSubmissionStatus();
@@ -101,6 +120,7 @@ export function TaskDetailSubmissionsList({
     submission: BaseCreativeTaskSubmissionDto,
     rewardValue?: number,
   ) => {
+    if (isFrozen) return;
     updateSubmissionStatus({
       id: submission.id,
       data: {
@@ -116,6 +136,7 @@ export function TaskDetailSubmissionsList({
     submission: BaseCreativeTaskSubmissionDto,
     reviewComment: string,
   ) => {
+    if (isFrozen) return;
     updateSubmissionStatus({
       id: submission.id,
       data: { decision: "reject", reviewComment },
@@ -125,18 +146,33 @@ export function TaskDetailSubmissionsList({
 
   return (
     <div>
-      {isLoading ? (
+      {isFrozen ? (
+        <Alert className="mx-4 mb-3">
+          <AlertDescription>
+            Задание остановлено. Выполнения доступны для просмотра, но модерация приостановлена.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {isLoading || (search && isLoadingAmbassadors) ? (
         <div className="flex justify-center py-8">
           <PageLoader label="Загрузка…" />
         </div>
       ) : submissions.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Заявок нет</p>
+        <p className="px-4 py-6 text-[13px] font-medium text-[#797979]">
+          Выполнений нет
+        </p>
+      ) : visibleSubmissions.length === 0 ? (
+        <p className="px-4 py-6 text-[13px] font-medium text-[#797979]">
+          Ничего не найдено
+        </p>
       ) : (
         <>
           <div className="overflow-hidden">
-            {submissions.map((submission) => {
+            {visibleSubmissions.map((submission) => {
+              const ambassador = ambassadorsById.get(submission.ambassadorId);
               const ambassadorName =
-                ambassadorNames.get(submission.ambassadorId) ?? submission.ambassadorId;
+                ambassador?.username ?? submission.ambassadorId;
 
               return (
                 <button
@@ -148,6 +184,7 @@ export function TaskDetailSubmissionsList({
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2">
                     <Avatar
+                      src={ambassador?.avatarUrl}
                       size="sm"
                       shape="rounded"
                       name={ambassadorName}
@@ -188,6 +225,7 @@ export function TaskDetailSubmissionsList({
         onApprove={handleLogApprove}
         onReject={handleLogReject}
         isPending={isPending}
+        reviewDisabled={isFrozen}
       />
     </div>
   );
