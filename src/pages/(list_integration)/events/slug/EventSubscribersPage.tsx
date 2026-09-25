@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
-import { PageLoader } from "@senler/ui";
+import { Alert, AlertDescription, PageLoader } from "@senler/ui";
+import { supportsSenlerRuAutomation } from '@/services/projects/projects.types';
 import { useEvents } from "@/hooks/events/useEvents";
 import { useGetProject } from "@/hooks/projects/useGetProject";
 import { getProjectVkCommunityId } from "@/utils/projectLinks";
@@ -52,10 +53,10 @@ const EventSubscribersPage = () => {
 
   return (
     <div className="w-full px-2 py-6">
-      <SubscriberGroupsSection
+      {supportsSenlerRuAutomation(project) ? <SubscriberGroupsSection
         event={event}
         channelExternalId={getProjectVkCommunityId(project)}
-      />
+      /> : <Alert><AlertDescription>Группы подписчиков доступны для проектов Senler.ru.</AlertDescription></Alert>}
     </div>
   );
 };

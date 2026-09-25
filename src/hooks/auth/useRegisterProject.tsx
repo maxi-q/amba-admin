@@ -4,6 +4,6 @@ import type { RegisterProjectByAuthorizationCodeRequestDto } from '@/api/generat
 
 export function useRegisterProject() {
   return useMutation({
-    mutationFn: (data: RegisterProjectByAuthorizationCodeRequestDto) => authControllerCreateProject(data),
+    mutationFn: (data: RegisterProjectByAuthorizationCodeRequestDto) => authControllerCreateProject(data, { skipAuth: true }),
   });
 }

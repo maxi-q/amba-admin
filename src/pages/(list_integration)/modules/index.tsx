@@ -258,6 +258,8 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       navigation={navigation}
       currentPath={currentPath}
       renderLink={renderLink}
+      headerTitle={roomData.name}
+      labels={{ navigation: "Разделы комнаты", openSidebar: "Открыть меню комнаты" }}
       className="bg-[#FFFFFF]"
       brand={
         <NavLink
@@ -300,7 +302,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               variant="ghost"
               size="icon_sm"
               className={[
-                "opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100",
+                "opacity-100 transition-opacity md:opacity-0 md:hover:opacity-100 md:focus-visible:opacity-100",
                 overflowActive ? "bg-muted text-foreground" : "",
               ].join(" ")}
               aria-label="Ещё разделы"
@@ -381,7 +383,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
           />
         </button>
       }
-      headerClassName="hidden"
+      headerClassName="md:hidden"
       sidebarClassName={[
         "h-auto min-h-dvh w-[260px] self-stretch border-[#e4e4e4] bg-[#FFFFFF] text-black",
         // хедер компании = обычная строка списка, без линии и без лишней высоты

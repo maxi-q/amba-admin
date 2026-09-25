@@ -1,4 +1,6 @@
 import { NavLink, useParams } from "react-router-dom";
+import { useGetProject } from '@/hooks/projects/useGetProject';
+import { supportsSenlerRuAutomation } from '@/services/projects/projects.types';
 
 const tabInactive =
   "relative pb-3 pt-0 text-[15px] font-normal text-muted-foreground transition-colors hover:text-foreground";
@@ -11,6 +13,7 @@ const tabActive =
  * (Список / Событие / Справка — в сайдбаре RoomBox.)
  */
 export const EventsHeader = () => {
+  const { project } = useGetProject();
   const { slug, eventId } = useParams<{
     slug: string;
     eventId?: string;
@@ -51,12 +54,12 @@ export const EventsHeader = () => {
         >
           Описание
         </NavLink>
-        <NavLink
+        {supportsSenlerRuAutomation(project) && <NavLink
           to={`${base}/subscribers`}
           className={({ isActive }) => (isActive ? tabActive : tabInactive)}
         >
           Группы подписчиков
-        </NavLink>
+        </NavLink>}
         <NavLink
           to={`${base}/invitations`}
           className={({ isActive }) => (isActive ? tabActive : tabInactive)}

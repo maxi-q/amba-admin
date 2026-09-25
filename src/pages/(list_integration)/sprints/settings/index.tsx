@@ -5,6 +5,7 @@ import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetProject } from "@/hooks/projects/useGetProject";
 import { getProjectVkCommunityId, getSenlerSubscriptionUrl } from "@/utils/projectLinks";
+import { supportsSenlerRuAutomation } from '@/services/projects/projects.types';
 import { SprintSettingsHeader } from "./components/SprintSettingsHeader";
 import { SubscriberGroupCard } from "./components/SubscriberGroupCard";
 import { SprintSettingsErrorState } from "./components/SprintSettingsErrorState";
@@ -79,7 +80,7 @@ export default function SprintSettingsPage() {
   }
 
   const communityId = getProjectVkCommunityId(project);
-  const groups = [
+  const groups = !communityId ? [] : [
     {
       id: 1,
       title: "Группа подписчиков в Senler для подачи заявки в амбассадорку",
@@ -131,7 +132,9 @@ export default function SprintSettingsPage() {
         totalSprints={totalSprints}
       />
       <div className="flex flex-col gap-4">
-        {!communityId ? (
+        {!supportsSenlerRuAutomation(project) ? (
+          <Alert><AlertDescription>Группы подписчиков доступны для проектов Senler.ru.</AlertDescription></Alert>
+        ) : !communityId ? (
           <Alert><AlertDescription>Ссылки на группы подписчиков доступны только для проекта Senler.ru с подключённым VK-сообществом.</AlertDescription></Alert>
         ) : groups.map((group) => (
           <SubscriberGroupCard

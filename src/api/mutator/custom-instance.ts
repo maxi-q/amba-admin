@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 
-import { API_URL } from '@/constants';
+import { getApiBaseUrl } from '@/constants';
+import { useAuthStore } from '@/store';
 import { ApiError, type IApiErrorResponse } from '@/types';
 
 type CustomInstanceMock = (
@@ -13,16 +14,8 @@ export const setCustomInstanceMock = (mock: CustomInstanceMock | null) => {
   customInstanceMock = mock;
 };
 
-const getBaseUrl = () => {
-  const normalizedUrl = (API_URL || '').replace(/\/+$/, '');
-
-  return normalizedUrl.endsWith('/api')
-    ? normalizedUrl.slice(0, -'/api'.length)
-    : normalizedUrl;
-};
-
 const axiosInstance = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: getApiBaseUrl(),
 });
 
 const createApiError = (error: AxiosError) => {
@@ -49,17 +42,18 @@ const createApiError = (error: AxiosError) => {
 
 export const customInstance = async <T>(
   config: AxiosRequestConfig,
-  options?: AxiosRequestConfig,
+  options?: AxiosRequestConfig & { skipAuth?: boolean },
 ): Promise<T> => {
-  const token = localStorage.getItem('token');
+  const { skipAuth = false, ...requestOptions } = options ?? {};
+  const token = skipAuth ? null : localStorage.getItem('token');
 
   const requestConfig: AxiosRequestConfig = {
     ...config,
-    ...options,
+    ...requestOptions,
     headers: {
       'Content-Type': 'application/json',
       ...config.headers,
-      ...options?.headers,
+      ...requestOptions.headers,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   };
@@ -74,6 +68,12 @@ export const customInstance = async <T>(
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
+      // A response from an old session must not log out a newly selected project.
+      if (error.response?.status === 401 && token &&
+          localStorage.getItem('authProvider') === 'SENLER_IO' &&
+          localStorage.getItem('token') === token) {
+        useAuthStore.getState().logout();
+      }
       throw createApiError(error);
     }
 

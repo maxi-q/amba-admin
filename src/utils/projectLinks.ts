@@ -1,7 +1,8 @@
 import type { GetProjectResponseDto } from "@/api/generated/model";
 
-export function getProjectVkCommunityId(project?: Pick<GetProjectResponseDto, "provider" | "channelTypeId" | "channelExternalId">) {
-  if (project?.provider !== "SENLER_RU" || project.channelTypeId !== 1) return undefined;
+export function getProjectVkCommunityId(project?: Pick<GetProjectResponseDto, "channelTypeId" | "channelExternalId"> & Partial<Pick<GetProjectResponseDto, "provider">>) {
+  // Older Senler.ru responses omit provider; explicit non-RU projects must never get VK links.
+  if (!project || (project.provider !== undefined && project.provider !== "SENLER_RU") || project.channelTypeId !== 1) return undefined;
   const id = project.channelExternalId?.trim().replace(/^-/, "");
   return id && /^[1-9]\d*$/.test(id) ? id : undefined;
 }

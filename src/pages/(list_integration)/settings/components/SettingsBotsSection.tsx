@@ -107,7 +107,7 @@ export function SettingsBotsSection({
   room,
   onSaveSuccess,
 }: SettingsBotsSectionProps) {
-  const { bots, isLoading: isLoadingBots } = useGetBots();
+  const { bots, isLoading: isLoadingBots, isSupported } = useGetBots();
   const { updateRoom, isPending: isUpdating, generalError } = useUpdateRoom();
 
   const [approvedBot, setApprovedBot] = useState<BotItem | null>(null);
@@ -140,6 +140,8 @@ export function SettingsBotsSection({
       }
     );
   };
+
+  if (!isSupported) return null;
 
   return (
     <Card id="bots">

@@ -19,8 +19,8 @@ export function useRegisterProjectWithAuth() {
       authData: LoginBySignRequestDto; 
     }) => {
       return registerAndLogin(
-        () => authControllerCreateProject(registerData),
-        () => authControllerLogin(authData),
+        () => authControllerCreateProject(registerData, { skipAuth: true }),
+        () => authControllerLogin(authData, { skipAuth: true }),
       );
     },
     onSuccess: (response) => {

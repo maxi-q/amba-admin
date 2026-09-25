@@ -7,10 +7,12 @@ import { useAuth } from "@/hooks/auth/useAuth";
 import { useRegisterProjectWithAuth } from "@/hooks/auth/useRegisterProjectWithAuth";
 import { useAuthStore } from "@store/index";
 import { MessageTypes } from "@/messages/types/messages.enum";
-import { API_URL } from "@/constants";
+import { getApiEndpointUrl } from "@/constants";
+import { useSenlerIoLogin } from '@/hooks/auth/useSenlerIoLogin';
 
 export const AuthPage = () => {
   const { sign, senlerGroupId, senlerUserId, context, senlerChannelTypeId } = getUrlParams();
+  const hasSenlerRuParams = Boolean(sign && senlerGroupId && senlerUserId && context && senlerChannelTypeId);
   const { message } = useMessage();
   const { auth } = useAuthStore();
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ export const AuthPage = () => {
 
   const authMutation = useAuth();
   const registerProjectWithAuthMutation = useRegisterProjectWithAuth();
+  const senlerIoLogin = useSenlerIoLogin();
 
   useEffect(() => {
     if (!message) return;
@@ -116,7 +119,7 @@ export const AuthPage = () => {
     setError(null);
 
     try {
-      const url = `${API_URL}auth/start?groupId=${Number(senlerGroupId)}`;
+      const url = `${getApiEndpointUrl('auth/start')}?groupId=${Number(senlerGroupId)}`;
       authPopup.current = window.open(url, '_blank', 'width=600,height=700');
       if (!authPopup.current) {
         setError("Браузер заблокировал окно авторизации. Разрешите всплывающие окна и повторите вход.");
@@ -138,29 +141,35 @@ export const AuthPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-        {error && (
+        {(error || senlerIoLogin.error) && (
           <Alert variant="destructive" className="text-left">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{senlerIoLogin.error || error}</AlertDescription>
           </Alert>
         )}
 
         <p className="text-center text-sm text-muted-foreground">
-          {isLoading
+          {senlerIoLogin.isRestoring ? "Восстанавливаем вход…" : isLoading || senlerIoLogin.isPending
             ? "Выполняется авторизация…"
             : "Для доступа к системе необходимо авторизоваться через Senler"
           }
         </p>
 
-        {!isLoading && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
-          <Button
-            type="button"
-            className="w-full"
-            size="lg"
-            onClick={openAuthPopup}
-            disabled={authMutation.isPending || registerProjectWithAuthMutation.isPending}
-          >
-            Войти
-          </Button>
+        {!isLoading && !senlerIoLogin.isRestoring && !auth && !authMutation.isPending && !registerProjectWithAuthMutation.isPending && (
+          <div className="space-y-3">
+            {hasSenlerRuParams ? (
+              <Button type="button" className="w-full" size="lg" onClick={openAuthPopup} disabled={senlerIoLogin.isPending}>
+                Войти через Senler.ru
+              </Button>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">
+                Для входа через Senler.ru откройте амбассадорку из кабинета Senler.ru.
+              </p>
+            )}
+            <Button type="button" className="w-full" size="lg" variant={hasSenlerRuParams ? 'outline' : 'default'}
+              onClick={() => void senlerIoLogin.start()} disabled={senlerIoLogin.isPending || senlerIoLogin.isBlocked}>
+              {senlerIoLogin.isPending ? 'Ожидание авторизации…' : 'Войти через Senler.io'}
+            </Button>
+          </div>
         )}
         </CardContent>
       </Card>

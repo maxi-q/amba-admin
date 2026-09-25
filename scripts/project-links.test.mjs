@@ -3,6 +3,9 @@ import { getProjectVkCommunityId, getSenlerSubscriptionUrl } from "../src/utils/
 
 const project = { provider: "SENLER_RU", channelTypeId: 1, channelExternalId: "-12345" };
 assert.equal(getProjectVkCommunityId(project), "12345");
+assert.equal(getProjectVkCommunityId({ ...project, provider: undefined }), "12345", "Keep VK links for older Senler.ru responses");
+assert.equal(getProjectVkCommunityId({ ...project, provider: null }), undefined);
+assert.equal(getProjectVkCommunityId({ ...project, provider: "UNKNOWN" }), undefined);
 assert.equal(getProjectVkCommunityId({ ...project, provider: "SENLER_IO" }), undefined);
 assert.equal(getProjectVkCommunityId({ ...project, channelTypeId: 2 }), undefined);
 for (const channelExternalId of [null, "", "undefined", "null", "0", "../123", "javascript:alert(1)"]) {

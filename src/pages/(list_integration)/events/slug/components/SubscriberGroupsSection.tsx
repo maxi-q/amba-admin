@@ -10,7 +10,7 @@ type EventWithSubscriptionGroups = GetMyEventsResponseItemDto & {
 
 interface SubscriberGroupsSectionProps {
   event: EventWithSubscriptionGroups;
-  channelExternalId?: string;
+  channelExternalId?: string | null;
 }
 
 export const SubscriberGroupsSection = ({ event, channelExternalId }: SubscriberGroupsSectionProps) => {

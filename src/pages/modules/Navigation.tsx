@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import {
   RoomsPage,
@@ -55,6 +55,8 @@ import { useMessage } from "@messages/messageProvider";
 
 
 export const Navigation = () => {
+  // Re-evaluate the legacy context after login removes the old URL parameters.
+  useLocation();
   const { context } = getUrlParams()
   const { sendMessage } = useMessage()
 

@@ -14,10 +14,10 @@ import {
 interface InvitationSuccessDialogProps {
   open: boolean;
   onClose: () => void;
-  channelExternalId?: string;
+  channelExternalId?: string | null;
 }
 
-function getCommunityUrl(channelExternalId?: string) {
+function getCommunityUrl(channelExternalId?: string | null) {
   const id = channelExternalId?.trim().replace(/^-/, "");
   return id ? `https://vk.com/club${id}` : "";
 }
@@ -67,7 +67,7 @@ export function InvitationSuccessDialog({
           <AlertDialogDescription className="text-left">
             {communityUrl
               ? "Отправьте ссылку вашему амбассадору на вступление, если он ещё не зарегистрирован."
-              : "Приглашение создано. Ссылка на VK-сообщество для этого проекта недоступна."}
+              : "Приглашение сохранено."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
