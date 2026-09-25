@@ -8,7 +8,18 @@ export type SubmissionItemContent = {
 
 export type SubmissionWithItems = {
   items?: SubmissionItemContent[];
+  comment?: string | null;
 };
+
+/** Submitted links are untrusted content, not executable URL schemes. */
+export function getSubmissionLink(value: string): string | null {
+  try {
+    const url = new URL(value.trim());
+    return ["https:", "http:"].includes(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
 
 export function getSubmissionPreviewText(submission: SubmissionWithItems): string {
   const items = submission.items ?? [];

@@ -3,11 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { User } from "lucide-react";
 import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
+import { useSubmission } from "@/hooks/creativetasks/useSubmission";
 import { useUpdateSubmissionStatus } from "@/hooks/creativetasks/useUpdateSubmissionStatus";
 import { SubmissionStatusLogDialog } from "./SubmissionStatusLogDialog";
 import { CreativesPaginationControls } from "./CreativesPaginationControls";
 import type { BaseCreativeTaskSubmissionDto } from "@/api/generated/model";
-import { Alert, AlertDescription, Avatar, PageLoader } from "@senler/ui";
+import { Alert, AlertDescription, Avatar, Button, PageLoader } from "@senler/ui";
 import { isFinalApproveStatus } from "../submissionStatus";
 
 interface TaskDetailSubmissionsListProps {
@@ -37,7 +38,7 @@ const SUBMISSION_PROGRESS: Record<
   approved: { progress: 3, label: "Задание принято" },
 };
 
-function SubmissionProgress({ submission }: { submission: BaseCreativeTaskSubmissionDto }) {
+export function SubmissionProgress({ submission }: { submission: BaseCreativeTaskSubmissionDto }) {
   const meta = SUBMISSION_PROGRESS[submission.status];
   const label =
     submission.status === "approved" && submission.rewardValue != null
@@ -78,30 +79,37 @@ export function TaskDetailSubmissionsList({
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [logSubmission, setLogSubmission] = useState<BaseCreativeTaskSubmissionDto | null>(null);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedSubmissionId = searchParams.get("submission") ?? "";
+  const requestedSubmission = useSubmission(requestedSubmissionId);
+  const activeSubmission = logSubmission ?? (requestedSubmission.submission?.taskId === taskId ? requestedSubmission.submission : null);
+  const closeLog = () => {
+    setLogSubmission(null);
+    if (requestedSubmissionId) setSearchParams((params) => { params.delete("submission"); return params; }, { replace: true });
+  };
   const search = searchParams.get("search")?.trim().toLocaleLowerCase("ru-RU") ?? "";
 
   useEffect(() => setPage(1), [search]);
 
-  const { submissions, isLoading, pagination } = useSubmissions(taskId, {
-    page,
-    size: pageSize,
-  });
+  const { submissions, isLoading, pagination, isError, refetch } = useSubmissions(taskId, {
+    page: search ? 1 : page,
+    size: search ? 100 : pageSize,
+  }, { allPages: !!search });
 
   const ambassadorIds = useMemo(
     () => Array.from(new Set(submissions.map((submission) => submission.ambassadorId))),
     [submissions],
   );
-  const { ambassadors, isLoading: isLoadingAmbassadors } = useAmbassadors({
+  const { ambassadors, isLoading: isLoadingAmbassadors, isError: isAmbassadorError, refetch: refetchAmbassadors } = useAmbassadors({
     page: 1,
     size: Math.max(ambassadorIds.length, 1),
     ambassadorIds,
-  });
+  }, { allPages: true, enabled: ambassadorIds.length > 0 });
   const ambassadorsById = useMemo(
     () => new Map(ambassadors.map((ambassador) => [ambassador.id, ambassador])),
     [ambassadors],
   );
-  const visibleSubmissions = useMemo(
+  const matchingSubmissions = useMemo(
     () =>
       search
         ? submissions.filter((submission) => {
@@ -113,14 +121,17 @@ export function TaskDetailSubmissionsList({
         : submissions,
     [ambassadorsById, search, submissions],
   );
+  const totalPages = search ? Math.ceil(matchingSubmissions.length / pageSize) : pagination?.totalPages ?? 0;
+  const currentPage = Math.min(page, Math.max(1, totalPages));
+  const visibleSubmissions = search ? matchingSubmissions.slice((currentPage - 1) * pageSize, currentPage * pageSize) : matchingSubmissions;
 
-  const { updateSubmissionStatus, isPending } = useUpdateSubmissionStatus();
+  const { updateSubmissionStatus, isPending, reset, error: reviewError } = useUpdateSubmissionStatus();
 
   const handleLogApprove = (
     submission: BaseCreativeTaskSubmissionDto,
     rewardValue?: number,
   ) => {
-    if (isFrozen) return;
+    if (isFrozen || isPending) return;
     updateSubmissionStatus({
       id: submission.id,
       data: {
@@ -128,24 +139,23 @@ export function TaskDetailSubmissionsList({
         reviewComment: "",
         ...(isFinalApproveStatus(submission.status) ? { rewardValue } : {}),
       },
-    });
-    setLogSubmission(null);
+    }, { onSuccess: closeLog });
   };
 
   const handleLogReject = (
     submission: BaseCreativeTaskSubmissionDto,
     reviewComment: string,
   ) => {
-    if (isFrozen) return;
+    if (isFrozen || isPending) return;
     updateSubmissionStatus({
       id: submission.id,
       data: { decision: "reject", reviewComment },
-    });
-    setLogSubmission(null);
+    }, { onSuccess: closeLog });
   };
 
   return (
     <div>
+      {requestedSubmissionId && (requestedSubmission.isError || (requestedSubmission.submission && requestedSubmission.submission.taskId !== taskId)) && <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Запрошенное выполнение недоступно в этом задании.<Button variant="outline" onClick={closeLog}>Закрыть</Button></AlertDescription></Alert>}
       {isFrozen ? (
         <Alert className="mx-4 mb-3">
           <AlertDescription>
@@ -154,7 +164,9 @@ export function TaskDetailSubmissionsList({
         </Alert>
       ) : null}
 
-      {isLoading || (search && isLoadingAmbassadors) ? (
+      {isError || (search && isAmbassadorError) ? (
+        <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Не удалось загрузить выполнения или имена участников. Поиск может быть неполным.<Button variant="outline" className="ml-2" onClick={() => { void refetch(); if (ambassadorIds.length > 0) void refetchAmbassadors(); }}>Повторить</Button></AlertDescription></Alert>
+      ) : isLoading || (search && isLoadingAmbassadors) ? (
         <div className="flex justify-center py-8">
           <PageLoader label="Загрузка…" />
         </div>
@@ -179,7 +191,7 @@ export function TaskDetailSubmissionsList({
                   key={submission.id}
                   type="button"
                   className="flex h-12 w-full items-center gap-4 border-b border-[#e4e4e4] px-4 text-left hover:bg-[#fafafa]"
-                  onClick={() => setLogSubmission(submission)}
+                  onClick={() => { reset(); setLogSubmission(submission); }}
                   aria-label={`Открыть статус задания: ${ambassadorName}`}
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -204,11 +216,11 @@ export function TaskDetailSubmissionsList({
             })}
           </div>
 
-          {pagination && pagination.totalPages > 1 ? (
+          {totalPages > 1 ? (
             <div className="px-4">
               <CreativesPaginationControls
-                page={page}
-                totalPages={pagination.totalPages}
+                page={currentPage}
+                totalPages={totalPages}
                 onPageChange={setPage}
                 className="mt-4"
               />
@@ -218,14 +230,15 @@ export function TaskDetailSubmissionsList({
       )}
 
       <SubmissionStatusLogDialog
-        open={!!logSubmission}
-        submission={logSubmission}
+        open={!!activeSubmission}
+        submission={activeSubmission}
         minimalRewardInBalls={minimalRewardInBalls}
-        onClose={() => setLogSubmission(null)}
+        onClose={() => { if (!isPending) closeLog(); }}
         onApprove={handleLogApprove}
         onReject={handleLogReject}
         isPending={isPending}
         reviewDisabled={isFrozen}
+        errorMessage={reviewError ? reviewError.message || "Не удалось сохранить решение. Попробуйте ещё раз." : undefined}
       />
     </div>
   );

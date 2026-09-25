@@ -50,7 +50,7 @@ export const SelectActionPage = () => {
 
   const {
     events
-  } = useEvents({ page: 1, size: 100 }, selectedRoom)
+  } = useEvents({ page: 1, size: 100 }, selectedRoom, { allPages: true })
 
   const handleSetData = (mockMessage?: { private: any, public: any }) => {
     const { public: publicPayload } = mockMessage ? mockMessage : message.request.payload;

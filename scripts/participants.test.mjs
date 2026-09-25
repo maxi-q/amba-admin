@@ -24,6 +24,12 @@ const request = (method, url, data, params) => mock({ method, url, data, params 
 const pending = request("GET", "/api/ambassador/room-applications", undefined, { status: "pending", roomIds: ["preview-room"] });
 request("PATCH", "/api/ambassador/room-applications/status", { ids: [pending.items[0].id], status: "rejected" });
 assert.equal(request("GET", "/api/ambassador/room-applications", undefined, { status: "pending" }).total, pending.total - 1);
+const bulkIds = pending.items.slice(1).map((item) => item.id);
+request("PATCH", "/api/ambassador/room-applications/status", { ids: bulkIds, status: "approved" });
+assert.equal(request("GET", "/api/ambassador/room-applications", undefined, { status: "pending" }).total, 0);
+const approved = request("GET", "/api/ambassador/room-applications", undefined, { status: "approved" }).items;
+assert.ok(bulkIds.every((id) => approved.some((item) => item.id === id)));
+assert.ok(!approved.some((item) => item.id === pending.items[0].id));
 const created = request("POST", "/api/invitations", { roomId: "preview-room", targets: [{ channelTypeId: 1, subscriberId: "987" }] });
 assert.equal("privateTaskIds" in created, false);
 assert.deepEqual(created.eventIds, []);

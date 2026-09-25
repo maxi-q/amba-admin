@@ -70,7 +70,7 @@ export function InvitationFormDialog({
   const isEventPickerHidden = !!lockedEventIds;
 
   const { mutateAsync: parseVkUserId } = useParseVkUserId();
-  const { events } = useEvents({ page: 1, size: 100 }, slug);
+  const { events, isLoading: isEventsLoading, isError: isEventsError, error: eventsError } = useEvents({ page: 1, size: 100 }, slug, { allPages: true });
 
   const {
     createInvitation,
@@ -262,7 +262,11 @@ export function InvitationFormDialog({
                 aria-label="Поиск событий"
               />
               <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border p-2">
-                {filteredEvents.length === 0 ? (
+                {isEventsLoading ? (
+                  <p className="text-sm text-muted-foreground">Загрузка событий…</p>
+                ) : isEventsError ? (
+                  <p role="alert" className="text-sm text-destructive">{eventsError?.message || "Не удалось загрузить события"}</p>
+                ) : filteredEvents.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Нет событий</p>
                 ) : (
                   filteredEvents.map((ev) => (
@@ -293,7 +297,7 @@ export function InvitationFormDialog({
             type="button"
             size="lg"
             onClick={() => void handleSubmit()}
-            disabled={isPending || !canSubmit}
+            disabled={isPending || !canSubmit || (!isEventPickerHidden && (isEventsLoading || isEventsError))}
           >
             {isPending ? "Сохранение…" : submitLabel ?? "Сохранить"}
           </Button>

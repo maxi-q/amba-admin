@@ -2,6 +2,27 @@ main:has(> .participants-page) {
   padding: 0;
 }
 
+.participants-page [data-slot="checkbox"] {
+  box-shadow: none;
+}
+
+.participants-page [data-slot="checkbox"][data-state="checked"],
+.participants-page [data-slot="checkbox"][data-state="indeterminate"] {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: white;
+}
+
+.participants-page [data-state="indeterminate"] [data-slot="checkbox-indicator"] svg {
+  display: none;
+}
+
+.participants-page [data-state="indeterminate"] [data-slot="checkbox-indicator"]::after {
+  content: "";
+  width: 8px;
+  border-top: 1.5px solid currentColor;
+}
+
 [data-participant-dialog] > div {
   align-items: flex-start;
   padding-top: 30px;

@@ -12,7 +12,8 @@ export default function SprintList() {
 
   const { sprints, isLoading, isError, error } = useSprints(
     { page: 1, size: 100, include: "tasksToReviewCount" },
-    slug || ""
+    slug || "",
+    { allPages: true }
   );
 
   const handleCreateSprint = () => {

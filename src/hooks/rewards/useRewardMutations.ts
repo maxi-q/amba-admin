@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { QueryKeys } from "@/config/tanstack/queryKeys";
 import { MutationKeys } from "@/config/tanstack/mutationKeys";
 import {
@@ -15,11 +15,13 @@ import {
 import type {
   CreateRewardPhotoRequestDto,
   CreateRewardRequestDto,
+  BaseRewardDto,
   RewardImageUploadDto,
   RewardImageUploadRequestDto,
   UpdateRewardRequestDto,
 } from "@/api/generated/model";
 import { ApiError } from "@/types";
+import { newRewardUploadProgress, uploadRewardImages, type RewardUploadProgress } from "./rewardUploadProgress";
 
 const getErrorState = (error: unknown) => ({
   isValidationError: error instanceof ApiError && error.statusCode === 422,
@@ -37,6 +39,8 @@ export interface CreateRewardInput {
   roomId: string;
   iconFile: File;
   photoFiles?: File[];
+  photoIdsToDelete?: string[];
+  onPhotoConfirmed?: (file: File, reward: BaseRewardDto) => void;
   isDivisible: boolean;
   divisionPrecision: number;
 }
@@ -47,6 +51,7 @@ export interface UpdateRewardInput {
   iconFile?: File | null;
   photoFiles?: File[];
   photoIdsToDelete?: string[];
+  onPhotoConfirmed?: (file: File, reward: BaseRewardDto) => void;
 }
 
 const supportedImageTypes = new Set([
@@ -81,8 +86,31 @@ const uploadImage = async (file: File, upload: RewardImageUploadDto) => {
   }
 };
 
+const rewardUploadActions = (id: string, onPhotoConfirmed?: (file: File, reward: BaseRewardDto) => void) => ({
+  createIconUpload: (file: File) => rewardsControllerCreateIconUploadUrl(id, {
+    contentType: getContentType(file) as RewardImageUploadRequestDto["contentType"],
+  }),
+  createPhoto: (file: File, sortOrder: number) => rewardsControllerCreatePhoto(id, {
+    contentType: getContentType(file) as CreateRewardPhotoRequestDto["contentType"],
+    sortOrder,
+  }),
+  upload: uploadImage,
+  confirmIcon: () => rewardsControllerConfirmIconUpload(id),
+  confirmPhoto: (photoId: string) => rewardsControllerConfirmPhotoUpload(id, photoId),
+  onPhotoConfirmed,
+});
+
+async function deleteRequestedPhotos(id: string, photoIds: string[], progress: RewardUploadProgress) {
+  for (const photoId of photoIds) {
+    if (progress.deletedPhotoIds.has(photoId)) continue;
+    await rewardsControllerDeletePhoto(id, photoId);
+    progress.deletedPhotoIds.add(photoId);
+  }
+}
+
 export function useCreateReward() {
   const queryClient = useQueryClient();
+  const progress = useRef(newRewardUploadProgress());
   const mutation = useMutation({
     mutationKey: [MutationKeys.CREATE_REWARD],
     mutationFn: async ({
@@ -90,50 +118,49 @@ export function useCreateReward() {
       roomId,
       iconFile,
       photoFiles = [],
+      photoIdsToDelete = [],
+      onPhotoConfirmed,
       isDivisible,
       divisionPrecision,
     }: CreateRewardInput) => {
       const contentType = getContentType(iconFile);
-      const reward = await rewardsControllerCreateReward({
-        name,
-        roomId,
-        contentType,
-        isDivisible,
-        divisionPrecision,
-      });
-
-      try {
-        await uploadImage(iconFile, reward.iconUpload);
-        let result = await rewardsControllerConfirmIconUpload(reward.id);
-        for (const [sortOrder, file] of photoFiles.entries()) {
-          const photo = await rewardsControllerCreatePhoto(reward.id, {
-            contentType: getContentType(file) as CreateRewardPhotoRequestDto["contentType"],
-            sortOrder,
-          });
-          await uploadImage(file, photo.upload);
-          result = await rewardsControllerConfirmPhotoUpload(reward.id, photo.photoId);
-        }
-        return result;
-      } catch (error) {
-        await rewardsControllerDeleteReward(reward.id).catch(() => undefined);
-        throw error;
+      photoFiles.forEach(getContentType);
+      let reward: BaseRewardDto;
+      if (progress.current.rewardId) {
+        reward = await rewardsControllerUpdateReward(progress.current.rewardId, { name, isDivisible, divisionPrecision });
+      } else {
+        const created = await rewardsControllerCreateReward({ name, roomId, contentType, isDivisible, divisionPrecision });
+        reward = created;
+        progress.current.rewardId = created.id;
+        progress.current.icon = { file: iconFile, upload: created.iconUpload, uploaded: false, confirmed: false };
       }
+      const result = await uploadRewardImages(reward, iconFile, photoFiles, progress.current, rewardUploadActions(reward.id, onPhotoConfirmed));
+      await deleteRequestedPhotos(reward.id, photoIdsToDelete, progress.current);
+      return result;
     },
     onSuccess: (reward) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.REWARDS, reward.roomId], exact: false });
     },
+    onError: (_error, input) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.REWARDS, input.roomId], exact: false });
+    },
   });
+  const resetCreateReward = useCallback(() => {
+    progress.current = newRewardUploadProgress();
+    mutation.reset();
+  }, [mutation.reset]);
 
   return {
     createReward: mutation.mutate,
     isPending: mutation.isPending,
-    resetCreateReward: mutation.reset,
+    resetCreateReward,
     ...getErrorState(mutation.error),
   };
 }
 
 export function useUpdateReward() {
   const queryClient = useQueryClient();
+  const progress = useRef(newRewardUploadProgress());
   const mutation = useMutation({
     mutationKey: [MutationKeys.UPDATE_REWARD],
     mutationFn: async ({
@@ -142,56 +169,34 @@ export function useUpdateReward() {
       iconFile,
       photoFiles = [],
       photoIdsToDelete = [],
+      onPhotoConfirmed,
     }: UpdateRewardInput) => {
-      const iconContentType = iconFile ? getContentType(iconFile) : null;
-      const photoContentTypes = photoFiles.map(
-        (file) => getContentType(file) as CreateRewardPhotoRequestDto["contentType"]
-      );
-      let reward = await rewardsControllerUpdateReward(id, data);
-
-      if (iconFile && iconContentType) {
-        const upload = await rewardsControllerCreateIconUploadUrl(id, {
-          contentType: iconContentType as RewardImageUploadRequestDto["contentType"],
-        });
-        await uploadImage(iconFile, upload);
-        reward = await rewardsControllerConfirmIconUpload(id);
+      if (progress.current.rewardId !== id) {
+        progress.current = { ...newRewardUploadProgress(), rewardId: id };
       }
-
-      const firstNewSortOrder =
-        reward.photos.reduce(
-          (highest, photo) => Math.max(highest, photo.sortOrder),
-          -1
-        ) + 1;
-
-      for (const [sortOrder, file] of photoFiles.entries()) {
-        const photo = await rewardsControllerCreatePhoto(id, {
-          contentType: photoContentTypes[sortOrder],
-          sortOrder: firstNewSortOrder + sortOrder,
-        });
-        try {
-          await uploadImage(file, photo.upload);
-          reward = await rewardsControllerConfirmPhotoUpload(id, photo.photoId);
-        } catch (error) {
-          await rewardsControllerDeletePhoto(id, photo.photoId).catch(() => undefined);
-          throw error;
-        }
-      }
-
-      for (const photoId of photoIdsToDelete) {
-        await rewardsControllerDeletePhoto(id, photoId);
-      }
-
-      return reward;
+      if (iconFile) getContentType(iconFile);
+      photoFiles.forEach(getContentType);
+      const reward = await rewardsControllerUpdateReward(id, data);
+      const result = await uploadRewardImages(reward, iconFile, photoFiles, progress.current, rewardUploadActions(id, onPhotoConfirmed));
+      await deleteRequestedPhotos(id, photoIdsToDelete, progress.current);
+      return result;
     },
     onSuccess: (reward) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.REWARDS, reward.roomId], exact: false });
     },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.REWARDS], exact: false });
+    },
   });
+  const resetUpdateReward = useCallback(() => {
+    progress.current = newRewardUploadProgress();
+    mutation.reset();
+  }, [mutation.reset]);
 
   return {
     updateReward: mutation.mutate,
     isPending: mutation.isPending,
-    resetUpdateReward: mutation.reset,
+    resetUpdateReward,
     ...getErrorState(mutation.error),
   };
 }

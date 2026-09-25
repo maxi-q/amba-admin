@@ -7,12 +7,15 @@ import {
   DialogTitle,
 } from "@senler/ui";
 import type {
+  BaseCreativeTaskDto,
   BaseRewardDto,
   BaseSprintDto,
   SprintRewardRuleDto,
 } from "@/api/generated/model";
 import { useRewardsByIds } from "@/hooks/rewards/useRoomRewards";
+import { rankRewardPlaceCount } from "@/utils/sprintRewardPreview";
 import { checkSprintStatus } from "../../constants/sprintStatus";
+import { TaskPlatform } from "../../../creativetasks/components/TaskPlatform";
 
 type SidebarReward = {
   rewardId: string;
@@ -65,6 +68,7 @@ function collectRewards(
 
   for (const rule of rules) {
     if ((rule.type === "manual") !== isManual) continue;
+    const places = rule.type === "byRank" ? rankRewardPlaceCount(rule) : 1;
     for (const item of rule.rewards) {
       const previous = rewards.get(item.rewardId);
       rewards.set(item.rewardId, {
@@ -72,7 +76,7 @@ function collectRewards(
         name: item.reward.name,
         iconUrl: item.reward.iconUrl,
         version: item.reward.version,
-        amount: (previous?.amount ?? 0) + item.amount,
+        amount: Number(((previous?.amount ?? 0) + item.amount * places).toFixed(10)),
       });
     }
   }
@@ -87,7 +91,9 @@ function RewardItem({
   reward: SidebarReward;
   onSelect: (reward: SidebarReward) => void;
 }) {
-  const amountIsPartOfName = /[₽$€]/.test(reward.name);
+  const isMoney = /руб|[₽$€]/i.test(reward.name);
+  const currencySymbol = reward.name.match(/([₽$€])$/)?.[1] ?? "₽";
+  const amount = reward.amount.toLocaleString("ru-RU", { maximumFractionDigits: 10 });
 
   return (
     <div className="flex h-12 items-center gap-1.5">
@@ -108,10 +114,10 @@ function RewardItem({
         )}
       </button>
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 text-[13px] font-medium leading-4 tracking-[-0.25px]">
-        <p className="truncate text-foreground">{reward.name}</p>
-        {!amountIsPartOfName ? (
+        <p className="truncate text-foreground">{isMoney ? `${amount} ${currencySymbol}` : reward.name}</p>
+        {!isMoney ? (
           <p className="text-[#797979]">
-            {reward.amount.toLocaleString("ru-RU")} шт.
+            {amount} шт.
           </p>
         ) : null}
       </div>
@@ -158,9 +164,12 @@ function RewardGroup({
 interface OpenSprintSidebarProps {
   sprint: BaseSprintDto;
   rules: SprintRewardRuleDto[];
+  platforms: BaseCreativeTaskDto["targetPlatform"][];
+  platformsLoading: boolean;
+  platformsError: boolean;
 }
 
-export function OpenSprintSidebar({ sprint, rules }: OpenSprintSidebarProps) {
+export function OpenSprintSidebar({ sprint, rules, platforms, platformsLoading, platformsError }: OpenSprintSidebarProps) {
   const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const rewardIds = [
@@ -227,6 +236,13 @@ export function OpenSprintSidebar({ sprint, rules }: OpenSprintSidebarProps) {
         <p className="mt-1 whitespace-pre-wrap text-[#797979]">
           {sprint.description?.trim() || "Нет описания"}
         </p>
+      </section>
+
+      <section className="border-b border-border p-4 text-[13px] font-medium leading-4 tracking-[-0.0325px]">
+        <h2 className="mb-1 text-foreground">Платформы</h2>
+        {platformsError ? <p className="text-destructive">Не удалось загрузить</p> : platformsLoading ? <p className="text-muted-foreground">Загрузка…</p> : platforms.length === 0 ? <p className="text-muted-foreground">Заданий пока нет</p> : <div className="flex items-center gap-1.5">
+          {[...new Set(platforms.map((platform) => platform === "VK_GROUP" ? "VK_USER" as const : platform))].map((platform) => <TaskPlatform key={platform} platform={platform} />)}
+        </div>}
       </section>
 
       <section className="min-h-[68px] border-b border-[#e4e4e4] p-4 text-[13px] font-medium leading-4 tracking-[-0.25px]">

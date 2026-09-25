@@ -69,7 +69,7 @@ export default function ApplicationsPage() {
     error: roomDataError
   } = useGetRoomById(slug || "");
 
-  const { events } = useEvents({ page: 1, size: 100 }, slug || "");
+  const { events } = useEvents({ page: 1, size: 100 }, slug || "", { allPages: true });
   const { ambassadors } = useAmbassadors({ page: 1, size: 100 });
 
   const eventNameMap = useMemo(() => {

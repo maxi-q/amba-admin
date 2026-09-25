@@ -143,11 +143,11 @@ export function SprintRewardRulesSection({
   roomSlug,
   disabled = false,
 }: SprintRewardRulesSectionProps) {
-  const { rules, isLoading, refetch } = useSprintRewardRules(sprintId);
-  const { rewards, isLoading: isRewardsLoading } = useRoomRewards(roomId, {
+  const { rules, isLoading, isError: isRulesError, error: rulesError, refetch } = useSprintRewardRules(sprintId);
+  const { rewards, isLoading: isRewardsLoading, isError: isRewardsError, error: rewardsError } = useRoomRewards(roomId, {
     page: 1,
     size: 100,
-  });
+  }, { allPages: true });
   const activeRewards = useMemo(
     () => rewards.filter((reward) => !reward.isDeleted),
     [rewards]
@@ -241,6 +241,14 @@ export function SprintRewardRulesSection({
       <div className="flex justify-center py-6">
         <PageLoader label="Загрузка правил…" />
       </div>
+    );
+  }
+
+  if (isRulesError || isRewardsError) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{rulesError?.message || rewardsError?.message || "Не удалось загрузить награды"}</AlertDescription>
+      </Alert>
     );
   }
 

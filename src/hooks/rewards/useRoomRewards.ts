@@ -5,14 +5,18 @@ import {
   rewardsControllerGetRewards,
 } from "@/api/generated/rewards/rewards";
 import type { RewardsControllerGetRewardsParams } from "@/api/generated/model";
+import { collectPages, type AllPagesOptions } from "../collectPages";
 
 export function useRoomRewards(
   roomId: string,
-  params: RewardsControllerGetRewardsParams = { page: 1, size: 100 }
+  params: RewardsControllerGetRewardsParams = { page: 1, size: 100 },
+  { allPages = false }: AllPagesOptions = {}
 ) {
   const query = useQuery({
-    queryKey: [QueryKeys.REWARDS, roomId, params.page, params.size, params.includeDeleted],
-    queryFn: () => rewardsControllerGetRewards(roomId, params),
+    queryKey: [QueryKeys.REWARDS, roomId, allPages ? "all" : params.page, params.size, params.includeDeleted],
+    queryFn: ({ signal }) => allPages
+      ? collectPages((page) => rewardsControllerGetRewards(roomId, { ...params, page }, undefined, signal))
+      : rewardsControllerGetRewards(roomId, params, undefined, signal),
     enabled: !!roomId,
     staleTime: 30_000,
   });

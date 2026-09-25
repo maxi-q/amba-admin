@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Alert, AlertDescription, Button, Card, CardContent, CardHeader, CardTitle } from "@senler/ui";
 import { getUrlParams } from "@helpers/index";
@@ -17,6 +17,7 @@ export const AuthPage = () => {
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const authPopup = useRef<Window | null>(null);
 
   const authMutation = useAuth();
   const registerProjectWithAuthMutation = useRegisterProjectWithAuth();
@@ -25,9 +26,11 @@ export const AuthPage = () => {
     if (!message) return;
 
     if (message.type === MessageTypes.AmoAuthCode) {
+      authPopup.current = null;
       const { code } = message.payload;
       handleAuthCode(code);
     } else if (message.type === MessageTypes.AmoAuthCodeError) {
+      authPopup.current = null;
       const { error } = message.payload;
       setError(error);
       setIsLoading(false);
@@ -56,18 +59,9 @@ export const AuthPage = () => {
         sign,
       }
     }, {
-      onError: (error: { message?: string }) => {
-        if (error?.message === 'PROJECT_ALREADY_EXISTS') {
-          authMutation.mutate({
-            userId: senlerUserId,
-            groupId: Number(senlerGroupId),
-            context,
-            sign,
-          });
-        } else {
-          setError("Ошибка регистрации проекта");
-          setIsLoading(false);
-        }
+      onError: (error) => {
+        setError(error instanceof Error ? error.message : "Ошибка регистрации проекта");
+        setIsLoading(false);
       }
     });
   };
@@ -105,14 +99,31 @@ export const AuthPage = () => {
     }
   }, [auth, location, navigate]);
 
+  useEffect(() => {
+    if (!isLoading || !authPopup.current) return;
+    const timer = window.setInterval(() => {
+      if (authPopup.current?.closed) {
+        authPopup.current = null;
+        setError("Окно авторизации закрыто. Попробуйте войти ещё раз.");
+        setIsLoading(false);
+      }
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [isLoading]);
+
   const openAuthPopup = () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const url = `${API_URL}auth/start?groupId=${Number(senlerGroupId)}`;
-      window.open(url, '_blank', 'width=600,height=700');
+      authPopup.current = window.open(url, '_blank', 'width=600,height=700');
+      if (!authPopup.current) {
+        setError("Браузер заблокировал окно авторизации. Разрешите всплывающие окна и повторите вход.");
+        setIsLoading(false);
+      }
     } catch {
+      authPopup.current = null;
       setError("Ошибка открытия popup");
       setIsLoading(false);
     }

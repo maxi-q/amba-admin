@@ -5,6 +5,8 @@ import type {
   CreativeTaskSubmissionEventDtoType,
 } from "@/api/generated/model";
 import {
+  Alert,
+  AlertDescription,
   Button,
   DialogContent,
   DialogDescription,
@@ -20,6 +22,8 @@ import pencilRulerIcon from "../assets/task-status-log/pencil-ruler.png";
 import rejectIcon from "../assets/task-status-log/reject.png";
 import timelineUrl from "../assets/task-status-log/timeline.svg";
 import { isReviewableSubmissionStatus } from "../submissionStatus";
+import { getSubmissionLink } from "../submissionContent.utils";
+import { SubmissionContentPreview } from "./SubmissionContentPreview";
 
 type ActionMode = "idle" | "reject" | "approve";
 
@@ -79,6 +83,7 @@ interface SubmissionStatusLogDialogProps {
   onReject: (submission: BaseCreativeTaskSubmissionDto, reviewComment: string) => void;
   isPending: boolean;
   reviewDisabled?: boolean;
+  errorMessage?: string;
 }
 
 function formatEventDate(value: string) {
@@ -198,9 +203,9 @@ function ReviewStep({
   const isPublicationReview = submission.status === "waiting_for_review_publication";
   const publicationUrls = submission.items
     .map((item) => item.publicationUrl)
-    .filter((url): url is string => Boolean(url));
+    .filter((url): url is string => Boolean(url && getSubmissionLink(url)));
   const parsedReward = Number(rewardValue);
-  const rewardIsValid = rewardValue !== "" && parsedReward >= minimalRewardInBalls;
+  const rewardIsValid = rewardValue.trim() !== "" && Number.isFinite(parsedReward) && parsedReward >= minimalRewardInBalls;
 
   return (
     <div className="relative flex items-start gap-3">
@@ -336,6 +341,7 @@ export function SubmissionStatusLogDialog({
   onReject,
   isPending,
   reviewDisabled = false,
+  errorMessage,
 }: SubmissionStatusLogDialogProps) {
   const [actionMode, setActionMode] = useState<ActionMode>("idle");
   const [reviewComment, setReviewComment] = useState("");
@@ -350,27 +356,17 @@ export function SubmissionStatusLogDialog({
   const events = [...(submission?.events ?? [])].sort(
     (left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime(),
   );
-  const hasReviewStep = submission ? isReviewableSubmissionStatus(submission.status) : false;
-  const listHeight =
-    actionMode === "reject"
-      ? "h-[564px]"
-      : actionMode === "approve"
-        ? "h-[537px]"
-        : submission?.status === "approved"
-          ? "h-[400px]"
-          : "h-[504px]";
-
   return (
     <DialogRoot
       open={open}
       onOpenChange={(next) => {
-        if (!next) onClose();
+        if (!next && !isPending) onClose();
       }}
     >
       <DialogContent
         data-task-status-log-dialog
         showCloseButton={false}
-        className="mt-[58px] w-[min(358px,calc(100vw-2rem))] self-start gap-0 overflow-hidden rounded-[8px] border-0 bg-white p-0 shadow-none sm:max-w-[358px]"
+        className="w-[min(358px,calc(100vw-2rem))] self-start gap-0 overflow-hidden rounded-[8px] border-0 bg-white p-0 shadow-none sm:max-w-[358px]"
       >
         <DialogHeader className="h-11 flex-row items-center gap-4 space-y-0 px-4 py-2.5">
           <DialogTitle className="flex-1 text-left text-[15px] font-medium leading-5 tracking-[-0.135px] text-black">
@@ -383,25 +379,35 @@ export function SubmissionStatusLogDialog({
             type="button"
             className="flex size-6 shrink-0 items-center justify-center border-0 bg-transparent p-0 outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
             onClick={onClose}
+            disabled={isPending}
             aria-label="Закрыть"
           >
             <img src={closeIcon} alt="" width={14} height={14} className="size-[13px]" />
           </button>
         </DialogHeader>
 
-        <div className={`${listHeight} max-h-[calc(100dvh-118px)] overflow-y-auto px-4 py-4`}>
-          {submission && (events.length > 0 || hasReviewStep) ? (
+        <div className="max-h-[calc(100dvh-90px)] overflow-y-auto px-4 py-4">
+          {submission ? (
             <div className="relative space-y-4">
               <img
                 src={timelineUrl}
                 alt=""
                 width={2}
                 height={332}
-                className="pointer-events-none absolute left-[9px] top-2.5 h-[332px] w-[1.5px] max-w-none"
+                className="pointer-events-none absolute bottom-2.5 left-[9px] top-2.5 h-[calc(100%-20px)] w-[1.5px] max-w-none"
               />
               {events.map((event) => (
                 <EventRow key={event.id} event={event} rewardValue={submission.rewardValue} />
               ))}
+              <div className="relative flex items-start gap-3">
+                <StatusIcon src={pencilRulerIcon} />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-[13px] font-medium leading-4 text-[#797979]">Ответ исполнителя</p>
+                  <SubmissionContentPreview submission={submission} />
+                  {events.length > 0 && <p className="pt-2 text-xs leading-4 text-[#797979]">Текущая версия материалов. Исторические версии API не возвращает.</p>}
+                </div>
+              </div>
+              {errorMessage && <Alert variant="destructive" role="alert"><AlertDescription>{errorMessage}</AlertDescription></Alert>}
               <ReviewStep
                 submission={submission}
                 minimalRewardInBalls={minimalRewardInBalls}

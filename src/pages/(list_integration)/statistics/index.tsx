@@ -67,8 +67,8 @@ export default function StatisticsPage() {
     size: 5,
   });
 
-  const { sprints } = useSprints({ page: 1, size: 100 }, slug || "");
-  const { events } = useEvents({ page: 1, size: 100 }, slug || "");
+  const { sprints } = useSprints({ page: 1, size: 100 }, slug || "", { allPages: true });
+  const { events } = useEvents({ page: 1, size: 100 }, slug || "", { allPages: true });
   const { promoCodes } = useCustomPromoCodes(slug || "");
   const publishedSprints = useMemo(
     () =>

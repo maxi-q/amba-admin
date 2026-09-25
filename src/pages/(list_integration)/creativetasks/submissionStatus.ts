@@ -1,4 +1,4 @@
-import type { BaseCreativeTaskSubmissionDtoStatus } from "@/api/generated/model";
+import type { BaseCreativeTaskSubmissionDto, BaseCreativeTaskSubmissionDtoStatus } from "@/api/generated/model";
 
 export const SUBMISSION_STATUS_LABELS: Record<BaseCreativeTaskSubmissionDtoStatus, string> = {
   new: "Черновик",
@@ -42,4 +42,19 @@ export function isReviewableSubmissionStatus(status: BaseCreativeTaskSubmissionD
 
 export function isFinalApproveStatus(status: BaseCreativeTaskSubmissionDtoStatus): boolean {
   return status === "waiting_for_review_publication";
+}
+
+/** Review and work are disjoint: an unsent draft is not an answer awaiting review. */
+export function getSubmissionCounts(submissions: Pick<BaseCreativeTaskSubmissionDto, "status">[]) {
+  const byStatus: Partial<Record<BaseCreativeTaskSubmissionDtoStatus, number>> = {};
+  for (const { status } of submissions) byStatus[status] = (byStatus[status] ?? 0) + 1;
+  const review = (byStatus.waiting_for_review_materials ?? 0) + (byStatus.waiting_for_review_publication ?? 0);
+  const approved = byStatus.approved ?? 0;
+  return { byStatus, review, approved, inWork: submissions.length - review - approved, total: submissions.length };
+}
+
+export function answersLabel(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  return `${count} ${mod10 === 1 && mod100 !== 11 ? "ответ" : mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20) ? "ответа" : "ответов"}`;
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageLoader } from "@senler/ui";
+import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
 import { useRooms } from "@/hooks/rooms/useRooms";
 import { useCreateRoom } from "@/hooks/rooms/useCreateRoom";
 import { RoomsHeader } from "./components/RoomsHeader";
@@ -11,7 +11,7 @@ import { CreateCompanyForm } from "./components/CreateCompanyForm";
 
 export default function RoomsPage() {
   const navigate = useNavigate();
-  const { rooms, isLoading } = useRooms();
+  const { rooms, isLoading, isFetching, isError, error, refetch } = useRooms();
   const {
     createRoom,
     isPending,
@@ -81,6 +81,19 @@ export default function RoomsPage() {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
         <PageLoader label="Загрузка…" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="w-full px-6 py-6">
+        <Alert variant="destructive">
+          <AlertDescription>{error?.message || "Не удалось загрузить компании"}</AlertDescription>
+        </Alert>
+        <Button variant="outline" className="mt-4" disabled={isFetching} onClick={() => void refetch()}>
+          {isFetching ? "Загрузка…" : "Повторить"}
+        </Button>
       </div>
     );
   }

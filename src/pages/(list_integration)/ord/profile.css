@@ -39,6 +39,25 @@ main:has(.ord-profile-page) { padding: 0; }
 }
 .ord-profile-page [data-slot="switch"] { width: 28px; border: 0; box-shadow: none; }
 .ord-profile-page [data-slot="switch-thumb"][data-state="checked"] { translate: 12px 0; }
-.ord-profile-page button[type="submit"]:disabled { background: #f0f0f0; color: #b2b2b2; }
+.ord-profile-page button[type="submit"]:disabled { background: #e4e4e4; color: #797979; }
+.ord-profile-status {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px 8px 8px;
+}
+.ord-profile-status-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  background: var(--muted);
+}
+.ord-profile-status button { border-color: #e4e4e4; }
 [data-ord-profile-dialog] > div { align-items: flex-start; padding-top: 30px; }
 body:has([data-ord-profile-dialog]) [data-slot="dialog-overlay"] { background: rgb(0 0 0 / 40%) !important; }

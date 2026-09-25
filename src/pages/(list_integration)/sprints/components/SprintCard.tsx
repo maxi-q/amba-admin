@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import pencil from "@/assets/task-flow/pencil.svg";
 import { toast } from "sonner";
 import { Button } from "@senler/ui";
 import type { GetMySprintsResponseItemDto } from "@/api/generated/model";
@@ -92,13 +93,13 @@ export const SprintCard = ({ sprint }: SprintCardProps) => {
           {dateRange}
         </span>
 
-        <span
-          className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#e4e4e4] bg-white"
-          aria-hidden
-        >
-          <Pencil className="size-4 text-[#707070]" strokeWidth={1.5} />
-        </span>
       </Link>
+
+      <Button asChild variant="outline" size="icon" className="ml-4 size-7 shrink-0 border-[#e4e4e4] bg-card shadow-none">
+        <Link to={`/rooms/${slug}/sprints/${sprint.id}/edit`} aria-label={`Редактировать спринт «${sprint.name?.trim() || "Без названия"}»`}>
+          <img src={pencil} alt="" />
+        </Link>
+      </Button>
 
       {canDelete ? (
         <Button

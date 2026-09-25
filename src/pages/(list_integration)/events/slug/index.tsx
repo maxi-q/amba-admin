@@ -32,7 +32,8 @@ const EventsSetting = () => {
     error: eventsError
   } = useEvents(
     { page: 1, size: 100 },
-    slug || ""
+    slug || "",
+    { allPages: true }
   );
 
   const {

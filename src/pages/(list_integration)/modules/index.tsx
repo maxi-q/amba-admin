@@ -223,7 +223,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
     );
   }
 
-  if (isError) {
+  if (isError && !roomData) {
     return (
       <div className="w-full px-4 py-6">
         <Alert variant="destructive" className="mb-4">

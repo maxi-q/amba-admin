@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { Pencil, Plus } from "lucide-react";
-import { Button, CheckBox, Input, PageLoader } from "@senler/ui";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import pencil from "@/assets/task-flow/pencil.svg";
+import plus from "@/assets/task-flow/plus-muted.svg";
+import { Alert, AlertDescription, Button, CheckBox, Input, PageLoader } from "@senler/ui";
 import { toast } from "sonner";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
@@ -19,6 +20,7 @@ type OpenSprintTab = "quests" | "leaderboard";
 export default function OpenSprintPage() {
   const { sprintId = "", slug = "" } = useParams();
   const navigate = useNavigate();
+  const [urlParams] = useSearchParams();
   const [tabState, setTabState] = useState<{
     sprintId: string;
     value: OpenSprintTab;
@@ -30,22 +32,23 @@ export default function OpenSprintPage() {
   const isCreatePath = sprintId === "new";
   const effectiveSprintId = isCreatePath ? "" : sprintId;
 
-  const { room } = useGetRoomById(slug);
+  const { room, isLoading: isLoadingRoom, isError: isRoomError, refetch: refetchRoom } = useGetRoomById(slug);
   const roomId = room?.id ?? "";
 
-  const { sprints, isLoading: isLoadingSprints } = useSprints(
+  const { sprints, isLoading: isLoadingSprints, isError: isSprintsError, refetch: refetchSprints } = useSprints(
     { page: 1, size: 100 },
-    slug
+    slug,
+    { allPages: true }
   );
   const sprint =
     sprints.find((item) => item.id === effectiveSprintId) ?? null;
 
-  const { rules, isLoading: isLoadingRules } =
+  const { rules, isLoading: isLoadingRules, isError: isRulesError, refetch: refetchRules } =
     useSprintRewardRules(effectiveSprintId);
-  const { tasks, isLoading: isLoadingTasks } = useRoomCreativeTasks(roomId, {
+  const { tasks, isLoading: isLoadingTasks, isError: isTasksError, refetch: refetchTasks } = useRoomCreativeTasks(roomId, {
     page: 1,
     size: 100,
-  });
+  }, { allPages: true });
 
   if (isCreatePath) {
     return <SprintSetting />;
@@ -55,7 +58,11 @@ export default function OpenSprintPage() {
     return <Navigate to={`/rooms/${slug}/sprints`} replace />;
   }
 
-  if (isLoadingSprints) {
+  if (isSprintsError || isRoomError) {
+    return <Alert variant="destructive"><AlertDescription>Не удалось загрузить спринт. Проверьте подключение и обновите страницу.<Button variant="outline" className="ml-2" onClick={() => { void refetchSprints(); void refetchRoom(); }}>Повторить</Button></AlertDescription></Alert>;
+  }
+
+  if (isLoadingSprints || isLoadingRoom) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
         <PageLoader label="Загрузка…" />
@@ -78,7 +85,7 @@ export default function OpenSprintPage() {
 
   const isAwarding = sprint.status === "awarding";
   const defaultTab: OpenSprintTab =
-    sprint.status === "active" ? "quests" : "leaderboard";
+    urlParams.get("tab") === "leaderboard" || sprint.status !== "active" ? "leaderboard" : "quests";
   const tab =
     tabState?.sprintId === sprint.id ? tabState.value : defaultTab;
   const search =
@@ -105,7 +112,7 @@ export default function OpenSprintPage() {
   };
 
   return (
-    <div className="-m-4 grid min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-1 grid-cols-1 bg-white md:-m-6 md:w-[calc(100%+3rem)] lg:grid-cols-[minmax(0,680px)_260px]">
+    <div className="-m-4 grid min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-1 grid-cols-1 bg-white lg:grid-cols-[minmax(0,1fr)_260px]">
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4">
           <h1 className="min-w-0 truncate text-[20px] font-medium leading-8 tracking-[-0.34px] text-foreground">
@@ -123,11 +130,7 @@ export default function OpenSprintPage() {
                   aria-label="Редактирование недоступно во время выдачи наград"
                   title="Редактирование недоступно во время выдачи наград"
                 >
-                  <Pencil
-                    className="size-4 text-[#707070]"
-                    strokeWidth={1.5}
-                    aria-hidden
-                  />
+                  <img src={pencil} alt="" />
                 </Button>
                 <Button
                   type="button"
@@ -138,11 +141,7 @@ export default function OpenSprintPage() {
                   aria-label="Добавление заданий недоступно во время выдачи наград"
                   title="Добавление заданий недоступно во время выдачи наград"
                 >
-                  <Plus
-                    className="size-4 text-[#9a9a9a]"
-                    strokeWidth={1.5}
-                    aria-hidden
-                  />
+                  <img src={plus} alt="" />
                 </Button>
               </>
             ) : sprint.status === "active" ? (
@@ -157,11 +156,7 @@ export default function OpenSprintPage() {
                     navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)
                   }
                 >
-                  <Pencil
-                    className="size-4 text-[#707070]"
-                    strokeWidth={1.5}
-                    aria-hidden
-                  />
+                  <img src={pencil} alt="" />
                 </Button>
                 <Button
                   type="button"
@@ -175,11 +170,7 @@ export default function OpenSprintPage() {
                     )
                   }
                 >
-                  <Plus
-                    className="size-4 text-[#9a9a9a]"
-                    strokeWidth={1.5}
-                    aria-hidden
-                  />
+                  <img src={plus} alt="" />
                 </Button>
               </>
             ) : null}
@@ -258,7 +249,7 @@ export default function OpenSprintPage() {
         </div>
 
         {tab === "quests" ? (
-          isLoadingTasks ? (
+          isTasksError ? <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Не удалось загрузить задания.<Button variant="outline" className="ml-2" onClick={() => void refetchTasks()}>Повторить</Button></AlertDescription></Alert> : isLoadingTasks ? (
             <div className="flex justify-center py-10">
               <PageLoader label="Загрузка…" />
             </div>
@@ -288,6 +279,7 @@ export default function OpenSprintPage() {
                     title={task.title}
                     roomSlug={slug}
                     isFrozen={task.isFrozen}
+                    targetPlatform={task.targetPlatform}
                   />
                 ))}
               </div>
@@ -304,12 +296,12 @@ export default function OpenSprintPage() {
         )}
       </div>
 
-      {isLoadingRules ? (
+      {isRulesError ? <aside className="border-l border-[#e4e4e4] p-4"><Alert variant="destructive"><AlertDescription>Не удалось загрузить награды.<Button variant="outline" onClick={() => void refetchRules()}>Повторить</Button></AlertDescription></Alert></aside> : isLoadingRules ? (
         <aside className="flex w-full shrink-0 items-center justify-center border-l border-[#e4e4e4] py-10 lg:w-[260px]">
           <PageLoader label="Загрузка…" />
         </aside>
       ) : (
-        <OpenSprintSidebar sprint={sprint} rules={rules} />
+        <OpenSprintSidebar sprint={sprint} rules={rules} platforms={tasks.filter((task) => task.sprintId === sprint.id && !task.isDeleted).map((task) => task.targetPlatform)} platformsLoading={isLoadingTasks} platformsError={isTasksError} />
       )}
     </div>
   );

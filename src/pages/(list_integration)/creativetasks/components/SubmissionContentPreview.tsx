@@ -1,4 +1,11 @@
-import { getSubmissionPreviewText, type SubmissionWithItems } from "../submissionContent.utils";
+import { getSubmissionLink, getSubmissionPreviewText, type SubmissionWithItems } from "../submissionContent.utils";
+
+function ContentLink({ value }: { value: string }) {
+  const href = getSubmissionLink(value);
+  return href
+    ? <a href={href} target="_blank" rel="noopener noreferrer" className="block break-words text-[#2563eb] [overflow-wrap:anywhere]">{value}</a>
+    : <span className="block break-words text-[#797979] [overflow-wrap:anywhere]">{value} (некорректная ссылка)</span>;
+}
 
 type SubmissionContentPreviewProps = {
   submission: SubmissionWithItems;
@@ -18,12 +25,9 @@ export function SubmissionContentPreview({
   }
 
   const items = submission.items ?? [];
-  if (items.length === 0) {
-    return <p className="text-sm text-foreground">—</p>;
-  }
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 text-[13px] font-medium leading-4 text-black">
+      {items.length === 0 && <p className="text-[#797979]">Материалы пока не отправлены</p>}
       {items.map((item, itemIndex) => {
         const texts = item.texts?.map((text) => text.trim()).filter(Boolean) ?? [];
         const targetUrls = item.targetUrls?.filter(Boolean) ?? [];
@@ -32,7 +36,7 @@ export function SubmissionContentPreview({
         return (
           <div
             key={itemIndex}
-            className="space-y-2 rounded-md border border-border/70 bg-muted/20 p-3 text-sm text-foreground"
+            className="space-y-1"
           >
             {items.length > 1 ? (
               <p className="text-xs font-medium text-muted-foreground">
@@ -41,7 +45,7 @@ export function SubmissionContentPreview({
             ) : null}
 
             {texts.length > 0 ? (
-              <div className="space-y-1">
+              <div className="space-y-1 text-xs leading-4">
                 {texts.map((text, index) => (
                   <p key={index} className="whitespace-pre-wrap">
                     {text}
@@ -54,15 +58,7 @@ export function SubmissionContentPreview({
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">Ссылки:</p>
                 {targetUrls.map((url, index) => (
-                  <a
-                    key={index}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block break-all text-primary underline underline-offset-2"
-                  >
-                    {url}
-                  </a>
+                  <ContentLink key={index} value={url} />
                 ))}
               </div>
             ) : null}
@@ -72,19 +68,15 @@ export function SubmissionContentPreview({
                 <p className="text-xs font-medium text-muted-foreground">
                   Ссылка на публикацию:
                 </p>
-                <a
-                  href={item.publicationUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block break-all text-primary underline underline-offset-2"
-                >
-                  {item.publicationUrl}
-                </a>
+                <ContentLink value={item.publicationUrl} />
               </div>
             ) : null}
 
             {mediaCount > 0 ? (
-              <p className="text-xs text-muted-foreground">Медиафайлов: {mediaCount}</p>
+              <div className="rounded-md border border-[#e4e4e4] p-2 text-xs text-[#797979]">
+                <p>Медиафайлов: {mediaCount}. Просмотр пока недоступен: сервер не возвращает ссылки для проверяющего.</p>
+                <details className="mt-1"><summary className="cursor-pointer">Идентификаторы файлов</summary><ul className="mt-1 space-y-1 break-all">{item.mediaFileIds?.map((id, index) => <li key={`${id}-${index}`}>{id}</li>)}</ul></details>
+              </div>
             ) : null}
 
             {item.erid ? (
@@ -101,6 +93,7 @@ export function SubmissionContentPreview({
           </div>
         );
       })}
+      {submission.comment?.trim() && <div className="space-y-1"><p className="text-[#797979]">Комментарий исполнителя</p><p className="whitespace-pre-wrap rounded-md bg-[#f0f0f0] p-1 text-xs leading-4">{submission.comment}</p></div>}
     </div>
   );
 }

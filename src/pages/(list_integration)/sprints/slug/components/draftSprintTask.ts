@@ -1,5 +1,6 @@
 import type {
   CreateCreativeTaskRequestDto,
+  CreativeTaskWithDefaultsDto,
   UpdateCreativeTaskRequestDto,
 } from "@/api/generated/model";
 import { CreateCreativeTaskRequestDtoTargetPlatform } from "@/api/generated/model";
@@ -76,6 +77,24 @@ export function cloneDraftSprintTask(task: DraftSprintTask): DraftSprintTask {
     targetUrls: [...task.targetUrls],
     defaultTexts: [...task.defaultTexts],
     defaultMediaIds: [...task.defaultMediaIds],
+  };
+}
+
+export function creativeTaskToDraft(task: CreativeTaskWithDefaultsDto): DraftSprintTask {
+  return {
+    id: task.id, isPersisted: true, title: task.title, description: task.description ?? "",
+    prohibited: task.restrictions?.join("\n") ?? "",
+    criteria: task.criteria?.length ? [...task.criteria] : [""],
+    allowedFormats: [...(task.allowedFormats ?? [])], targetPlatform: task.targetPlatform,
+    ordForm: task.ordForm ?? "", ordKktus: [...(task.ordKktus ?? [])],
+    ordContractTemplateId: task.ordContractTemplateId ?? "",
+    targetUrls: task.defaultTargetUrls?.length ? [...task.defaultTargetUrls] : [""],
+    allowAmbassadorTargetUrl: task.allowAmbassadorTargetUrl,
+    defaultTexts: task.defaultTexts?.length ? [...task.defaultTexts] : [""],
+    allowAmbassadorText: task.allowAmbassadorText, defaultMediaIds: [...(task.defaultMediaIds ?? [])],
+    allowAmbassadorMedia: task.allowAmbassadorMedia, publicationsCount: task.publicationsCount,
+    requireMaterialsReview: task.requireMaterialsReview, requirePublicationReview: task.requirePublicationReview,
+    minimalRewardInBalls: String(task.minimalRewardInBalls),
   };
 }
 

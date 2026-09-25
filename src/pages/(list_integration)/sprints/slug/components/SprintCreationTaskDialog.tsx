@@ -23,7 +23,7 @@ import { OrdContractTemplateSelect } from "../../../ord/components/OrdContractTe
 import { OrdKktuPicker } from "../../../creativetasks/components/OrdKktuPicker";
 import { OrdRoomFilesPicker } from "../../../creativetasks/components/OrdRoomFilesPicker";
 import { ORD_CREATIVE_FORM_OPTIONS } from "../../../creativetasks/ordCreative.utils";
-import type { CreativeTaskFormat } from "../../../creativetasks/utils/creativetaskUtils";
+import { CREATIVE_TASK_FORMAT_OPTIONS, type CreativeTaskFormat } from "../../../creativetasks/utils/creativetaskUtils";
 import {
   cloneDraftSprintTask,
   emptyDraftSprintTask,
@@ -38,11 +38,14 @@ interface SprintCreationTaskDialogProps {
   initialTask?: DraftSprintTask | null;
   onClose: () => void;
   onSave: (task: DraftSprintTask) => void;
+  presentation?: "dialog" | "page";
+  saveLabel?: string;
 }
 
 const FORMAT_CHIPS: { value: CreativeTaskFormat; label: string }[] = [
   { value: "POST", label: "Пост" },
   { value: "VIDEO", label: "Видео" },
+  ...CREATIVE_TASK_FORMAT_OPTIONS.filter(({ value }) => value !== "POST" && value !== "VIDEO"),
 ];
 
 function FieldRow({
@@ -105,6 +108,8 @@ export function SprintCreationTaskDialog({
   initialTask,
   onClose,
   onSave,
+  presentation = "dialog",
+  saveLabel = "Сохранить",
 }: SprintCreationTaskDialogProps) {
   const [form, setForm] = useState<DraftSprintTask>(emptyDraftSprintTask);
   const [clientError, setClientError] = useState("");
@@ -145,6 +150,10 @@ export function SprintCreationTaskDialog({
       setClientError("Выберите хотя бы один формат публикации");
       return;
     }
+    if (!form.minimalRewardInBalls.trim() || !Number.isSafeInteger(Number(form.minimalRewardInBalls)) || Number(form.minimalRewardInBalls) < 0) {
+      setClientError("Укажите неотрицательное целое количество очков");
+      return;
+    }
     if (!form.allowAmbassadorTargetUrl && form.targetUrls.every((url) => !url.trim())) {
       setClientError("Добавьте целевую ссылку или запросите её у исполнителя");
       return;
@@ -161,33 +170,7 @@ export function SprintCreationTaskDialog({
     onSave(form);
   };
 
-  return (
-    <DialogRoot
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) onClose();
-      }}
-    >
-      <DialogContent
-        showCloseButton={false}
-        className="flex max-h-[90dvh] w-[min(700px,calc(100vw-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-[700px]"
-      >
-        <DialogHeader className="shrink-0 flex-row items-center gap-2 space-y-0 border-b border-[#e4e4e4] px-4 py-3">
-          <DialogTitle className="flex-1 text-left text-[15px] font-medium leading-5">
-            {initialTask ? "Изменить задание" : "Добавить задание"}
-          </DialogTitle>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-6 shrink-0"
-            onClick={onClose}
-            aria-label="Закрыть"
-          >
-            <X className="size-5" />
-          </Button>
-        </DialogHeader>
-
+  const fields = (
         <div className="min-h-0 flex-1 overflow-y-auto">
           {clientError ? (
             <div className="px-4 pt-4">
@@ -333,6 +316,7 @@ export function SprintCreationTaskDialog({
                       key={chip.value}
                       type="button"
                       onClick={() => toggleFormat(chip.value)}
+                      aria-pressed={active}
                       className={[
                         "h-7 rounded-md px-2 text-[13px] font-medium leading-4",
                         active
@@ -585,16 +569,30 @@ export function SprintCreationTaskDialog({
             </div>
           </FieldRow>
         </div>
-
-        <DialogFooter className="shrink-0 border-t border-[#e4e4e4] px-4 py-2.5 sm:justify-end">
+  );
+  const saveButton = (
           <Button
             type="button"
             size="sm"
             className="h-7 bg-[#2563eb] px-2 text-[13px] font-medium hover:bg-[#2563eb]/90"
             onClick={handleSave}
           >
-            Сохранить
+            {saveLabel}
           </Button>
+  );
+
+  if (presentation === "page") return <section className="overflow-hidden rounded-lg border border-border bg-card">{fields}<div className="flex justify-end px-4 py-2.5">{saveButton}</div></section>;
+
+  return (
+    <DialogRoot open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
+      <DialogContent showCloseButton={false} className="flex max-h-[90dvh] w-[min(700px,calc(100vw-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-[700px]">
+        <DialogHeader className="shrink-0 flex-row items-center gap-2 space-y-0 border-b border-[#e4e4e4] px-4 py-3">
+          <DialogTitle className="flex-1 text-left text-[15px] font-medium leading-5">{initialTask ? "Изменить задание" : "Добавить задание"}</DialogTitle>
+          <Button type="button" variant="ghost" size="icon" className="size-6 shrink-0" onClick={onClose} aria-label="Закрыть"><X className="size-5" /></Button>
+        </DialogHeader>
+        {fields}
+        <DialogFooter className="shrink-0 border-t border-[#e4e4e4] px-4 py-2.5 sm:justify-end">
+          {saveButton}
         </DialogFooter>
       </DialogContent>
     </DialogRoot>

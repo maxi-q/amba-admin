@@ -24,7 +24,7 @@ export default function SprintSettingsPage() {
     isLoading: isLoadingSprints,
     isError: isSprintsError,
     error: sprintsError,
-  } = useSprints({ page: 1, size: 100 }, slug || "");
+  } = useSprints({ page: 1, size: 100 }, slug || "", { allPages: true });
 
   const {
     project,

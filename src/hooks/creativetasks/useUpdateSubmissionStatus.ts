@@ -9,7 +9,7 @@ import { ApiError } from '@/types';
 export function useUpdateSubmissionStatus() {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, error, isSuccess, isError } = useMutation<
+  const { mutate, reset, isPending, error, isSuccess, isError } = useMutation<
     Awaited<ReturnType<typeof creativeTasksControllerUpdateSubmissionStatus>>,
     ApiError,
     { id: string; data: UpdateSubmissionStatusRequestDto }
@@ -32,6 +32,7 @@ export function useUpdateSubmissionStatus() {
         queryKey: [QueryKeys.SPRINTS],
         exact: false,
       });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.SPRINT_LEADERBOARD], exact: false });
     },
   });
 
@@ -52,6 +53,7 @@ export function useUpdateSubmissionStatus() {
 
   return {
     updateSubmissionStatus: mutate,
+    reset,
     isPending,
     error,
     isSuccess,

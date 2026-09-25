@@ -58,7 +58,7 @@ export function CreateCreativeTaskDialog({
 }: CreateCreativeTaskDialogProps) {
   const { slug: slugParam } = useParams();
   const sprintRoomKey = roomSlug || slugParam || "";
-  const { sprints } = useSprints({ page: 1, size: 100 }, sprintRoomKey);
+  const { sprints, isLoading: isSprintsLoading, isError: isSprintsError, error: sprintsError } = useSprints({ page: 1, size: 100 }, sprintRoomKey, { allPages: true });
   const activeSprints = sprints.filter(
     (sprint) => !sprint.isDraft && sprint.status === "active"
   );
@@ -177,7 +177,7 @@ export function CreateCreativeTaskDialog({
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Спринт *</p>
-            <Select value={sprintId || undefined} onValueChange={setSprintId}>
+            <Select value={sprintId || undefined} onValueChange={setSprintId} disabled={isSprintsLoading || isSprintsError}>
               <SelectTrigger aria-label="Спринт">
                 <SelectValue placeholder="Выберите спринт" />
               </SelectTrigger>
@@ -189,7 +189,11 @@ export function CreateCreativeTaskDialog({
                 ))}
               </SelectContent>
             </Select>
-            {activeSprints.length === 0 ? (
+            {isSprintsLoading ? (
+              <p className="text-xs text-muted-foreground">Загрузка спринтов…</p>
+            ) : isSprintsError ? (
+              <p role="alert" className="text-sm text-destructive">{sprintsError?.message || "Не удалось загрузить спринты"}</p>
+            ) : activeSprints.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 Сначала создайте спринт — задание привязывается к нему.
               </p>
@@ -304,7 +308,7 @@ export function CreateCreativeTaskDialog({
             size="lg"
             onClick={handleSubmit}
             disabled={
-              isPending || !title.trim() || !ordContractTemplateId || !sprintId
+              isPending || isSprintsLoading || isSprintsError || !title.trim() || !ordContractTemplateId || !sprintId
             }
           >
             {isPending ? "Создание…" : "Создать"}

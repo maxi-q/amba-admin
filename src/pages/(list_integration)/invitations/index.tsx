@@ -31,7 +31,7 @@ export default function InvitationsPage() {
 
   const roomId = room?.id ?? "";
 
-  const { events } = useEvents({ page: 1, size: 100 }, slug ?? "");
+  const { events } = useEvents({ page: 1, size: 100 }, slug ?? "", { allPages: true });
 
   const { invitations, isLoading, isError, error } = useRoomInvitations(roomId);
   const { project } = useGetProject();

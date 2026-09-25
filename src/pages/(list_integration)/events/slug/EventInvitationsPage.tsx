@@ -40,9 +40,10 @@ const EventInvitationsPage = () => {
 
   const roomId = room?.id ?? "";
 
-  const { events, isLoading: isLoadingEvents } = useEvents(
+  const { events, isLoading: isLoadingEvents, isError: isEventsError, error: eventsError } = useEvents(
     { page: 1, size: 100 },
-    slug ?? ""
+    slug ?? "",
+    { allPages: true }
   );
 
   const event = useMemo(
@@ -154,12 +155,12 @@ const EventInvitationsPage = () => {
     );
   }
 
-  if (isRoomError || !room) {
+  if (isRoomError || isEventsError || !room) {
     return (
       <div className="w-full px-2 py-6">
         <Alert variant="destructive">
           <AlertDescription>
-            {(roomError as Error)?.message ?? "Комната не найдена"}
+            {roomError?.message ?? eventsError?.message ?? "Компания не найдена"}
           </AlertDescription>
         </Alert>
       </div>

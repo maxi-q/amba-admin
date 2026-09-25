@@ -18,7 +18,7 @@ const EventSubscribersPage = () => {
     isLoading: isLoadingEvents,
     isError: isEventsError,
     error: eventsError,
-  } = useEvents({ page: 1, size: 100 }, slug || "");
+  } = useEvents({ page: 1, size: 100 }, slug || "", { allPages: true });
 
   const {
     project,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useParams,
   useNavigate,
@@ -19,7 +19,6 @@ import type {
   UpdateSprintRequestDto,
 } from "@/api/generated/model";
 import { QueryKeys } from "@/config/tanstack/queryKeys";
-import { ApiError } from "@/types";
 import {
   dateToInput,
   emptySprintFormData,
@@ -52,6 +51,7 @@ import { useSprintRewardRules } from "@/hooks/sprints/useSprintRewardRules";
 import { useSprintRewardRuleActions } from "@/hooks/sprints/useSprintRewardRuleActions";
 import { useSprintTaskActions } from "@/hooks/sprints/useSprintTaskActions";
 import { useSprintTaskLoader } from "@/hooks/sprints/useSprintTaskLoader";
+import { saveSprintWithRelations, type SprintSaveProgress } from "./saveSprintWithRelations";
 
 const formDateToIso = (value: string | null): string | null => {
   if (!value) return null;
@@ -97,7 +97,8 @@ const SprintSetting = () => {
 
   const { sprints, isLoading: isLoadingSprints } = useSprints(
     { page: 1, size: 100 },
-    slug || ""
+    slug || "",
+    { allPages: true }
   );
   const {
     rules: existingRewardRules,
@@ -115,7 +116,7 @@ const SprintSetting = () => {
   } = useRoomCreativeTasks(isEditSprint ? roomId : "", {
     page: 1,
     size: 100,
-  });
+  }, { allPages: true });
 
   const [sprint, setSprint] = useState<BaseSprintDto | null>(null);
   const [description, setDescription] = useState("");
@@ -136,25 +137,22 @@ const SprintSetting = () => {
   const [draftTasks, setDraftTasks] = useState<DraftSprintTask[]>([]);
   const [editBaseline, setEditBaseline] = useState<{
     sprintId: string;
-    ruleIds: string[];
-    taskIds: string[];
-    proportionalRuleId?: string;
-    manualRuleId?: string;
   } | null>(null);
   const [editHydrationError, setEditHydrationError] = useState("");
   const [isLaunching, setIsLaunching] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [createdDraftId, setCreatedDraftId] = useState<string | null>(null);
+  const saveProgress = useRef<SprintSaveProgress>({ ruleIds: {}, taskIds: {} });
+  const savingRef = useRef(false);
+  const leavingRef = useRef(false);
+  const hydratedSprintId = useRef<string | null>(null);
   const [allowLeave, setAllowLeave] = useState(false);
 
   const shouldBlockLeave =
     (isNewSprint || isEditSprint) &&
-    !allowLeave &&
-    !isLaunching &&
-    !isSavingDraft;
+    !allowLeave;
   const leaveBlocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      shouldBlockLeave && currentLocation.pathname !== nextLocation.pathname
+      shouldBlockLeave && !leavingRef.current && currentLocation.pathname !== nextLocation.pathname
   );
   const [formData, setFormData] = useState<SprintFormData>(
     emptySprintFormData
@@ -168,8 +166,11 @@ const SprintSetting = () => {
       const foundSprint = sprints.find((s) => s.id === sprintId);
       if (foundSprint) {
         setSprint(foundSprint);
-        setDescription(foundSprint.description ?? "");
-        setFormData(sprintToFormData(foundSprint));
+        if (hydratedSprintId.current !== foundSprint.id) {
+          hydratedSprintId.current = foundSprint.id;
+          setDescription(foundSprint.description ?? "");
+          setFormData(sprintToFormData(foundSprint));
+        }
       }
     }
   }, [sprintId, sprints]);
@@ -294,13 +295,15 @@ const SprintSetting = () => {
           };
         })
       );
-      setEditBaseline({
+      saveProgress.current = {
         sprintId: sprint.id,
-        ruleIds: existingRewardRules.map((rule) => rule.id),
-        taskIds: sprintTasks.map((task) => task.id),
-        proportionalRuleId: proportionalRule?.id,
-        manualRuleId: manualRule?.id,
-      });
+        ruleIds: Object.fromEntries(existingRewardRules.map((rule) => [
+          rule.type === "byPoints" ? "proportional" : rule.type === "manual" ? "manual" : rule.id,
+          rule.id,
+        ])),
+        taskIds: Object.fromEntries(sprintTasks.map((task) => [task.id, task.id])),
+      };
+      setEditBaseline({ sprintId: sprint.id });
     }).catch(() => {
       if (!cancelled) {
         setEditHydrationError(
@@ -524,6 +527,8 @@ const SprintSetting = () => {
   };
 
   const handleLeaveWithoutSaving = () => {
+    if (savingRef.current) return;
+    leavingRef.current = true;
     if (leaveBlocker.state === "blocked") {
       leaveBlocker.proceed();
       return;
@@ -545,12 +550,12 @@ const SprintSetting = () => {
 
   const buildRewardRules = () => {
     const rules: Array<{
-      id?: string;
+      key: string;
       data: CreateRewardRuleRequestDto;
     }> = draftRankRules
       .filter((rule) => rule.rewards.length > 0)
       .map((rule) => ({
-        id: editBaseline?.ruleIds.includes(rule.id) ? rule.id : undefined,
+        key: rule.id,
         data: {
           type: "byRank",
           rankFrom: rule.rankFrom,
@@ -560,13 +565,9 @@ const SprintSetting = () => {
         },
       }));
 
-    const hasProportionalFilter =
-      Number(draftProportional.rankTo) > 0 ||
-      (draftProportional.minPoints !== "" &&
-        Number(draftProportional.minPoints) >= 0);
-    if (draftProportional.rewards.length > 0 && hasProportionalFilter) {
+    if (draftProportional.rewards.length > 0) {
       rules.push({
-        id: editBaseline?.proportionalRuleId,
+        key: "proportional",
         data: {
           type: "byPoints",
           rankFrom: null,
@@ -583,7 +584,7 @@ const SprintSetting = () => {
 
     if (draftManualRewards.length > 0) {
       rules.push({
-        id: editBaseline?.manualRuleId,
+        key: "manual",
         data: {
           type: "manual",
           rankFrom: null,
@@ -597,107 +598,56 @@ const SprintSetting = () => {
     return rules;
   };
 
-  const syncSprintRelations = async (
-    savedSprint: { id: string; roomId: string },
-    targetRoomId: string
-  ) => {
-    const rewardRules = buildRewardRules();
-    for (const rule of rewardRules) {
-      if (rule.id) {
-        await updateRuleAsync({ id: rule.id, data: rule.data });
-      } else {
-        await createRuleAsync({ sprintId: savedSprint.id, data: rule.data });
-      }
+  const saveWizard = async (data: UpdateSprintRequestDto, publish: boolean) => {
+    const targetRoomId = roomId || sprint?.roomId || slug || "";
+    try {
+      return await saveSprintWithRelations({
+        progress: saveProgress.current,
+        roomId: targetRoomId,
+        data,
+        publish,
+        rules: buildRewardRules(),
+        tasks: draftTasks.map((task) => ({
+          key: task.id,
+          createData: draftTaskToCreatePayload(task, targetRoomId, ""),
+          updateData: draftTaskToUpdatePayload(task, ""),
+        })),
+        actions: {
+          createSprint: createSprintAsync,
+          updateSprint: patchSprintAsync,
+          createRule: createRuleAsync,
+          updateRule: updateRuleAsync,
+          deleteRule: deleteRuleAsync,
+          createTask: createTaskAsync,
+          updateTask: updateTaskAsync,
+        },
+      });
+    } finally {
+      // A partial save is real server state too; keep IDs and refresh every affected view.
+      setDraftTasks((tasks) => tasks.map((task) => saveProgress.current.taskIds[task.id]
+        ? { ...task, isPersisted: true }
+        : task));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.SPRINTS, targetRoomId] }),
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.CREATIVE_TASKS, targetRoomId] }),
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.SPRINT_REWARD_RULES, saveProgress.current.sprintId] }),
+        queryClient.invalidateQueries({ queryKey: [QueryKeys.SPRINT_LEADERBOARD] }),
+      ]);
     }
-
-    if (editBaseline) {
-      const keptRuleIds = new Set(
-        rewardRules.flatMap((rule) => (rule.id ? [rule.id] : []))
-      );
-      for (const ruleId of editBaseline.ruleIds) {
-        if (!keptRuleIds.has(ruleId)) {
-          await deleteRuleAsync(ruleId);
-        }
-      }
-    }
-
-    const originalTaskIds = new Set(editBaseline?.taskIds ?? []);
-    const keptTaskIds = new Set(
-      draftTasks
-        .filter((task) => originalTaskIds.has(task.id))
-        .map((task) => task.id)
-    );
-
-    for (const task of draftTasks) {
-      if (originalTaskIds.has(task.id)) {
-        await updateTaskAsync({
-          id: task.id,
-          data: draftTaskToUpdatePayload(task, savedSprint.id),
-        });
-      } else {
-        await createTaskAsync(
-          draftTaskToCreatePayload(task, targetRoomId, savedSprint.id)
-        );
-      }
-    }
-
-    for (const taskId of originalTaskIds) {
-      if (!keptTaskIds.has(taskId)) {
-        await updateTaskAsync({
-          id: taskId,
-          data: { isDeleted: true },
-        });
-      }
-    }
-
-    await queryClient.invalidateQueries({
-      queryKey: [QueryKeys.SPRINTS, savedSprint.roomId],
-    });
-    await queryClient.invalidateQueries({
-      queryKey: [QueryKeys.CREATIVE_TASKS, targetRoomId],
-      exact: false,
-    });
-    await queryClient.invalidateQueries({
-      queryKey: [QueryKeys.SPRINT_REWARD_RULES, savedSprint.id],
-    });
-    await queryClient.invalidateQueries({
-      queryKey: [QueryKeys.SPRINT_LEADERBOARD],
-      exact: false,
-    });
   };
 
   const handleDraftClick = async (leaveAfterSave = false) => {
-    if (!slug || isSavingDraft) return;
+    if (!slug || savingRef.current) return;
 
-    const targetRoomId = roomId || sprint?.roomId || slug;
-    const existingSprintId = isEditSprint ? sprintId : createdDraftId;
     const keepAsDraft = !sprint || sprint.isDraft;
+    savingRef.current = true;
     setIsSavingDraft(true);
     setGeneralError("");
 
     try {
-      let savedSprint;
-      if (existingSprintId) {
-        savedSprint = await patchSprintAsync({
-          sprintId: existingSprintId,
-          data: buildSprintPayload(keepAsDraft ? true : undefined),
-        });
-      } else {
-        savedSprint = await createSprintAsync({
-          roomId: targetRoomId,
-          isDraft: true,
-        });
-        setCreatedDraftId(savedSprint.id);
-        if (hasSprintContent) {
-          savedSprint = await patchSprintAsync({
-            sprintId: savedSprint.id,
-            data: buildSprintPayload(true),
-          });
-        }
-      }
-
-      await syncSprintRelations(savedSprint, targetRoomId);
+      await saveWizard(hasSprintContent ? buildSprintPayload() : {}, false);
       toast.success(keepAsDraft ? "Черновик сохранён" : "Спринт сохранён");
+      leavingRef.current = true;
       setAllowLeave(true);
       if (leaveAfterSave && leaveBlocker.state === "blocked") {
         leaveBlocker.proceed();
@@ -706,7 +656,7 @@ const SprintSetting = () => {
       }
     } catch (error) {
       const message =
-        error instanceof ApiError
+        error instanceof Error
           ? error.message
           : keepAsDraft
             ? "Не удалось сохранить черновик"
@@ -714,6 +664,7 @@ const SprintSetting = () => {
       setGeneralError(message);
       toast.error(message);
     } finally {
+      savingRef.current = false;
       setIsSavingDraft(false);
     }
   };
@@ -723,7 +674,7 @@ const SprintSetting = () => {
   };
 
   const handleLaunchSprint = async () => {
-    if (!slug || draftTasks.length === 0) return;
+    if (!slug || draftTasks.length === 0 || savingRef.current) return;
 
     const publicationErrors: Record<string, string[]> = {};
     if (!formData.name.trim()) {
@@ -757,7 +708,6 @@ const SprintSetting = () => {
       return;
     }
 
-    const targetRoomId = roomId || sprint?.roomId || slug;
     const startDate =
       isEditSprint &&
       sprint?.startDate &&
@@ -774,37 +724,30 @@ const SprintSetting = () => {
           : formDateToIso(formData.endDate)
         : null;
 
+    savingRef.current = true;
     setIsLaunching(true);
     setGeneralError("");
 
     try {
       const sprintData: UpdateSprintRequestDto = {
-        ...buildSprintPayload(false),
+        ...buildSprintPayload(),
         startDate,
         endDate,
       };
 
-      const existingSprintId = isEditSprint ? sprintId : createdDraftId;
-      const savedSprint = existingSprintId
-        ? await patchSprintAsync({ sprintId: existingSprintId, data: sprintData })
-        : await createSprintAsync({
-            ...sprintData,
-            roomId: targetRoomId,
-            isDraft: false,
-          });
-
-      await syncSprintRelations(savedSprint, targetRoomId);
+      const savedSprint = await saveWizard(sprintData, true);
 
       toast.success(
         isEditSprint && !sprint?.isDraft
           ? "Спринт сохранён"
           : "Спринт запущен"
       );
+      leavingRef.current = true;
       setAllowLeave(true);
       navigate(`/rooms/${slug}/sprints/${savedSprint.id}`);
     } catch (error) {
       const message =
-        error instanceof ApiError
+        error instanceof Error
           ? error.message
           : isEditSprint
             ? "Не удалось сохранить спринт"
@@ -812,6 +755,7 @@ const SprintSetting = () => {
       setGeneralError(message);
       toast.error(message);
     } finally {
+      savingRef.current = false;
       setIsLaunching(false);
     }
   };
@@ -867,12 +811,13 @@ const SprintSetting = () => {
 
   if (isNewSprint || isEditSprint) {
     return (
-      <div className="flex min-h-full w-full flex-col py-6">
+      <div className="flex min-h-full w-full flex-col py-6" inert={isLaunching || isSavingDraft} aria-busy={isLaunching || isSavingDraft}>
         <SprintUnsavedLeaveDialog
           open={leaveBlocker.state === "blocked"}
           onStay={handleStayOnPage}
           onLeaveWithoutSaving={handleLeaveWithoutSaving}
           onSaveDraft={handleSaveDraftAndLeave}
+          isSaving={isLaunching || isSavingDraft}
         />
         {generalError ? (
           <Alert variant="destructive" className="mx-auto mb-4 w-full max-w-[700px]">
@@ -884,7 +829,7 @@ const SprintSetting = () => {
             formData={formData}
             description={description}
             fieldErrors={fieldErrors}
-            isSaving={isCreating || isUpdating || isSavingDraft}
+            isSaving={isCreating || isUpdating || isSavingDraft || isLaunching}
             onNameChange={handleInputChange("name")}
             onRewardValueChange={handleInputChange("rewardValue")}
             onRewardUnitsChange={(value) =>
@@ -902,6 +847,7 @@ const SprintSetting = () => {
           <SprintCreationStepTwo
             roomId={roomId}
             roomSlug={slug ?? ""}
+            pinnedRewards={existingRewardRules.flatMap((rule) => rule.rewards.map((item) => item.reward))}
             rankRules={draftRankRules}
             proportional={draftProportional}
             manualRewards={draftManualRewards}
@@ -920,7 +866,7 @@ const SprintSetting = () => {
             roomId={roomId}
             roomSlug={slug ?? ""}
             tasks={draftTasks}
-            isLaunching={isLaunching}
+            isLaunching={isLaunching || isSavingDraft}
             onTasksChange={setDraftTasks}
             onBack={() => setCreationStep(2)}
             onLaunch={() => {

@@ -1,7 +1,5 @@
-import { useEvents } from "@/hooks/events/useEvents";
 import { useGetProject } from "@/hooks/projects/useGetProject";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
-import { useSprints } from "@/hooks/sprints/useSprints";
 import { Loader } from "@components/Loader";
 import { useParams, Outlet } from "react-router-dom";
 import { RoomBox } from "../(list_integration)";
@@ -17,41 +15,28 @@ export const RoomLayout = () => {
   } = useGetRoomById(slug || '');
 
   const {
-    isLoading: isLoadingSprints,
-    isError: isSprintsError,
-    error: sprintsError
-  } = useSprints({ page: 1, size: 100 }, slug || '');
-
-  const {
-    isLoading: isLoadingEvents,
-    isError: isEventsError,
-    error: eventsError
-  } = useEvents({ page: 1, size: 100 }, slug || '');
-
-  const {
+    project,
     isLoading: isLoadingProject,
     isError: isProjectError,
     error: projectError
   } = useGetProject();
 
-  const isLoading = isLoadingRoom || isLoadingSprints || isLoadingEvents || isLoadingProject;
+  const isLoading = (!room && isLoadingRoom) || (!project && isLoadingProject);
 
   if (isLoading) {
     return <Loader />;
   }
 
-  if (isRoomError || isSprintsError || isEventsError || isProjectError) {
+  if ((!room && isRoomError) || (!project && isProjectError)) {
     return (
       <div className="w-full px-4 py-6">
-        {isRoomError && <div>Ошибка загрузки комнаты: {roomError?.message}</div>}
-        {isSprintsError && <div>Ошибка загрузки спринтов: {sprintsError?.message}</div>}
-        {isEventsError && <div>Ошибка загрузки событий: {eventsError?.message}</div>}
-        {isProjectError && <div>Ошибка загрузки проекта: {projectError?.message}</div>}
+        {!room && isRoomError && <div>Ошибка загрузки компании: {roomError?.message}</div>}
+        {!project && isProjectError && <div>Ошибка загрузки проекта: {projectError?.message}</div>}
       </div>
     );
   }
 
-  if (!room) {
+  if (!room || !project) {
     return <Loader />;
   }
 

@@ -44,6 +44,8 @@ import {
 import { ProtectedRoute } from "@components/ProtectedRoute";
 import { getUrlParams } from "@helpers/index";
 import { RoomLayout } from "./RoomLayout";
+import SprintParticipantPage from "../(list_integration)/sprints/slug/SprintParticipantPage";
+import CreativeTaskEditorPage from "../(list_integration)/creativetasks/CreativeTaskEditorPage";
 import { SelectActionPage } from "../(Bot_step)/main";
 import { RoomRedirect } from "..";
 import { AuthPage } from "../auth";
@@ -131,6 +133,7 @@ export const Navigation = () => {
           <Route path="new" element={<SprintSetting />} />
           <Route path=":sprintId" element={<OpenSprintPage />} />
           <Route path=":sprintId/edit" element={<SprintSetting />} />
+          <Route path=":sprintId/participants/:ambassadorId" element={<SprintParticipantPage />} />
         </Route>
 
         <Route path="rewards" element={<RewardsPage />} />
@@ -156,6 +159,8 @@ export const Navigation = () => {
           <Route path=":contractId" element={<OrdContractDetailPage />} />
         </Route>
         <Route path="creativetasks" element={<CreativeTasksPage />} />
+        <Route path="creativetasks/new" element={<CreativeTaskEditorPage />} />
+        <Route path="creativetasks/:taskId/edit" element={<CreativeTaskEditorPage />} />
         <Route path="creativetasks/private/*" element={<Navigate to="../creativetasks" replace />} />
         <Route path="private-creativetasks/*" element={<Navigate to="../creativetasks" replace />} />
         <Route path="creativetasks/:taskId" element={<CreativeTaskDetailLayout />}>

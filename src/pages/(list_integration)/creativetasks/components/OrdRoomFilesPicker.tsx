@@ -52,7 +52,7 @@ export function OrdRoomFilesPicker({
     <div className="space-y-2">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-foreground">ORD-файлы комнаты</p>
+          <p className="text-sm font-medium text-foreground">ОРД-файлы компании</p>
           <p className="text-xs text-muted-foreground">
             Можно выбрать только синхронизированные файлы.
           </p>
@@ -84,7 +84,7 @@ export function OrdRoomFilesPicker({
           <p className="py-2 text-center text-sm text-muted-foreground">
             {files.length
               ? "Нет синхронизированных ORD-файлов. Дождитесь синхронизации или добавьте новые."
-              : "ORD-файлов пока нет. Добавьте их в разделе «Файлы» комнаты."}
+              : "ОРД-файлов пока нет. Добавьте их в разделе «Файлы» компании."}
           </p>
         ) : (
           <ul className="space-y-0.5">

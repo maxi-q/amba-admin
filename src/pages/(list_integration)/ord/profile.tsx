@@ -8,12 +8,13 @@ import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useCreateRoomOrdProfile } from "@/hooks/rooms/useCreateRoomOrdProfile";
 import { useUpdateRoomOrdProfile } from "@/hooks/rooms/useUpdateRoomOrdProfile";
 import { QueryKeys } from "@/config/tanstack/queryKeys";
-import { isFioComplete, parseFioFromApi } from "@/utils/fio";
+import { validateOrdProfileName } from "@/utils/ordProfileName";
 import { applyRuPhoneChange, formatRuMobileInput, INITIAL_RU_PHONE_DISPLAY, isCompleteRuMobile, ruPhoneToE164 } from "@/utils/ruPhone";
 import { validateInn } from "@/utils/validateInn";
 import earthIcon from "@/assets/ord-profile/earth.svg";
 import closeIcon from "@/assets/ord-profile/close.svg";
 import checkIcon from "@/assets/ord-profile/check.svg";
+import userIcon from "@/assets/ord-profile/user.svg";
 import { OrdProfilePreviewContext } from "./OrdProfilePreviewContext";
 import { ORD_COPY, type OrdJuridicalType } from "./ord.constants";
 import "./profile.css";
@@ -47,15 +48,19 @@ function OrdProfileForm({ roomId, profile }: { roomId: string; profile: RoomOrdP
   const [savedForeignDraft, setSavedForeignDraft] = useState("");
   const [attempted, setAttempted] = useState(false);
   const [lockOpen, setLockOpen] = useState(preview?.locked ?? false);
+  const [changeStatusOpen, setChangeStatusOpen] = useState(false);
   const pending = create.isPending || update.isPending;
   const mutation = profile ? update : create;
   const apiErrors = mutation.validationErrors;
   const fullName = name.trim().replace(/\s+/g, " ");
   const innValidation = validateInn(inn, juridicalType);
-  const nameError = apiErrors.name?.[0] ?? (attempted && !isFioComplete(parseFioFromApi(name)) ? "Укажите фамилию, имя и отчество" : undefined);
+  const nameValidation = validateOrdProfileName(name, juridicalType);
+  const nameError = apiErrors.name?.[0] ?? (attempted ? nameValidation : undefined);
   const phoneError = apiErrors.phone?.[0] ?? (attempted && !isCompleteRuMobile(phone) ? ORD_COPY.phoneFormatHint : undefined);
   const innError = apiErrors.inn?.[0] ?? ((attempted || !!inn) ? innValidation.error ?? undefined : undefined);
   const foreignDemo = !!preview && details.foreign;
+  const nameLabel = juridicalType === "juridical" ? "Наименование организации" : "ФИО";
+  const statusLabel = juridicalType === "juridical" ? "Юридическое лицо" : juridicalType === "ip" ? "Индивидуальный предприниматель" : "Физическое лицо";
   const locked = !!preview?.locked;
   const detailsChanged = JSON.stringify(details) !== JSON.stringify(savedDetails);
   const foreignDraft = JSON.stringify({ name: fullName, phone: ruPhoneToE164(phone), juridicalType, details });
@@ -78,7 +83,7 @@ function OrdProfileForm({ roomId, profile }: { roomId: string; profile: RoomOrdP
   const handleSave = () => {
     if (pending || !changed) return;
     setAttempted(true);
-    if (!isFioComplete(parseFioFromApi(name)) || !isCompleteRuMobile(phone)) return;
+    if (nameValidation || !isCompleteRuMobile(phone)) return;
     if (foreignDemo && (!details.paymentNumber.trim() || !details.country || !details.address.trim())) return;
     if (!profile && !foreignDemo && innValidation.error) return;
     mutation.reset();
@@ -109,37 +114,40 @@ function OrdProfileForm({ roomId, profile }: { roomId: string; profile: RoomOrdP
     },
   } : {};
 
+  const foreignControl = <div className="mb-1 flex h-12 items-center gap-1.5 rounded-md border border-border py-2 pl-2 pr-3">
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-[5px] bg-muted"><img src={earthIcon} alt="" className="size-5" /></span>
+    <div className="min-w-0 flex-1"><label htmlFor="ord-foreign" className="block text-black">Иностранный контрагент</label><p className="text-muted-foreground">Для нерезидентов РФ</p></div>
+    <Switch id="ord-foreign" aria-label="Иностранный контрагент" size="tiny" checked={foreignDemo} disabled={!preview || pending}
+      aria-describedby={!preview ? "ord-foreign-unavailable" : undefined}
+      onCheckedChange={(foreign) => locked ? setLockOpen(true) : setDetails((prev) => ({ ...prev, foreign }))} />
+  </div>;
+
   return <>
     <form className="mx-auto mt-10 w-[358px] max-w-[calc(100%-32px)] pb-8" noValidate onSubmit={(event) => { event.preventDefault(); handleSave(); }}>
       <Card className="flex flex-col gap-3 rounded-lg border border-border bg-white p-[15px] shadow-none">
-        <TabsRoot value={juridicalType} onValueChange={(value) => {
-          if (locked) setLockOpen(true);
-          else if (!profile) setJuridicalType(value as OrdJuridicalType);
-        }}>
+        {profile ? <div className="ord-profile-status">
+          <span className="ord-profile-status-avatar"><img src={userIcon} alt="" /></span>
+          <div className="min-w-0 flex-1"><p>{statusLabel}</p><p className="text-muted-foreground">{foreignDemo ? "Нерезидент РФ" : "Резидент РФ"}</p></div>
+          <Button type="button" variant="outline" className="h-7 rounded-md px-2 text-[13px] font-medium leading-4 shadow-none" disabled={pending} onClick={() => setChangeStatusOpen(true)}>Сменить</Button>
+        </div> : <>
+        <TabsRoot value={juridicalType} onValueChange={(value) => setJuridicalType(value as OrdJuridicalType)}>
           <TabsList className="w-full" aria-label="Юридический тип">
             {([['physical', 'Физ. лицо'], ['juridical', 'Юр. лицо'], ['ip', 'ИП']] as const).map(([value, label]) => <TabsTrigger
               key={value} value={value} className="h-6 flex-1 disabled:opacity-100"
-              disabled={pending || (!!profile && !locked && value !== juridicalType)}
-              title={profile && !locked && value !== juridicalType ? "Тип уже созданного профиля нельзя изменить через API" : undefined}
+              disabled={pending}
             >{label}</TabsTrigger>)}
           </TabsList>
         </TabsRoot>
         {apiErrors.juridicalType?.[0] && <p role="alert" className="text-destructive">{apiErrors.juridicalType[0]}</p>}
-
-        <div className="mb-1 flex h-12 items-center gap-1.5 rounded-md border border-border py-2 pl-2 pr-3">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-[5px] bg-muted"><img src={earthIcon} alt="" className="size-5" /></span>
-          <div className="min-w-0 flex-1"><label htmlFor="ord-foreign" className="block text-black">Иностранный контрагент</label><p className="text-muted-foreground">Для нерезидентов РФ</p></div>
-          <Switch id="ord-foreign" aria-label="Иностранный контрагент" size="tiny" checked={foreignDemo} disabled={!preview || pending}
-            aria-describedby={!preview ? "ord-foreign-unavailable" : undefined}
-            onCheckedChange={(foreign) => locked ? setLockOpen(true) : setDetails((prev) => ({ ...prev, foreign }))} />
-        </div>
+        {foreignControl}
+        </>}
 
         {profile && changed && <p className="rounded-md bg-muted p-2"><span className="text-[#f98600]">Внимание!</span> Убедитесь, что вы вносите актуальные данные, они будут отображаться в будущих актах</p>}
 
         {mutation.generalError && <Alert variant="destructive"><AlertDescription>{mutation.generalError}</AlertDescription></Alert>}
         {profile?.lastSyncError && <Alert variant="destructive"><AlertDescription>{profile.lastSyncError}</AlertDescription></Alert>}
 
-        <InputField label="ФИО" autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} disabled={pending}
+        <InputField label={nameLabel} autoComplete={juridicalType === "juridical" ? "organization" : "name"} value={name} onChange={(event) => setName(event.target.value)} disabled={pending}
           error={!!nameError} aria-invalid={!!nameError} helperText={nameError} />
         <InputField label="Номер телефона" type="tel" autoComplete="tel" value={phone}
           onChange={(event) => setPhone((prev) => applyRuPhoneChange(prev, event.target.value))} disabled={pending}
@@ -168,9 +176,24 @@ function OrdProfileForm({ roomId, profile }: { roomId: string; profile: RoomOrdP
       <div className="mt-3 flex justify-end"><Button type="submit" className="h-10 rounded-md px-3 text-[13px] font-medium leading-4 shadow-none disabled:opacity-100" disabled={pending || !changed}>
         {pending ? ORD_COPY.savePending : ORD_COPY.save}
       </Button></div>
+      {profile && <details className="mt-4 text-muted-foreground">
+        <summary className="cursor-pointer">{preview ? "Демо-параметры" : "Дополнительные параметры"}</summary>
+        <div className="mt-3">{foreignControl}</div>
+      </details>}
       {preview ? <p className="mt-4 text-muted-foreground">Демо: иностранные реквизиты и блокировка после актов пока не поддерживаются API. Изменения реквизитов сбрасываются при выходе со страницы или её перезагрузке.</p>
-        : <p id="ord-foreign-unavailable" className="mt-4 text-muted-foreground">Иностранные реквизиты пока недоступны: API не поддерживает страну, адрес и платёжные данные.{profile && " ИНН и юридический тип после создания не изменяются; ФИО и телефон можно редактировать."}</p>}
+        : <p id="ord-foreign-unavailable" className="mt-4 text-muted-foreground">Иностранные реквизиты пока недоступны: API не поддерживает страну, адрес и платёжные данные.{profile && " ИНН и юридический тип после создания не изменяются; имя контрагента и телефон можно редактировать."}</p>}
     </form>
+
+    <DialogRoot open={changeStatusOpen} onOpenChange={setChangeStatusOpen}>
+      <DialogContent data-ord-profile-dialog showCloseButton={false} className="w-[358px] max-w-[calc(100vw-32px)] gap-0 overflow-hidden rounded-lg border-0 bg-white p-0 text-black sm:max-w-[358px]">
+        <DialogHeader className="h-11 flex-row items-center justify-between gap-2 space-y-0 px-4 py-2.5 text-left">
+          <DialogTitle className="text-[15px] font-medium leading-5 tracking-[-0.135px]">Сменить статус</DialogTitle>
+          <DialogClose asChild><Button variant="ghost" aria-label="Закрыть" className="size-6 shrink-0 p-0"><img src={closeIcon} alt="" className="size-6" /></Button></DialogClose>
+        </DialogHeader>
+        <DialogDescription className="px-4 py-2 text-[13px] font-medium leading-4 text-muted-foreground">Чтобы сменить ваш статус контрагента, необходимо создать новую компанию</DialogDescription>
+        <DialogFooter className="flex-row justify-end px-4 py-2.5"><Button asChild className="h-7 rounded-md px-2 text-[13px] font-medium leading-4 shadow-none"><Link to="/">Создать новую компанию</Link></Button></DialogFooter>
+      </DialogContent>
+    </DialogRoot>
 
     {preview && <DialogRoot open={lockOpen} onOpenChange={setLockOpen}>
       <DialogContent data-ord-profile-dialog showCloseButton={false} className="w-[358px] max-w-[calc(100vw-32px)] gap-0 overflow-hidden rounded-lg border-0 bg-white p-0 text-black sm:max-w-[358px]">

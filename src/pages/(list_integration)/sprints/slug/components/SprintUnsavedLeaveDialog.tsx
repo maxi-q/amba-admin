@@ -13,6 +13,7 @@ interface SprintUnsavedLeaveDialogProps {
   onStay: () => void;
   onLeaveWithoutSaving: () => void;
   onSaveDraft: () => void;
+  isSaving?: boolean;
 }
 
 export function SprintUnsavedLeaveDialog({
@@ -20,6 +21,7 @@ export function SprintUnsavedLeaveDialog({
   onStay,
   onLeaveWithoutSaving,
   onSaveDraft,
+  isSaving = false,
 }: SprintUnsavedLeaveDialogProps) {
   return (
     <DialogRoot
@@ -65,6 +67,7 @@ export function SprintUnsavedLeaveDialog({
             size="sm"
             className="h-7 border-[#e4e4e4] bg-white px-2 text-[13px] font-medium shadow-none"
             onClick={onLeaveWithoutSaving}
+            disabled={isSaving}
           >
             Без сохранения
           </Button>
@@ -73,6 +76,7 @@ export function SprintUnsavedLeaveDialog({
             size="sm"
             className="h-7 bg-[#2563eb] px-2 text-[13px] font-medium hover:bg-[#2563eb]/90"
             onClick={onSaveDraft}
+            disabled={isSaving}
           >
             Сохранить черновик
           </Button>

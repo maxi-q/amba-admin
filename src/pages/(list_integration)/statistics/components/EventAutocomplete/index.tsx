@@ -10,7 +10,7 @@ export const EventAutocomplete = ({ selectedIds, onChange, roomId }: EventAutoco
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 200);
 
-  const { events, isLoading } = useEvents({ page: 1, size: 100 }, roomId);
+  const { events, isLoading, isError, error } = useEvents({ page: 1, size: 100 }, roomId, { allPages: true });
 
   const allOptions = useMemo<AutocompleteOption[]>(
     () => events.map((e: GetMyEventsResponseItemDto) => ({ id: e.id, label: e.name })),
@@ -93,6 +93,8 @@ export const EventAutocomplete = ({ selectedIds, onChange, roomId }: EventAutoco
           <div className="flex justify-center py-6">
             <PageLoader label="Загрузка…" />
           </div>
+        ) : isError ? (
+          <p role="alert" className="py-2 text-sm text-destructive">{error?.message || "Не удалось загрузить события"}</p>
         ) : displayOptions.length === 0 ? (
           <p className="py-2 text-center text-sm text-muted-foreground">Нет событий</p>
         ) : (

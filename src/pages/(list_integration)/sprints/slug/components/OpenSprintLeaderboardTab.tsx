@@ -1,8 +1,14 @@
 import { Fragment, useEffect, useState } from "react";
-import { Banknote, ChevronDown, Gift, User } from "lucide-react";
+import { Banknote, ChevronDown, Gift } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import profileIcon from "@/assets/task-flow/user.svg";
 import {
   Avatar,
+  Button,
   PageLoader,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -37,16 +43,6 @@ const numberFormatter = new Intl.NumberFormat("ru-RU", {
 
 function formatPoints(points: number): string {
   return `${points.toLocaleString("ru-RU")} XP`;
-}
-
-function leaderboardRewardAmount(reward: LeaderboardRewardDto): number {
-  const currencyAmount = reward.name.match(/^([\d\s]+(?:[,.]\d+)?)\s*[₽$€]$/);
-  if (!currencyAmount) return reward.amount;
-
-  const parsed = Number(
-    currencyAmount[1].replace(/\s/g, "").replace(",", ".")
-  );
-  return Number.isFinite(parsed) ? parsed : reward.amount;
 }
 
 function ruleMatchesEntry(
@@ -92,7 +88,7 @@ function getRewardBreakdown(
     .reduce((total, source) => total + source.item.amount, 0);
   const precision = reward.isDivisible ? reward.divisionPrecision : 0;
   const multiplier = 10 ** precision;
-  const total = leaderboardRewardAmount(reward);
+  const total = reward.amount;
   const proportional =
     Math.round(Math.max(0, total - fixed) * multiplier) / multiplier;
   const contributionCount =
@@ -126,7 +122,7 @@ function RewardChip({
     .find((item) => item.rewardId === reward.rewardId)?.reward;
   const currencySymbol = reward.name.match(/([₽$€])$/)?.[1] ?? "₽";
   const isMoney = /руб|[₽$€]/i.test(`${ruleReward?.name ?? ""} ${reward.name}`);
-  const amount = leaderboardRewardAmount(reward);
+  const amount = reward.amount;
   const breakdown = getRewardBreakdown(entry, reward, rules);
   const RewardIcon = isMoney ? Banknote : Gift;
   const content = (
@@ -223,9 +219,10 @@ export function OpenSprintLeaderboardTab({
   rules,
   search = "",
 }: OpenSprintLeaderboardTabProps) {
+  const { slug = "" } = useParams();
   const [page, setPage] = useState(1);
-  const { sprint, entries, pagination, isLoading, isError, error } =
-    useSprintLeaderboard(roomId, { page, size: 50 });
+  const { sprint, entries, isLoading, isError, error } =
+    useSprintLeaderboard(roomId, { page: 1, size: 100 }, { allPages: true });
 
   useEffect(() => setPage(1), [search]);
 
@@ -264,16 +261,19 @@ export function OpenSprintLeaderboardTab({
   }
 
   const normalizedSearch = search.trim().toLocaleLowerCase("ru-RU");
-  const visibleEntries = normalizedSearch
+  const filteredEntries = normalizedSearch
     ? entries.filter((entry) =>
         entry.username.toLocaleLowerCase("ru-RU").includes(normalizedSearch)
       )
     : entries;
+  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / 50));
+  const currentPage = Math.min(page, totalPages);
+  const visibleEntries = filteredEntries.slice((currentPage - 1) * 50, currentPage * 50);
   const paginationControls =
-    pagination && pagination.totalPages > 1 ? (
+    totalPages > 1 ? (
       <CreativesPaginationControls
-        page={page}
-        totalPages={pagination.totalPages}
+        page={currentPage}
+        totalPages={totalPages}
         onPageChange={setPage}
         aria-label="Страницы рейтинга спринта"
         className="border-b border-[#e4e4e4] py-3"
@@ -303,7 +303,7 @@ export function OpenSprintLeaderboardTab({
             entry.rewards.length > 0 &&
             (nextEntry
               ? nextEntry.rewards.length === 0
-              : pagination?.page === pagination?.totalPages);
+              : entryIndex === entries.length - 1);
 
           return (
             <Fragment key={entry.ambassadorId}>
@@ -338,9 +338,13 @@ export function OpenSprintLeaderboardTab({
                       );
                     })}
                     {hiddenRewardsCount > 0 ? (
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#e9efff] text-[13px] font-medium leading-4 text-[#2563eb]">
-                        +{hiddenRewardsCount}
-                      </span>
+                      <Popover>
+                        <PopoverTrigger asChild><Button variant="ghost" className="size-6 shrink-0 rounded-full bg-[#e9efff] p-0 text-[13px] font-medium leading-4 text-[#2563eb]" aria-label={`Ещё награды: ${hiddenRewardsCount}, ${entry.username}`}>+{hiddenRewardsCount}</Button></PopoverTrigger>
+                        <PopoverContent align="end" className="w-[260px] p-3">
+                          <p className="mb-2 text-[13px] font-medium">Остальные награды</p>
+                          <div className="flex flex-wrap gap-1">{entry.rewards.slice(2).map((reward) => <RewardChip key={reward.rewardId} entry={entry} reward={reward} rules={rules} />)}</div>
+                        </PopoverContent>
+                      </Popover>
                     ) : null}
                   </div>
                 ) : null}
@@ -358,12 +362,9 @@ export function OpenSprintLeaderboardTab({
                   </span>
                 </div>
 
-                <span
-                  className="flex size-7 shrink-0 items-center justify-center rounded-md border border-[#e4e4e4] bg-white"
-                  aria-hidden
-                >
-                  <User className="size-4" strokeWidth={1.5} />
-                </span>
+                <Button asChild variant="outline" className="size-7 shrink-0 border-[#e4e4e4] p-0 shadow-none">
+                  <Link to={`/rooms/${slug}/sprints/${sprintId}/participants/${entry.ambassadorId}`} aria-label={`Профиль исполнителя: ${entry.username}`}><img src={profileIcon} alt="" /></Link>
+                </Button>
               </div>
 
               {isEndOfRewardZone ? (

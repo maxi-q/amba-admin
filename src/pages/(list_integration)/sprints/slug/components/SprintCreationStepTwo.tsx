@@ -34,8 +34,16 @@ import {
   PageLoader,
   Switch,
 } from "@senler/ui";
-import type { BaseRewardDto } from "@/api/generated/model";
+import type { BaseRewardDto, RewardSummaryDto } from "@/api/generated/model";
 import { useRoomRewards } from "@/hooks/rewards/useRoomRewards";
+import {
+  distributeRewardPool,
+  isValidRewardRange,
+  rankParticipants,
+  rankRewardPlaceCount,
+  rankRewardsForParticipant,
+  sumRewardAmounts,
+} from "@/utils/sprintRewardPreview";
 import { SprintCreationHeader } from "./SprintCreationHeader";
 
 export interface DraftRankReward {
@@ -65,6 +73,7 @@ interface SprintCreationStepTwoProps {
   rankRules: DraftRankRule[];
   proportional: DraftProportionalReward;
   manualRewards: DraftManualReward[];
+  pinnedRewards?: RewardSummaryDto[];
   onRankRulesChange: (rules: DraftRankRule[]) => void;
   onProportionalChange: (value: DraftProportionalReward) => void;
   onManualRewardsChange: (rewards: DraftManualReward[]) => void;
@@ -75,6 +84,7 @@ interface SprintCreationStepTwoProps {
 }
 
 type PlaceDialogKind = "single" | "range" | "manual";
+type RewardPresentation = Pick<BaseRewardDto, "id" | "name" | "iconUrl" | "isDivisible" | "divisionPrecision">;
 
 interface PreviewParticipant {
   id: string;
@@ -91,14 +101,14 @@ const PREVIEW_PARTICIPANTS: PreviewParticipant[] = [
 
 const MANUAL_DIALOG_ID = "__manual__";
 const PROPORTIONAL_DIALOG_ID = "__proportional__";
-const numberFormatter = new Intl.NumberFormat("ru-RU");
+const numberFormatter = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 10 });
 
 const ruleLabel = (rule: DraftRankRule) =>
   rule.rankFrom === rule.rankTo
     ? `${rule.rankFrom} место`
     : `${rule.rankFrom}–${rule.rankTo} место`;
 
-const RewardImage = ({ reward }: { reward: BaseRewardDto }) =>
+const RewardImage = ({ reward }: { reward: RewardPresentation }) =>
   reward.iconUrl ? (
     <img
       src={reward.iconUrl}
@@ -115,7 +125,7 @@ const RewardChip = ({
   reward,
   amount,
 }: {
-  reward: BaseRewardDto;
+  reward: RewardPresentation;
   amount: number;
 }) => {
   const isMoney = /руб|₽/i.test(reward.name);
@@ -141,7 +151,7 @@ const RewardPreviewItem = ({
   reward,
   amount,
 }: {
-  reward: BaseRewardDto;
+  reward: RewardPresentation;
   amount: number;
 }) => {
   const isMoney = /руб|₽/i.test(reward.name);
@@ -204,6 +214,7 @@ export const SprintCreationStepTwo = ({
   rankRules,
   proportional,
   manualRewards,
+  pinnedRewards,
   onRankRulesChange,
   onProportionalChange,
   onManualRewardsChange,
@@ -221,15 +232,15 @@ export const SprintCreationStepTwo = ({
     page: 1,
     size: 100,
     includeDeleted: false,
-  });
+  }, { allPages: true });
   const activeRewards = useMemo(
     () => rewards.filter((reward) => !reward.isDeleted),
     [rewards]
   );
-  const rewardById = useMemo(
-    () => new Map(activeRewards.map((reward) => [reward.id, reward])),
-    [activeRewards]
-  );
+  const rewardById = useMemo(() => new Map<string, RewardPresentation>([
+    ...activeRewards.map((reward) => [reward.id, reward] as const),
+    ...(pinnedRewards ?? []).map((reward) => [reward.id, reward] as const),
+  ]), [activeRewards, pinnedRewards]);
 
   const [placeDialogOpen, setPlaceDialogOpen] = useState(false);
   const [placeDialogKind, setPlaceDialogKind] =
@@ -240,6 +251,13 @@ export const SprintCreationStepTwo = ({
   const [distributeProportionally, setDistributeProportionally] =
     useState(false);
   const [rewardDraft, setRewardDraft] = useState<DraftRankReward[]>([]);
+  const dialogRewards = useMemo(() => [...new Set([
+    ...activeRewards.map((reward) => reward.id),
+    ...rewardDraft.map((reward) => reward.rewardId),
+  ])].flatMap((id) => {
+    const reward = rewardById.get(id);
+    return reward ? [reward] : [];
+  }), [activeRewards, rewardDraft, rewardById]);
   const [selectedRuleIds, setSelectedRuleIds] = useState<string[]>([]);
   const [previewTab, setPreviewTab] = useState<"distribution" | "all">(
     "distribution"
@@ -254,11 +272,11 @@ export const SprintCreationStepTwo = ({
   const ratingPool = useMemo(() => {
     const totals = new Map<string, number>();
     for (const rule of rankRules) {
-      const places = rule.rankTo - rule.rankFrom + 1;
+      const places = rankRewardPlaceCount(rule);
       for (const reward of rule.rewards) {
         totals.set(
           reward.rewardId,
-          (totals.get(reward.rewardId) ?? 0) + reward.amount * places
+          Number(((totals.get(reward.rewardId) ?? 0) + reward.amount * places).toFixed(10))
         );
       }
     }
@@ -271,28 +289,22 @@ export const SprintCreationStepTwo = ({
     for (const reward of proportionalRewards) {
       totals.set(
         reward.rewardId,
-        (totals.get(reward.rewardId) ?? 0) + reward.amount
+        Number(((totals.get(reward.rewardId) ?? 0) + reward.amount).toFixed(10))
       );
     }
     return [...totals.entries()];
   }, [proportionalRewards, ratingPool]);
 
   const participants = previewHistory[previewHistoryIndex] ?? PREVIEW_PARTICIPANTS;
+  const rankedParticipants = useMemo(() => rankParticipants(participants), [participants]);
   const visibleParticipants = useMemo(
-    () =>
-      [...participants]
-        .sort((first, second) => second.points - first.points)
-        .map((participant, index) => ({ participant, rank: index + 1 }))
-        .filter(({ participant }) =>
+    () => rankedParticipants.filter(({ participant }) =>
           participant.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
         ),
-    [participants, searchQuery]
+    [rankedParticipants, searchQuery]
   );
 
-  const hasProportionalFilter =
-    Boolean(proportional.rankTo) || proportional.minPoints !== "";
-  const hasProportionalRule =
-    hasProportionalFilter && proportionalRewards.length > 0;
+  const hasProportionalRule = proportionalRewards.length > 0;
   const hasManualRule = manualRewards.length > 0;
   const ruleIds = [
     ...rankRules.map((rule) => rule.id),
@@ -307,6 +319,16 @@ export const SprintCreationStepTwo = ({
 
   const allRulesSelected =
     ruleIds.length > 0 && selectedRuleIds.length === ruleIds.length;
+  const hasUnsupportedProportionalRange = distributeProportionally && Number(rangeFrom) !== 1;
+  const isPlaceRangeValid = placeDialogKind === "manual" || (
+    distributeProportionally && rangeTo === ""
+      ? Number(rangeFrom) === 1
+      : isValidRewardRange(
+          Number(rangeFrom),
+          placeDialogKind === "single" ? Number(rangeFrom) : Number(rangeTo),
+          distributeProportionally
+        )
+  );
 
   const openNewPlaceDialog = () => {
     setEditingRuleId(null);
@@ -341,7 +363,7 @@ export const SprintCreationStepTwo = ({
     setPlaceDialogKind("range");
     setDistributeProportionally(true);
     setRangeFrom("1");
-    setRangeTo(proportional.rankTo || "1");
+    setRangeTo(proportional.rankTo);
     setRewardDraft(proportionalRewards.map((reward) => ({ ...reward })));
     setPlaceDialogOpen(true);
   };
@@ -354,10 +376,11 @@ export const SprintCreationStepTwo = ({
     );
   };
 
-  const setRewardAmount = (reward: BaseRewardDto, amount: number) => {
+  const setRewardAmount = (reward: RewardPresentation, amount: number) => {
     const precision = reward.isDivisible ? reward.divisionPrecision : 0;
     const multiplier = 10 ** precision;
     const minimum = 1 / multiplier;
+    if (!Number.isFinite(amount * multiplier)) return;
     setRewardDraft((previous) =>
       previous.map((item) =>
         item.rewardId === reward.id
@@ -409,7 +432,7 @@ export const SprintCreationStepTwo = ({
 
     const from = Number(rangeFrom);
     const to = placeDialogKind === "single" ? from : Number(rangeTo);
-    if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+    if (!isPlaceRangeValid) {
       return;
     }
 
@@ -418,7 +441,7 @@ export const SprintCreationStepTwo = ({
         amount: String(
           rewardDraft.reduce((total, reward) => total + reward.amount, 0)
         ),
-        rankTo: String(to),
+        rankTo: rangeTo === "" ? "" : String(to),
         minPoints:
           editingRuleId === PROPORTIONAL_DIALOG_ID
             ? proportional.minPoints
@@ -489,7 +512,7 @@ export const SprintCreationStepTwo = ({
   const updateParticipantPoints = (participantId: string, points: number) => {
     const nextParticipants = participants.map((participant) =>
       participant.id === participantId
-        ? { ...participant, points: Math.max(0, Math.trunc(points || 0)) }
+        ? { ...participant, points: Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, Math.trunc(points || 0))) }
         : participant
     );
     const nextHistory = [
@@ -502,60 +525,37 @@ export const SprintCreationStepTwo = ({
 
   const canContinue =
     ruleIds.length > 0 &&
-    rankRules.every((rule) => rule.rewards.length > 0) &&
-    (!hasProportionalRule || hasProportionalFilter);
+    rankRules.every((rule) => rule.rewards.length > 0);
 
-  const rewardsForParticipant = (
-    participant: PreviewParticipant,
-    rank: number
-  ) => {
-    const fixedRewards =
-      rankRules.find((rule) => rank >= rule.rankFrom && rank <= rule.rankTo)
-        ?.rewards ?? [];
+  const proportionalAmounts = useMemo(() => {
     const proportionalRankTo = Number(proportional.rankTo) || 0;
     const proportionalMinPoints =
       proportional.minPoints === "" ? null : Number(proportional.minPoints);
-    if (
-      !hasProportionalRule ||
-      (proportionalRankTo > 0 && rank > proportionalRankTo) ||
-      (proportionalMinPoints !== null &&
-        participant.points < proportionalMinPoints)
-    ) {
-      return fixedRewards;
-    }
-
-    const eligibleParticipants = [...participants]
-      .sort((first, second) => second.points - first.points)
-      .filter(
-        (item, index) =>
-          (proportionalRankTo === 0 || index < proportionalRankTo) &&
+    const eligibleParticipants = rankedParticipants
+      .filter(({ participant, rank }) =>
+          (proportionalRankTo === 0 || rank <= proportionalRankTo) &&
           (proportionalMinPoints === null ||
-            item.points >= proportionalMinPoints)
-      );
-    const totalPoints = eligibleParticipants.reduce(
-      (total, item) => total + item.points,
-      0
-    );
-    if (totalPoints === 0) return fixedRewards;
-
-    return [
-      ...fixedRewards,
-      ...proportionalRewards.map((reward) => {
+            participant.points >= proportionalMinPoints))
+      .map(({ participant }) => participant);
+    return new Map(
+      (hasProportionalRule ? proportionalRewards : []).map((reward) => {
         const rewardData = rewardById.get(reward.rewardId);
         const precision = rewardData?.isDivisible
           ? rewardData.divisionPrecision
           : 0;
-        const multiplier = 10 ** precision;
-        return {
-          ...reward,
-          amount:
-            Math.round(
-              reward.amount * (participant.points / totalPoints) * multiplier
-            ) / multiplier,
-        };
-      }),
-    ];
-  };
+        return [reward.rewardId, distributeRewardPool(reward.amount, precision, eligibleParticipants)];
+      })
+    );
+  }, [rankedParticipants, proportional.rankTo, proportional.minPoints, hasProportionalRule, proportionalRewards, rewardById]);
+
+  const rewardsForParticipant = (participant: PreviewParticipant, rank: number) =>
+    sumRewardAmounts([
+      ...rankRewardsForParticipant(rankRules, rank),
+      ...proportionalRewards.map((reward) => ({
+        rewardId: reward.rewardId,
+        amount: proportionalAmounts.get(reward.rewardId)?.get(participant.id) ?? 0,
+      })),
+    ]).filter((reward) => reward.amount > 0);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col">
@@ -680,10 +680,15 @@ export const SprintCreationStepTwo = ({
                         <p className="text-[13px] font-medium leading-4">
                           {proportional.rankTo
                             ? `1–${proportional.rankTo} место`
-                            : `от ${proportional.minPoints} XP`}
+                            : proportional.minPoints !== ""
+                              ? `от ${proportional.minPoints} XP`
+                              : "Все места"}
                         </p>
                         <p className="text-[13px] font-medium leading-4 text-[#797979]">
                           Пропорционально
+                          {proportional.rankTo && proportional.minPoints !== ""
+                            ? ` · от ${proportional.minPoints} XP`
+                            : ""}
                         </p>
                       </div>
                       <div className="flex min-w-0 flex-1 flex-wrap gap-1">
@@ -1074,6 +1079,8 @@ export const SprintCreationStepTwo = ({
                     value={rangeFrom}
                     onChange={(event) => setRangeFrom(event.target.value)}
                     aria-label="Место от"
+                    aria-invalid={hasUnsupportedProportionalRange}
+                    aria-describedby="proportional-range-label"
                     className="h-10"
                   />
                   <span className="text-[13px] text-[#797979]">до</span>
@@ -1083,15 +1090,18 @@ export const SprintCreationStepTwo = ({
                     value={rangeTo}
                     onChange={(event) => setRangeTo(event.target.value)}
                     aria-label="Место до"
+                    placeholder={distributeProportionally ? "Без ограничения" : undefined}
                     className="h-10"
                   />
                 </div>
-                <label className="mt-2 flex items-center gap-2.5 text-[13px] font-medium leading-4">
+                <label id="proportional-range-label" className="mt-2 flex items-center gap-2.5 text-[13px] font-medium leading-4">
                   <Switch
                     checked={distributeProportionally}
                     onCheckedChange={setDistributeProportionally}
                   />
-                  Распределить пропорционально XP
+                  {hasUnsupportedProportionalRange
+                    ? "Пропорционально XP — только начиная с 1 места"
+                    : "Распределить пропорционально XP (с 1 места)"}
                 </label>
               </div>
             )}
@@ -1120,7 +1130,7 @@ export const SprintCreationStepTwo = ({
                 Повторить
               </Button>
             </div>
-          ) : activeRewards.length === 0 ? (
+          ) : dialogRewards.length === 0 ? (
             <div className="px-4 py-5 text-center text-[13px] text-[#797979]">
               <p className="text-[15px] font-medium leading-5 text-black">
                 Нужно добавить награды
@@ -1132,7 +1142,7 @@ export const SprintCreationStepTwo = ({
             </div>
           ) : (
             <div className="max-h-[336px] overflow-y-auto px-2.5 pt-1.5">
-              {activeRewards.map((reward) => {
+              {dialogRewards.map((reward) => {
                 const selected = rewardDraft.find(
                   (item) => item.rewardId === reward.id
                 );
@@ -1207,7 +1217,8 @@ export const SprintCreationStepTwo = ({
               size="sm"
               disabled={
                 isRewardsError ||
-                activeRewards.length === 0 ||
+                !isPlaceRangeValid ||
+                dialogRewards.length === 0 ||
                 rewardDraft.length === 0
               }
               onClick={savePlace}

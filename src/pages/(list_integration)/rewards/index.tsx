@@ -91,10 +91,6 @@ const precisionLabel = (reward: BaseRewardDto) =>
     ? `точность ${precisionValue(reward.divisionPrecision)}`
     : "точность до целого";
 
-// ponytail: в контракте нет isSystem/isEditable; заменить проверку серверным флагом.
-const isSystemReward = (reward: BaseRewardDto) =>
-  reward.name.trim().toLocaleLowerCase("ru") === "рубли";
-
 function RewardImagePicker({
   form,
   setForm,
@@ -319,13 +315,13 @@ function RewardsPreview({
 
 export default function RewardsPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { room, isLoading: isRoomLoading } = useGetRoomById(slug ?? "");
+  const { room, isLoading: isRoomLoading, isError: isRoomError, error: roomError } = useGetRoomById(slug ?? "");
   const roomId = room?.id ?? "";
   const { rewards, isLoading, isError, error, refetch } = useRoomRewards(roomId, {
     page: 1,
     size: 100,
     includeDeleted: false,
-  });
+  }, { allPages: true });
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -387,8 +383,13 @@ export default function RewardsPage() {
   };
 
   const handleSubmit = () => {
-    if (!roomId || !form.name.trim()) return;
+    if (isPending || !roomId || !form.name.trim()) return;
     const divisionPrecision = form.isDivisible ? form.divisionPrecision : 0;
+    const onPhotoConfirmed = (file: File, reward: BaseRewardDto) => setForm((previous) => ({
+      ...previous,
+      photoFiles: previous.photoFiles.filter((pending) => pending !== file),
+      existingPhotos: reward.photos.filter((photo) => !previous.removedPhotoIds.includes(photo.id)),
+    }));
 
     if (editing) {
       updateReward(
@@ -402,6 +403,7 @@ export default function RewardsPage() {
           iconFile: form.iconFile,
           photoFiles: form.photoFiles,
           photoIdsToDelete: form.removedPhotoIds,
+          onPhotoConfirmed,
         },
         {
           onSuccess: () => {
@@ -421,6 +423,8 @@ export default function RewardsPage() {
         roomId,
         iconFile: form.iconFile,
         photoFiles: form.photoFiles,
+        photoIdsToDelete: form.removedPhotoIds,
+        onPhotoConfirmed,
         isDivisible: form.isDivisible,
         divisionPrecision,
       },
@@ -450,6 +454,10 @@ export default function RewardsPage() {
         <PageLoader label="Загрузка наград…" />
       </div>
     );
+  }
+
+  if (isRoomError || !room) {
+    return <Alert variant="destructive"><AlertDescription>{roomError?.message || "Компания не найдена"}</AlertDescription></Alert>;
   }
 
   return (
@@ -525,7 +533,6 @@ export default function RewardsPage() {
           ) : (
             <div className="flex flex-col">
               {rewards.map((reward) => {
-                const system = isSystemReward(reward);
                 const imageUrl = reward.iconUrl ?? reward.photos[0]?.url;
                 return (
                   <div
@@ -547,7 +554,6 @@ export default function RewardsPage() {
                         {precisionLabel(reward)}
                       </p>
                     </div>
-                    {!system ? (
                       <div className="flex shrink-0 items-center gap-1">
                         <Button
                           type="button"
@@ -572,7 +578,6 @@ export default function RewardsPage() {
                           <Trash2 className="size-4" strokeWidth={1.5} />
                         </Button>
                       </div>
-                    ) : null}
                   </div>
                 );
               })}
@@ -581,7 +586,7 @@ export default function RewardsPage() {
         </div>
       )}
 
-      <DialogRoot open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogRoot open={dialogOpen} onOpenChange={(open) => { if (!isPending) setDialogOpen(open); }}>
         <DialogContent
           showCloseButton={false}
           className="max-h-[min(705px,calc(100dvh-2rem))] w-[min(358px,calc(100vw-2rem))] gap-0 overflow-hidden rounded-lg border-0 bg-white p-0 sm:max-w-[358px]"
@@ -596,13 +601,14 @@ export default function RewardsPage() {
               size="icon_sm"
               className="size-6 text-[#797979]"
               onClick={() => setDialogOpen(false)}
+              disabled={isPending}
               aria-label="Закрыть"
             >
               <X className="size-5" strokeWidth={1.5} />
             </Button>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-3">
+          <fieldset disabled={isPending} className="m-0 min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto border-0 px-4 pb-3 pt-0">
             <RewardImagePicker form={form} setForm={setForm} />
 
             <div className="space-y-2">
@@ -683,7 +689,7 @@ export default function RewardsPage() {
                 <AlertDescription>{generalError}</AlertDescription>
               </Alert>
             ) : null}
-          </div>
+          </fieldset>
 
           <DialogFooter className="h-12 shrink-0 flex-row items-center justify-end px-4 py-2.5 sm:justify-end">
             <Button

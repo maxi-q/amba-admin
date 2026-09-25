@@ -1,171 +1,40 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useState } from "react";
-import {
-  PageLoader,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@senler/ui";
+import { Alert, AlertDescription, Button, PageLoader, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@senler/ui";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
-import { CreativeTasksHeader } from "./components/CreativeTasksHeader";
-import { CreativeTasksErrorState } from "./components/CreativeTasksErrorState";
-import { CreativeTasksEmptyState } from "./components/CreativeTasksEmptyState";
-import { CreateCreativeTaskButton } from "./components/CreateCreativeTaskButton";
-import { CreativeTaskCard } from "./components/CreativeTaskCard";
-import { CreateCreativeTaskDialog } from "./components/CreateCreativeTaskDialog";
-import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
+import { useSprints } from "@/hooks/sprints/useSprints";
+import { CreativeTaskRow } from "./components/CreativeTaskRow";
 import { CreativesPaginationControls } from "./components/CreativesPaginationControls";
-import type { BaseCreativeTaskDto } from "@/api/generated/model";
+import plus from "@/assets/task-flow/plus.svg";
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
-
-/**
- * Страница «Задачи» комнаты.
- * Список задач с пагинацией, создание и редактирование, раскрытие заявок по задаче.
- */
 export default function CreativeTasksPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug = "" } = useParams();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editTask, setEditTask] = useState<BaseCreativeTaskDto | null>(null);
+  const roomQuery = useGetRoomById(slug);
+  const tasksQuery = useRoomCreativeTasks(roomQuery.room?.id ?? "", { page, size: pageSize });
+  const sprintsQuery = useSprints({ page: 1, size: 100 }, slug, { allPages: true });
+  const { tasks, pagination } = tasksQuery;
+  const createPath = "/rooms/" + slug + "/creativetasks/new";
+  const loading = roomQuery.isLoading || tasksQuery.isLoading;
+  const error = roomQuery.isError || tasksQuery.isError;
 
-  const {
-    room,
-    isLoading: isLoadingRoom,
-    isError: isRoomError,
-    error: roomError,
-  } = useGetRoomById(slug ?? "");
-
-  const roomId = room?.id ?? "";
-
-  const {
-    tasks,
-    isLoading: isLoadingTasks,
-    isError: isTasksError,
-    error: tasksError,
-    refetch,
-    pagination,
-  } = useRoomCreativeTasks(roomId, { page, size: pageSize });
-
-  const handlePageSizeChange = (value: string) => {
-    setPageSize(Number(value));
-    setPage(1);
-  };
-
-  const handleCreateSuccess = () => {
-    void refetch();
-  };
-
-  const handleEditSuccess = () => {
-    setEditTask(null);
-    void refetch();
-  };
-
-  if (isLoadingRoom) {
-    return (
-      <div className="flex min-h-dvh w-full items-center justify-center px-2 py-6">
-        <PageLoader label="Загрузка…" />
-      </div>
-    );
-  }
-
-  if (isRoomError) {
-    return (
-      <CreativeTasksErrorState
-        errorMessage={(roomError as Error)?.message}
-      />
-    );
-  }
-
-  return (
-    <div className="w-full px-2 py-3">
-      <CreativeTasksHeader />
-
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CreateCreativeTaskButton
-            onClick={() => setCreateDialogOpen(true)}
-          />
-          {pagination && pagination.totalPages > 0 ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">На странице</span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={handlePageSizeChange}
-              >
-                <SelectTrigger className="h-9 w-[120px]">
-                  <SelectValue placeholder="Размер" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZE_OPTIONS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
-        </div>
-
-        {isLoadingTasks ? (
-          <div className="flex justify-center py-8">
-            <PageLoader label="Загрузка задач…" />
-          </div>
-        ) : isTasksError ? (
-          <CreativeTasksErrorState
-            errorMessage={(tasksError as Error)?.message}
-          />
-        ) : tasks.length === 0 && !pagination?.total ? (
-          <CreativeTasksEmptyState
-            onCreateClick={() => setCreateDialogOpen(true)}
-          />
-        ) : (
-          <>
-            {pagination ? (
-              <p className="text-sm text-muted-foreground">Всего: {pagination.total}</p>
-            ) : null}
-
-            <div className="flex flex-col gap-3">
-              {tasks.map((task) => (
-                <CreativeTaskCard
-                  key={task.id}
-                  task={task}
-                  onEdit={setEditTask}
-                />
-              ))}
-            </div>
-
-            {pagination && pagination.totalPages > 1 ? (
-              <CreativesPaginationControls
-                page={page}
-                totalPages={pagination.totalPages}
-                onPageChange={setPage}
-                className="mt-2"
-              />
-            ) : null}
-          </>
-        )}
-      </div>
-
-      <CreateCreativeTaskDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-        roomId={roomId}
-        roomSlug={slug}
-        onSuccess={handleCreateSuccess}
-      />
-
-      <EditCreativeTaskDialog
-        open={!!editTask}
-        onClose={() => setEditTask(null)}
-        task={editTask}
-        onSuccess={handleEditSuccess}
-      />
-    </div>
-  );
+  return <div className="-m-4 min-h-full w-[calc(100%+2rem)] bg-card text-black">
+    <header className="flex h-12 items-center justify-between border-b border-border px-4">
+      <h1 className="text-[13px] font-medium leading-4 tracking-[-0.0325px]">Задания</h1>
+      <Button asChild className="h-7 gap-1 bg-[#2563eb] px-2 text-[13px] font-medium shadow-none hover:bg-[#2563eb]/90"><Link to={createPath}><img src={plus} alt="" />Добавить</Link></Button>
+    </header>
+    {error ? <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Не удалось загрузить задания.<Button variant="outline" onClick={() => { void roomQuery.refetch(); void tasksQuery.refetch(); }}>Повторить</Button></AlertDescription></Alert> : loading ? <div className="flex justify-center py-8"><PageLoader label="Загрузка заданий…" /></div> : <>
+      {sprintsQuery.isError && <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Не удалось загрузить сроки и статусы спринтов. Редактирование временно недоступно.<Button variant="outline" onClick={() => void sprintsQuery.refetch()}>Повторить</Button></AlertDescription></Alert>}
+      <div className="overflow-x-auto">{tasks.filter((task) => !task.isDeleted).map((task) => <CreativeTaskRow key={task.id} task={task} sprint={sprintsQuery.sprints.find((sprint) => sprint.id === task.sprintId)} roomSlug={slug} />)}</div>
+      {tasks.length === 0 && <p className="px-4 py-6 text-[13px] text-muted-foreground">{page === 1 ? <>Заданий пока нет. <Link to={createPath} className="text-primary underline">Добавьте первое задание</Link>.</> : "На этой странице заданий нет. Вернитесь на предыдущую страницу."}</p>}
+      {pagination && pagination.total > 0 && <footer className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-xs text-muted-foreground">
+        <span>Всего: {pagination.total}</span>
+        {pagination.totalPages > 1 && <CreativesPaginationControls page={page} totalPages={pagination.totalPages} onPageChange={setPage} />}
+        <div className="flex items-center gap-2"><span>На странице</span><Select value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }}><SelectTrigger aria-label="Заданий на странице" className="h-7 w-20"><SelectValue /></SelectTrigger><SelectContent>{[10, 25, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}</SelectContent></Select></div>
+      </footer>}
+      {tasks.length === 0 && page > 1 && <Button variant="outline" className="mx-4" onClick={() => setPage(page - 1)}>Предыдущая страница</Button>}
+    </>}
+  </div>;
 }

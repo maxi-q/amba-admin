@@ -2,11 +2,14 @@ import { QueryKeys } from '@/config/tanstack/queryKeys';
 import { creativeTasksControllerGetSubmissions } from '@/api/generated/creative-tasks/creative-tasks';
 import type { CreativeTasksControllerGetSubmissionsParams } from '@/api/generated/model';
 import { useQuery } from '@tanstack/react-query';
+import { collectPages, type AllPagesOptions } from '../collectPages';
 
-export function useSubmissions(taskId: string, data: CreativeTasksControllerGetSubmissionsParams) {
+export function useSubmissions(taskId: string, data: CreativeTasksControllerGetSubmissionsParams, { allPages = false }: AllPagesOptions = {}) {
   const { data: submissionsData, isLoading, isError, error, refetch } = useQuery({
-    queryKey: [QueryKeys.SUBMISSIONS, taskId, data.page, data.size, data.status],
-    queryFn: () => creativeTasksControllerGetSubmissions(taskId, data),
+    queryKey: [QueryKeys.SUBMISSIONS, taskId, allPages ? 'all' : data.page, data.size, data.status],
+    queryFn: ({ signal }) => allPages
+      ? collectPages((page) => creativeTasksControllerGetSubmissions(taskId, { ...data, page }, undefined, signal))
+      : creativeTasksControllerGetSubmissions(taskId, data, undefined, signal),
     enabled: !!taskId,
     staleTime: 0,
     retry: 2,

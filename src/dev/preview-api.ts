@@ -27,7 +27,6 @@ const SPRINT_ID = "sprint-active";
 const TASK_ID = "task-review";
 const NOW = "2026-08-21T09:00:00.000Z";
 const indivisibleReward = { isDivisible: false, divisionPrecision: 0 } as const;
-const divisibleReward = { isDivisible: true, divisionPrecision: 2 } as const;
 const ambassadorAvatarUrl = `data:image/svg+xml,${encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
     <rect width="24" height="24" rx="6" fill="#e5f1f6"/>
@@ -169,8 +168,7 @@ let sprints: BaseSprintDto[] = [
     isDraft: true,
   },
 ];
-let selectedSprintId =
-  new URLSearchParams(window.location.search).get("sprint") ?? SPRINT_ID;
+let reviewFailureRemaining = new URLSearchParams(window.location.search).has("review-fail-once");
 
 const task = (
   id: string,
@@ -222,10 +220,12 @@ let tasks: CreativeTaskWithDefaultsDto[] = [
       "Поделитесь личным опытом использования сервиса."
     ),
     publicationsCount: 3,
+    targetPlatform: "VK_USER",
   },
   {
     ...task("task-reviewed", "Расскажите о первой трансляции", "Опишите подготовку и результат первой трансляции."),
     isFrozen: true,
+    targetPlatform: "VK_GROUP",
   },
   task("task-empty", "Покажите любимую функцию", "Продемонстрируйте функцию, которой пользуетесь чаще всего."),
 ];
@@ -273,10 +273,10 @@ const submission = (
   taskId,
   ambassadorId,
   status,
-  comment: "Публикация готова к проверке",
+  comment: status === "waiting_for_review_materials" ? "Материалы готовы к проверке" : "Публикация готова к проверке",
   reviewComment: null,
   rewardValue,
-  items: [{ ...submissionItem, id: `${id}-item` }],
+  items: [{ ...submissionItem, id: `${id}-item`, ...(["new", "waiting_for_review_materials", "rejected_for_materials"].includes(status) ? { publicationUrl: null, erid: null } : {}) }],
   events,
 });
 
@@ -370,7 +370,7 @@ let submissions: BaseCreativeTaskSubmissionDto[] = [
 ];
 
 const rewards = {
-  money: { id: "reward-money", versionId: "reward-money-v1", version: 1, name: "5 000 ₽", iconUrl: rewardMoneyUrl, ...indivisibleReward },
+  money: { id: "reward-money", versionId: "reward-money-v1", version: 1, name: "Рубли", iconUrl: rewardMoneyUrl, ...indivisibleReward },
   shirt: { id: "reward-shirt", versionId: "reward-shirt-v1", version: 1, name: "Футболка", iconUrl: rewardGiftUrl, ...indivisibleReward },
   pro: { id: "reward-pro", versionId: "reward-pro-v1", version: 1, name: "Тариф Pro", iconUrl: rewardGiftUrl, ...indivisibleReward },
   points: { id: "reward-points", versionId: "reward-points-v1", version: 1, name: "Баллы Senler", iconUrl: rewardGiftUrl, ...indivisibleReward },
@@ -404,7 +404,7 @@ let catalogRewards: BaseRewardDto[] = [
   },
   {
     id: rewards.points.id,
-    version: 1,
+    version: 2,
     createdAt: NOW,
     updatedAt: NOW,
     name: "Баллы Senler",
@@ -535,7 +535,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       promoCode: "STREAM1",
       points: 13720,
       rewards: [
-        { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
+        { rewardId: rewards.money.id, name: rewards.money.name, amount: 5000, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
         { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
         { rewardId: rewards.points.id, name: rewards.points.name, amount: 1000, ...leaderboardRewardVersion(rewards.points), ...indivisibleReward },
         { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 1, ...leaderboardRewardVersion(rewards.pro), ...indivisibleReward },
@@ -549,7 +549,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       promoCode: "STREAM2",
       points: 2678,
       rewards: [
-        { rewardId: rewards.money.id, name: "2 345 ₽", amount: 1, ...leaderboardRewardVersion(rewards.money), ...divisibleReward },
+        { rewardId: rewards.money.id, name: rewards.money.name, amount: 2345, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
         { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
       ],
     },
@@ -560,7 +560,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM3",
       points: 1325,
-      rewards: [{ rewardId: rewards.money.id, name: "1 121 ₽", amount: 1, ...leaderboardRewardVersion(rewards.money), ...divisibleReward }],
+      rewards: [{ rewardId: rewards.money.id, name: rewards.money.name, amount: 1121, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward }],
     },
     {
       rank: 4,
@@ -569,7 +569,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM4",
       points: 720,
-      rewards: [{ rewardId: rewards.money.id, name: "614 ₽", amount: 1, ...leaderboardRewardVersion(rewards.money), ...divisibleReward }],
+      rewards: [{ rewardId: rewards.money.id, name: rewards.money.name, amount: 614, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward }],
     },
     {
       rank: 5,
@@ -582,7 +582,7 @@ const leaderboard: GetLeaderboardResponseDto = {
     },
   ],
   manualRewards: [
-    { rewardId: rewards.money.id, name: rewards.money.name, amount: 1, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
+    { rewardId: rewards.money.id, name: rewards.money.name, amount: 5000, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
     { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
     { rewardId: rewards.pro.id, name: rewards.pro.name, amount: 3, ...leaderboardRewardVersion(rewards.pro), ...indivisibleReward },
   ],
@@ -592,9 +592,10 @@ const leaderboard: GetLeaderboardResponseDto = {
   totalPages: 1,
 };
 
-function getSelectedLeaderboard(): GetLeaderboardResponseDto {
-  const selectedSprint =
-    sprints.find((item) => item.id === selectedSprintId) ?? sprints[0];
+function getActiveLeaderboard(): GetLeaderboardResponseDto {
+  // The API returns the company's active sprint, not the sprint being viewed.
+  const selectedSprint = sprints.find((item) => item.id === SPRINT_ID && item.status === "active" && !item.isDraft);
+  if (!selectedSprint) return { ...leaderboard, sprint: null, items: [], manualRewards: [], total: 0, totalPages: 0 };
 
   return {
     ...leaderboard,
@@ -693,10 +694,6 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   const rewardRulesMatch = url.match(/^\/api\/sprints\/([^/]+)\/reward-rules$/);
   const rewardVersionsMatch = url.match(/^\/api\/sprints\/([^/]+)\/reward-versions$/);
 
-  if (method === "GET" && rewardRulesMatch) {
-    selectedSprintId = rewardRulesMatch[1];
-  }
-
   await new Promise((resolve) => window.setTimeout(resolve, 60));
 
   const participantResponse = participantsPreview(config);
@@ -755,7 +752,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     ]);
   }
   if (method === "GET" && url === `/api/sprints/${ROOM_ID}/leaderboard`) {
-    return getSelectedLeaderboard();
+    return getActiveLeaderboard();
   }
   if (method === "GET" && url === "/api/vk-auth/me") {
     return {
@@ -993,7 +990,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   }
 
   if (method === "GET" && url === `/api/creative-tasks/room/${ROOM_ID}`) {
-    return paginated(tasks);
+    return paginated(tasks.filter((task) => !task.isDeleted));
   }
 
   if (method === "POST" && url === "/api/creative-tasks") {
@@ -1020,6 +1017,13 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   const submissionsMatch = url.match(/^\/api\/creative-tasks\/([^/]+)\/submissions$/);
   if (method === "GET" && submissionsMatch) {
     return paginated(submissions.filter((item) => item.taskId === submissionsMatch[1]));
+  }
+
+  const submissionMatch = url.match(/^\/api\/creative-tasks\/submissions\/([^/]+)$/);
+  if (method === "GET" && submissionMatch) {
+    const item = submissions.find((candidate) => candidate.id === submissionMatch[1]);
+    if (!item) throw new Error(`Mock submission not found: ${submissionMatch[1]}`);
+    return item;
   }
 
   const taskFreezeMatch = url.match(
@@ -1051,6 +1055,10 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     /^\/api\/creative-tasks\/submissions\/([^/]+)\/status$/,
   );
   if (method === "PATCH" && submissionStatusMatch) {
+    if (reviewFailureRemaining) {
+      reviewFailureRemaining = false;
+      throw new Error("Демо: не удалось сохранить решение. Повторите отправку — введённые данные сохранены.");
+    }
     return updateSubmission(
       submissionStatusMatch[1],
       config.data as UpdateSubmissionStatusRequestDto,
@@ -1101,7 +1109,6 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
       roomId: data.roomId,
     };
     sprints = [...sprints, created];
-    selectedSprintId = created.id;
     return created;
   }
 
@@ -1115,7 +1122,6 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   if (method === "PATCH" && sprintMatch) {
     const index = sprints.findIndex((item) => item.id === sprintMatch[1]);
     if (index < 0) throw new Error(`Mock sprint not found: ${sprintMatch[1]}`);
-    selectedSprintId = sprintMatch[1];
     sprints[index] = {
       ...sprints[index],
       ...requestData<Partial<BaseSprintDto>>(config),

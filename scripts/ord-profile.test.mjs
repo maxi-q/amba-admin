@@ -2,6 +2,15 @@ import assert from "node:assert/strict";
 import { createOrdProfilePreview } from "../src/dev/preview-ord-profile.ts";
 import { validateInn } from "../src/utils/validateInn.ts";
 import { isCompleteRuMobile, ruPhoneToE164 } from "../src/utils/ruPhone.ts";
+import { validateOrdProfileName } from "../src/utils/ordProfileName.ts";
+
+assert.equal(validateOrdProfileName("ООО Ромашка", "juridical"), undefined);
+assert.equal(validateOrdProfileName("Ромашка", "juridical"), undefined);
+assert.ok(validateOrdProfileName("  ", "juridical"));
+for (const type of ["physical", "ip"]) {
+  assert.equal(validateOrdProfileName("Морозов Константин Николаевич", type), undefined);
+  assert.ok(validateOrdProfileName("ООО Ромашка", type));
+}
 
 const url = "/api/rooms/preview-room";
 const mock = createOrdProfilePreview({ id: "preview-room" }, true);
