@@ -17,4 +17,5 @@ export const UpdateRewardRuleResponseDtoType = {
   byRank: 'byRank',
   byPoints: 'byPoints',
   manual: 'manual',
+  each: 'each',
 } as const;

@@ -15,6 +15,7 @@ interface TaskDetailSubmissionsListProps {
   taskId: string;
   minimalRewardInBalls: number;
   isFrozen?: boolean;
+  reviewUnavailable?: string;
 }
 
 const SUBMISSION_PROGRESS: Record<
@@ -75,6 +76,7 @@ export function TaskDetailSubmissionsList({
   taskId,
   minimalRewardInBalls,
   isFrozen = false,
+  reviewUnavailable,
 }: TaskDetailSubmissionsListProps) {
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -131,7 +133,7 @@ export function TaskDetailSubmissionsList({
     submission: BaseCreativeTaskSubmissionDto,
     rewardValue?: number,
   ) => {
-    if (isFrozen || isPending) return;
+    if (isFrozen || reviewUnavailable || isPending) return;
     updateSubmissionStatus({
       id: submission.id,
       data: {
@@ -146,7 +148,7 @@ export function TaskDetailSubmissionsList({
     submission: BaseCreativeTaskSubmissionDto,
     reviewComment: string,
   ) => {
-    if (isFrozen || isPending) return;
+    if (isFrozen || reviewUnavailable || isPending) return;
     updateSubmissionStatus({
       id: submission.id,
       data: { decision: "reject", reviewComment },
@@ -156,10 +158,10 @@ export function TaskDetailSubmissionsList({
   return (
     <div>
       {requestedSubmissionId && (requestedSubmission.isError || (requestedSubmission.submission && requestedSubmission.submission.taskId !== taskId)) && <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Запрошенное выполнение недоступно в этом задании.<Button variant="outline" onClick={closeLog}>Закрыть</Button></AlertDescription></Alert>}
-      {isFrozen ? (
+      {isFrozen || reviewUnavailable ? (
         <Alert className="mx-4 mb-3">
           <AlertDescription>
-            Задание остановлено. Выполнения доступны для просмотра, но модерация приостановлена.
+            {reviewUnavailable || 'Задание остановлено. Выполнения доступны для просмотра, но модерация приостановлена.'}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -237,7 +239,8 @@ export function TaskDetailSubmissionsList({
         onApprove={handleLogApprove}
         onReject={handleLogReject}
         isPending={isPending}
-        reviewDisabled={isFrozen}
+        reviewDisabled={isFrozen || !!reviewUnavailable}
+        reviewDisabledReason={reviewUnavailable}
         errorMessage={reviewError ? reviewError.message || "Не удалось сохранить решение. Попробуйте ещё раз." : undefined}
       />
     </div>

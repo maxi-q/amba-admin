@@ -9,7 +9,7 @@ import { ApiError } from '@/types';
 export function usePatchEvent() {
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, error, isSuccess, isError } = useMutation<
+  const { mutate, mutateAsync, isPending, error, isSuccess, isError } = useMutation<
     Awaited<ReturnType<typeof eventsControllerUpdate>>,
     ApiError,
     { data: UpdateEventRequestDto; eventId: string }
@@ -17,9 +17,10 @@ export function usePatchEvent() {
     mutationKey: [MutationKeys.PATCH_EVENT],
     mutationFn: ({ data, eventId }: { data: UpdateEventRequestDto; eventId: string }) =>
       eventsControllerUpdate(eventId, data),
-    onSuccess: (updatedEvent, { eventId }) => {
+    onSuccess: async (updatedEvent, { eventId }) => {
+      await queryClient.invalidateQueries({ queryKey: ['competition', 'event', eventId] });
       if (updatedEvent) {
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: [QueryKeys.EVENTS, updatedEvent.roomId],
           exact: false
         });
@@ -45,6 +46,7 @@ export function usePatchEvent() {
 
   return {
     mutate,
+    mutateAsync,
     isPending,
     error,
     isSuccess,

@@ -1,4 +1,4 @@
-export type SprintStatus = "active" | "upcoming" | "past" | "awarding" | "completed";
+export type SprintStatus = "active" | "upcoming" | "past" | "reviewing" | "awarding" | "completed";
 
 export type SprintStatusTone = "active" | "planned" | "ended" | "draft";
 
@@ -6,7 +6,8 @@ export const statusLabels: Record<SprintStatus, string> = {
   active: "Активный",
   upcoming: "Запланирован",
   past: "Закончился",
-  awarding: "Начисление наград",
+  reviewing: "Проверка ответов",
+  awarding: "Выдача наград",
   completed: "Завершён",
 };
 
@@ -37,8 +38,9 @@ export const checkSprintStatus = (
   startDate: string | null,
   endDate: string | null,
   ignoreEndDate: boolean = false,
-  status: "active" | "awarding" | "completed" = "active"
+  status: "active" | "reviewing" | "awarding" | "completed" = "active"
 ) => {
+  if (status === "reviewing") return { status, label: statusLabels.reviewing, tone: "active" as const };
   if (status === "awarding") {
     return {
       status,
@@ -55,6 +57,9 @@ export const checkSprintStatus = (
     };
   }
 
+  if (startDate && new Date(startDate) > new Date()) {
+    return { status: "upcoming" as const, label: statusLabels.upcoming, tone: "planned" as const };
+  }
   if (ignoreEndDate) {
     return {
       status: "active" as const,
@@ -98,6 +103,7 @@ export const statusColors: Record<SprintStatus, "success" | "warning" | "default
   active: "success",
   upcoming: "warning",
   past: "default",
+  reviewing: "success",
   awarding: "warning",
   completed: "default",
 };

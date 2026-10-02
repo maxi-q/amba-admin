@@ -330,4 +330,66 @@ export const useAfterRegistrationInvitationsControllerDeleteInvitation = <TError
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * @summary Отменить одного необработанного адресата приглашения; созданное членство сохраняется
+ */
+export const afterRegistrationInvitationsControllerDeleteTarget = (
+    invitationId: string,
+    targetId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/invitations/${invitationId}/targets/${targetId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getAfterRegistrationInvitationsControllerDeleteTargetMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof afterRegistrationInvitationsControllerDeleteTarget>>, TError,{invitationId: string;targetId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof afterRegistrationInvitationsControllerDeleteTarget>>, TError,{invitationId: string;targetId: string}, TContext> => {
+
+const mutationKey = ['afterRegistrationInvitationsControllerDeleteTarget'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof afterRegistrationInvitationsControllerDeleteTarget>>, {invitationId: string;targetId: string}> = (props) => {
+          const {invitationId,targetId} = props ?? {};
+
+          return  afterRegistrationInvitationsControllerDeleteTarget(invitationId,targetId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AfterRegistrationInvitationsControllerDeleteTargetMutationResult = NonNullable<Awaited<ReturnType<typeof afterRegistrationInvitationsControllerDeleteTarget>>>
+    
+    export type AfterRegistrationInvitationsControllerDeleteTargetMutationError = void
+
+    /**
+ * @summary Отменить одного необработанного адресата приглашения; созданное членство сохраняется
+ */
+export const useAfterRegistrationInvitationsControllerDeleteTarget = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof afterRegistrationInvitationsControllerDeleteTarget>>, TError,{invitationId: string;targetId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof afterRegistrationInvitationsControllerDeleteTarget>>,
+        TError,
+        {invitationId: string;targetId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAfterRegistrationInvitationsControllerDeleteTargetMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
     

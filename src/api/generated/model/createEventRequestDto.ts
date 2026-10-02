@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreateEventRequestDtoType } from './createEventRequestDtoType';
 
 export interface CreateEventRequestDto {
   /** Название события */
@@ -39,4 +40,6 @@ export interface CreateEventRequestDto {
   rewardUnits: string;
   /** Id комнаты */
   roomId: string;
+  type?: CreateEventRequestDtoType;
+  isDraft?: boolean;
 }

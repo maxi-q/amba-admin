@@ -8,6 +8,10 @@
 
 export type CreativeTasksControllerGetCreativeTasksParams = {
 /**
+ * ID спринта, включая черновик владельца
+ */
+sprintId?: string;
+/**
  * Номер страницы (от 1)
  */
 page: number;

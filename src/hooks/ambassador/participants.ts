@@ -47,9 +47,6 @@ export function invitationParticipants(invitations: BaseAfterRegistrationInvitat
     name: `${target.channelTypeId === 1 ? "VK" : target.channelTypeId === 2 ? "Telegram" : "ID"} · ${target.subscriberId}`,
     profileUrl: vkProfileUrl(target.channelTypeId, target.subscriberId),
     invitationId: invitation.id,
-    cancellationUnavailable: invitation.targets.length > 1
-      ? "В этом приглашении несколько пользователей. API пока не поддерживает отмену для одного пользователя."
-      : undefined,
   })));
 }
 

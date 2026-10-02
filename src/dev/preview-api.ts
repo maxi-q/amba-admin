@@ -20,6 +20,7 @@ import rewardGiftUrl from "@/assets/sprint-flow/reward-gift.png";
 import rewardMoneyUrl from "@/assets/sprint-flow/reward-money.png";
 import { createParticipantsPreview } from "./preview-participants";
 import { createOrdProfilePreview } from "./preview-ord-profile";
+import { createCompetitionPreview } from "./preview-competitions";
 import participantAvatar from "./participant-avatar.png";
 
 const ROOM_ID = "preview-room";
@@ -108,6 +109,9 @@ const sprint = (
   endDate,
   ignoreEndDate,
   status,
+  reviewStartedAt: status === 'active' ? null : NOW,
+  resultsFixedAt: null,
+  completedAt: status === 'completed' ? NOW : null,
   isDraft: false,
   pendingSubscriptionId: 201,
   approvedSubscriptionId: 202,
@@ -517,6 +521,7 @@ let rewardRules: SprintRewardRuleDto[] = [
 ];
 
 const leaderboard: GetLeaderboardResponseDto = {
+  isFinal: false, resultsFixedAt: null, historyUnavailable: false, manualPositions: [],
   sprint: {
     id: SPRINT_ID,
     name: sprints[0].name ?? "Черновик спринта",
@@ -534,6 +539,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM1",
       points: 13720,
+      taskPoints: 13620, promoPoints: 100,
       rewards: [
         { rewardId: rewards.money.id, name: rewards.money.name, amount: 5000, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
         { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
@@ -548,6 +554,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM2",
       points: 2678,
+      taskPoints: 2678, promoPoints: 0,
       rewards: [
         { rewardId: rewards.money.id, name: rewards.money.name, amount: 2345, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward },
         { rewardId: rewards.shirt.id, name: rewards.shirt.name, amount: 1, ...leaderboardRewardVersion(rewards.shirt), ...indivisibleReward },
@@ -560,6 +567,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM3",
       points: 1325,
+      taskPoints: 1325, promoPoints: 0,
       rewards: [{ rewardId: rewards.money.id, name: rewards.money.name, amount: 1121, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward }],
     },
     {
@@ -569,6 +577,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM4",
       points: 720,
+      taskPoints: 720, promoPoints: 0,
       rewards: [{ rewardId: rewards.money.id, name: rewards.money.name, amount: 614, ...leaderboardRewardVersion(rewards.money), ...indivisibleReward }],
     },
     {
@@ -578,6 +587,7 @@ const leaderboard: GetLeaderboardResponseDto = {
       avatarUrl: ambassadorAvatarUrl,
       promoCode: "STREAM5",
       points: 567,
+      taskPoints: 567, promoPoints: 0,
       rewards: [],
     },
   ],
@@ -687,6 +697,7 @@ const previewUpload = {
 };
 
 const rewardPhotoDrafts = new Map<string, { rewardId: string; sortOrder: number }>();
+const competitionPreview = createCompetitionPreview();
 
 async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   const method = (config.method ?? "GET").toUpperCase();
@@ -695,6 +706,9 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   const rewardVersionsMatch = url.match(/^\/api\/sprints\/([^/]+)\/reward-versions$/);
 
   await new Promise((resolve) => window.setTimeout(resolve, 60));
+
+  const competitionResponse = competitionPreview(config, { roomId: ROOM_ID, sprints, rules: rewardRules, rewards: catalogRewards.map(currentRewardSummary), entries: leaderboard.items, tasks, submissions });
+  if (competitionResponse) return competitionResponse.data;
 
   const participantResponse = participantsPreview(config);
   if (participantResponse !== undefined) return participantResponse;
@@ -758,6 +772,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     return {
       authorized: true,
       status: "active",
+      reviewStartedAt: null, resultsFixedAt: null, completedAt: null,
       vkUserId: "1",
       expiresAt: "2026-12-31T20:59:59.000Z",
       scopes: ["wall", "photos"],
@@ -990,7 +1005,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   }
 
   if (method === "GET" && url === `/api/creative-tasks/room/${ROOM_ID}`) {
-    return paginated(tasks.filter((task) => !task.isDeleted));
+    return paginated(tasks.filter((task) => !task.isDeleted && (!config.params?.sprintId || task.sprintId === config.params.sprintId)));
   }
 
   if (method === "POST" && url === "/api/creative-tasks") {
@@ -1055,6 +1070,9 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     /^\/api\/creative-tasks\/submissions\/([^/]+)\/status$/,
   );
   if (method === "PATCH" && submissionStatusMatch) {
+    const submission = submissions.find((item) => item.id === submissionStatusMatch[1]);
+    const task = tasks.find((item) => item.id === submission?.taskId);
+    if (sprints.find((item) => item.id === task?.sprintId)?.resultsFixedAt) throw new Error("Итоги уже зафиксированы. Проверка закрыта.");
     if (reviewFailureRemaining) {
       reviewFailureRemaining = false;
       throw new Error("Демо: не удалось сохранить решение. Повторите отправку — введённые данные сохранены.");
@@ -1097,6 +1115,9 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
       ignoreEndDate: data.ignoreEndDate ?? false,
       status: "active",
       isDraft: data.isDraft ?? false,
+      reviewStartedAt: null,
+      resultsFixedAt: null,
+      completedAt: null,
       rewardType: data.rewardType ?? null,
       rewardUnits: data.rewardUnits ?? null,
       rewardValue: data.rewardValue ?? null,

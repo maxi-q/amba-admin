@@ -45,6 +45,7 @@ export default function EventsPage() {
 
   return (
     <div className="w-full px-2 pb-6">
+      <h1 className="mb-4 text-xl font-medium leading-8">События</h1>
       <div className="flex flex-col gap-2">
         {activeEvents.length === 0 ? (
           <EventsEmptyState onCreateClick={handleCreateEvent} />

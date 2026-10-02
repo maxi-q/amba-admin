@@ -33,6 +33,7 @@ export function useUpdateSubmissionStatus() {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.SPRINT_LEADERBOARD], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['competition', 'sprint'] });
     },
   });
 

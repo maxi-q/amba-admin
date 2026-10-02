@@ -299,7 +299,7 @@ export const useEventsControllerCreate = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Get event by id
+ * @summary Частично обновить событие или перейти active → reviewing / awarding → completed
  */
 export const eventsControllerUpdate = (
     id: string,
@@ -347,7 +347,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type EventsControllerUpdateMutationError = unknown
 
     /**
- * @summary Get event by id
+ * @summary Частично обновить событие или перейти active → reviewing / awarding → completed
  */
 export const useEventsControllerUpdate = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventsControllerUpdate>>, TError,{id: string;data: UpdateEventRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}

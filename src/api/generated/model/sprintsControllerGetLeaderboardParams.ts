@@ -8,6 +8,14 @@
 
 export type SprintsControllerGetLeaderboardParams = {
 /**
+ * ID конкретного спринта в комнате
+ */
+sprintId?: string;
+/**
+ * Поиск по логину или промокоду после расчёта общего места
+ */
+search?: string;
+/**
  * Номер страницы (от 1)
  */
 page?: number;

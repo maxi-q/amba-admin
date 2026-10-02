@@ -6,7 +6,7 @@ import { collectPages, type AllPagesOptions } from '../collectPages';
 
 export function useRoomCreativeTasks(roomId: string, data: CreativeTasksControllerGetCreativeTasksParams, { allPages = false }: AllPagesOptions = {}) {
   const { data: tasksData, isLoading, isError, error, refetch } = useQuery({
-    queryKey: [QueryKeys.CREATIVE_TASKS, roomId, allPages ? 'all' : data.page, data.size],
+    queryKey: [QueryKeys.CREATIVE_TASKS, roomId, allPages ? 'all' : data.page, data.size, data.sprintId],
     queryFn: ({ signal }) => allPages
       ? collectPages((page) => creativeTasksControllerGetCreativeTasks(roomId, { ...data, page }, undefined, signal))
       : creativeTasksControllerGetCreativeTasks(roomId, data, undefined, signal),

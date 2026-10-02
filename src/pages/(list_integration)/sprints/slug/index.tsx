@@ -114,6 +114,7 @@ const SprintSetting = () => {
     isLoading: isLoadingRoomTasks,
     isError: isRoomTasksError,
   } = useRoomCreativeTasks(isEditSprint ? roomId : "", {
+    sprintId: isEditSprint ? sprintId : undefined,
     page: 1,
     size: 100,
   }, { allPages: true });
@@ -249,6 +250,7 @@ const SprintSetting = () => {
                 )
               ),
               rankTo: String(proportionalRule.rankTo ?? ""),
+              rankFrom: String(proportionalRule.rankFrom ?? 1),
               minPoints: String(proportionalRule.minPoints ?? ""),
               rewards: proportionalRule.rewards.map((reward) => ({
                 rewardId: reward.rewardId,
@@ -570,7 +572,7 @@ const SprintSetting = () => {
         key: "proportional",
         data: {
           type: "byPoints",
-          rankFrom: null,
+          rankFrom: Number(draftProportional.rankFrom || 1),
           rankTo: draftProportional.rankTo
             ? Number(draftProportional.rankTo)
             : null,

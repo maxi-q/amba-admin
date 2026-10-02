@@ -7,24 +7,24 @@ import { eventsControllerCreate } from '@/api/generated/events/events';
 import type { CreateEventRequestDto } from '@/api/generated/model';
 import { ApiError } from '@/types';
 
-export function useCreateEvent() {
+export function useCreateEvent({ navigateOnSuccess = true }: { navigateOnSuccess?: boolean } = {}) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const { mutate, isPending, error, isSuccess, isError } = useMutation<
+  const { mutate, mutateAsync, isPending, error, isSuccess, isError } = useMutation<
     Awaited<ReturnType<typeof eventsControllerCreate>>,
     ApiError,
     CreateEventRequestDto
   >({
     mutationKey: [MutationKeys.CREATE_EVENT],
     mutationFn: (data: CreateEventRequestDto) => eventsControllerCreate(data),
-    onSuccess: (createdEvent) => {
+    onSuccess: async (createdEvent) => {
       if (createdEvent) {
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: [QueryKeys.EVENTS, createdEvent.roomId]
         });
 
-        navigate(`/rooms/${createdEvent.roomId}/events/${createdEvent.id}`);
+        if (navigateOnSuccess) navigate(`/rooms/${createdEvent.roomId}/events/${createdEvent.id}`);
       }
     },
   });
@@ -46,6 +46,7 @@ export function useCreateEvent() {
 
   return {
     mutate,
+    mutateAsync,
     isPending,
     error,
     isSuccess,

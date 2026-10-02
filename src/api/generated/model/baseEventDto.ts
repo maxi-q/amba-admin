@@ -5,6 +5,8 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { BaseEventDtoType } from './baseEventDtoType';
+import type { BaseEventDtoStatus } from './baseEventDtoStatus';
 
 export interface BaseEventDto {
   /** Unique identifier */
@@ -13,6 +15,18 @@ export interface BaseEventDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  /** Конкурс или награда каждому участнику */
+  type: BaseEventDtoType;
+  /** active → reviewing → awarding → completed */
+  status: BaseEventDtoStatus;
+  /** Черновик события */
+  isDraft: boolean;
+  /** @nullable */
+  reviewStartedAt: string | null;
+  /** @nullable */
+  resultsFixedAt: string | null;
+  /** @nullable */
+  completedAt: string | null;
   /** Название события */
   name: string;
   /**

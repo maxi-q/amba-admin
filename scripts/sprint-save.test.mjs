@@ -123,7 +123,7 @@ assert.ok(!active.calls.some((call) => call.operation === "createSprint" || "isD
 for (const invalid of [
   { type: "byRank", rankFrom: 0, rankTo: 3 },
   { type: "byRank", rankFrom: 5, rankTo: 2 },
-  { type: "byPoints", rankFrom: 2, rankTo: 5 },
+  { type: "byPoints", rankFrom: 0, rankTo: 5 },
   { type: "byPoints", rankTo: 0 },
   { type: "byPoints", minPoints: -1 },
   { type: "manual", rewards: [{ rewardId: "reward", amount: Number.NaN }] },
@@ -134,8 +134,12 @@ for (const invalid of [
   assert.equal(invalidSave.calls.length, 0);
 }
 const unbounded = fixture();
-Object.assign(unbounded.options.rules[0].data, { type: "byPoints", rankFrom: null, rankTo: null, minPoints: null });
+Object.assign(unbounded.options.rules[0].data, { type: "byPoints", rankFrom: null, rankTo: null, minPoints: 0 });
 await saveSprintWithRelations(unbounded.options);
 assert.equal(unbounded.calls.filter((call) => call.operation === "createRule").length, 1);
+const range = fixture();
+Object.assign(range.options.rules[0].data, { type: "byPoints", rankFrom: 2, rankTo: 5 });
+await saveSprintWithRelations(range.options);
+assert.equal(range.calls.find((call) => call.operation === "createRule").data.rankFrom, 2);
 
 console.log("Sprint save: draft-first publication, checkpoints, partial failures, safe retry and deferred deletions passed.");

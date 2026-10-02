@@ -5,6 +5,8 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { GetMyEventsResponseItemDtoType } from './getMyEventsResponseItemDtoType';
+import type { GetMyEventsResponseItemDtoStatus } from './getMyEventsResponseItemDtoStatus';
 
 export interface GetMyEventsResponseItemDto {
   /** Unique identifier */
@@ -45,4 +47,18 @@ export interface GetMyEventsResponseItemDto {
   rewardUnits: string;
   /** Id комнаты */
   roomId: string;
+  /** Конкурс или награда каждому участнику */
+  type: GetMyEventsResponseItemDtoType;
+  /** active → reviewing → awarding → completed */
+  status: GetMyEventsResponseItemDtoStatus;
+  /** Черновик события */
+  isDraft: boolean;
+  /** @nullable */
+  reviewStartedAt: string | null;
+  /** @nullable */
+  resultsFixedAt: string | null;
+  /** @nullable */
+  completedAt: string | null;
+  /** Сколько промокодов использовано */
+  promoCodeUsagesCount: number;
 }

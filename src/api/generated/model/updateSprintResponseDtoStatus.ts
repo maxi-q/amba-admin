@@ -7,7 +7,7 @@
  */
 
 /**
- * Статус опубликованного спринта. active допустим и при дате начала в будущем. awarding и completed закрывают взаимодействие с заданиями; владелец может только допроверить креативы.
+ * Статус опубликованного спринта. active допустим и при дате начала в будущем. reviewing разрешает проверку ранее поданных ответов, awarding и completed закрывают модерацию.
  */
 export type UpdateSprintResponseDtoStatus = typeof UpdateSprintResponseDtoStatus[keyof typeof UpdateSprintResponseDtoStatus];
 
@@ -15,6 +15,7 @@ export type UpdateSprintResponseDtoStatus = typeof UpdateSprintResponseDtoStatus
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UpdateSprintResponseDtoStatus = {
   active: 'active',
+  reviewing: 'reviewing',
   awarding: 'awarding',
   completed: 'completed',
 } as const;

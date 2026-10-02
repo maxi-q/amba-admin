@@ -175,7 +175,7 @@ export default function ApplicationsPage() {
         return;
       }
       if (!removeTarget?.invitationId || removeTarget.cancellationUnavailable) return;
-      removal.deleteInvitation({ id: removeTarget.invitationId, roomId: slug }, { onSuccess: () => { setRemoveTarget(null); toast.success("Приглашение отменено"); } });
+      removal.deleteInvitation({ id: removeTarget.invitationId, targetId: removeTarget.id, roomId: slug }, { onSuccess: () => { setRemoveTarget(null); toast.success("Приглашение отменено"); } });
     }} />
   </div>;
 }

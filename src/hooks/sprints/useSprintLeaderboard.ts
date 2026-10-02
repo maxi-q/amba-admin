@@ -10,7 +10,7 @@ export function useSprintLeaderboard(
   { allPages = false }: AllPagesOptions = {}
 ) {
   const query = useQuery({
-    queryKey: [QueryKeys.SPRINT_LEADERBOARD, roomId, allPages ? "all" : params.page, params.size],
+    queryKey: [QueryKeys.SPRINT_LEADERBOARD, roomId, params.sprintId, params.search, allPages ? "all" : params.page, params.size],
     queryFn: ({ signal }) => allPages
       ? collectPages((page) => sprintsControllerGetLeaderboard(roomId, { ...params, page }, undefined, signal))
       : sprintsControllerGetLeaderboard(roomId, params, undefined, signal),
@@ -22,6 +22,10 @@ export function useSprintLeaderboard(
     sprint: query.data?.sprint ?? null,
     entries: query.data?.items ?? [],
     manualRewards: query.data?.manualRewards ?? [],
+    manualPositions: query.data?.manualPositions ?? [],
+    isFinal: query.data?.isFinal ?? false,
+    resultsFixedAt: query.data?.resultsFixedAt ?? null,
+    historyUnavailable: query.data?.historyUnavailable ?? false,
     pagination: query.data
       ? {
           page: query.data.page,

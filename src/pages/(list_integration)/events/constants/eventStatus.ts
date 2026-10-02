@@ -17,6 +17,9 @@ export const checkEventStatus = (
   endDate: string | null,
   ignoreEndDate: boolean = false
 ) => {
+  if (startDate && new Date(startDate) > new Date()) {
+    return { label: statusLabels.upcoming, color: statusColors.upcoming };
+  }
   if (ignoreEndDate) {
     return { label: statusLabels.active, color: statusColors.active };
   }

@@ -12,9 +12,10 @@ export function rankParticipants<T extends Participant>(participants: readonly T
   });
 }
 
-export function isValidRewardRange(from: number, to: number, proportional: boolean) {
+export function isValidRewardRange(from: number, to: number, _proportional: boolean) {
+  void _proportional; // Both rule types now support an arbitrary starting rank.
   return Number.isSafeInteger(from) && Number.isSafeInteger(to) &&
-    from >= 1 && to >= from && (!proportional || from === 1);
+    from >= 1 && to >= from;
 }
 
 export function rankRewardPlaceCount(rule: { rankFrom: number | null; rankTo: number | null }) {
@@ -41,30 +42,30 @@ export function rankRewardsForParticipant(
   ));
 }
 
-// Local preview policy: largest remainder in indivisible units, then stable ID.
-// The API does not specify its remainder policy; real payouts use server amounts.
+// Same policy as CompetitionRewardsService: largest remainder, rank, stable ID.
 export function distributeRewardPool(
   amount: number,
   precision: number,
   participants: readonly Participant[]
 ): Map<string, number> {
   const result = new Map(participants.map(({ id }) => [id, 0]));
-  const eligible = participants.filter(({ points }) => Number.isSafeInteger(points) && points > 0);
+  const eligible = participants.filter(({ points }) => Number.isSafeInteger(points) && points >= 0);
   if (eligible.length === 0) return result;
 
   const multiplier = 10 ** precision;
   if (!Number.isInteger(precision) || precision < 0 || precision > 10 ||
       !Number.isFinite(amount * multiplier) || amount < 0) return result;
   const units = BigInt(Math.round(amount * multiplier));
-  const totalPoints = eligible.reduce((total, participant) => total + BigInt(participant.points), 0n);
+  const allZero = eligible.every(({ points }) => points === 0);
+  const totalPoints = eligible.reduce((total, participant) => total + BigInt(allZero ? 1 : participant.points), 0n);
   const shares = eligible.map(({ id, points }) => {
-    const numerator = units * BigInt(points);
-    return { id, units: numerator / totalPoints, remainder: numerator % totalPoints };
+    const numerator = units * BigInt(allZero ? 1 : points);
+    return { id, points, units: numerator / totalPoints, remainder: numerator % totalPoints };
   });
   const remaining = units - shares.reduce((total, share) => total + share.units, 0n);
   shares.sort((first, second) =>
     first.remainder === second.remainder
-      ? first.id.localeCompare(second.id)
+      ? second.points - first.points || first.id.localeCompare(second.id)
       : first.remainder > second.remainder ? -1 : 1
   );
   shares.forEach((share, index) => {

@@ -45,6 +45,8 @@ import { ProtectedRoute } from "@components/ProtectedRoute";
 import { getUrlParams } from "@helpers/index";
 import { RoomLayout } from "./RoomLayout";
 import SprintParticipantPage from "../(list_integration)/sprints/slug/SprintParticipantPage";
+import OpenEventPage from "../(list_integration)/events/slug/OpenEventPage";
+import EventParticipantPage from "../(list_integration)/events/slug/EventParticipantPage";
 import CreativeTaskEditorPage from "../(list_integration)/creativetasks/CreativeTaskEditorPage";
 import { SelectActionPage } from "../(Bot_step)/main";
 import { RoomRedirect } from "..";
@@ -144,7 +146,10 @@ export const Navigation = () => {
         <Route path="events" element={<EventsLayout />}>
           <Route index element={<EventsPage />} />
           <Route path="info" element={<EventsInfo />} />
-          <Route path=":eventId" element={<EventsSetting />} />
+          <Route path="new" element={<EventsSetting />} />
+          <Route path=":eventId" element={<OpenEventPage />} />
+          <Route path=":eventId/edit" element={<EventsSetting />} />
+          <Route path=":eventId/participants/:ambassadorId" element={<EventParticipantPage />} />
           <Route path=":eventId/subscribers" element={<EventSubscribersPage />} />
           <Route path=":eventId/invitations" element={<EventInvitationsPage />} />
         </Route>

@@ -8,8 +8,18 @@
 import type { GetLeaderboardResponseDtoSprint } from './getLeaderboardResponseDtoSprint';
 import type { LeaderboardEntryDto } from './leaderboardEntryDto';
 import type { LeaderboardRewardDto } from './leaderboardRewardDto';
+import type { LeaderboardManualPositionDto } from './leaderboardManualPositionDto';
 
 export interface GetLeaderboardResponseDto {
+  /** Результат зафиксирован и больше не пересчитывается */
+  isFinal: boolean;
+  /**
+   * Дата фиксации результатов
+   * @nullable
+   */
+  resultsFixedAt: string | null;
+  /** Исторический конкурс без зафиксированного снимка; достоверные итоги недоступны */
+  historyUnavailable: boolean;
   /**
    * Активный спринт, по которому построен лидерборд (null — активного спринта нет)
    * @nullable
@@ -19,6 +29,8 @@ export interface GetLeaderboardResponseDto {
   items: LeaderboardEntryDto[];
   /** Награды правил с типом manual: пул, который распределяется вручную и не привязан к участникам. Количество суммируется по всем правилам спринта с этим типом. */
   manualRewards: LeaderboardRewardDto[];
+  /** Ручные пулы по позициям правила с назначенным и доступным остатком */
+  manualPositions: LeaderboardManualPositionDto[];
   /** Номер текущей страницы (1-based) */
   page: number;
   /** Размер страницы */

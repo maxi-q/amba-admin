@@ -60,6 +60,7 @@ export interface DraftRankRule {
 
 export interface DraftProportionalReward {
   amount: string;
+  rankFrom?: string;
   rankTo: string;
   minPoints: string;
   rewards: DraftRankReward[];
@@ -319,10 +320,10 @@ export const SprintCreationStepTwo = ({
 
   const allRulesSelected =
     ruleIds.length > 0 && selectedRuleIds.length === ruleIds.length;
-  const hasUnsupportedProportionalRange = distributeProportionally && Number(rangeFrom) !== 1;
+  const hasUnsupportedProportionalRange = distributeProportionally && (!Number.isSafeInteger(Number(rangeFrom)) || Number(rangeFrom) < 1);
   const isPlaceRangeValid = placeDialogKind === "manual" || (
     distributeProportionally && rangeTo === ""
-      ? Number(rangeFrom) === 1
+      ? Number.isSafeInteger(Number(rangeFrom)) && Number(rangeFrom) >= 1
       : isValidRewardRange(
           Number(rangeFrom),
           placeDialogKind === "single" ? Number(rangeFrom) : Number(rangeTo),
@@ -362,7 +363,7 @@ export const SprintCreationStepTwo = ({
     setEditingRuleId(PROPORTIONAL_DIALOG_ID);
     setPlaceDialogKind("range");
     setDistributeProportionally(true);
-    setRangeFrom("1");
+    setRangeFrom(proportional.rankFrom ?? "1");
     setRangeTo(proportional.rankTo);
     setRewardDraft(proportionalRewards.map((reward) => ({ ...reward })));
     setPlaceDialogOpen(true);
@@ -438,14 +439,15 @@ export const SprintCreationStepTwo = ({
 
     if (distributeProportionally) {
       onProportionalChange({
+        rankFrom: String(from),
         amount: String(
           rewardDraft.reduce((total, reward) => total + reward.amount, 0)
         ),
         rankTo: rangeTo === "" ? "" : String(to),
         minPoints:
           editingRuleId === PROPORTIONAL_DIALOG_ID
-            ? proportional.minPoints
-            : "",
+            ? proportional.minPoints || (rangeTo === "" ? "0" : "")
+            : rangeTo === "" ? "0" : "",
         rewards: rewardDraft.map((reward) => ({ ...reward })),
       });
       if (editingRankRuleId) {
@@ -533,7 +535,7 @@ export const SprintCreationStepTwo = ({
       proportional.minPoints === "" ? null : Number(proportional.minPoints);
     const eligibleParticipants = rankedParticipants
       .filter(({ participant, rank }) =>
-          (proportionalRankTo === 0 || rank <= proportionalRankTo) &&
+          rank >= Number(proportional.rankFrom || 1) && (proportionalRankTo === 0 || rank <= proportionalRankTo) &&
           (proportionalMinPoints === null ||
             participant.points >= proportionalMinPoints))
       .map(({ participant }) => participant);
@@ -546,7 +548,7 @@ export const SprintCreationStepTwo = ({
         return [reward.rewardId, distributeRewardPool(reward.amount, precision, eligibleParticipants)];
       })
     );
-  }, [rankedParticipants, proportional.rankTo, proportional.minPoints, hasProportionalRule, proportionalRewards, rewardById]);
+  }, [rankedParticipants, proportional.rankFrom, proportional.rankTo, proportional.minPoints, hasProportionalRule, proportionalRewards, rewardById]);
 
   const rewardsForParticipant = (participant: PreviewParticipant, rank: number) =>
     sumRewardAmounts([
@@ -679,7 +681,7 @@ export const SprintCreationStepTwo = ({
                       <div className="w-[110px] shrink-0">
                         <p className="text-[13px] font-medium leading-4">
                           {proportional.rankTo
-                            ? `1–${proportional.rankTo} место`
+                            ? `${proportional.rankFrom || 1}–${proportional.rankTo} место`
                             : proportional.minPoints !== ""
                               ? `от ${proportional.minPoints} XP`
                               : "Все места"}
@@ -1100,8 +1102,8 @@ export const SprintCreationStepTwo = ({
                     onCheckedChange={setDistributeProportionally}
                   />
                   {hasUnsupportedProportionalRange
-                    ? "Пропорционально XP — только начиная с 1 места"
-                    : "Распределить пропорционально XP (с 1 места)"}
+                    ? "Укажите целое место от 1"
+                    : "Распределить пропорционально XP"}
                 </label>
               </div>
             )}

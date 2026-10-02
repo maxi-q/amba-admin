@@ -15,6 +15,7 @@ export type AmbassadorCreativeTaskDtoSprintStatus = typeof AmbassadorCreativeTas
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const AmbassadorCreativeTaskDtoSprintStatus = {
   active: 'active',
+  reviewing: 'reviewing',
   awarding: 'awarding',
   completed: 'completed',
 } as const;

@@ -4,6 +4,7 @@ import { Badge, Card, CardContent } from "@senler/ui";
 import type { GetMyEventsResponseItemDto } from "@/api/generated/model";
 import { formatDateRange, isEventActive } from "../utils/eventUtils";
 import { checkEventStatus } from "../constants/eventStatus";
+import { competitionStatusLabels } from "@/hooks/competitions/types";
 
 interface EventCardProps {
   /** Данные события */
@@ -18,7 +19,7 @@ interface EventCardProps {
  * Позволяет перейти к редактированию события по клику
  */
 export const EventCard = ({ event, roomSlug }: EventCardProps) => {
-  const dateRange = formatDateRange(event.startDate, event.endDate);
+  const dateRange = event.ignoreEndDate ? `${new Date(event.startDate).toLocaleDateString('ru-RU')} — бессрочно` : formatDateRange(event.startDate, event.endDate);
   const active = event.ignoreEndDate
     ? true
     : isEventActive(event.startDate, event.endDate);
@@ -37,7 +38,7 @@ export const EventCard = ({ event, roomSlug }: EventCardProps) => {
 
   return (
     <Link
-      to={`/rooms/${roomSlug}/events/${event.id}`}
+      to={`/rooms/${roomSlug}/events/${event.id}${event.isDraft ? '/edit' : ''}`}
       className={`block rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors hover:border-primary hover:bg-accent/30 ${
         event.isDeleted ? "opacity-60" : ""
       }`}
@@ -69,9 +70,9 @@ export const EventCard = ({ event, roomSlug }: EventCardProps) => {
 
           <div className="flex shrink-0 items-center gap-2">
             {!event.isDeleted ? (
-              <Badge variant={badgeVariant}>{label}</Badge>
+              <Badge variant={event.isDraft ? 'secondary' : badgeVariant}>{event.isDraft ? 'Черновик' : event.status === 'active' ? label : competitionStatusLabels[event.status]}</Badge>
             ) : null}
-            <Pencil className="size-4 text-muted-foreground" aria-hidden />
+            {event.isDraft && <Pencil className="size-4 text-muted-foreground" aria-hidden />}
           </div>
         </CardContent>
       </Card>

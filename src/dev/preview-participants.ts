@@ -69,6 +69,15 @@ export function createParticipantsPreview(sourceAmbassadors: BaseAmbassadorDto[]
       invitations = [...invitations, invitation];
       return invitation;
     }
+    const targetMatch = url.match(/^\/api\/invitations\/([^/]+)\/targets\/([^/]+)$/);
+    if (method === "DELETE" && targetMatch) {
+      const invitation = invitations.find((item) => item.id === targetMatch[1]);
+      const target = invitation?.targets.find((item) => item.id === targetMatch[2]);
+      if (!invitation || !target) throw new Error("Адресат не найден");
+      if (target.processed) throw new Error("Приглашение уже обработано");
+      invitation.targets = invitation.targets.filter((item) => item !== target);
+      return null;
+    }
     if (method === "DELETE" && url.startsWith("/api/invitations/")) {
       const id = url.split("/").at(-1);
       if (!invitations.some((item) => item.id === id)) throw new Error("Приглашение не найдено");

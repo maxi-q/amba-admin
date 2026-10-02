@@ -83,6 +83,7 @@ interface SubmissionStatusLogDialogProps {
   onReject: (submission: BaseCreativeTaskSubmissionDto, reviewComment: string) => void;
   isPending: boolean;
   reviewDisabled?: boolean;
+  reviewDisabledReason?: string;
   errorMessage?: string;
 }
 
@@ -170,6 +171,7 @@ function ReviewStep({
   onReject,
   isPending,
   reviewDisabled,
+  reviewDisabledReason,
 }: {
   submission: BaseCreativeTaskSubmissionDto;
   minimalRewardInBalls: number;
@@ -183,6 +185,7 @@ function ReviewStep({
   onReject: (submission: BaseCreativeTaskSubmissionDto, reviewComment: string) => void;
   isPending: boolean;
   reviewDisabled: boolean;
+  reviewDisabledReason?: string;
 }) {
   if (!isReviewableSubmissionStatus(submission.status)) return null;
 
@@ -191,9 +194,9 @@ function ReviewStep({
       <div className="relative flex items-start gap-3">
         <StatusIcon src={loaderIcon} />
         <div className="min-w-0 flex-1 text-[13px] font-medium leading-4 tracking-[-0.0325px]">
-          <p className="text-black">Проверка приостановлена</p>
+          <p className="text-black">{reviewDisabledReason ? 'Проверка недоступна' : 'Проверка приостановлена'}</p>
           <p className="mt-1 text-[#797979]">
-            Возобновите задание, чтобы принять или отклонить выполнение.
+            {reviewDisabledReason || 'Возобновите задание, чтобы принять или отклонить выполнение.'}
           </p>
         </div>
       </div>
@@ -341,6 +344,7 @@ export function SubmissionStatusLogDialog({
   onReject,
   isPending,
   reviewDisabled = false,
+  reviewDisabledReason,
   errorMessage,
 }: SubmissionStatusLogDialogProps) {
   const [actionMode, setActionMode] = useState<ActionMode>("idle");
@@ -421,6 +425,7 @@ export function SubmissionStatusLogDialog({
                 onReject={onReject}
                 isPending={isPending}
                 reviewDisabled={reviewDisabled}
+                reviewDisabledReason={reviewDisabledReason}
               />
             </div>
           ) : (

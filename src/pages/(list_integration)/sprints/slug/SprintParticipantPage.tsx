@@ -11,15 +11,17 @@ import { SubmissionProgress } from "../../creativetasks/components/TaskDetailSub
 import back from "@/assets/task-flow/back.svg";
 import user from "@/assets/task-flow/user.svg";
 import star from "@/assets/task-flow/star.svg";
+import { CompetitionAwards } from "@/components/competitions/CompetitionAwards";
+import { PromoPointsPanel } from "@/components/competitions/PromoPointsPanel";
 
 export default function SprintParticipantPage() {
   const { slug = "", sprintId = "", ambassadorId = "" } = useParams();
   const roomQuery = useGetRoomById(slug);
   const sprintsQuery = useSprints({ page: 1, size: 100 }, slug, { allPages: true });
-  const tasksQuery = useRoomCreativeTasks(roomQuery.room?.id ?? "", { page: 1, size: 100 }, { allPages: true });
+  const tasksQuery = useRoomCreativeTasks(roomQuery.room?.id ?? "", { sprintId, page: 1, size: 100 }, { allPages: true });
   const tasks = tasksQuery.tasks.filter((task) => task.sprintId === sprintId);
   const activity = useParticipantActivity(tasks.map((task) => task.id), ambassadorId);
-  const leaderboard = useSprintLeaderboard(roomQuery.room?.id ?? "", { page: 1, size: 100 }, { allPages: true });
+  const leaderboard = useSprintLeaderboard(roomQuery.room?.id ?? "", { sprintId, page: 1, size: 100 }, { allPages: true });
   const people = useAmbassadors({ page: 1, size: 1, ambassadorIds: [ambassadorId], roomIds: roomQuery.room ? [roomQuery.room.id] : [] }, { enabled: !!roomQuery.room && !!ambassadorId });
   const participant = people.ambassadors.find((item) => item.id === ambassadorId);
   const sprint = sprintsQuery.sprints.find((item) => item.id === sprintId);
@@ -48,6 +50,8 @@ export default function SprintParticipantPage() {
           {profileUrl ? <Button asChild variant="outline" className="border-[#e4e4e4] h-7 gap-1 px-2 text-[13px] shadow-none"><a href={profileUrl} target="_blank" rel="noopener noreferrer"><img src={user} alt="" />Профиль</a></Button>
             : <span title="API не вернул адрес внешнего профиля"><Button disabled variant="outline" className="border-[#e4e4e4] h-7 gap-1 px-2 text-[13px] shadow-none"><img src={user} alt="" />Профиль</Button></span>}
         </section>
+        <CompetitionAwards scope={{ kind: 'sprint', id: sprintId, roomId: roomQuery.room!.id }} ambassadorId={ambassadorId} status={sprint.status} />
+        <PromoPointsPanel scope={{ kind: 'sprint', id: sprintId, roomId: roomQuery.room!.id }} ambassadorId={ambassadorId} />
         <section className="mt-3 overflow-hidden rounded-lg border border-border bg-card" aria-label={`Активность в спринте «${sprint.name}»`}>
           <header className="flex h-[52px] items-center justify-between border-b border-border px-4 text-[15px] leading-5"><h2>Активность</h2><p>{completed.length} <span className="text-[13px] text-[#797979]">выполнено</span></p></header>
           {activity.submissions.length === 0 ? <p className="p-4 text-[#797979]">В этом спринте выполнений пока нет.</p> : activity.submissions.map((submission) => {

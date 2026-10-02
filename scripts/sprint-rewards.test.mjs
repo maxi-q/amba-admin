@@ -45,7 +45,8 @@ for (const precision of [0, 1, 2, 10]) {
     assert.equal(shares.get("zero"), 0);
   }
 }
-assert.deepEqual([...distributeRewardPool(1, 0, [{ id: "zero", points: 0 }]).values()], [0]);
+assert.deepEqual([...distributeRewardPool(1, 0, [{ id: "zero", points: 0 }]).values()], [1]);
+assert.deepEqual(Object.fromEntries(distributeRewardPool(3, 0, [{ id: "b", points: 0 }, { id: "a", points: 0 }])), { b: 1, a: 2 });
 assert.equal(distributeRewardPool(1, 0, []).size, 0);
 for (const amount of [NaN, Infinity, -1]) {
   assert.ok([...distributeRewardPool(amount, 0, equalParticipants).values()].every((value) => value === 0));
@@ -68,7 +69,7 @@ assert.equal(rankRewardPlaceCount({ rankFrom: 2, rankTo: 5 }) * 2, 8);
 assert.equal(rankRewardPlaceCount({ rankFrom: null, rankTo: null }), 0);
 assert.deepEqual(sumRewardAmounts([{ rewardId: "r", amount: 0.1 }, { rewardId: "r", amount: 0.2 }]), [{ rewardId: "r", amount: 0.3 }]);
 
-assert.equal(isValidRewardRange(2, 5, true), false, "The API ignores rankFrom for byPoints");
+assert.equal(isValidRewardRange(2, 5, true), true, "The API now respects rankFrom for byPoints");
 assert.equal(isValidRewardRange(1, 5, true), true);
 assert.equal(isValidRewardRange(2, 5, false), true);
 for (const [from, to] of [[0, 1], [2, 1], [1, 1.5], [NaN, 5], [1, Infinity]]) {

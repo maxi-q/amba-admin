@@ -23,12 +23,13 @@ import {
   Bell,
   Bot,
   Calendar,
-  ChartPie,
+  ChartLine,
   ChevronsUpDown,
   CircleQuestionMark,
   CircleUser,
   Ellipsis,
   Gift,
+  Megaphone,
   Users,
 } from "lucide-react";
 import tokenIcon from "@/assets/sprint-flow/token.svg";
@@ -51,8 +52,17 @@ const stubSoon = () => {
   toast.message("Скоро");
 };
 
+// ponytail: Figma placeholders; replace together when a sidebar-summary API is available.
+const sidebarPlaceholderCounts = {
+  eridTokens: 24,
+  notifications: 1,
+  sprints: 5,
+  events: 5,
+  participants: 23,
+} as const;
+
 const sidebarStubRowClassName =
-  "flex h-8 w-full cursor-pointer items-center gap-[9px] rounded-lg px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.25px] text-black outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring";
+  "flex h-8 w-full cursor-pointer items-center gap-[9px] rounded-lg px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring";
 
 const RoomBox = ({ children }: RoomBoxProps) => {
   const { slug } = useParams<{
@@ -76,6 +86,12 @@ const RoomBox = ({ children }: RoomBoxProps) => {
 
     return [
       {
+        id: "promo-codes",
+        label: "Промокоды",
+        href: `${roomBase}/promo-codes`,
+        match: (p) => pathWithoutHash(p).startsWith(`${roomBase}/promo-codes`),
+      },
+      {
         id: "vk-profile",
         label: "Профиль VK",
         href: `${roomBase}/vk-profile`,
@@ -86,17 +102,6 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         label: "Настройки",
         href: `${roomBase}/setting`,
         match: (p) => pathWithoutHash(p).startsWith(`${roomBase}/setting`),
-      },
-      {
-        id: "events",
-        label: "События",
-        href: `${roomBase}/events`,
-        match: (p) => {
-          const pt = pathWithoutHash(p);
-          return (
-            pt === `${roomBase}/events` || pt.startsWith(`${roomBase}/events/`)
-          );
-        },
       },
       {
         id: "creativetasks",
@@ -150,6 +155,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         id: "sprints",
         label: "Спринт",
         icon: Calendar,
+        badge: sidebarPlaceholderCounts.sprints,
         href: `${roomBase}/sprints`,
         match: (p) => {
           const pt = pathWithoutHash(p);
@@ -162,26 +168,36 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         },
       },
       {
+        id: "events",
+        label: "События",
+        icon: Megaphone,
+        badge: sidebarPlaceholderCounts.events,
+        href: `${roomBase}/events`,
+        match: (p) => pathWithoutHash(p) === `${roomBase}/events` || pathWithoutHash(p).startsWith(`${roomBase}/events/`),
+      },
+      {
+        id: "statistics",
+        label: "Статистика",
+        icon: ChartLine,
+        href: `${roomBase}/statistics`,
+      },
+      {
         id: "rewards",
         label: "Награды",
         icon: Gift,
         href: `${roomBase}/rewards`,
       },
       {
-        id: "promo-codes",
-        label: "Промокоды",
-        icon: BadgePercent,
-        href: `${roomBase}/promo-codes`,
-      },
-      {
-        id: "statistics",
-        label: "Аналитика",
-        icon: ChartPie,
-        href: `${roomBase}/statistics`,
-      },
-      {
         id: "applications",
-        label: "Участники",
+        label: (
+          <span className="flex w-full min-w-0 items-center">
+            <span className="min-w-0 flex-1 truncate">Участники</span>
+            <span className="ml-2 shrink-0 text-[#797979] tabular-nums">
+              {sidebarPlaceholderCounts.participants}
+            </span>
+          </span>
+        ),
+        title: "Участники",
         icon: Users,
         href: `${roomBase}/applications`,
       },
@@ -278,7 +294,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               />
             </span>
             <span className="flex min-w-0 items-center gap-0.5">
-              <span className="min-w-0 truncate text-[13px] font-medium leading-4 tracking-[-0.25px]">
+              <span className="min-w-0 truncate text-[13px] font-medium leading-4 tracking-[-0.0325px]">
                 {roomData.name}
               </span>
               <ChevronsUpDown
@@ -287,10 +303,6 @@ const RoomBox = ({ children }: RoomBoxProps) => {
                 aria-hidden
               />
             </span>
-          </span>
-          <span className="ml-auto flex shrink-0 items-center gap-1 text-[13px] text-[#797979]">
-            <Users className="size-4" strokeWidth={1.5} aria-hidden />
-            0
           </span>
         </NavLink>
       }
@@ -329,7 +341,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               type="button"
               className={sidebarStubRowClassName}
               onClick={stubSoon}
-              title="Токены — скоро"
+              title="ERID-токены — скоро"
             >
               <img
                 src={tokenIcon}
@@ -337,9 +349,9 @@ const RoomBox = ({ children }: RoomBoxProps) => {
                 className="size-5 shrink-0"
                 aria-hidden
               />
-              <span className="min-w-0 shrink truncate">Токены</span>
+              <span className="min-w-0 shrink truncate">ERID-токены</span>
               <span className="ml-auto shrink-0 text-[13px] font-medium leading-4 text-[#797979] tabular-nums">
-                5 000
+                {sidebarPlaceholderCounts.eridTokens}
               </span>
             </button>
           </li>
@@ -356,8 +368,8 @@ const RoomBox = ({ children }: RoomBoxProps) => {
                 aria-hidden
               />
               <span className="min-w-0 shrink truncate">Уведомления</span>
-              <span className="ml-auto flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[6px] bg-[#D52094] px-1.5 text-[12px] font-medium leading-4 text-white tabular-nums">
-                1
+              <span className="ml-auto flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[6px] bg-[#D52094] px-1.5 text-[12px] font-medium leading-4 tracking-normal text-white tabular-nums">
+                {sidebarPlaceholderCounts.notifications}
               </span>
             </button>
           </li>
@@ -366,7 +378,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       sidebarFooter={
         <button
           type="button"
-          className="flex h-8 w-full items-center gap-2 rounded-lg border border-[#e4e4e4] bg-[#FFFFFF] px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.25px] text-black transition-colors hover:bg-sidebar-accent"
+          className="flex h-8 w-full items-center gap-[9px] rounded-lg border border-[#e4e4e4] bg-[#FFFFFF] px-2 text-left text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black transition-colors hover:bg-sidebar-accent"
           onClick={stubSoon}
           title="Создаем бота — скоро"
         >
@@ -393,13 +405,14 @@ const RoomBox = ({ children }: RoomBoxProps) => {
         // токены/уведомления примыкают к названию и к навигации
         "[&>div>div:nth-child(2)]:pl-1 [&>div>div:nth-child(2)]:pr-2 [&>div>div:nth-child(2)]:py-0",
         "[&_nav]:gap-0 [&_nav]:pl-1 [&_nav]:pr-2 [&_nav]:pb-2 [&_nav]:pt-0 [&_nav_ul]:gap-0",
-        "[&_nav_a]:gap-[9px] [&_nav_a]:rounded-lg [&_nav_a]:text-[13px] [&_nav_a]:font-medium [&_nav_a]:leading-4 [&_nav_a]:tracking-[-0.25px] [&_nav_a]:text-black",
-        "[&_nav_button]:gap-[9px] [&_nav_button]:rounded-lg [&_nav_button]:text-[13px] [&_nav_button]:font-medium [&_nav_button]:leading-4 [&_nav_button]:tracking-[-0.25px] [&_nav_button]:text-black",
+        "[&_nav_a]:gap-[9px] [&_nav_a]:rounded-lg [&_nav_a]:text-[13px] [&_nav_a]:font-medium [&_nav_a]:leading-4 [&_nav_a]:tracking-[-0.0325px] [&_nav_a]:text-black",
+        "[&_nav_button]:gap-[9px] [&_nav_button]:rounded-lg [&_nav_button]:text-[13px] [&_nav_button]:font-medium [&_nav_button]:leading-4 [&_nav_button]:tracking-[-0.0325px] [&_nav_button]:text-black",
         "[&_nav_svg]:size-5 [&_nav_svg]:text-[#707070] [&_nav_svg]:[stroke-width:1.5]",
+        "[&_nav_a>div:last-child]:ml-auto [&_nav_a>div:last-child]:h-4 [&_nav_a>div:last-child]:min-w-4 [&_nav_a>div:last-child]:rounded-[6px] [&_nav_a>div:last-child]:border-0 [&_nav_a>div:last-child]:bg-[#D52094] [&_nav_a:hover>div:last-child]:bg-[#D52094] [&_nav_a>div:last-child]:px-1.5 [&_nav_a>div:last-child]:py-0 [&_nav_a>div:last-child]:text-[12px] [&_nav_a>div:last-child]:font-medium [&_nav_a>div:last-child]:leading-4 [&_nav_a>div:last-child]:tracking-normal [&_nav_a>div:last-child]:text-white",
         "[&_a[aria-current=page]]:bg-[#2563eb] [&_a[aria-current=page]]:font-medium [&_a[aria-current=page]]:text-white [&_a[aria-current=page]_svg]:text-white",
         "[&_button[aria-current=page]]:bg-[#2563eb] [&_button[aria-current=page]]:text-white",
-        // footer по макету: x=4, right=8, bottom=4, h=32
-        "[&>div>div:last-child]:pl-1 [&>div>div:last-child]:pr-2 [&>div>div:last-child]:pt-0 [&>div>div:last-child]:pb-1",
+        // footer по макету: x=4, right=4, bottom=4, h=32
+        "[&>div>div:last-child]:px-1 [&>div>div:last-child]:pt-0 [&>div>div:last-child]:pb-1",
       ].join(" ")}
       mainClassName="min-h-0 flex-1 overflow-y-auto bg-[#FFFFFF] p-4 md:p-6"
     >

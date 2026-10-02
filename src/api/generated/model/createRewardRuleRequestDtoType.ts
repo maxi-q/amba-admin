@@ -17,4 +17,5 @@ export const CreateRewardRuleRequestDtoType = {
   byRank: 'byRank',
   byPoints: 'byPoints',
   manual: 'manual',
+  each: 'each',
 } as const;

@@ -8,8 +8,11 @@
 import type { LeaderboardRewardDto } from './leaderboardRewardDto';
 
 export interface LeaderboardEntryDto {
-  /** Место в рейтинге (1-based, одинаковые баллы — одинаковое место) */
-  rank: number;
+  /**
+   * Место в рейтинге (1-based, одинаковые баллы — одинаковое место)
+   * @nullable
+   */
+  rank: number | null;
   /** ID амбассадора */
   ambassadorId: string;
   /** Логин амбассадора */
@@ -26,6 +29,10 @@ export interface LeaderboardEntryDto {
   promoCode: string | null;
   /** Сумма баллов за одобренные задания в рамках спринта */
   points: number;
+  /** Баллы за задания */
+  taskPoints: number;
+  /** Баллы за применение промокода */
+  promoPoints: number;
   /** Предпросмотр наград участника по правилам спринта (расчёт на текущий момент) */
   rewards: LeaderboardRewardDto[];
 }

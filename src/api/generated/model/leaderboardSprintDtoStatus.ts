@@ -15,6 +15,7 @@ export type LeaderboardSprintDtoStatus = typeof LeaderboardSprintDtoStatus[keyof
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const LeaderboardSprintDtoStatus = {
   active: 'active',
+  reviewing: 'reviewing',
   awarding: 'awarding',
   completed: 'completed',
 } as const;

@@ -37,8 +37,23 @@ export interface GetMySprintsResponseItemDto {
   endDate: string | null;
   /** Игнорировать дату окончания(сделать спринт бессрочным) */
   ignoreEndDate: boolean;
-  /** Статус опубликованного спринта. active допустим и при дате начала в будущем. awarding и completed закрывают взаимодействие с заданиями; владелец может только допроверить креативы. */
+  /** Статус опубликованного спринта. active допустим и при дате начала в будущем. reviewing разрешает проверку ранее поданных ответов, awarding и completed закрывают модерацию. */
   status: GetMySprintsResponseItemDtoStatus;
+  /**
+   * Начало проверки ответов
+   * @nullable
+   */
+  reviewStartedAt: string | null;
+  /**
+   * Фиксация результатов и автоматических наград
+   * @nullable
+   */
+  resultsFixedAt: string | null;
+  /**
+   * Завершение выдачи назначенных наград
+   * @nullable
+   */
+  completedAt: string | null;
   /** Черновик ли это. После публикации вернуть спринт в черновик нельзя */
   isDraft: boolean;
   /** ID группы ожидания подписки */

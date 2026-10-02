@@ -52,11 +52,13 @@ export async function saveSprintWithRelations({
       throw new Error("Укажите корректный диапазон призовых мест");
     }
     if (rule.type === "byPoints" && (
-      (rule.rankFrom != null && rule.rankFrom !== 1) ||
+      (rule.rankFrom != null && (!Number.isSafeInteger(rule.rankFrom) || rule.rankFrom < 1)) ||
+      (rule.rankFrom != null && rule.rankTo != null && rule.rankFrom > rule.rankTo) ||
+      (rule.rankTo == null && rule.minPoints == null) ||
       (rule.rankTo != null && (!Number.isSafeInteger(rule.rankTo) || rule.rankTo < 1)) ||
       (rule.minPoints != null && (!Number.isSafeInteger(rule.minPoints) || rule.minPoints < 0))
     )) {
-      throw new Error("Проверьте ограничения пропорционального распределения: места начинаются с первого, баллы не могут быть отрицательными");
+      throw new Error("Проверьте диапазон мест и порог баллов. Укажите конец диапазона или минимальные баллы.");
     }
     if (rule.rewards.length === 0 || rule.rewards.some((reward) => !reward.rewardId || !Number.isFinite(Number(reward.amount)) || Number(reward.amount) <= 0)) {
       throw new Error("Для каждого правила выберите награды и укажите количество больше нуля");

@@ -848,7 +848,7 @@ export function useCreativeTasksControllerGetSubmissionById<TData = Awaited<Retu
 
 
 /**
- * Позволяет амбассадору изменить комментарий своего ответа. Материалы можно заменить только в статусах new и rejected_for_materials. Статус при редактировании не меняется.
+ * Позволяет менять комментарий и материалы до финального одобрения. Изменение уже одобренных материалов возвращает их на проверку.
  * @summary Обновить ответ на задание (для амбассадора)
  */
 export const creativeTasksControllerUpdateSubmissionByAmbassador = (
@@ -913,7 +913,7 @@ export const useCreativeTasksControllerUpdateSubmissionByAmbassador = <TError = 
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Создаёт или заменяет ссылку отдельной публикации в статусе waiting_for_publication или rejected_for_publication.
+ * Создаёт или заменяет ссылку отдельной публикации до финального одобрения, включая ожидание проверки публикации.
  * @summary Прикрепить ссылку на опубликованный материал (для амбассадора)
  */
 export const creativeTasksControllerUpdatePublicationUrl = (

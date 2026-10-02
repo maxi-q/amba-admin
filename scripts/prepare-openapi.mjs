@@ -19,6 +19,12 @@ const normalizeSchema = (schema) => {
     return;
   }
 
+  // Nest emits JSON Schema `examples`; OpenAPI 3.0 uses a single `example`.
+  if (schema.type && Array.isArray(schema.examples)) {
+    schema.example ??= schema.examples[0];
+    delete schema.examples;
+  }
+
   if (schema.properties && isObject(schema.properties)) {
     for (const [fieldName, fieldSchema] of Object.entries(schema.properties)) {
       if (isObject(fieldSchema) && typeof fieldSchema.required === 'boolean') {
@@ -70,6 +76,17 @@ if (!response.ok) {
 
 const openApiSchema = await response.json();
 normalizeSchema(openApiSchema);
+
+// Verified against backend 26e41d1: these values are returned by the services,
+// but the Swagger PickType/nullable annotations have not caught up yet.
+const schemas = openApiSchema.components.schemas;
+for (const name of ['LeaderboardEntryDto', 'EventResultEntryDto']) {
+  schemas[name].properties.rank.nullable = true;
+}
+for (const field of ['type', 'status', 'isDraft', 'reviewStartedAt', 'resultsFixedAt', 'completedAt', 'promoCodeUsagesCount']) {
+  schemas.GetMyEventsResponseItemDto.properties[field] = structuredClone(schemas.BaseEventDto.properties[field]);
+  ensureRequiredField(schemas.GetMyEventsResponseItemDto, field);
+}
 
 await mkdir(new URL('.', TARGET_PATH), { recursive: true });
 await writeFile(TARGET_PATH, `${JSON.stringify(openApiSchema, null, 2)}\n`);

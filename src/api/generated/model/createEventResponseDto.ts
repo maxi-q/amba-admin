@@ -5,6 +5,8 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreateEventResponseDtoType } from './createEventResponseDtoType';
+import type { CreateEventResponseDtoStatus } from './createEventResponseDtoStatus';
 
 export interface CreateEventResponseDto {
   /** Unique identifier */
@@ -13,6 +15,18 @@ export interface CreateEventResponseDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  /** Конкурс или награда каждому участнику */
+  type: CreateEventResponseDtoType;
+  /** active → reviewing → awarding → completed */
+  status: CreateEventResponseDtoStatus;
+  /** Черновик события */
+  isDraft: boolean;
+  /** @nullable */
+  reviewStartedAt: string | null;
+  /** @nullable */
+  resultsFixedAt: string | null;
+  /** @nullable */
+  completedAt: string | null;
   /** Название события */
   name: string;
   /**

@@ -25,10 +25,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CompetitionReviewDto,
   CreateRewardRuleRequestDto,
   CreateRewardRuleResponseDto,
   CreateSprintRequestDto,
   CreateSprintResponseDto,
+  FinishCompetitionReviewDto,
   GetLeaderboardResponseDto,
   GetMySprintsResponseDto,
   GetRewardRulesResponseDto,
@@ -251,6 +253,160 @@ export function useSprintsControllerGetLeaderboardAsAmbassador<TData = Awaited<R
 
 
 /**
+ * @summary Сводка проверки ответов спринта
+ */
+export const sprintsControllerGetReview = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CompetitionReviewDto>(
+      {url: `/api/sprints/${id}/review`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getSprintsControllerGetReviewQueryKey = (id?: string,) => {
+    return [
+    `/api/sprints/${id}/review`
+    ] as const;
+    }
+
+    
+export const getSprintsControllerGetReviewQueryOptions = <TData = Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSprintsControllerGetReviewQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sprintsControllerGetReview>>> = ({ signal }) => sprintsControllerGetReview(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SprintsControllerGetReviewQueryResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerGetReview>>>
+export type SprintsControllerGetReviewQueryError = unknown
+
+
+export function useSprintsControllerGetReview<TData = Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetReview>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetReview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetReview<TData = Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof sprintsControllerGetReview>>,
+          TError,
+          Awaited<ReturnType<typeof sprintsControllerGetReview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSprintsControllerGetReview<TData = Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Сводка проверки ответов спринта
+ */
+
+export function useSprintsControllerGetReview<TData = Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof sprintsControllerGetReview>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSprintsControllerGetReviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Зафиксировать результаты и автоматические награды после проверки
+ */
+export const sprintsControllerFinishReview = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<FinishCompetitionReviewDto>(
+      {url: `/api/sprints/${id}/finish-review`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getSprintsControllerFinishReviewMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerFinishReview>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerFinishReview>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['sprintsControllerFinishReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sprintsControllerFinishReview>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  sprintsControllerFinishReview(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SprintsControllerFinishReviewMutationResult = NonNullable<Awaited<ReturnType<typeof sprintsControllerFinishReview>>>
+    
+    export type SprintsControllerFinishReviewMutationError = unknown
+
+    /**
+ * @summary Зафиксировать результаты и автоматические награды после проверки
+ */
+export const useSprintsControllerFinishReview = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sprintsControllerFinishReview>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sprintsControllerFinishReview>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSprintsControllerFinishReviewMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Получить правила выдачи наград спринта
  */
 export const sprintsControllerGetRewardRules = (

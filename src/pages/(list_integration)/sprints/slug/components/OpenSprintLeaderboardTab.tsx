@@ -19,8 +19,10 @@ import type {
   SprintRewardRuleDto,
 } from "@/api/generated/model";
 import { useSprintLeaderboard } from "@/hooks/sprints/useSprintLeaderboard";
+import { useCompetitionGrants } from "@/hooks/competitions/useCompetitionQueries";
 import { CreativesPaginationControls } from "../../../creativetasks/components/CreativesPaginationControls";
 import xpStarUrl from "../assets/xp-star.svg";
+import { useDebounce } from "use-debounce";
 
 interface OpenSprintLeaderboardTabProps {
   roomId: string;
@@ -35,6 +37,7 @@ interface RewardBreakdown {
   fixed: number;
   proportional: number;
   proportionalPool: number;
+  manual: number;
 }
 
 const numberFormatter = new Intl.NumberFormat("ru-RU", {
@@ -49,6 +52,7 @@ function ruleMatchesEntry(
   rule: SprintRewardRuleDto,
   entry: LeaderboardEntryDto
 ): boolean {
+  if (entry.rank == null) return false;
   if (rule.type === "byRank") {
     return (
       rule.rankFrom !== null &&
@@ -60,6 +64,7 @@ function ruleMatchesEntry(
 
   return (
     rule.type === "byPoints" &&
+    (rule.rankFrom === null || entry.rank >= rule.rankFrom) &&
     (rule.rankTo === null || entry.rank <= rule.rankTo) &&
     (rule.minPoints === null || entry.points >= rule.minPoints)
   );
@@ -68,12 +73,13 @@ function ruleMatchesEntry(
 function getRewardBreakdown(
   entry: LeaderboardEntryDto,
   reward: LeaderboardRewardDto,
-  rules: SprintRewardRuleDto[]
+  rules: SprintRewardRuleDto[],
+  manual: number,
 ): RewardBreakdown | null {
   const sources = rules.flatMap((rule) => {
     if (!ruleMatchesEntry(rule, entry)) return [];
     const item = rule.rewards.find(
-      (ruleReward) => ruleReward.rewardId === reward.rewardId
+      (ruleReward) => ruleReward.rewardId === reward.rewardId && (!reward.rewardVersionId || ruleReward.rewardVersionId === reward.rewardVersionId)
     );
     return item ? [{ type: rule.type, item }] : [];
   });
@@ -90,9 +96,9 @@ function getRewardBreakdown(
   const multiplier = 10 ** precision;
   const total = reward.amount;
   const proportional =
-    Math.round(Math.max(0, total - fixed) * multiplier) / multiplier;
+    Math.round(Math.max(0, total - fixed - manual) * multiplier) / multiplier;
   const contributionCount =
-    fixedSources.length + (proportional > 0 ? proportionalSources.length : 0);
+    fixedSources.length + (proportional > 0 ? proportionalSources.length : 0) + (manual > 0 ? 1 : 0);
 
   if (contributionCount < 2) return null;
 
@@ -104,6 +110,7 @@ function getRewardBreakdown(
     fixed,
     proportional,
     proportionalPool,
+    manual,
   };
 }
 
@@ -111,10 +118,12 @@ function RewardChip({
   entry,
   reward,
   rules,
+  manual = 0,
 }: {
   entry: LeaderboardEntryDto;
   reward: LeaderboardRewardDto;
   rules: SprintRewardRuleDto[];
+  manual?: number;
 }) {
   const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
   const ruleReward = rules
@@ -123,7 +132,7 @@ function RewardChip({
   const currencySymbol = reward.name.match(/([₽$€])$/)?.[1] ?? "₽";
   const isMoney = /руб|[₽$€]/i.test(`${ruleReward?.name ?? ""} ${reward.name}`);
   const amount = reward.amount;
-  const breakdown = getRewardBreakdown(entry, reward, rules);
+  const breakdown = getRewardBreakdown(entry, reward, rules, manual);
   const RewardIcon = isMoney ? Banknote : Gift;
   const content = (
     <>
@@ -206,6 +215,7 @@ function RewardChip({
                 </span>
               </div>
             ) : null}
+            {breakdown.manual > 0 && <div className="mt-1 flex justify-between gap-2 text-[12px]"><span className="text-[#797979]">Ручное назначение</span><span>{numberFormatter.format(breakdown.manual)}</span></div>}
           </div>
         </div>
       </TooltipContent>
@@ -220,9 +230,12 @@ export function OpenSprintLeaderboardTab({
   search = "",
 }: OpenSprintLeaderboardTabProps) {
   const { slug = "" } = useParams();
+  const grants = useCompetitionGrants({ kind: 'sprint', id: sprintId, roomId });
+  const manualAmount = (entry: LeaderboardEntryDto, reward: LeaderboardRewardDto) => (grants.data?.items ?? []).filter((grant) => grant.assignmentType === 'manual' && grant.ambassadorId === entry.ambassadorId && grant.rewardId === reward.rewardId && (!reward.rewardVersionId || grant.rewardVersionId === reward.rewardVersionId)).reduce((sum, grant) => sum + grant.amount, 0);
   const [page, setPage] = useState(1);
-  const { sprint, entries, isLoading, isError, error } =
-    useSprintLeaderboard(roomId, { page: 1, size: 100 }, { allPages: true });
+  const [debouncedSearch] = useDebounce(search.trim(), 250);
+  const { sprint, entries, isLoading, isError, error, pagination, historyUnavailable, isFinal } =
+    useSprintLeaderboard(roomId, { sprintId, search: debouncedSearch || undefined, page, size: 50 });
 
   useEffect(() => setPage(1), [search]);
 
@@ -247,28 +260,24 @@ export function OpenSprintLeaderboardTab({
   if (!sprint || sprint.id !== sprintId) {
     return (
       <p className="px-4 py-6 text-[13px] font-medium text-[#797979]">
-        Таблица лидеров доступна только для активного спринта компании.
+        Не удалось получить рейтинг выбранного спринта.
       </p>
     );
   }
+
+  if (historyUnavailable) return <p className="p-4 text-[13px] text-muted-foreground">Для этого старого спринта исторические итоги не сохранены. Текущий рейтинг не подменяет зафиксированные результаты.</p>;
 
   if (entries.length === 0) {
     return (
       <p className="px-4 py-6 text-[13px] font-medium text-[#797979]">
-        Пока нет участников в рейтинге.
+        {search ? "Ничего не найдено" : "Пока нет участников в рейтинге."}
       </p>
     );
   }
 
-  const normalizedSearch = search.trim().toLocaleLowerCase("ru-RU");
-  const filteredEntries = normalizedSearch
-    ? entries.filter((entry) =>
-        entry.username.toLocaleLowerCase("ru-RU").includes(normalizedSearch)
-      )
-    : entries;
-  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / 50));
+  const totalPages = pagination?.totalPages ?? 1;
   const currentPage = Math.min(page, totalPages);
-  const visibleEntries = filteredEntries.slice((currentPage - 1) * 50, currentPage * 50);
+  const visibleEntries = entries;
   const paginationControls =
     totalPages > 1 ? (
       <CreativesPaginationControls
@@ -300,17 +309,18 @@ export function OpenSprintLeaderboardTab({
           const hiddenRewardsCount = entry.rewards.length - visibleRewards.length;
           const nextEntry = entries[entryIndex + 1];
           const isEndOfRewardZone =
+            !debouncedSearch &&
             entry.rewards.length > 0 &&
             (nextEntry
               ? nextEntry.rewards.length === 0
-              : entryIndex === entries.length - 1);
+              : currentPage === totalPages && entryIndex === entries.length - 1);
 
           return (
             <Fragment key={entry.ambassadorId}>
               <div className="flex h-12 items-center gap-4 border-b border-[#e4e4e4] px-4">
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="shrink-0 text-right text-[13px] font-medium leading-4 tracking-[-0.25px] text-foreground">
-                    {entry.rank}.
+                    {entry.rank == null ? "—" : `${entry.rank}.`}
                   </span>
                   <Avatar
                     src={entry.avatarUrl}
@@ -333,7 +343,8 @@ export function OpenSprintLeaderboardTab({
                           key={reward.rewardId}
                           entry={entry}
                           reward={reward}
-                          rules={rules}
+                          rules={isFinal || !grants.data || grants.isError ? [] : rules}
+                          manual={manualAmount(entry, reward)}
                         />
                       );
                     })}
@@ -342,7 +353,7 @@ export function OpenSprintLeaderboardTab({
                         <PopoverTrigger asChild><Button variant="ghost" className="size-6 shrink-0 rounded-full bg-[#e9efff] p-0 text-[13px] font-medium leading-4 text-[#2563eb]" aria-label={`Ещё награды: ${hiddenRewardsCount}, ${entry.username}`}>+{hiddenRewardsCount}</Button></PopoverTrigger>
                         <PopoverContent align="end" className="w-[260px] p-3">
                           <p className="mb-2 text-[13px] font-medium">Остальные награды</p>
-                          <div className="flex flex-wrap gap-1">{entry.rewards.slice(2).map((reward) => <RewardChip key={reward.rewardId} entry={entry} reward={reward} rules={rules} />)}</div>
+                          <div className="flex flex-wrap gap-1">{entry.rewards.slice(2).map((reward) => <RewardChip key={reward.rewardId} entry={entry} reward={reward} rules={isFinal || !grants.data || grants.isError ? [] : rules} manual={manualAmount(entry, reward)} />)}</div>
                         </PopoverContent>
                       </Popover>
                     ) : null}
@@ -358,7 +369,7 @@ export function OpenSprintLeaderboardTab({
                     className="size-3.5 shrink-0"
                   />
                   <span className="whitespace-nowrap text-[13px] font-medium leading-4 tracking-[-0.25px] text-foreground">
-                    {formatPoints(entry.points)}
+                    <span title={`Задания: ${entry.taskPoints} XP · Промокоды: ${entry.promoPoints} XP`}>{formatPoints(entry.points)}</span>
                   </span>
                 </div>
 

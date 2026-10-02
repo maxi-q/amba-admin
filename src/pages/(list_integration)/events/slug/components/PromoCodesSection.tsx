@@ -65,7 +65,7 @@ export const PromoCodesSection = ({
             />
           </div>
           <p className="shrink-0 text-sm text-muted-foreground">
-            {getRewardUnitShortName(formData.rewardUnits)}
+            {getRewardUnitShortName(formData.rewardUnits ?? '')}
           </p>
         </div>
       </div>

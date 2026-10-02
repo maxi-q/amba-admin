@@ -15,6 +15,7 @@ export type UpdateSprintRequestDtoStatus = typeof UpdateSprintRequestDtoStatus[k
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const UpdateSprintRequestDtoStatus = {
   active: 'active',
+  reviewing: 'reviewing',
   awarding: 'awarding',
   completed: 'completed',
 } as const;

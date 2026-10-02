@@ -16,7 +16,7 @@ assert.equal(filterParticipants(people, "id123").length, 1);
 const invitation = { id: "invite", targets: [{ id: "one", processed: false, channelTypeId: 1, subscriberId: "123" }, { id: "two", processed: true, channelTypeId: 1, subscriberId: "456" }] };
 const rows = invitationParticipants([invitation]);
 assert.equal(rows.length, 1);
-assert.ok(rows[0].cancellationUnavailable);
+assert.equal(rows[0].cancellationUnavailable, undefined);
 assert.equal(invitationParticipants([{ ...invitation, targets: [invitation.targets[0]] }])[0].cancellationUnavailable, undefined);
 
 const mock = createParticipantsPreview(ambassadors);
@@ -36,5 +36,8 @@ assert.deepEqual(created.eventIds, []);
 assert.ok(request("GET", "/api/invitations/room/preview-room").items.some((item) => item.id === created.id));
 request("DELETE", `/api/invitations/${created.id}`);
 assert.ok(!request("GET", "/api/invitations/room/preview-room").items.some((item) => item.id === created.id));
+const multi = request("POST", "/api/invitations", { roomId: "preview-room", targets: [{ channelTypeId: 1, subscriberId: "1" }, { channelTypeId: 1, subscriberId: "2" }] });
+request("DELETE", `/api/invitations/${multi.id}/targets/${multi.targets[0].id}`);
+assert.deepEqual(request("GET", "/api/invitations/room/preview-room").items.find((item) => item.id === multi.id).targets.map((item) => item.subscriberId), ["2"]);
 assert.deepEqual(request("POST", "/api/invitations/parse-vk-user-id", { input: "https://vk.com/id987" }), { vkUserId: "987" });
 console.log("Participants: pagination, search, mapping, safe cancellation and mock actions passed.");

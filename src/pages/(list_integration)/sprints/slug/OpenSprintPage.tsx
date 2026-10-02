@@ -2,20 +2,21 @@ import { useState } from "react";
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import pencil from "@/assets/task-flow/pencil.svg";
 import plus from "@/assets/task-flow/plus-muted.svg";
-import { Alert, AlertDescription, Button, CheckBox, Input, PageLoader } from "@senler/ui";
-import { toast } from "sonner";
+import { Alert, AlertDescription, Button, Input, PageLoader } from "@senler/ui";
+import { CompetitionLifecycle } from "@/components/competitions/CompetitionLifecycle";
+import { PromoPointsPanel } from "@/components/competitions/PromoPointsPanel";
+import { ManualAwardPicker } from "@/components/competitions/ManualAwardPicker";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
 import { useSprintRewardRules } from "@/hooks/sprints/useSprintRewardRules";
-import { usePatchSprint } from "@/hooks/sprints/usePatchSprint";
 import { SprintNotFoundState } from "./components/SprintNotFoundState";
 import { OpenSprintQuestRow } from "./components/OpenSprintQuestRow";
 import { OpenSprintSidebar } from "./components/OpenSprintSidebar";
 import { OpenSprintLeaderboardTab } from "./components/OpenSprintLeaderboardTab";
 import SprintSetting from "./index";
 
-type OpenSprintTab = "quests" | "leaderboard";
+type OpenSprintTab = "quests" | "leaderboard" | "promo";
 
 export default function OpenSprintPage() {
   const { sprintId = "", slug = "" } = useParams();
@@ -26,8 +27,6 @@ export default function OpenSprintPage() {
     value: OpenSprintTab;
   } | null>(null);
   const [searchState, setSearchState] = useState({ sprintId: "", value: "" });
-  const [confirmedSprintId, setConfirmedSprintId] = useState<string | null>(null);
-  const { patchSprint, isPending: isCompleting } = usePatchSprint();
 
   const isCreatePath = sprintId === "new";
   const effectiveSprintId = isCreatePath ? "" : sprintId;
@@ -46,6 +45,7 @@ export default function OpenSprintPage() {
   const { rules, isLoading: isLoadingRules, isError: isRulesError, refetch: refetchRules } =
     useSprintRewardRules(effectiveSprintId);
   const { tasks, isLoading: isLoadingTasks, isError: isTasksError, refetch: refetchTasks } = useRoomCreativeTasks(roomId, {
+    sprintId: effectiveSprintId || undefined,
     page: 1,
     size: 100,
   }, { allPages: true });
@@ -85,31 +85,12 @@ export default function OpenSprintPage() {
 
   const isAwarding = sprint.status === "awarding";
   const defaultTab: OpenSprintTab =
-    urlParams.get("tab") === "leaderboard" || sprint.status !== "active" ? "leaderboard" : "quests";
+    urlParams.get("tab") === "leaderboard" || isAwarding || sprint.status === "completed" ? "leaderboard" : "quests";
   const tab =
     tabState?.sprintId === sprint.id ? tabState.value : defaultTab;
   const search =
     searchState.sprintId === sprint.id ? searchState.value : "";
   const normalizedSearch = search.trim().toLocaleLowerCase("ru-RU");
-  const awardsSent = confirmedSprintId === sprint.id;
-
-  const completeSprint = () => {
-    patchSprint(
-      {
-        sprintId: sprint.id,
-        data: { status: "completed" },
-      },
-      {
-        onSuccess: () => toast.success("Спринт завершён"),
-        onError: (error) =>
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Не удалось завершить спринт"
-          ),
-      }
-    );
-  };
 
   return (
     <div className="-m-4 grid min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-1 grid-cols-1 bg-white lg:grid-cols-[minmax(0,1fr)_260px]">
@@ -119,6 +100,7 @@ export default function OpenSprintPage() {
             {sprint.name}
           </h1>
           <div className="flex shrink-0 items-center gap-1">
+            {sprint.status !== 'completed' && <ManualAwardPicker scope={{ kind: 'sprint', id: sprint.id, roomId }} />}
             {isAwarding ? (
               <>
                 <Button
@@ -177,36 +159,14 @@ export default function OpenSprintPage() {
           </div>
         </div>
 
-        {isAwarding ? (
-          <div className="mx-4 mb-4 flex h-[46px] items-center justify-between gap-3 rounded-md border border-[#e4e4e4] px-2">
-            <div className="[&_label]:text-[13px] [&_label]:font-medium [&_label]:tracking-[-0.25px]">
-              <CheckBox
-                checked={awardsSent}
-                onCheckedChange={(checked) =>
-                  setConfirmedSprintId(checked === true ? sprint.id : null)
-                }
-                className="data-[state=checked]:border-[#2563eb] data-[state=checked]:bg-[#2563eb] hover:border-[#2563eb]"
-                label="Я отправил все награды"
-              />
-            </div>
-            <Button
-              type="button"
-              loading={isCompleting}
-              disabled={!awardsSent || isCompleting}
-              onClick={completeSprint}
-              className="bg-[#2563eb] text-[13px] hover:bg-[#2563eb]/90"
-            >
-              Завершить спринт
-            </Button>
-          </div>
-        ) : null}
+        <CompetitionLifecycle scope={{ kind: 'sprint', id: sprint.id, roomId }} status={sprint.status} onReview={() => setTabState({ sprintId: sprint.id, value: 'quests' })} />
 
         <div
           className={`flex h-12 items-center gap-2 border-y border-[#e4e4e4] px-4 py-2.5 ${
             isAwarding ? "" : "mt-1"
           }`}
         >
-          <div className="inline-flex h-7 w-[137px] shrink-0 items-center gap-0.5 rounded-md bg-[#f0f0f0] p-0.5">
+          <div className="inline-flex h-7 shrink-0 items-center gap-0.5 rounded-md bg-[#f0f0f0] p-0.5">
             <button
               type="button"
               className={`flex-1 rounded px-1.5 py-1 text-[13px] font-medium leading-4 tracking-[-0.25px] outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
@@ -233,6 +193,7 @@ export default function OpenSprintPage() {
             >
               Рейтинг
             </button>
+            <Button variant="ghost" className={`h-6 px-1.5 text-[13px] ${tab === 'promo' ? 'bg-white' : ''}`} onClick={() => setTabState({ sprintId: sprint.id, value: 'promo' })}>Промокод</Button>
           </div>
           <Input
             type="search"
@@ -248,7 +209,7 @@ export default function OpenSprintPage() {
           />
         </div>
 
-        {tab === "quests" ? (
+        {tab === "promo" ? <div className="p-4"><PromoPointsPanel scope={{ kind: 'sprint', id: sprint.id, roomId }} editable={sprint.status === 'active'} /></div> : tab === "quests" ? (
           isTasksError ? <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Не удалось загрузить задания.<Button variant="outline" className="ml-2" onClick={() => void refetchTasks()}>Повторить</Button></AlertDescription></Alert> : isLoadingTasks ? (
             <div className="flex justify-center py-10">
               <PageLoader label="Загрузка…" />

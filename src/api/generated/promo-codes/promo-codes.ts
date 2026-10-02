@@ -29,6 +29,8 @@ import type {
   CreateCustomPromoCodeRequestDto,
   CreateCustomPromoCodeResponseDto,
   CreatePromoCodeUsageDto,
+  ReservePromoCodeRequestDto,
+  ReservePromoCodeResponseDto,
   UpdateCustomPromoCodeRequestDto,
   UpdateCustomPromoCodeResponseDto
 } from '.././model';
@@ -321,6 +323,70 @@ export const usePromoCodesControllerUsePromoCode = <TError = unknown,
       > => {
 
       const mutationOptions = getPromoCodesControllerUsePromoCodeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Reserve promo code
+ */
+export const promoCodesControllerReservePromoCode = (
+    reservePromoCodeRequestDto: ReservePromoCodeRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ReservePromoCodeResponseDto>(
+      {url: `/api/promo-code/reserve`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: reservePromoCodeRequestDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getPromoCodesControllerReservePromoCodeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerReservePromoCode>>, TError,{data: ReservePromoCodeRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerReservePromoCode>>, TError,{data: ReservePromoCodeRequestDto}, TContext> => {
+
+const mutationKey = ['promoCodesControllerReservePromoCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof promoCodesControllerReservePromoCode>>, {data: ReservePromoCodeRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  promoCodesControllerReservePromoCode(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PromoCodesControllerReservePromoCodeMutationResult = NonNullable<Awaited<ReturnType<typeof promoCodesControllerReservePromoCode>>>
+    export type PromoCodesControllerReservePromoCodeMutationBody = ReservePromoCodeRequestDto
+    export type PromoCodesControllerReservePromoCodeMutationError = unknown
+
+    /**
+ * @summary Reserve promo code
+ */
+export const usePromoCodesControllerReservePromoCode = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof promoCodesControllerReservePromoCode>>, TError,{data: ReservePromoCodeRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof promoCodesControllerReservePromoCode>>,
+        TError,
+        {data: ReservePromoCodeRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPromoCodesControllerReservePromoCodeMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

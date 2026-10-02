@@ -5,34 +5,42 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { UpdateEventRequestDtoType } from './updateEventRequestDtoType';
+import type { UpdateEventRequestDtoStatus } from './updateEventRequestDtoStatus';
 
 export interface UpdateEventRequestDto {
+  /** Конкурс или награда каждому участнику */
+  type?: UpdateEventRequestDtoType;
+  /** active → reviewing → awarding → completed */
+  status?: UpdateEventRequestDtoStatus;
+  /** Черновик события */
+  isDraft?: boolean;
   /** Название события */
-  name: string;
+  name?: string;
   /**
    * Описание события
    * @nullable
    */
   description?: string | null;
   /** Дата начала */
-  startDate: string;
+  startDate?: string;
   /**
    * Дата окончания
    * @nullable
    */
-  endDate: string | null;
+  endDate?: string | null;
   /** Игнорировать дату окончания */
-  ignoreEndDate: boolean;
+  ignoreEndDate?: boolean;
   /** Лимит промокодов */
   promoCodeUsageLimit?: number;
   /** Игнорировать лимит промокодов */
-  ignorePromoCodeUsageLimit: boolean;
+  ignorePromoCodeUsageLimit?: boolean;
   /** Флаг удаления */
-  isDeleted: boolean;
+  isDeleted?: boolean;
   /** Тип награды */
-  rewardType: string;
+  rewardType?: string;
   /** Значение награды */
-  rewardValue: number;
+  rewardValue?: number;
   /** Единицы награды */
-  rewardUnits: string;
+  rewardUnits?: string;
 }
