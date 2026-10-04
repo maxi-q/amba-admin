@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:auth": "node --test scripts/senler-io-auth.test.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "api:prepare-schema": "node ./scripts/prepare-openapi.mjs",

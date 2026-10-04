@@ -166,7 +166,7 @@ export const AuthPage = () => {
               </p>
             )}
             <Button type="button" className="w-full" size="lg" variant={hasSenlerRuParams ? 'outline' : 'default'}
-              onClick={() => void senlerIoLogin.start()} disabled={senlerIoLogin.isPending || senlerIoLogin.isBlocked}>
+              onClick={() => void senlerIoLogin.start()} disabled={senlerIoLogin.isPending}>
               {senlerIoLogin.isPending ? 'Ожидание авторизации…' : 'Войти через Senler.io'}
             </Button>
           </div>
