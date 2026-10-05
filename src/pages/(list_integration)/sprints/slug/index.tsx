@@ -147,9 +147,11 @@ const SprintSetting = () => {
   const leavingRef = useRef(false);
   const hydratedSprintId = useRef<string | null>(null);
   const [allowLeave, setAllowLeave] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const shouldBlockLeave =
     (isNewSprint || isEditSprint) &&
+    hasUnsavedChanges &&
     !allowLeave;
   const leaveBlocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
@@ -430,6 +432,7 @@ const SprintSetting = () => {
   const handleInputChange =
     (field: keyof SprintFormData) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
+      setHasUnsavedChanges(true);
       const newValue = event.target.value;
       const updatedData = {
         ...formData,
@@ -447,6 +450,7 @@ const SprintSetting = () => {
   const handleSelectChange =
     (field: keyof SprintFormData) =>
     (event: { target: { value: string } }) => {
+      setHasUnsavedChanges(true);
       const newValue = event.target.value;
       setFormData({
         ...formData,
@@ -469,6 +473,7 @@ const SprintSetting = () => {
   };
 
   const handleIgnoreEndDateChange = (value: boolean) => {
+    setHasUnsavedChanges(true);
     setFormData({
       ...formData,
       ignoreEndDate: value,
@@ -476,6 +481,7 @@ const SprintSetting = () => {
   };
 
   const handleIgnorePromoCodeUsageLimitChange = (value: boolean) => {
+    setHasUnsavedChanges(true);
     setFormData({
       ...formData,
       ignorePromoCodeUsageLimit: value,
@@ -483,6 +489,7 @@ const SprintSetting = () => {
   };
 
   const handleDateRangeChange = (from?: Date, to?: Date) => {
+    setHasUnsavedChanges(true);
     const toInputValue = (date?: Date) => {
       if (!date) return null;
       const year = date.getFullYear();
@@ -837,7 +844,10 @@ const SprintSetting = () => {
             onRewardUnitsChange={(value) =>
               handleSelectChange("rewardUnits")({ target: { value } })
             }
-            onDescriptionChange={setDescription}
+            onDescriptionChange={(value) => {
+              setHasUnsavedChanges(true);
+              setDescription(value);
+            }}
             onDateRangeChange={handleDateRangeChange}
             onSaveDraft={() => {
               void handleDraftClick();
@@ -853,9 +863,18 @@ const SprintSetting = () => {
             rankRules={draftRankRules}
             proportional={draftProportional}
             manualRewards={draftManualRewards}
-            onRankRulesChange={setDraftRankRules}
-            onProportionalChange={setDraftProportional}
-            onManualRewardsChange={setDraftManualRewards}
+            onRankRulesChange={(rules) => {
+              setHasUnsavedChanges(true);
+              setDraftRankRules(rules);
+            }}
+            onProportionalChange={(value) => {
+              setHasUnsavedChanges(true);
+              setDraftProportional(value);
+            }}
+            onManualRewardsChange={(rewards) => {
+              setHasUnsavedChanges(true);
+              setDraftManualRewards(rewards);
+            }}
             onBack={() => setCreationStep(1)}
             onContinue={() => setCreationStep(3)}
             onSaveDraft={() => {
@@ -869,7 +888,10 @@ const SprintSetting = () => {
             roomSlug={slug ?? ""}
             tasks={draftTasks}
             isLaunching={isLaunching || isSavingDraft}
-            onTasksChange={setDraftTasks}
+            onTasksChange={(tasks) => {
+              setHasUnsavedChanges(true);
+              setDraftTasks(tasks);
+            }}
             onBack={() => setCreationStep(2)}
             onLaunch={() => {
               void handleLaunchSprint();
