@@ -4,6 +4,7 @@ import type { IGetProjectResponse } from '@/services/projects/projects.types';
 
 export interface SenlerIoLoginResponse {
   token: string;
+  refreshToken?: string;
   project: IGetProjectResponse & { provider: 'SENLER_IO'; senlerIoProjectId: string };
 }
 
@@ -44,7 +45,7 @@ export function openSenlerIoPopup(launchCode?: string) {
     window.addEventListener('message', receive);
     const timer = setInterval(() => {
       if (popup.closed) finish(undefined, new Error('Окно авторизации закрыто. Повторите вход через Senler.io.'));
-      else if (Date.now() - startedAt > 10 * 60 * 1000) finish(undefined, new Error('Время входа истекло. Откройте плагин заново.'));
+      else if (Date.now() - startedAt > 10 * 60 * 1000) finish(undefined, new Error('Время входа истекло. Повторите вход через Senler.io.'));
     }, 500);
     cancel = () => finish(undefined, new Error('Вход отменён.'));
 

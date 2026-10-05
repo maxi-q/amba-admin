@@ -160,7 +160,7 @@ export const AuthPage = () => {
             className="w-full"
             size="lg"
             onClick={hasSenlerRuParams ? openAuthPopup : () => void senlerIoLogin.start()}
-            disabled={senlerIoLogin.isPending || (!hasSenlerRuParams && senlerIoLogin.isBlocked)}
+            disabled={senlerIoLogin.isPending}
           >
             Войти
           </Button>

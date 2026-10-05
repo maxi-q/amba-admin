@@ -1,11 +1,12 @@
 import { create } from 'zustand'
 import type { ProjectProvider } from '@/services/projects/projects.types';
 import { senlerIoLaunch } from '@/services/auth/senler-io-launch';
+import { SENLER_IO_REFRESH_STORAGE_KEY } from '@/services/auth/senler-io-credentials';
 
 interface StoreState {
   auth: boolean
   token: string
-  login: (token: string, provider?: ProjectProvider) => void
+  login: (token: string, provider?: ProjectProvider, refreshToken?: string) => void
   logout: () => void
   setToken: (token: string) => void
 }
@@ -24,13 +25,19 @@ const savedIoToken = localStorage.getItem('authProvider') === 'SENLER_IO' &&
 export const useAuthStore = create<StoreState>((set) => ({
   auth: !!savedIoToken,
   token: savedIoToken,
-  login: (token: string, provider?: ProjectProvider) => {
+  login: (token: string, provider?: ProjectProvider, refreshToken?: string) => {
+    if (provider === 'SENLER_IO' && refreshToken) {
+      localStorage.setItem(SENLER_IO_REFRESH_STORAGE_KEY, JSON.stringify({ id: crypto.randomUUID(), refreshToken }));
+    } else if (provider !== 'SENLER_IO' || localStorage.getItem('token') !== token) {
+      localStorage.removeItem(SENLER_IO_REFRESH_STORAGE_KEY);
+    }
     localStorage.setItem('token', token);
     if (provider) localStorage.setItem('authProvider', provider);
     else localStorage.removeItem('authProvider');
     set({ auth: true, token });
   },
   logout: () => {
+    localStorage.removeItem(SENLER_IO_REFRESH_STORAGE_KEY);
     localStorage.removeItem('token');
     localStorage.removeItem('authProvider');
     set({ auth: false, token: '' });

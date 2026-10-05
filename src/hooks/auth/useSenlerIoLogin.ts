@@ -9,7 +9,7 @@ import {
   finishSenlerIoSessionResume,
   isCurrentSenlerIoSession,
   resumeSenlerIoSession,
-  senlerIoSessionRequiresNewLaunch,
+  takeSenlerIoLaunchCode,
 } from '@/services/auth/senler-io-session';
 import { senlerIoLaunch } from '@/services/auth/senler-io-launch';
 import { useAuthStore } from '@/store';
@@ -18,9 +18,7 @@ import { ApiError } from '@/types';
 export function useSenlerIoLogin() {
   const [isPending, setIsPending] = useState(false);
   const [isRestoring, setIsRestoring] = useState(canResumeSenlerIoSession);
-  const [isBlocked, setIsBlocked] = useState(senlerIoSessionRequiresNewLaunch);
-  const [error, setError] = useState<string | null>(() => senlerIoSessionRequiresNewLaunch()
-    ? 'Для повторного входа закройте плагин и откройте его заново в Senler.io.' : null);
+  const [error, setError] = useState<string | null>(null);
   const attempt = useRef<ReturnType<typeof openSenlerIoPopup> | null>(null);
   const mounted = useRef(false);
   const client = useQueryClient();
@@ -36,7 +34,7 @@ export function useSenlerIoLogin() {
     client.clear();
     clearSenlerRuAuthContext();
     client.setQueryData([QueryKeys.PROJECT], response.project);
-    login(response.token, 'SENLER_IO');
+    login(response.token, 'SENLER_IO', response.refreshToken);
     navigate('/', { replace: true });
     return true;
   }, [client, login, navigate]);
@@ -65,7 +63,7 @@ export function useSenlerIoLogin() {
         if (!active) return;
         finishSenlerIoSessionResume(true);
         if (!isCurrentSenlerIoSession(response.token)) {
-          throw new Error('Сессия изменилась. Закройте плагин и откройте его заново.');
+          throw new Error('Сессия изменилась. Повторите вход через Senler.io.');
         }
         const applied = await acceptSession(response, () => active && isCurrentSenlerIoSession(response.token));
         if (active && !applied) throw new Error('Сессия изменилась во время восстановления.');
@@ -76,10 +74,9 @@ export function useSenlerIoLogin() {
         const canUseOAuth = cause instanceof ApiError && [401, 403, 404, 409].includes(cause.statusCode);
         finishSenlerIoSessionResume(!canUseOAuth);
         if (!canUseOAuth) {
-          // A lost response may already have consumed the nonce. Do not retry
-          // the same launch or send the user through a futile OAuth flow.
-          setIsBlocked(true);
-          setError('Не удалось восстановить вход. Закройте плагин и откройте его заново.');
+          // A lost response may have consumed the nonce. The next click starts
+          // a fresh OAuth without that hint, letting Senler verify project access.
+          setError('Не удалось восстановить сессию. Войдите через Senler.io повторно.');
         }
       } finally {
         if (active) setIsRestoring(false);
@@ -89,14 +86,11 @@ export function useSenlerIoLogin() {
   }, [acceptSession]);
 
   const start = async () => {
-    if (attempt.current || isRestoring || isBlocked) return;
+    if (attempt.current || isRestoring) return;
     setError(null);
     setIsPending(true);
     try {
-      if (senlerIoLaunch.embedded && !senlerIoLaunch.code) {
-        throw new Error('Код запуска отсутствует. Закройте плагин и откройте его заново в Senler.io.');
-      }
-      const popup = openSenlerIoPopup(senlerIoLaunch.code ?? undefined);
+      const popup = openSenlerIoPopup(takeSenlerIoLaunchCode());
       attempt.current = popup;
       const code = await popup.result;
       // No retries: the backend login code is single-use.
@@ -111,5 +105,5 @@ export function useSenlerIoLogin() {
     }
   };
 
-  return { start, isPending: isPending || isRestoring, isRestoring, isBlocked, error };
+  return { start, isPending: isPending || isRestoring, isRestoring, error };
 }
