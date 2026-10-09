@@ -84,6 +84,13 @@ export default function OpenSprintPage() {
   }
 
   const isAwarding = sprint.status === "awarding";
+  const canEditSprint = sprint.status === "active";
+  const unavailableActionReason =
+    sprint.status === "reviewing"
+      ? "во время проверки"
+      : sprint.status === "awarding"
+        ? "во время выдачи наград"
+        : "после завершения спринта";
   const defaultTab: OpenSprintTab =
     urlParams.get("tab") === "leaderboard" || isAwarding || sprint.status === "completed" ? "leaderboard" : "quests";
   const tab =
@@ -101,61 +108,36 @@ export default function OpenSprintPage() {
           </h1>
           <div className="flex shrink-0 items-center gap-1">
             {sprint.status !== 'completed' && <ManualAwardPicker scope={{ kind: 'sprint', id: sprint.id, roomId }} />}
-            {isAwarding ? (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled
-                  className="size-7 border-[#e4e4e4] shadow-none disabled:opacity-100"
-                  aria-label="Редактирование недоступно во время выдачи наград"
-                  title="Редактирование недоступно во время выдачи наград"
-                >
-                  <img src={pencil} alt="" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled
-                  className="size-7 border-[#e4e4e4] shadow-none disabled:opacity-100"
-                  aria-label="Добавление заданий недоступно во время выдачи наград"
-                  title="Добавление заданий недоступно во время выдачи наград"
-                >
-                  <img src={plus} alt="" />
-                </Button>
-              </>
-            ) : sprint.status === "active" ? (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="size-7 border-[#e4e4e4] shadow-none"
-                  aria-label="Редактировать спринт"
-                  onClick={() =>
-                    navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)
-                  }
-                >
-                  <img src={pencil} alt="" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="size-7 border-[#e4e4e4] shadow-none"
-                  aria-label="Добавить задание"
-                  onClick={() =>
-                    navigate(
-                      `/rooms/${slug}/sprints/${sprint.id}/edit?step=tasks`
-                    )
-                  }
-                >
-                  <img src={plus} alt="" />
-                </Button>
-              </>
-            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={!canEditSprint}
+              className="size-7 border-[#e4e4e4] shadow-none disabled:opacity-100"
+              aria-label={canEditSprint ? "Редактировать спринт" : `Редактирование недоступно ${unavailableActionReason}`}
+              title={canEditSprint ? "Редактировать спринт" : `Редактирование недоступно ${unavailableActionReason}`}
+              onClick={() =>
+                navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)
+              }
+            >
+              <img src={pencil} alt="" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={!canEditSprint}
+              className="size-7 border-[#e4e4e4] shadow-none disabled:opacity-100"
+              aria-label={canEditSprint ? "Добавить задание" : `Добавление заданий недоступно ${unavailableActionReason}`}
+              title={canEditSprint ? "Добавить задание" : `Добавление заданий недоступно ${unavailableActionReason}`}
+              onClick={() =>
+                navigate(
+                  `/rooms/${slug}/sprints/${sprint.id}/edit?step=tasks`
+                )
+              }
+            >
+              <img src={plus} alt="" />
+            </Button>
           </div>
         </div>
 
