@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { toast } from "sonner";
-import type { BaseCreativeTaskDto } from "@/api/generated/model";
+import type { CreativeTaskWithDefaultsDto } from "@/api/generated/model";
 import { useUpdateCreativeTask } from "@/hooks/creativetasks/useUpdateCreativeTask";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { SprintCreationTaskDialog } from "../../sprints/slug/components/SprintCreationTaskDialog";
@@ -12,7 +12,7 @@ import {
 interface EditCreativeTaskDialogProps {
   open: boolean;
   onClose: () => void;
-  task: BaseCreativeTaskDto | null;
+  task: CreativeTaskWithDefaultsDto | null;
   roomSlug: string;
   onSuccess?: () => void;
 }
