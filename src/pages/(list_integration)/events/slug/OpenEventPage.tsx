@@ -1,53 +1,157 @@
-import { useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
-import { useDebounce } from 'use-debounce';
-import { Avatar, Button, Input, PageLoader } from '@senler/ui';
-import { useEvents } from '@/hooks/events/useEvents';
-import { useCompetitionRules, useCompetitionGrants, useEventResults } from '@/hooks/competitions/useCompetitionQueries';
-import { competitionStatusLabels } from '@/hooks/competitions/types';
-import { CompetitionLifecycle } from '@/components/competitions/CompetitionLifecycle';
-import { ManualAwardPicker } from '@/components/competitions/ManualAwardPicker';
-import { PromoPointsPanel } from '@/components/competitions/PromoPointsPanel';
-import pencil from '@/assets/task-flow/pencil.svg';
-import user from '@/assets/task-flow/user.svg';
+import { useState } from "react";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
+import { Alert, AlertDescription, Button, Input, PageLoader } from "@senler/ui";
+import { useEvents } from "@/hooks/events/useEvents";
+import { useEventTasks } from "@/hooks/events/useEventTasks";
+import { useEventPromoRewardRules } from "@/hooks/events/useEventPromoRewards";
+import { usePromoPointsRules } from "@/hooks/promoCodes/usePromoPoints";
+import { useCompetitionRules } from "@/hooks/competitions/useCompetitionQueries";
+import { CompetitionLifecycle } from "@/components/competitions/CompetitionLifecycle";
+import { ManualAwardPicker } from "@/components/competitions/ManualAwardPicker";
+import { OpenEventResultsTab } from "./components/OpenEventResultsTab";
+import { OpenEventTaskRow } from "./components/OpenEventTaskRow";
+import { OpenEventSidebar } from "./components/OpenEventSidebar";
+import { OpenEventPromoTab } from "./components/OpenEventPromoTab";
+import pencil from "@/assets/task-flow/pencil.svg";
+import plus from "@/assets/task-flow/plus.svg";
+
+type OpenEventTab = "tasks" | "promo" | "results";
 
 export default function OpenEventPage() {
-  const { slug = '', eventId = '' } = useParams();
-  const scope = { kind: 'event' as const, id: eventId, roomId: slug };
+  const { slug = "", eventId = "" } = useParams();
+  const [urlParams] = useSearchParams();
   const events = useEvents({ page: 1, size: 100 }, slug, { allPages: true });
   const event = events.events.find((item) => item.id === eventId);
-  const [search, setSearch] = useState('');
-  const [debounced] = useDebounce(search.trim(), 250);
-  const [page, setPage] = useState(1);
-  const [tab, setTab] = useState('results');
-  const results = useEventResults(eventId, page, debounced);
+  const tasks = useEventTasks(eventId);
+  const scope = { kind: "event" as const, id: eventId, roomId: slug };
   const rules = useCompetitionRules(scope);
-  const grants = useCompetitionGrants(scope);
-  if (events.isLoading) return <PageLoader label="Загрузка события…" />;
-  if (events.isError) return <Button onClick={() => void events.refetch()}>Повторить загрузку</Button>;
-  if (!event) return <p>Событие не найдено</p>;
+  const contestPromoRules = usePromoPointsRules(scope, event?.type === "contest");
+  const everyonePromoRules = useEventPromoRewardRules(eventId, event?.type === "everyone");
+  const [tabState, setTabState] = useState<{
+    eventId: string;
+    value: OpenEventTab;
+  } | null>(null);
+  const [searchState, setSearchState] = useState({ eventId: "", value: "" });
+
+  if (events.isLoading) {
+    return <div className="flex min-h-[50vh] items-center justify-center"><PageLoader label="Загрузка события…" /></div>;
+  }
+  if (events.isError) {
+    return <Alert variant="destructive"><AlertDescription>Не удалось загрузить событие.<Button variant="outline" className="ml-2" onClick={() => void events.refetch()}>Повторить</Button></AlertDescription></Alert>;
+  }
+  if (!event) return <p className="p-4 text-[13px] text-[#797979]">Событие не найдено</p>;
   if (event.isDraft) return <Navigate to={`/rooms/${slug}/events/${eventId}/edit`} replace />;
-  return <div className="-m-4 grid min-h-[calc(100vh-44px)] grid-cols-1 text-[13px] font-medium lg:grid-cols-[minmax(0,1fr)_260px]">
-    <article className="min-w-0"><header className="flex items-center justify-between gap-3 p-4"><h1 className="truncate text-xl font-medium leading-8">{event.name}</h1><div className="flex gap-2">{event.status !== 'completed' && rules.data?.some((rule) => rule.type === 'manual') && <ManualAwardPicker scope={scope} />}{event.status === 'active' && <Button asChild size="icon" variant="outline" className="size-7"><Link to={`/rooms/${slug}/events/${eventId}/edit`} aria-label="Настройки события"><img src={pencil} alt="" /></Link></Button>}</div></header>
-      <CompetitionLifecycle scope={scope} status={event.status} />
-      <div className="flex flex-wrap gap-2 border-y border-border px-4 py-2"><Button size="sm" variant={tab === 'results' ? 'secondary' : 'ghost'} onClick={() => setTab('results')}>{event.type === 'contest' ? 'Рейтинг' : 'Участники'}</Button><Button size="sm" variant={tab === 'promo' ? 'secondary' : 'ghost'} onClick={() => setTab('promo')}>Промокод</Button><Input className="h-8 min-w-28 flex-1 bg-muted" aria-label="Поиск по рейтингу события" placeholder="Поиск..." type="search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} /></div>
-      {tab === 'promo' ? <div className="p-4"><PromoPointsPanel scope={scope} editable={event.status === 'active'} /></div> : results.isLoading ? <PageLoader label="Загрузка результатов…" /> : results.isError ? <div className="p-4"><p>Не удалось загрузить итоги.</p><Button onClick={() => void results.refetch()}>Повторить</Button></div> : results.data?.historyUnavailable ? <p className="p-4 text-muted-foreground">Исторические результаты этого события не сохранены.</p> : <>
-        {results.data?.items.map((entry) => {
-          const ownGrants = grants.data?.items.filter((grant) => grant.ambassadorId === entry.ambassadorId) ?? [];
-          const allDelivered = ownGrants.length > 0 && ownGrants.every((grant) => !!grant.deliveredAt);
-          const profile = `/rooms/${slug}/events/${eventId}/participants/${entry.ambassadorId}`;
-          return <div key={entry.ambassadorId} className="flex min-h-12 flex-wrap items-center gap-2 border-b border-border px-4 py-2">{event.type === 'contest' && <span>{entry.rank == null ? '—' : `${entry.rank}.`}</span>}<Avatar name={entry.username} colorKey={entry.ambassadorId} size="sm" shape="rounded" /><Link to={profile} className="min-w-0 flex-1 truncate">{entry.username}</Link>{event.type === 'contest' && <span title={`Задания: ${entry.taskPoints} XP; промокоды: ${entry.promoPoints} XP`}>{entry.points.toLocaleString('ru-RU')} XP</span>}
-            {entry.rewards.map((reward) => <span key={`${reward.rewardId}-${reward.rewardVersionId}`} className="rounded-full bg-muted px-2 py-1 text-xs" title={reward.name}>{reward.name} · {reward.amount.toLocaleString('ru-RU')}</span>)}
-            {(event.status === 'awarding' || event.status === 'completed') && !grants.isError && grants.data && (allDelivered ? <span className="text-muted-foreground">✓ Награды отправлены</span> : ownGrants.length > 0 ? <Button asChild size="sm" variant="outline"><Link to={profile}>Отправьте награды</Link></Button> : <span className="text-muted-foreground">Нет назначений</span>)}
-            <Button asChild size="icon" variant="outline" className="size-7"><Link to={profile} aria-label={`Профиль исполнителя: ${entry.username}`}><img src={user} alt="" /></Link></Button>
-          </div>;
-        })}
-        {results.data?.items.length === 0 && <p className="p-4 text-muted-foreground">{search ? 'Ничего не найдено' : 'Участников пока нет'}</p>}
-        {(results.data?.totalPages ?? 0) > 1 && <div className="flex items-center justify-between p-4"><Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>Назад</Button><span>{page} / {results.data?.totalPages}</span><Button variant="outline" disabled={page >= (results.data?.totalPages ?? 1)} onClick={() => setPage(page + 1)}>Далее</Button></div>}
-      </>}
-    </article>
-    <aside className="border-l border-border"><section className="border-b border-border p-4"><h2>О событии</h2><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{event.description || 'Описание не добавлено'}</p></section><section className="border-b border-border p-4"><p>Статус: {competitionStatusLabels[event.status]}</p><p className="mt-1 text-muted-foreground">{new Date(event.startDate).toLocaleDateString('ru-RU')} – {event.ignoreEndDate ? 'Бессрочно' : event.endDate && new Date(event.endDate).toLocaleDateString('ru-RU')}</p></section>
-      {rules.isError ? <Button onClick={() => void rules.refetch()}>Повторить загрузку наград</Button> : rules.data?.map((rule) => <section key={rule.id} className="border-b border-border p-4"><h2>{rule.type === 'each' ? 'Награды каждому' : rule.type === 'manual' ? 'Ручной отбор' : 'Награды рейтинга'}</h2>{rule.rewards.map((position) => <div key={position.id} className="mt-2 flex items-center gap-2">{position.reward.iconUrl && <img src={position.reward.iconUrl} alt="" className="size-12 rounded-lg border border-border object-cover" />}<div><p>{position.reward.name}</p><p className="text-muted-foreground">{position.amount.toLocaleString('ru-RU')}</p></div></div>)}</section>)}
-    </aside>
-  </div>;
+
+  const hasPromo = event.type === "contest"
+    ? contestPromoRules.data?.some((rule) => rule.isActive) ?? false
+    : everyonePromoRules.data?.some((rule) => rule.isActive) ?? false;
+  const requestedTab = urlParams.get("tab");
+  const defaultTab: OpenEventTab =
+    requestedTab === "promo" && hasPromo
+      ? "promo"
+      : requestedTab === "tasks"
+        ? "tasks"
+      : requestedTab === "results" || event.status === "awarding" || event.status === "completed"
+        ? "results"
+        : event.type === "everyone"
+          ? "results"
+          : "tasks";
+  const tab = tabState?.eventId === event.id ? tabState.value : defaultTab;
+  const search = searchState.eventId === event.id ? searchState.value : "";
+  const tabs: Array<{ value: OpenEventTab; label: string }> = event.type === "contest"
+    ? [
+        { value: "tasks", label: "Задания" },
+        ...(hasPromo ? [{ value: "promo" as const, label: "Промокод" }] : []),
+        { value: "results", label: "Рейтинг" },
+      ]
+    : [
+        { value: "results", label: "Участники" },
+        ...(hasPromo ? [{ value: "promo" as const, label: "Промокод" }] : []),
+        { value: "tasks", label: "Задания" },
+      ];
+
+  return (
+    <div className="-m-4 grid min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-1 grid-cols-1 bg-white text-[13px] font-medium lg:grid-cols-[minmax(0,1fr)_260px]">
+      <article className="flex min-w-0 flex-col">
+        <header className="flex items-center justify-between gap-3 px-4 pb-3 pt-4">
+          <h1 className="min-w-0 truncate text-[20px] font-medium leading-8 tracking-[-0.34px]">
+            {event.name}
+          </h1>
+          <div className="flex shrink-0 items-center gap-1">
+            {event.status !== "completed" && rules.data?.some((rule) => rule.type === "manual") ? (
+              <ManualAwardPicker scope={scope} />
+            ) : null}
+            {event.status === "active" ? (
+              <>
+                <Button asChild size="icon" variant="outline" className="size-7 border-[#e4e4e4] shadow-none">
+                  <Link to={`/rooms/${slug}/events/${eventId}/edit`} aria-label="Редактировать событие"><img src={pencil} alt="" /></Link>
+                </Button>
+                <Button asChild size="icon" variant="outline" className="size-7 border-[#e4e4e4] shadow-none">
+                  <Link to={`/rooms/${slug}/events/${eventId}/edit?step=3`} aria-label="Добавить задание"><img src={plus} alt="" /></Link>
+                </Button>
+              </>
+            ) : null}
+          </div>
+        </header>
+
+        <CompetitionLifecycle
+          scope={scope}
+          status={event.status}
+          onReview={() => setTabState({ eventId: event.id, value: "tasks" })}
+        />
+
+        <div className="flex h-12 items-center gap-2 border-y border-[#e4e4e4] px-4 py-2.5">
+          <div className="inline-flex h-7 shrink-0 items-center gap-0.5 rounded-md bg-[#f0f0f0] p-0.5">
+            {tabs.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                className={`rounded px-1.5 py-1 text-[13px] leading-4 tracking-[-0.25px] outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${tab === item.value ? "bg-white" : ""}`}
+                onClick={() => setTabState({ eventId: event.id, value: item.value })}
+                aria-pressed={tab === item.value}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {tab === "results" || tab === "promo" ? (
+            <Input
+              className="h-7 flex-1 rounded-md border-0 bg-[#f0f0f0] px-2 py-1.5 text-[13px] shadow-none focus-visible:border-transparent"
+              aria-label={tab === "promo" ? "Поиск по активациям" : event.type === "contest" ? "Поиск по рейтингу" : "Поиск по участникам"}
+              placeholder="Поиск..."
+              type="search"
+              value={search}
+              onChange={(inputEvent) => setSearchState({ eventId: event.id, value: inputEvent.target.value })}
+            />
+          ) : null}
+        </div>
+
+        {tab === "results" ? (
+          <OpenEventResultsTab event={event} roomSlug={slug} search={search} />
+        ) : tab === "promo" ? (
+          <OpenEventPromoTab event={event} scope={scope} search={search} />
+        ) : tasks.isError ? (
+          <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Не удалось загрузить задания события.<Button variant="outline" className="ml-2" onClick={() => void tasks.refetch()}>Повторить</Button></AlertDescription></Alert>
+        ) : tasks.isLoading ? (
+          <div className="flex justify-center py-10"><PageLoader label="Загрузка заданий…" /></div>
+        ) : tasks.tasks.filter((task) => !task.isDeleted).length === 0 ? (
+          <p className="p-4 text-[#797979]">Заданий пока нет</p>
+        ) : (
+          <div className="flex flex-col">
+            {tasks.tasks.filter((task) => !task.isDeleted).map((task) => (
+              <OpenEventTaskRow key={task.id} eventId={event.id} roomSlug={slug} task={task} />
+            ))}
+          </div>
+        )}
+      </article>
+
+      {rules.isError ? (
+        <aside className="border-l border-[#e4e4e4] p-4"><Alert variant="destructive"><AlertDescription>Не удалось загрузить награды.<Button variant="outline" className="mt-2" onClick={() => void rules.refetch()}>Повторить</Button></AlertDescription></Alert></aside>
+      ) : rules.isLoading || tasks.isLoading || contestPromoRules.isLoading || everyonePromoRules.isLoading ? (
+        <aside className="flex w-full items-center justify-center border-l border-[#e4e4e4] py-10 lg:w-[260px]"><PageLoader label="Загрузка…" /></aside>
+      ) : (
+        <OpenEventSidebar event={event} rules={rules.data ?? []} tasks={tasks.tasks} />
+      )}
+    </div>
+  );
 }

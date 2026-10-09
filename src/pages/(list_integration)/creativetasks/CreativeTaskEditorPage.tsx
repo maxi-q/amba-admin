@@ -6,9 +6,10 @@ import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useCreativeTask } from "@/hooks/creativetasks/useCreativeTask";
 import { useCreateCreativeTask } from "@/hooks/creativetasks/useCreateCreativeTask";
-import { useUpdateCreativeTask } from "@/hooks/creativetasks/useUpdateCreativeTask";
 import { SprintCreationTaskDialog } from "../sprints/slug/components/SprintCreationTaskDialog";
-import { creativeTaskToDraft, draftTaskToCreatePayload, draftTaskToUpdatePayload, type DraftSprintTask } from "../sprints/slug/components/draftSprintTask";
+import { creativeTaskToDraft, draftTaskToCreatePayload, type DraftSprintTask } from "../sprints/slug/components/draftSprintTask";
+import CreativeTasksPage from ".";
+import { EditCreativeTaskDialog } from "./components/EditCreativeTaskDialog";
 import back from "@/assets/task-flow/back.svg";
 
 export default function CreativeTaskEditorPage() {
@@ -27,14 +28,13 @@ function CreativeTaskEditor({ taskId, roomSlug }: { taskId: string; roomSlug: st
   const taskQuery = useCreativeTask(taskId);
   const sprintsQuery = useSprints({ page: 1, size: 100 }, roomSlug, { allPages: true });
   const create = useCreateCreativeTask();
-  const update = useUpdateCreativeTask();
   const initialTask = useMemo(() => taskQuery.task ? creativeTaskToDraft(taskQuery.task) : null, [taskQuery.task]);
   const sprintId = taskId ? taskQuery.task?.sprintId ?? "" : selectedSprintId;
   const availableSprints = sprintsQuery.sprints.filter((sprint) => !sprint.isDraft && sprint.status === "active");
   const sprint = sprintsQuery.sprints.find((item) => item.id === sprintId);
-  const pending = create.isPending || update.isPending;
-  const validationMessages = Object.values(taskId ? update.validationErrors : create.validationErrors).flat();
-  const error = validationMessages.length ? validationMessages.join(". ") : (taskId ? update.error : create.error)?.message;
+  const pending = create.isPending;
+  const validationMessages = Object.values(create.validationErrors).flat();
+  const error = validationMessages.length ? validationMessages.join(". ") : create.error?.message;
   const listPath = `/rooms/${roomSlug}/creativetasks`;
 
   const save = () => {
@@ -46,15 +46,23 @@ function CreativeTaskEditor({ taskId, roomSlug }: { taskId: string; roomSlug: st
     }
     setClientError("");
     const form = { ...draft, publicationsCount: count };
-    const onSuccess = () => { toast.success(taskId ? "Задание сохранено" : "Задание создано"); navigate(listPath); };
-    if (taskId) update.updateCreativeTask({ id: taskId, data: draftTaskToUpdatePayload(form, sprintId) }, { onSuccess });
-    else create.createCreativeTask(draftTaskToCreatePayload(form, roomQuery.room.id, sprintId), { onSuccess });
+    const onSuccess = () => { toast.success("Задание создано"); navigate(listPath); };
+    create.createCreativeTask(draftTaskToCreatePayload(form, roomQuery.room.id, sprintId), { onSuccess });
   };
 
   if (roomQuery.isError || taskQuery.isError || sprintsQuery.isError) return <Alert variant="destructive"><AlertDescription>Не удалось загрузить данные задания.<Button variant="outline" onClick={() => { void roomQuery.refetch(); void sprintsQuery.refetch(); if (taskId) void taskQuery.refetch(); }}>Повторить</Button></AlertDescription></Alert>;
   if (roomQuery.isLoading || taskQuery.isLoading || sprintsQuery.isLoading) return <PageLoader label="Загрузка задания…" />;
   if (!roomQuery.room || (taskId && (!taskQuery.task || taskQuery.task.roomId !== roomQuery.room.id))) return <p>Задание не найдено в этой компании.</p>;
   if (taskId && (!sprint || sprint.isDraft || sprint.status !== "active")) return <div className="space-y-4"><Button asChild variant="outline"><Link to={listPath}>Назад к заданиям</Link></Button><p>Редактирование доступно только в активном опубликованном спринте.</p></div>;
+  if (taskId && taskQuery.task) return <>
+    <CreativeTasksPage />
+    <EditCreativeTaskDialog
+      open
+      task={taskQuery.task}
+      roomSlug={roomSlug}
+      onClose={() => navigate(listPath)}
+    />
+  </>;
 
   return <div className="mx-auto w-full max-w-[700px] text-[13px] font-medium leading-4">
     <div className="mb-3 flex items-center gap-3"><Button variant="outline" disabled={pending} onClick={() => navigate(listPath)} aria-label="Назад к заданиям" className="size-7 border-[#e4e4e4] p-0 shadow-none"><img src={back} alt="" /></Button><h1>{taskId ? "Настройка задания" : "Добавить задание"}</h1></div>

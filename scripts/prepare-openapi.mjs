@@ -88,6 +88,28 @@ for (const field of ['type', 'status', 'isDraft', 'reviewStartedAt', 'resultsFix
   ensureRequiredField(schemas.GetMyEventsResponseItemDto, field);
 }
 
+// Verified against backend c9a31a5: inherited pagination query fields on the
+// event-task controllers are integers, but Swagger currently exposes Object.
+for (const [path, pathItem] of Object.entries(openApiSchema.paths)) {
+  if (!path.startsWith('/api/events/{eventId}/tasks')) continue;
+  for (const operation of Object.values(pathItem)) {
+    if (!isObject(operation) || !Array.isArray(operation.parameters)) continue;
+    for (const parameter of operation.parameters) {
+      if (
+        parameter?.in === 'query' &&
+        ['page', 'size'].includes(parameter.name) &&
+        parameter.schema?.$ref === '#/components/schemas/Object'
+      ) {
+        parameter.schema = {
+          type: 'integer',
+          minimum: 1,
+          ...(parameter.name === 'page' ? { default: 1 } : { default: 100, maximum: 100 }),
+        };
+      }
+    }
+  }
+}
+
 await mkdir(new URL('.', TARGET_PATH), { recursive: true });
 await writeFile(TARGET_PATH, `${JSON.stringify(openApiSchema, null, 2)}\n`);
 

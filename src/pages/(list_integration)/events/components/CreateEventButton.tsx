@@ -1,4 +1,5 @@
 import { Button } from "@senler/ui";
+import plus from "@/assets/task-flow/plus.svg";
 
 interface CreateEventButtonProps {
   /** Обработчик клика для создания нового события */
@@ -6,20 +7,17 @@ interface CreateEventButtonProps {
 }
 
 /**
- * Кнопка для создания нового события
- * Отображается внизу списка событий
+ * Кнопка для создания нового события в шапке списка
  */
 export const CreateEventButton = ({ onClick }: CreateEventButtonProps) => {
   return (
-    <div className="flex justify-end pt-1">
-      <Button
-        type="button"
-        variant="outline"
-        className="border-green-600/30 bg-green-500/10 text-green-800 hover:bg-green-500/20 dark:border-green-500/40 dark:text-green-400"
-        onClick={onClick}
-      >
-        Добавить событие
-      </Button>
-    </div>
+    <Button
+      type="button"
+      onClick={onClick}
+      className="h-7 gap-1 bg-[#2563eb] px-2 text-[13px] font-medium leading-4 shadow-none hover:bg-[#2563eb]/90"
+    >
+      <img src={plus} alt="" className="size-4" />
+      Добавить
+    </Button>
   );
 };

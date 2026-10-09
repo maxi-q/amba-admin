@@ -7,7 +7,7 @@
  */
 
 /**
- * Тип юридического лица
+ * Тип контрагента
  */
 export type CreateOrdPersonDtoJuridicalType = typeof CreateOrdPersonDtoJuridicalType[keyof typeof CreateOrdPersonDtoJuridicalType];
 
@@ -17,4 +17,6 @@ export const CreateOrdPersonDtoJuridicalType = {
   physical: 'physical',
   ip: 'ip',
   juridical: 'juridical',
+  foreign_physical: 'foreign_physical',
+  foreign_juridical: 'foreign_juridical',
 } as const;

@@ -1022,7 +1022,7 @@ export const SprintCreationStepTwo = ({
 
       <DialogRoot open={placeDialogOpen} onOpenChange={setPlaceDialogOpen}>
         <DialogContent className="!max-w-[358px] gap-0 p-0" showCloseButton>
-          <DialogHeader className="px-4 pb-0 pt-2.5">
+          <DialogHeader className="h-11 px-4 py-2.5">
             <DialogTitle>Место</DialogTitle>
             <DialogDescription className="sr-only">
               Настройте место и количество наград

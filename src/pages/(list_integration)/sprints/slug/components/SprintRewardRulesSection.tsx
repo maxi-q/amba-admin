@@ -56,7 +56,7 @@ const emptyForm = (): RuleFormState => ({
 
 function ruleToForm(rule: SprintRewardRuleDto): RuleFormState {
   return {
-    type: rule.type,
+    type: rule.type === "each" ? RewardRuleTypeEnum.manual : rule.type,
     rankFrom: rule.rankFrom != null ? String(rule.rankFrom) : "",
     rankTo: rule.rankTo != null ? String(rule.rankTo) : "",
     minPoints: rule.minPoints != null ? String(rule.minPoints) : "",
@@ -308,7 +308,7 @@ export function SprintRewardRulesSection({
                     variant="outline"
                     size="sm"
                     onClick={() => openEdit(rule)}
-                    disabled={disabled || isPending}
+                    disabled={disabled || isPending || rule.type === "each"}
                   >
                     Изменить
                   </Button>

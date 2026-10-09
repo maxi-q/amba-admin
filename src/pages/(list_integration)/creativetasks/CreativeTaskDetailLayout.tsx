@@ -199,6 +199,7 @@ export default function CreativeTaskDetailLayout() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         task={task}
+        roomSlug={slug ?? ""}
       />
       <StopCreativeTaskDialog
         open={stopOpen}

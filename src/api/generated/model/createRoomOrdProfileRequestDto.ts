@@ -8,12 +8,27 @@
 import type { CreateRoomOrdProfileRequestDtoJuridicalType } from './createRoomOrdProfileRequestDtoJuridicalType';
 
 export interface CreateRoomOrdProfileRequestDto {
-  /** ИНН контрагента */
-  inn: string;
-  /** Наименование контрагента */
+  /**
+   * ФИО или наименование организации
+   * @maxLength 255
+   */
   name: string;
-  /** Телефон контрагента */
+  /** Номер телефона с кодом страны, например +79876543210 */
   phone: string;
-  /** Юридический тип */
+  /** Тип контрагента */
   juridicalType: CreateRoomOrdProfileRequestDtoJuridicalType;
+  /** Российский ИНН; обязателен для physical, ip, juridical */
+  inn?: string;
+  /** Адрес регистрации; опционален для совместимости со старыми запросами */
+  address?: string;
+  /** Цифровой код страны ISO 3166; обязателен для иностранных контрагентов */
+  foreignOksmCountryCode?: string;
+  /** Номер карты или счёта; обязателен для иностранного физлица */
+  foreignEpaymentMethod?: string;
+  /** Регистрационный номер; обязателен для иностранного юрлица */
+  foreignRegistrationNumber?: string;
+  /** Иностранный ИНН: обязателен для иностранного юрлица; для иностранного физлица принимается без сохранения */
+  foreignInn?: string;
+  /** ID существующего иностранного физлица для повторной привязки */
+  ordPersonId?: string;
 }

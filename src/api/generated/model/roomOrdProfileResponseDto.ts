@@ -8,23 +8,53 @@
 import type { RoomOrdProfileResponseDtoJuridicalType } from './roomOrdProfileResponseDtoJuridicalType';
 
 export interface RoomOrdProfileResponseDto {
-  /** ID профиля ОРД */
+  /** ID ORD профиля */
   id: string;
-  /** ИНН контрагента */
-  inn: string;
-  /** Наименование контрагента */
+  createdAt: string;
+  updatedAt: string;
+  /** ФИО или наименование организации */
   name: string;
-  /** Телефон контрагента */
+  /**
+   * Российский ИНН
+   * @nullable
+   */
+  inn: string | null;
+  /**
+   * Адрес регистрации
+   * @nullable
+   */
+  address: string | null;
+  /**
+   * Цифровой код страны ISO 3166
+   * @nullable
+   */
+  foreignOksmCountryCode: string | null;
+  /**
+   * Номер иностранной карты или счёта
+   * @nullable
+   */
+  foreignEpaymentMethod: string | null;
+  /**
+   * Регистрационный номер иностранного юрлица
+   * @nullable
+   */
+  foreignRegistrationNumber: string | null;
+  /**
+   * Иностранный ИНН юридического лица
+   * @nullable
+   */
+  foreignInn: string | null;
+  /** Номер телефона */
   phone: string;
-  /** Юридический тип */
+  /** Тип юридического лица */
   juridicalType: RoomOrdProfileResponseDtoJuridicalType;
   /**
-   * Дата последней успешной синхронизации с ОРД
+   * Дата последней синхронизации с ОРД
    * @nullable
    */
   syncedAt: string | null;
   /**
-   * Последняя ошибка синхронизации
+   * Последняя ошибка синхронизации с ОРД
    * @nullable
    */
   lastSyncError: string | null;

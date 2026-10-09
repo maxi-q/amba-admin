@@ -17,5 +17,4 @@ export const UpdateRewardRuleRequestDtoType = {
   byRank: 'byRank',
   byPoints: 'byPoints',
   manual: 'manual',
-  each: 'each',
 } as const;

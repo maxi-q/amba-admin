@@ -13,5 +13,6 @@ export type OrdContractIssuancesControllerGetOrdContractIssuancesSourceTypesItem
 export const OrdContractIssuancesControllerGetOrdContractIssuancesSourceTypesItem = {
   room: 'room',
   creativeTask: 'creativeTask',
+  eventCreativeTask: 'eventCreativeTask',
   privateCreativeTask: 'privateCreativeTask',
 } as const;

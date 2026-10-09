@@ -6,6 +6,7 @@ import {
   Button,
   CheckBox,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogRoot,
@@ -40,6 +41,9 @@ interface SprintCreationTaskDialogProps {
   onSave: (task: DraftSprintTask) => void;
   presentation?: "dialog" | "page";
   saveLabel?: string;
+  lockedSprintName?: string;
+  isSaving?: boolean;
+  serverError?: string;
 }
 
 const FORMAT_CHIPS: { value: CreativeTaskFormat; label: string }[] = [
@@ -110,6 +114,9 @@ export function SprintCreationTaskDialog({
   onSave,
   presentation = "dialog",
   saveLabel = "Сохранить",
+  lockedSprintName,
+  isSaving = false,
+  serverError,
 }: SprintCreationTaskDialogProps) {
   const [form, setForm] = useState<DraftSprintTask>(emptyDraftSprintTask);
   const [clientError, setClientError] = useState("");
@@ -134,6 +141,7 @@ export function SprintCreationTaskDialog({
   };
 
   const handleSave = () => {
+    if (isSaving) return;
     if (!form.title.trim() || form.title.trim().length < 3) {
       setClientError("Укажите название задания (минимум 3 символа)");
       return;
@@ -172,12 +180,26 @@ export function SprintCreationTaskDialog({
 
   const fields = (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {clientError ? (
+          {clientError || serverError ? (
             <div className="px-4 pt-4">
               <Alert variant="destructive">
-                <AlertDescription>{clientError}</AlertDescription>
+                <AlertDescription>{clientError || serverError}</AlertDescription>
               </Alert>
             </div>
+          ) : null}
+
+          {lockedSprintName ? (
+            <FieldRow
+              label="Спринт"
+              hint="Задание уже привязано к этому спринту"
+            >
+              <Input
+                value={lockedSprintName}
+                disabled
+                aria-label="Спринт задания"
+                className="h-10 border-[#e4e4e4] bg-[#f7f7f7] text-[13px] shadow-none"
+              />
+            </FieldRow>
           ) : null}
 
           <FieldRow label="Код ККТУ" hint="Выберите тематику публикации" alignTop>
@@ -576,6 +598,8 @@ export function SprintCreationTaskDialog({
             size="sm"
             className="h-7 bg-[#2563eb] px-2 text-[13px] font-medium hover:bg-[#2563eb]/90"
             onClick={handleSave}
+            loading={isSaving}
+            disabled={isSaving}
           >
             {saveLabel}
           </Button>
@@ -584,11 +608,16 @@ export function SprintCreationTaskDialog({
   if (presentation === "page") return <section className="overflow-hidden rounded-lg border border-border bg-card">{fields}<div className="flex justify-end px-4 py-2.5">{saveButton}</div></section>;
 
   return (
-    <DialogRoot open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
+    <DialogRoot open={open} onOpenChange={(next) => { if (!next && !isSaving) onClose(); }}>
       <DialogContent showCloseButton={false} className="flex max-h-[90dvh] w-[min(700px,calc(100vw-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-[700px]">
         <DialogHeader className="shrink-0 flex-row items-center gap-2 space-y-0 border-b border-[#e4e4e4] px-4 py-3">
           <DialogTitle className="flex-1 text-left text-[15px] font-medium leading-5">{initialTask ? "Изменить задание" : "Добавить задание"}</DialogTitle>
-          <Button type="button" variant="ghost" size="icon" className="size-6 shrink-0" onClick={onClose} aria-label="Закрыть"><X className="size-5" /></Button>
+          <DialogDescription className="sr-only">
+            {initialTask
+              ? "Измените параметры задания и сохраните изменения"
+              : "Заполните параметры нового задания"}
+          </DialogDescription>
+          <Button type="button" variant="ghost" size="icon" className="size-6 shrink-0" onClick={onClose} disabled={isSaving} aria-label="Закрыть"><X className="size-5" /></Button>
         </DialogHeader>
         {fields}
         <DialogFooter className="shrink-0 border-t border-[#e4e4e4] px-4 py-2.5 sm:justify-end">

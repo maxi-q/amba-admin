@@ -10,5 +10,7 @@ import type { GetProjectResponseDto } from './getProjectResponseDto';
 export interface SenlerIoLoginResponseDto {
   /** JWT амбассадорки */
   token: string;
+  /** Одноразовый токен обновления сессии амбассадорки */
+  refreshToken: string;
   project: GetProjectResponseDto;
 }

@@ -47,6 +47,7 @@ import { RoomLayout } from "./RoomLayout";
 import SprintParticipantPage from "../(list_integration)/sprints/slug/SprintParticipantPage";
 import OpenEventPage from "../(list_integration)/events/slug/OpenEventPage";
 import EventParticipantPage from "../(list_integration)/events/slug/EventParticipantPage";
+import EventTaskPage from "../(list_integration)/events/slug/EventTaskPage";
 import CreativeTaskEditorPage from "../(list_integration)/creativetasks/CreativeTaskEditorPage";
 import { SelectActionPage } from "../(Bot_step)/main";
 import { RoomRedirect } from "..";
@@ -150,6 +151,7 @@ export const Navigation = () => {
           <Route path=":eventId" element={<OpenEventPage />} />
           <Route path=":eventId/edit" element={<EventsSetting />} />
           <Route path=":eventId/participants/:ambassadorId" element={<EventParticipantPage />} />
+          <Route path=":eventId/tasks/:taskId" element={<EventTaskPage />} />
           <Route path=":eventId/subscribers" element={<EventSubscribersPage />} />
           <Route path=":eventId/invitations" element={<EventInvitationsPage />} />
         </Route>

@@ -13,5 +13,6 @@ export type OrdIssuanceRuleResponseDtoSourceType = typeof OrdIssuanceRuleRespons
 export const OrdIssuanceRuleResponseDtoSourceType = {
   room: 'room',
   creativeTask: 'creativeTask',
+  eventCreativeTask: 'eventCreativeTask',
   privateCreativeTask: 'privateCreativeTask',
 } as const;

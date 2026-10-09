@@ -7,7 +7,7 @@
  */
 
 /**
- * Юридический тип
+ * Тип контрагента
  */
 export type CreateRoomOrdProfileRequestDtoJuridicalType = typeof CreateRoomOrdProfileRequestDtoJuridicalType[keyof typeof CreateRoomOrdProfileRequestDtoJuridicalType];
 
@@ -17,4 +17,6 @@ export const CreateRoomOrdProfileRequestDtoJuridicalType = {
   physical: 'physical',
   ip: 'ip',
   juridical: 'juridical',
+  foreign_physical: 'foreign_physical',
+  foreign_juridical: 'foreign_juridical',
 } as const;

@@ -18,7 +18,7 @@ export const SprintCreationHeader = ({
     <div
       className={[
         "flex min-h-11 w-full items-center justify-between gap-4 py-2",
-        activeStep === 2 ? "px-4" : "mx-auto max-w-[700px]",
+        activeStep === 1 ? "mx-auto max-w-[700px]" : "px-4",
       ].join(" ")}
     >
       <ol

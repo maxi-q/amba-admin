@@ -47,7 +47,7 @@ export interface GetMyEventsResponseItemDto {
   rewardUnits: string;
   /** Id комнаты */
   roomId: string;
-  /** Конкурс или награда каждому участнику */
+  /** contest — конкурс с XP и лидербордом; everyone — награды за задания без XP и лидерборда */
   type: GetMyEventsResponseItemDtoType;
   /** active → reviewing → awarding → completed */
   status: GetMyEventsResponseItemDtoStatus;

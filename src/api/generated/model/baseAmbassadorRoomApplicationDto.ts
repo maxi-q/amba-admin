@@ -19,8 +19,11 @@ export interface BaseAmbassadorRoomApplicationDto {
   ordPersonId: string;
   /** Имя (из OrdPerson) */
   name: string;
-  /** ИНН (из OrdPerson) */
-  inn: number;
+  /**
+   * ИНН (из OrdPerson); null для иностранных контрагентов
+   * @nullable
+   */
+  inn: number | null;
   /** Телефон (из OrdPerson) */
   phone: string;
   /** Статус заявки */

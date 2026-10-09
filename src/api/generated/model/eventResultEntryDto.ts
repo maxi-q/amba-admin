@@ -9,7 +9,7 @@ import type { LeaderboardRewardDto } from './leaderboardRewardDto';
 
 export interface EventResultEntryDto {
   /**
-   * Место в рейтинге (1-based, одинаковые баллы — одинаковое место)
+   * Место в конкурсном событии; null во внеконкурсном
    * @nullable
    */
   rank: number | null;

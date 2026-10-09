@@ -14,8 +14,36 @@ export interface OrdPersonItemDto {
   updatedAt: string;
   /** ФИО или наименование организации */
   name: string;
-  /** ИНН */
-  inn: string;
+  /**
+   * Российский ИНН
+   * @nullable
+   */
+  inn: string | null;
+  /**
+   * Адрес регистрации
+   * @nullable
+   */
+  address: string | null;
+  /**
+   * Цифровой код страны ISO 3166
+   * @nullable
+   */
+  foreignOksmCountryCode: string | null;
+  /**
+   * Номер иностранной карты или счёта
+   * @nullable
+   */
+  foreignEpaymentMethod: string | null;
+  /**
+   * Регистрационный номер иностранного юрлица
+   * @nullable
+   */
+  foreignRegistrationNumber: string | null;
+  /**
+   * Иностранный ИНН юридического лица
+   * @nullable
+   */
+  foreignInn: string | null;
   /** Номер телефона */
   phone: string;
   /** Тип юридического лица */

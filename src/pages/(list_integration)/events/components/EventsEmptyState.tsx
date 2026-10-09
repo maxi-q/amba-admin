@@ -1,4 +1,5 @@
-import { Alert, AlertDescription } from "@senler/ui";
+import { Button } from "@senler/ui";
+import { EventInstructions } from "./EventInstructions";
 
 interface EventsEmptyStateProps {
   onCreateClick: () => void;
@@ -6,18 +7,17 @@ interface EventsEmptyStateProps {
 
 export const EventsEmptyState = ({ onCreateClick }: EventsEmptyStateProps) => {
   return (
-    <Alert className="mb-3">
-      <AlertDescription className="inline-block">
-        Событий пока нет.{" "}
-        <button
+    <section className="flex min-h-[664px] justify-center px-4 pb-10 pt-10">
+      <div className="flex w-[326px] max-w-full flex-col items-center gap-3">
+        <EventInstructions />
+        <Button
           type="button"
           onClick={onCreateClick}
-          className=" cursor-pointer border-0 bg-transparent p-0 align-baseline font-medium text-primary underline underline-offset-2 hover:text-primary/90"
+          className="h-10 bg-[#2563eb] px-3 text-[13px] font-medium leading-4 shadow-none hover:bg-[#2563eb]/90"
         >
-          Создайте первое событие
-        </button>
-        , чтобы начать работу.
-      </AlertDescription>
-    </Alert>
+          Создать первое событие
+        </Button>
+      </div>
+    </section>
   );
 };

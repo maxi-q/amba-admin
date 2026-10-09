@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig } from 'axios';
-import type { BaseSprintDto, BaseEventDto, RewardSummaryDto, BaseCreativeTaskSubmissionDto, CreativeTaskWithDefaultsDto, SprintRewardRuleDto, CompetitionRewardRuleDto, LeaderboardEntryDto, RewardGrantDto, PromoPointsRuleResponseDto, PromoPointsAccrualResponseDto, SprintRewardRuleConfigDto, EventParticipantDto } from '../api/generated/model';
+import type { BaseSprintDto, BaseEventDto, RewardSummaryDto, BaseCreativeTaskSubmissionDto, CreativeTaskWithDefaultsDto, SprintRewardRuleDto, CompetitionRewardRuleDto, LeaderboardEntryDto, RewardGrantDto, PromoPointsRuleResponseDto, PromoPointsAccrualResponseDto, SprintRewardRuleConfigDto, EventParticipantDto, EventTaskDto, EventPromoRewardRuleDto, EventPromoRewardAccrualDto, CreateEventPromoRewardRuleDto, CreateEventTaskDto } from '../api/generated/model';
 import { distributeRewardPool, rankParticipants } from '../utils/sprintRewardPreview';
 
 type State = { roomId: string; sprints: BaseSprintDto[]; rules: SprintRewardRuleDto[]; rewards: RewardSummaryDto[]; entries: LeaderboardEntryDto[]; tasks: CreativeTaskWithDefaultsDto[]; submissions: BaseCreativeTaskSubmissionDto[] };
@@ -13,6 +13,9 @@ const pageOf = <T,>(items: T[], params: { page?: number; size?: number } = {}) =
 /** In-memory API only. Loaded exclusively by the dev preview entry. */
 export function createCompetitionPreview() {
   let initialized = false;
+  const emptyEventsPreview =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('empty-events');
   const events: BaseEventDto[] = [];
   const eventRules: CompetitionRewardRuleDto[] = [];
   const members = new Map<string, EventParticipantDto[]>();
@@ -21,6 +24,9 @@ export function createCompetitionPreview() {
   let grants: RewardGrantDto[] = [];
   let promoRules: PromoPointsRuleResponseDto[] = [];
   const accruals: PromoPointsAccrualResponseDto[] = [];
+  const eventTasks: EventTaskDto[] = [];
+  const eventPromoRewardRules: EventPromoRewardRuleDto[] = [];
+  const eventPromoRewardAccruals: EventPromoRewardAccrualDto[] = [];
 
   return (config: AxiosRequestConfig, state: State): { data: unknown } | undefined => {
     const method = config.method?.toUpperCase() ?? 'GET', url = config.url ?? '';
@@ -34,7 +40,7 @@ export function createCompetitionPreview() {
     const addGrant = (id: string, ruleRewardId: string, ambassadorId: string, amount: number, assignmentType: 'manual' | 'automatic') => {
       const position = rulesFor(id).flatMap((rule) => rule.rewards).find((item) => item.id === ruleRewardId)!;
       const person = state.entries.find((item) => item.ambassadorId === ambassadorId);
-      const grant: RewardGrantDto = { id: crypto.randomUUID(), sprintId: events.some((item) => item.id === id) ? null : id, eventId: events.some((item) => item.id === id) ? id : null, ambassadorId, ambassador: { id: ambassadorId, username: person?.username ?? ambassadorId, subscriberId: ambassadorId, channelTypeId: 1 }, ruleRewardId, rewardId: position.rewardId, rewardVersionId: position.rewardVersionId!, reward: { id: position.rewardId, name: position.reward.name, version: position.reward.version, isDivisible: position.reward.isDivisible, divisionPrecision: position.reward.divisionPrecision, iconUrl: position.reward.iconUrl }, amount, assignmentType, deliveredAt: null, deliveredByProjectId: null, createdAt: now(), updatedAt: now(), history: [] };
+      const grant: RewardGrantDto = { id: crypto.randomUUID(), sprintId: events.some((item) => item.id === id) ? null : id, eventId: events.some((item) => item.id === id) ? id : null, ambassadorId, ambassador: { id: ambassadorId, username: person?.username ?? ambassadorId, subscriberId: ambassadorId, channelTypeId: 1 }, ruleRewardId, eventTaskSubmissionId: null, eventPromoRewardAccrualId: null, rewardId: position.rewardId, rewardVersionId: position.rewardVersionId!, reward: { id: position.rewardId, name: position.reward.name, version: position.reward.version, isDivisible: position.reward.isDivisible, divisionPrecision: position.reward.divisionPrecision, iconUrl: position.reward.iconUrl }, amount, assignmentType, deliveredAt: null, deliveredByProjectId: null, createdAt: now(), updatedAt: now(), history: [] };
       grants.push(grant); return grant;
     };
     const inScope = (grant: RewardGrantDto, id: string) => grant.sprintId === id || grant.eventId === id;
@@ -68,6 +74,15 @@ export function createCompetitionPreview() {
       const rows = rowsFor(id);
       snapshots.set(id, structuredClone(rows));
       for (const item of awardsFor(id, rows)) addGrant(id, item.ruleRewardId, item.ambassadorId, item.amount, 'automatic');
+      const event = events.find((item) => item.id === id);
+      const ambassadorId = members.get(id)?.[0]?.ambassadorId;
+      const person = state.entries.find((item) => item.ambassadorId === ambassadorId);
+      const reward = state.rewards[0];
+      if (event?.type === 'everyone' && ambassadorId && reward) {
+        const base = { sprintId: null, eventId: id, ambassadorId, ambassador: { id: ambassadorId, username: person?.username ?? ambassadorId, subscriberId: ambassadorId, channelTypeId: 1 }, ruleRewardId: null, rewardId: reward.id, rewardVersionId: reward.versionId ?? `${reward.id}-v${reward.version}`, reward: { id: reward.id, name: reward.name, version: reward.version, isDivisible: reward.isDivisible, divisionPrecision: reward.divisionPrecision, iconUrl: reward.iconUrl }, amount: 100, assignmentType: 'automatic' as const, deliveredAt: null, deliveredByProjectId: null, createdAt: now(), updatedAt: now(), history: [] };
+        grants.push({ ...base, id: crypto.randomUUID(), eventTaskSubmissionId: `${id}-submission`, eventPromoRewardAccrualId: null });
+        if (eventPromoRewardRules.some((rule) => rule.eventId === id && rule.isActive)) grants.push({ ...base, id: crypto.randomUUID(), eventTaskSubmissionId: null, eventPromoRewardAccrualId: `${id}-promo-accrual` });
+      }
       parent.resultsFixedAt = now(); parent.status = 'awarding';
     };
     if (!initialized) {
@@ -77,16 +92,84 @@ export function createCompetitionPreview() {
         if (!state.rules.some((rule) => rule.sprintId === sprint.id)) state.rules.push(...state.rules.filter((rule) => rule.sprintId === 'sprint-active').map((rule) => ({ ...structuredClone(rule), id: `${sprint.id}-${rule.id}`, sprintId: sprint.id, rewards: rule.rewards.map((position) => ({ ...structuredClone(position), id: `${sprint.id}-${position.id}` })) })));
         if (sprint.status === 'awarding' || sprint.status === 'completed') { const completed = sprint.status === 'completed'; sprint.status = 'reviewing'; sprint.resultsFixedAt = null; finish(sprint.id); if (completed) { sprint.status = 'completed'; grants.filter((grant) => inScope(grant, sprint.id)).forEach((grant) => { grant.deliveredAt = now(); }); } }
       }
-      for (const [id, type, name] of [['event-contest', 'contest', 'Конкурс промокодов'], ['event-everyone', 'everyone', 'Награды каждому участнику']] as const) {
-        events.push({ id, type, status: 'active', isDraft: false, createdAt: now(), updatedAt: now(), reviewStartedAt: null, resultsFixedAt: null, completedAt: null, name, description: 'Участвуйте в событии и получайте награды', promoCodesPrefix: type === 'contest' ? 'SALE' : 'GIFT', startDate: '2026-09-01T00:00:00.000Z', endDate: '2026-12-31T00:00:00.000Z', ignoreEndDate: false, promoCodeUsagesCount: 15, promoCodeUsageLimit: 100, ignorePromoCodeUsageLimit: false, isDeleted: false, rewardType: 'fix', rewardValue: 100, rewardUnits: '₽', roomId: state.roomId });
-        members.set(id, state.entries.map((entry) => ({ id: `${id}-${entry.ambassadorId}`, ambassadorId: entry.ambassadorId, username: entry.username, status: 'approved' })));
-        const seed = state.rules.find((rule) => rule.type === 'byRank')!;
-        eventRules.push({ ...structuredClone(seed), id: `${id}-rule`, sprintId: null, eventId: id, type: type === 'everyone' ? 'each' : 'byRank', rewards: seed.rewards.slice(0, 2).map((item) => ({ ...structuredClone(item), id: `${id}-${item.id}` })) });
+      if (!emptyEventsPreview) {
+        for (const [id, type, name] of [['event-contest', 'contest', 'Конкурс промокодов'], ['event-everyone', 'everyone', 'Награды каждому участнику']] as const) {
+          events.push({ id, type, status: 'active', isDraft: false, createdAt: now(), updatedAt: now(), reviewStartedAt: null, resultsFixedAt: null, completedAt: null, name, description: 'Участвуйте в событии и получайте награды', promoCodesPrefix: type === 'contest' ? 'SALE' : 'GIFT', startDate: '2026-09-01T00:00:00.000Z', endDate: '2026-12-31T00:00:00.000Z', ignoreEndDate: false, promoCodeUsagesCount: 15, promoCodeUsageLimit: 100, ignorePromoCodeUsageLimit: false, isDeleted: false, rewardType: 'fix', rewardValue: 100, rewardUnits: '₽', roomId: state.roomId });
+          members.set(id, state.entries.map((entry) => ({ id: `${id}-${entry.ambassadorId}`, ambassadorId: entry.ambassadorId, username: entry.username, status: 'approved' })));
+          const seed = state.rules.find((rule) => rule.type === 'byRank')!;
+          eventRules.push({ ...structuredClone(seed), id: `${id}-rule`, sprintId: null, eventId: id, type: type === 'everyone' ? 'each' : 'byRank', rewards: seed.rewards.slice(0, 2).map((item) => ({ ...structuredClone(item), id: `${id}-${item.id}` })) });
+          const taskReward = type === 'everyone' ? state.rewards[0] : undefined;
+          eventTasks.push({ id: `${id}-task-1`, eventId: id, eventType: type, createdAt: now(), updatedAt: now(), title: type === 'contest' ? 'Снять обзор продукта' : 'Опубликовать историю', description: 'Подготовьте публикацию по брифу', isDeleted: false, isFrozen: false, criteria: ['Следовать брифу'], restrictions: [], allowedFormats: ['POST'], targetPlatform: 'VK_USER', ordForm: null, ordFlags: [], ordKktus: [], ordBrand: null, ordCategory: null, ordProductDescription: null, ordTargeting: null, ordPayType: null, publicationsCount: 1, requireMaterialsReview: true, requirePublicationReview: true, ordContractTemplateId: null, experiencePoints: type === 'contest' ? 100 : 0, reward: taskReward ? { rewardId: taskReward.id, rewardVersionId: taskReward.versionId ?? `${taskReward.id}-v${taskReward.version}`, version: taskReward.version, name: taskReward.name, isDivisible: taskReward.isDivisible, divisionPrecision: taskReward.divisionPrecision, amount: 100 } : null });
+        }
+        const promoReward = state.rewards[0];
+        if (promoReward) {
+          const rule: EventPromoRewardRuleDto = { id: 'event-everyone-promo-rule', eventId: 'event-everyone', createdAt: now(), effectiveFrom: now(), isActive: true, usagesPerAward: 5, reward: { rewardId: promoReward.id, rewardVersionId: promoReward.versionId ?? `${promoReward.id}-v${promoReward.version}`, version: promoReward.version, name: promoReward.name, isDivisible: promoReward.isDivisible, divisionPrecision: promoReward.divisionPrecision, amount: 100 } };
+          eventPromoRewardRules.push(rule);
+          eventPromoRewardAccruals.push({ id: 'event-everyone-promo-accrual', eventId: 'event-everyone', ambassadorId: 'ambassador-1', ruleId: rule.id, systemEventId: 'promo-usage-event-everyone', createdAt: now(), thresholdNumber: 5, reward: rule.reward });
+
+          const sourceEvent = events.find((item) => item.id === 'event-everyone')!;
+          const awardingId = 'event-everyone-awarding';
+          events.push({ ...structuredClone(sourceEvent), id: awardingId, name: 'Награды участникам', status: 'awarding', resultsFixedAt: now() });
+          members.set(awardingId, structuredClone(members.get('event-everyone') ?? []));
+          eventRules.push(...eventRules.filter((item) => item.eventId === 'event-everyone').map((item) => ({ ...structuredClone(item), id: `${awardingId}-${item.id}`, eventId: awardingId, rewards: item.rewards.map((position) => ({ ...structuredClone(position), id: `${awardingId}-${position.id}` })) })));
+          eventTasks.push(...eventTasks.filter((item) => item.eventId === 'event-everyone').map((item) => ({ ...structuredClone(item), id: `${awardingId}-task-1`, eventId: awardingId })));
+          const awardingPromoRule = { ...structuredClone(rule), id: `${awardingId}-promo-rule`, eventId: awardingId };
+          eventPromoRewardRules.push(awardingPromoRule);
+          const person = state.entries[0];
+          if (person) {
+            const grantBase = { sprintId: null, eventId: awardingId, ambassadorId: person.ambassadorId, ambassador: { id: person.ambassadorId, username: person.username, subscriberId: person.ambassadorId, channelTypeId: 1 }, ruleRewardId: null, rewardId: promoReward.id, rewardVersionId: promoReward.versionId ?? `${promoReward.id}-v${promoReward.version}`, reward: { id: promoReward.id, name: promoReward.name, version: promoReward.version, isDivisible: promoReward.isDivisible, divisionPrecision: promoReward.divisionPrecision, iconUrl: promoReward.iconUrl }, amount: 100, assignmentType: 'automatic' as const, deliveredAt: null, deliveredByProjectId: null, createdAt: now(), updatedAt: now(), history: [] };
+            grants.push({ ...grantBase, id: `${awardingId}-task-grant`, eventTaskSubmissionId: `${awardingId}-submission`, eventPromoRewardAccrualId: null });
+            grants.push({ ...grantBase, id: `${awardingId}-promo-grant`, eventTaskSubmissionId: null, eventPromoRewardAccrualId: `${awardingId}-promo-accrual` });
+          }
+        }
       }
       promoRules = ['sprint-active', 'event-contest'].map((id) => ({ id: `promo-rule-${id}`, ...(id.startsWith('event') ? { eventId: id } : { sprintId: id }), usagesPerAward: 5, pointsPerAward: '100', isActive: true, effectiveFrom: now(), createdAt: now(), updatedAt: now() }));
       for (const rule of promoRules) accruals.push({ id: `accrual-${rule.id}`, sprintId: rule.sprintId, eventId: rule.eventId, ambassadorId: 'ambassador-1', ruleId: rule.id, systemEventId: `usage-${rule.id}`, points: '100', thresholdNumber: 1, createdAt: now() });
     }
     if (method === 'GET' && url === `/api/events/${state.roomId}`) return response(pageOf(events.filter((item) => !item.isDeleted), config.params));
+    const eventTasksMatch = url.match(/^\/api\/events\/([^/]+)\/tasks$/);
+    if (eventTasksMatch) {
+      const id = eventTasksMatch[1];
+      if (method === 'GET') return response(pageOf(eventTasks.filter((item) => item.eventId === id && !item.isDeleted), config.params));
+      if (method === 'POST') {
+        const data = body<CreateEventTaskDto>(config), event = events.find((item) => item.id === id)!;
+        const reward = data.rewardId ? state.rewards.find((item) => item.id === data.rewardId) : undefined;
+        const task: EventTaskDto = { id: crypto.randomUUID(), eventId: id, eventType: event.type, createdAt: now(), updatedAt: now(), title: data.title, description: data.description, isDeleted: false, isFrozen: data.isFrozen ?? false, criteria: data.criteria ?? [], restrictions: data.restrictions ?? [], allowedFormats: data.allowedFormats ?? [], targetPlatform: data.targetPlatform ?? 'VK_USER', ordForm: data.ordForm ?? null, ordFlags: data.ordFlags ?? [], ordKktus: data.ordKktus ?? [], ordBrand: data.ordBrand ?? null, ordCategory: data.ordCategory ?? null, ordProductDescription: data.ordProductDescription ?? null, ordTargeting: data.ordTargeting ?? null, ordPayType: data.ordPayType ?? null, publicationsCount: data.publicationsCount ?? 1, requireMaterialsReview: data.requireMaterialsReview ?? true, requirePublicationReview: data.requirePublicationReview ?? true, ordContractTemplateId: data.ordContractTemplateId ?? null, experiencePoints: data.experiencePoints ?? 0, reward: reward ? { rewardId: reward.id, rewardVersionId: reward.versionId ?? `${reward.id}-v${reward.version}`, version: reward.version, name: reward.name, isDivisible: reward.isDivisible, divisionPrecision: reward.divisionPrecision, amount: Number(data.rewardAmount ?? 1) } : null };
+        eventTasks.push(task); return response(task);
+      }
+    }
+    const eventTaskMatch = url.match(/^\/api\/events\/([^/]+)\/tasks\/([^/]+)$/);
+    if (eventTaskMatch && method === 'PATCH') {
+      const task = eventTasks.find((item) => item.eventId === eventTaskMatch[1] && item.id === eventTaskMatch[2]);
+      if (!task) throw new Error('Задание не найдено');
+      const data = body<CreateEventTaskDto>(config), reward = data.rewardId ? state.rewards.find((item) => item.id === data.rewardId) : undefined;
+      Object.assign(task, data, { updatedAt: now(), reward: reward ? { rewardId: reward.id, rewardVersionId: reward.versionId ?? `${reward.id}-v${reward.version}`, version: reward.version, name: reward.name, isDivisible: reward.isDivisible, divisionPrecision: reward.divisionPrecision, amount: Number(data.rewardAmount ?? 1) } : task.reward });
+      return response(task);
+    }
+    const eventSubmissionsMatch = url.match(/^\/api\/events\/([^/]+)\/tasks\/([^/]+)\/submissions$/);
+    if (method === 'GET' && eventSubmissionsMatch) return response(pageOf([], config.params));
+    const eventPromoRulesMatch = url.match(/^\/api\/events\/([^/]+)\/promo-reward-rules(?:\/([^/]+))?$/);
+    if (eventPromoRulesMatch) {
+      const [, id, ruleId] = eventPromoRulesMatch;
+      if (method === 'GET') return response(eventPromoRewardRules.filter((rule) => rule.eventId === id));
+      if (method === 'DELETE' && ruleId) {
+        const rule = eventPromoRewardRules.find((item) => item.id === ruleId);
+        if (rule) rule.isActive = false;
+        return response(rule);
+      }
+      const data = body<CreateEventPromoRewardRuleDto>(config);
+      const source = state.rewards.find((reward) => reward.id === data.rewardId)!;
+      const previous = ruleId ? eventPromoRewardRules.find((item) => item.id === ruleId) : undefined;
+      if (previous) previous.isActive = false;
+      const rule: EventPromoRewardRuleDto = { id: crypto.randomUUID(), eventId: id, createdAt: now(), effectiveFrom: now(), isActive: true, usagesPerAward: data.usagesPerAward ?? previous?.usagesPerAward ?? 1, reward: { rewardId: source.id, rewardVersionId: source.versionId ?? `${source.id}-v${source.version}`, version: source.version, name: source.name, isDivisible: source.isDivisible, divisionPrecision: source.divisionPrecision, amount: Number(data.rewardAmount ?? previous?.reward.amount ?? 1) } };
+      eventPromoRewardRules.push(rule); return response(rule);
+    }
+    const eventPromoJournalMatch = url.match(/^\/api\/events\/([^/]+)\/promo-rewards$/);
+    if (method === 'GET' && eventPromoJournalMatch) {
+      const id = eventPromoJournalMatch[1];
+      const items = eventPromoRewardAccruals.filter((item) => item.eventId === id && (!config.params?.ambassadorId || item.ambassadorId === config.params.ambassadorId));
+      return response({ ...pageOf(items, config.params), activeRule: eventPromoRewardRules.find((rule) => rule.eventId === id && rule.isActive) ?? null, progress: [] });
+    }
     if (method === 'GET' && url.includes('/events/check-promo-codes-prefix-available/')) return response(true);
     if (method === 'POST' && url === '/api/events') {
       const data = body<BaseEventDto>(config);
@@ -134,7 +217,7 @@ export function createCompetitionPreview() {
         if (parent.status !== 'active') throw new Error('Правила наград зафиксированы');
         if (method === 'DELETE') { if (grants.some((grant) => rulesFor(id).find((rule) => rule.id === ruleId)?.rewards.some((position) => position.id === grant.ruleRewardId))) throw new Error('Правило уже используется'); const index = eventRules.findIndex((rule) => rule.id === ruleId); eventRules.splice(index, 1); return response(null); }
         const data = body<SprintRewardRuleConfigDto>(config), old = eventRules.find((rule) => rule.id === ruleId);
-        if ((parent as BaseEventDto).type === 'everyone' ? !['each', 'manual'].includes(data.type) : data.type === 'each') throw new Error('Недопустимый тип правила');
+        if ((parent as BaseEventDto).type === 'everyone' && data.type !== 'manual') throw new Error('Недопустимый тип правила');
         const rule: CompetitionRewardRuleDto = { id: old?.id ?? crypto.randomUUID(), sprintId: null, eventId: id, createdAt: old?.createdAt ?? now(), updatedAt: now(), type: data.type, rankFrom: data.rankFrom ?? null, rankTo: data.rankTo ?? null, minPoints: data.minPoints ?? null, rewards: data.rewards.map((line) => { const reward = state.rewards.find((item) => item.id === line.rewardId)!; const prev = old?.rewards.find((item) => item.rewardId === line.rewardId); return { id: prev?.id ?? crypto.randomUUID(), rewardId: reward.id, rewardVersionId: prev?.rewardVersionId ?? `${reward.id}-v${reward.version}`, amount: Number(line.amount), reward: prev?.reward ?? reward }; }) };
         if (old) eventRules.splice(eventRules.indexOf(old), 1, rule); else eventRules.push(rule); return response(rule);
       }

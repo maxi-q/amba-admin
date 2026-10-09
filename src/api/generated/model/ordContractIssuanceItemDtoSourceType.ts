@@ -16,5 +16,6 @@ export type OrdContractIssuanceItemDtoSourceType = typeof OrdContractIssuanceIte
 export const OrdContractIssuanceItemDtoSourceType = {
   room: 'room',
   creativeTask: 'creativeTask',
+  eventCreativeTask: 'eventCreativeTask',
   privateCreativeTask: 'privateCreativeTask',
 } as const;

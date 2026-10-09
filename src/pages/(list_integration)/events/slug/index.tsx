@@ -9,8 +9,9 @@ import { useCreateEvent } from '@/hooks/events/useCreateEvent';
 import { usePatchEvent } from '@/hooks/events/usePatchEvent';
 import { useApprovedParticipants, useCompetitionRules, useEventParticipants } from '@/hooks/competitions/useCompetitionQueries';
 import { useEventCompetitionActions } from '@/hooks/competitions/useCompetitionActions';
-import { PromoPointsPanel } from '@/components/competitions/PromoPointsPanel';
 import { EventRewardEditor } from './EventRewardEditor';
+import { EventPromoSetupCard } from './components/EventPromoSetupCard';
+import { EventTasksSetupSection } from './components/EventTasksSetupSection';
 
 export default function EventsSetting() {
   const { slug = '', eventId = 'new' } = useParams();
@@ -38,7 +39,7 @@ function EventEditorForm({ roomId, event }: { roomId: string; event?: GetMyEvent
   const selected = selectedIds ?? participants.data?.filter((item) => item.status === 'approved').map((item) => item.ambassadorId) ?? [];
   const [search, setSearch] = useState('');
   const [promoDirty, setPromoDirty] = useState(false);
-  const [form, setForm] = useState<CreateEventRequestDto>(() => ({ roomId, name: event?.name ?? '', description: event?.description ?? '', promoCodesPrefix: event?.promoCodesPrefix ?? '', startDate: event?.startDate ?? '', endDate: event?.endDate ?? null, ignoreEndDate: event?.ignoreEndDate ?? false, rewardType: event?.rewardType ?? 'fix', rewardValue: event?.rewardValue ?? NaN, rewardUnits: event?.rewardUnits ?? '', ignorePromoCodeUsageLimit: event?.ignorePromoCodeUsageLimit ?? true, promoCodeUsageLimit: event?.promoCodeUsageLimit, isDeleted: false, isDraft: event?.isDraft ?? true, type: event?.type ?? 'contest' }));
+  const [form, setForm] = useState<CreateEventRequestDto>(() => ({ roomId, name: event?.name ?? '', description: event?.description ?? '', promoCodesPrefix: event?.promoCodesPrefix ?? '', startDate: event?.startDate ?? '', endDate: event?.endDate ?? null, ignoreEndDate: event?.ignoreEndDate ?? false, rewardType: event?.rewardType ?? 'fix', rewardValue: event?.rewardValue ?? 0, rewardUnits: event?.rewardUnits ?? 'XP', ignorePromoCodeUsageLimit: event?.ignorePromoCodeUsageLimit ?? true, promoCodeUsageLimit: event?.promoCodeUsageLimit, isDeleted: false, isDraft: event?.isDraft ?? true, type: event?.type ?? 'contest' }));
   const busy = create.isPending || patch.isPending || relations.isPending;
   const savedForm = useRef(JSON.stringify(form));
   const leaving = useRef(false);
@@ -54,13 +55,13 @@ function EventEditorForm({ roomId, event }: { roomId: string; event?: GetMyEvent
       pool.set(key, { reward: position.reward, manual: rule.type === 'manual', amount: Number(((pool.get(key)?.amount ?? 0) + position.amount * count).toFixed(10)) });
     }
   }
-  const valid = form.name.trim().length >= 3 && form.name.trim().length <= 100 && (form.description?.length ?? 0) <= 1000 && (form.promoCodesPrefix.trim().length >= 3 && form.promoCodesPrefix.trim().length <= 50) && !form.promoCodesPrefix.includes('_') && !!form.startDate && (form.ignoreEndDate || !!form.endDate && new Date(form.endDate) > new Date(form.startDate)) && Number.isSafeInteger(form.rewardValue) && form.rewardValue >= 0 && !!form.rewardUnits.trim() && (form.ignorePromoCodeUsageLimit || Number.isSafeInteger(form.promoCodeUsageLimit) && form.promoCodeUsageLimit! >= 0);
+  const valid = form.name.trim().length >= 3 && form.name.trim().length <= 100 && (form.description?.length ?? 0) <= 1000 && (form.promoCodesPrefix.trim().length >= 3 && form.promoCodesPrefix.trim().length <= 50) && !form.promoCodesPrefix.includes('_') && !!form.startDate && (form.ignoreEndDate || !!form.endDate && new Date(form.endDate) > new Date(form.startDate)) && (form.ignorePromoCodeUsageLimit || Number.isSafeInteger(form.promoCodeUsageLimit) && form.promoCodeUsageLimit! >= 0);
   const update = <K extends keyof CreateEventRequestDto>(key: K, value: CreateEventRequestDto[K]) => setForm((old) => ({ ...old, [key]: value }));
   const save = async (nextStep?: number, publish = false) => {
     try {
       if (promoDirty) { toast.error('Сначала сохраните или отмените изменения правила промокода'); return; }
       if (step === 1) {
-        if (!valid) { toast.error('Заполните название, даты, префикс и параметры награды промокода'); return; }
+        if (!valid) { toast.error('Заполните название, даты и префикс промокода'); return; }
         // DTO still validates this integer even when the limit is disabled.
         const data = { ...form, endDate: form.ignoreEndDate ? null : form.endDate, promoCodeUsageLimit: form.promoCodeUsageLimit ?? 0 };
         if (!event) {
@@ -95,7 +96,7 @@ function EventEditorForm({ roomId, event }: { roomId: string; event?: GetMyEvent
     catch (error) { toast.error(error instanceof Error ? error.message : 'Не удалось изменить тип'); }
   };
   return <div className="-m-4 text-[13px] font-medium">
-    <header className="flex min-h-12 flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-2"><ol className="flex gap-3">{['Настройка события', 'Участники', 'Промокод'].map((label, index) => <li key={label} className={`flex items-center gap-1.5 ${step < index + 1 ? 'text-muted-foreground' : ''}`}><span className={`flex size-6 items-center justify-center rounded-full ${step === index + 1 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{step > index + 1 ? '✓' : index + 1}</span>{label}</li>)}</ol><Button size="sm" variant="outline" disabled={busy} onClick={() => void save()}>{event && !event.isDraft ? 'Сохранить' : 'Сохранить черновик'}</Button></header>
+    <header className="flex min-h-12 flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-2"><ol className="flex gap-3">{['Настройка события', 'Участники', 'Задания'].map((label, index) => <li key={label} className={`flex items-center gap-1.5 ${step < index + 1 ? 'text-muted-foreground' : ''}`}><span className={`flex size-6 items-center justify-center rounded-full ${step === index + 1 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{step > index + 1 ? '✓' : index + 1}</span>{label}</li>)}</ol><Button size="sm" variant="outline" disabled={busy} onClick={() => void save()}>{event && !event.isDraft ? 'Сохранить' : 'Сохранить черновик'}</Button></header>
     <div className={step === 2 ? 'grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px]' : ''}>
     <div className="mx-auto w-full max-w-[732px] px-4 py-9">
       {step === 1 && <div className="overflow-hidden rounded-lg border border-border">
@@ -103,8 +104,6 @@ function EventEditorForm({ roomId, event }: { roomId: string; event?: GetMyEvent
         <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><label htmlFor="event-description">Описание<p className="mt-1 text-muted-foreground">Пару слов о событии</p></label><Textarea id="event-description" value={form.description ?? ''} maxLength={1000} onChange={(e) => update('description', e.target.value)} /></div>
         <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><span>Продолжительность</span><div><Calendar mode="range" numberOfMonths={2} className="max-w-full overflow-x-auto [--cell-size:28px]" selected={{ from: form.startDate ? new Date(form.startDate) : undefined, to: form.endDate ? new Date(form.endDate) : undefined }} onSelect={(range) => { update('startDate', range?.from?.toISOString() ?? ''); update('endDate', range?.to?.toISOString() ?? null); }} /><CheckBox label="Без даты окончания" checked={form.ignoreEndDate} onCheckedChange={(value) => update('ignoreEndDate', value === true)} /></div></div>
         <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><label htmlFor="event-prefix">Префикс промокода</label><div><Input id="event-prefix" maxLength={50} disabled={!!event} value={form.promoCodesPrefix} onChange={(e) => update('promoCodesPrefix', e.target.value)} /><p className="mt-1 text-muted-foreground">Без символа _. После создания не изменяется.</p></div></div>
-        <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><label htmlFor="event-value">Значение награды промокода</label><Input id="event-value" type="number" min={0} value={Number.isFinite(form.rewardValue) ? form.rewardValue : ''} onChange={(e) => update('rewardValue', e.target.value === '' ? NaN : Number(e.target.value))} /></div>
-        <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><span>Тип и единицы награды</span><div className="space-y-2"><p>Фиксированная</p><Input aria-label="Единицы награды промокода" placeholder="Например, ₽" value={form.rewardUnits} onChange={(e) => update('rewardUnits', e.target.value)} /></div></div>
         <div className="grid gap-4 p-4 md:grid-cols-[224px_1fr]"><span>Лимит активаций</span><div className="space-y-2"><CheckBox label="Без ограничения" checked={form.ignorePromoCodeUsageLimit} onCheckedChange={(value) => update('ignorePromoCodeUsageLimit', value === true)} />{!form.ignorePromoCodeUsageLimit && <Input aria-label="Лимит активаций" type="number" min={0} value={form.promoCodeUsageLimit ?? ''} onChange={(e) => update('promoCodeUsageLimit', e.target.value === '' ? undefined : Number(e.target.value))} />}</div></div>
       </div>}
       {step === 2 && <>
@@ -112,11 +111,14 @@ function EventEditorForm({ roomId, event }: { roomId: string; event?: GetMyEvent
           {members.isError || participants.isError ? <Button variant="outline" onClick={() => { void members.refetch(); void participants.refetch(); }}>Повторить загрузку участников</Button> : members.isLoading || participants.isLoading ? <PageLoader label="Загрузка участников…" /> : <div className="mt-3 max-h-60 space-y-2 overflow-auto">{members.data?.items.filter((item) => item.name.toLocaleLowerCase('ru-RU').includes(search.toLocaleLowerCase('ru-RU'))).map((item) => <CheckBox key={item.ambassadorId} label={item.name} checked={selected.includes(item.ambassadorId)} onCheckedChange={(value) => setSelectedIds(value === true ? [...selected, item.ambassadorId] : selected.filter((id) => id !== item.ambassadorId))} />)}</div>}
           <Button asChild variant="link" className="mt-2 px-0"><Link to={`/rooms/${roomId}/events/${event!.id}/invitations`}>Пригласить отдельно</Link></Button>
         </section>
-        <div className="mt-3 flex gap-2"><Button variant={form.type === 'contest' ? 'default' : 'outline'} disabled={busy || !rules.data || rules.data.length > 0} onClick={() => void changeType('contest')}>Конкурс</Button><Button variant={form.type === 'everyone' ? 'default' : 'outline'} disabled={busy || !rules.data || rules.data.length > 0} onClick={() => void changeType('everyone')}>Для каждого</Button></div>
+        <div className="mt-3 flex gap-2"><Button variant={form.type === 'contest' ? 'default' : 'outline'} disabled={busy || !rules.data || rules.data.length > 0} onClick={() => void changeType('contest')}>Конкурс</Button><Button variant={form.type === 'everyone' ? 'default' : 'outline'} disabled={busy || !rules.data || rules.data.length > 0} onClick={() => void changeType('everyone')}>Равная награда</Button></div>
         {!!rules.data?.length && <p className="mt-2 text-muted-foreground">Для смены типа сначала удалите правила наград.</p>}
         <EventRewardEditor scope={scope} type={form.type ?? 'contest'} />
       </>}
-      {step === 3 && <><PromoPointsPanel scope={scope} editable onDirtyChange={setPromoDirty} /><p className="mt-3 text-muted-foreground">Задания событий пока не поддерживаются API. Здесь настраивается начисление XP за промокоды.</p></>}
+      {step === 3 && event && <>
+        <EventPromoSetupCard event={event} scope={scope} onDirtyChange={setPromoDirty} />
+        <EventTasksSetupSection event={event} />
+      </>}
       <footer className="mt-3 flex justify-between gap-3"><Button variant="outline" disabled={busy} onClick={() => promoDirty ? toast.error('Сначала сохраните или отмените изменения правила промокода') : step > 1 ? setParams({ step: String(step - 1) }) : navigate(`/rooms/${roomId}/events`)}>Назад</Button><Button disabled={busy || (step === 1 && !valid)} loading={busy} onClick={() => void save(step < 3 ? step + 1 : undefined, step === 3)}>{step === 3 ? event?.isDraft ? 'Создать событие' : 'Готово' : 'Продолжить'}</Button></footer>
       {event && (event.isDraft || new Date(event.startDate) > new Date()) && <Button variant="ghost" className="mt-4 text-destructive" disabled={busy} onClick={() => setDeleteOpen(true)}>Удалить событие</Button>}
     </div>

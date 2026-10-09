@@ -42,7 +42,11 @@ function OrdProfileForm({ roomId, profile }: { roomId: string; profile: RoomOrdP
   const [name, setName] = useState(profile?.name ?? "");
   const [phone, setPhone] = useState(profile ? formatRuMobileInput(profile.phone) : INITIAL_RU_PHONE_DISPLAY);
   const [inn, setInn] = useState(profile?.inn ?? "");
-  const [juridicalType, setJuridicalType] = useState<OrdJuridicalType>(profile?.juridicalType ?? "physical");
+  const [juridicalType, setJuridicalType] = useState<OrdJuridicalType>(
+    profile?.juridicalType === "ip" || profile?.juridicalType === "juridical"
+      ? profile.juridicalType
+      : "physical",
+  );
   const [details, setDetails] = useState(preview?.details ?? { foreign: false, paymentNumber: "", country: "", address: "" });
   const [savedDetails, setSavedDetails] = useState(details);
   const [savedForeignDraft, setSavedForeignDraft] = useState("");

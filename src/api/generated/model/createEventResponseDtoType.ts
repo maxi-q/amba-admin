@@ -7,7 +7,7 @@
  */
 
 /**
- * Конкурс или награда каждому участнику
+ * contest — конкурс с XP и лидербордом; everyone — награды за задания без XP и лидерборда
  */
 export type CreateEventResponseDtoType = typeof CreateEventResponseDtoType[keyof typeof CreateEventResponseDtoType];
 

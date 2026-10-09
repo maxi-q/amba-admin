@@ -5,7 +5,10 @@ import type {
   CreateRoomOrdProfileRequestDtoJuridicalType,
 } from "@/api/generated/model";
 
-export type OrdJuridicalType = CreateRoomOrdProfileRequestDtoJuridicalType;
+export type OrdJuridicalType = Extract<
+  CreateRoomOrdProfileRequestDtoJuridicalType,
+  "physical" | "ip" | "juridical"
+>;
 export type OrdContractType = CreateRoomOrdContractRequestDtoType;
 export type OrdContractActionType = CreateRoomOrdContractRequestDtoActionType;
 export type OrdContractSubjectType = CreateRoomOrdContractRequestDtoSubjectType;

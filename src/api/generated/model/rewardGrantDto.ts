@@ -18,7 +18,21 @@ export interface RewardGrantDto {
   eventId: string | null;
   ambassadorId: string;
   ambassador: GrantRecipientDto;
-  ruleRewardId: string;
+  /**
+   * Позиция правила; null для награды за задание события
+   * @nullable
+   */
+  ruleRewardId: string | null;
+  /**
+   * Одобренный ответ события; null для награды по правилу
+   * @nullable
+   */
+  eventTaskSubmissionId: string | null;
+  /**
+   * Начисление за промокод внеконкурсного события
+   * @nullable
+   */
+  eventPromoRewardAccrualId: string | null;
   rewardId: string;
   rewardVersionId: string;
   reward: GrantRewardDto;

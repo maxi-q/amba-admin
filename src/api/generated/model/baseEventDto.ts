@@ -15,7 +15,7 @@ export interface BaseEventDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
-  /** Конкурс или награда каждому участнику */
+  /** contest — конкурс с XP и лидербордом; everyone — награды за задания без XP и лидерборда */
   type: BaseEventDtoType;
   /** active → reviewing → awarding → completed */
   status: BaseEventDtoStatus;

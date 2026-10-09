@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription, Button, PageLoader } from "@senler/ui";
 import { useRooms } from "@/hooks/rooms/useRooms";
 import { useCreateRoom } from "@/hooks/rooms/useCreateRoom";
-import { RoomsHeader } from "./components/RoomsHeader";
-import { CreateRoomButton } from "./components/CreateRoomButton";
-import { RoomCard } from "./components/RoomCard";
 import { RoomsWelcome } from "./components/RoomsWelcome";
 import { CreateCompanyForm } from "./components/CreateCompanyForm";
+import { pickInitialRoom, rememberLastOpenedRoom } from "./roomSelection";
 
 export default function RoomsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { rooms, isLoading, isFetching, isError, error, refetch } = useRooms();
   const {
     createRoom,
@@ -20,7 +19,9 @@ export default function RoomsPage() {
     generalError: hookGeneralError,
   } = useCreateRoom();
 
-  const [isCreating, setIsCreating] = useState(false);
+  const availableRooms = rooms.filter((room) => !room.isDeleted);
+  const createRequested = searchParams.get("create") === "1";
+  const [isCreating, setIsCreating] = useState(createRequested);
   const [companyName, setCompanyName] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState("");
@@ -38,6 +39,10 @@ export default function RoomsPage() {
     }
   }, [isValidationError, validationErrors, hookGeneralError]);
 
+  useEffect(() => {
+    if (createRequested) setIsCreating(true);
+  }, [createRequested]);
+
   const resetCreateForm = () => {
     setCompanyName("");
     setFieldErrors({});
@@ -52,6 +57,7 @@ export default function RoomsPage() {
   const handleCloseCreate = () => {
     setIsCreating(false);
     resetCreateForm();
+    navigate("/", { replace: true });
   };
 
   const handleSubmit = () => {
@@ -68,8 +74,10 @@ export default function RoomsPage() {
       },
       {
         onSuccess: (createdRoom) => {
-          handleCloseCreate();
+          setIsCreating(false);
+          resetCreateForm();
           if (createdRoom?.id) {
+            rememberLastOpenedRoom(createdRoom.id);
             navigate(`/rooms/${createdRoom.id}/onboarding/tariff`);
           }
         },
@@ -98,7 +106,12 @@ export default function RoomsPage() {
     );
   }
 
-  const isFirstCompany = rooms.length === 0;
+  const initialRoom = pickInitialRoom(availableRooms);
+  const isFirstCompany = availableRooms.length === 0;
+
+  if (initialRoom && !isCreating) {
+    return <Navigate to={`/rooms/${initialRoom.id}`} replace />;
+  }
 
   if (isFirstCompany && !isCreating) {
     return <RoomsWelcome onGetStarted={handleOpenCreate} />;
@@ -119,15 +132,5 @@ export default function RoomsPage() {
     );
   }
 
-  return (
-    <div className="min-h-[652px] w-full px-6 py-6">
-      <RoomsHeader />
-      <CreateRoomButton onClick={handleOpenCreate} />
-      <div className="flex flex-col p-0">
-        {rooms.map((room) => (
-          <RoomCard key={room.id} room={room} />
-        ))}
-      </div>
-    </div>
-  );
+  return null;
 }

@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { roomPromoPointsControllerListRules, roomPromoPointsControllerListPoints } from '@/api/generated/room-promo-points/room-promo-points';
 import { scopeParams, type CompetitionScope } from '../competitions/types';
 
-export function usePromoPointsRules(scope: CompetitionScope) {
-  return useQuery({ queryKey: ['promoPointsRules', scope.roomId], enabled: !!scope.roomId,
+export function usePromoPointsRules(scope: CompetitionScope, enabled = true) {
+  return useQuery({ queryKey: ['promoPointsRules', scope.roomId], enabled: enabled && !!scope.roomId,
     queryFn: () => roomPromoPointsControllerListRules(scope.roomId),
     select: (rules) => rules.filter((rule) => scope.kind === 'sprint' ? rule.sprintId === scope.id : rule.eventId === scope.id) });
 }

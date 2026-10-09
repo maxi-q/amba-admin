@@ -14,7 +14,21 @@ export interface RewardGrantMutationDto {
   /** @nullable */
   eventId: string | null;
   ambassadorId: string;
-  ruleRewardId: string;
+  /**
+   * Позиция правила; null для награды за задание события
+   * @nullable
+   */
+  ruleRewardId: string | null;
+  /**
+   * Одобренный ответ события; null для награды по правилу
+   * @nullable
+   */
+  eventTaskSubmissionId: string | null;
+  /**
+   * Начисление за промокод внеконкурсного события
+   * @nullable
+   */
+  eventPromoRewardAccrualId: string | null;
   rewardVersionId: string;
   /** Количество в единицах закреплённой версии награды */
   amount: number;

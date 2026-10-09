@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, NavLink, useParams, useLocation } from "react-router-dom";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   AppShell,
@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuRoot,
   DropdownMenuTrigger,
+  Input,
   PageLoader,
 } from "@senler/ui";
 import {
@@ -23,6 +24,7 @@ import {
   Bell,
   Bot,
   Calendar,
+  Check,
   ChartLine,
   ChevronsUpDown,
   CircleQuestionMark,
@@ -30,10 +32,13 @@ import {
   Ellipsis,
   Gift,
   Megaphone,
+  Plus,
   Users,
 } from "lucide-react";
 import tokenIcon from "@/assets/sprint-flow/token.svg";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
+import { useRooms } from "@/hooks/rooms/useRooms";
+import { rememberLastOpenedRoom } from "../rooms/roomSelection";
 
 interface RoomBoxProps {
   children: ReactNode | ReactNode[];
@@ -70,6 +75,8 @@ const RoomBox = ({ children }: RoomBoxProps) => {
     eventId?: string;
   }>();
   const location = useLocation();
+  const [roomSwitcherOpen, setRoomSwitcherOpen] = useState(false);
+  const [roomSearch, setRoomSearch] = useState("");
 
   const {
     room: roomData,
@@ -77,6 +84,23 @@ const RoomBox = ({ children }: RoomBoxProps) => {
     isError,
     error,
   } = useGetRoomById(slug || "");
+  const roomsQuery = useRooms();
+
+  const availableRooms = useMemo(
+    () => roomsQuery.rooms.filter((room) => !room.isDeleted),
+    [roomsQuery.rooms],
+  );
+  const filteredRooms = useMemo(() => {
+    const query = roomSearch.trim().toLocaleLowerCase("ru-RU");
+    if (!query) return availableRooms;
+    return availableRooms.filter((room) =>
+      room.name.toLocaleLowerCase("ru-RU").includes(query),
+    );
+  }, [availableRooms, roomSearch]);
+
+  useEffect(() => {
+    if (roomData?.id) rememberLastOpenedRoom(roomData.id);
+  }, [roomData?.id]);
 
   const roomBase = slug ? `/rooms/${slug}` : "";
   const currentPath = `${location.pathname}${location.hash}`;
@@ -275,36 +299,140 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       currentPath={currentPath}
       renderLink={renderLink}
       headerTitle={roomData.name}
-      labels={{ navigation: "Разделы комнаты", openSidebar: "Открыть меню комнаты" }}
+      labels={{ navigation: "Разделы компании", openSidebar: "Открыть меню компании" }}
       className="bg-[#FFFFFF]"
       brand={
-        <NavLink
-          to="/"
-          className="flex h-8 min-w-0 items-center justify-between rounded-lg pl-1.5 pr-2 text-black transition-colors hover:bg-sidebar-accent"
-          title="К списку компаний"
+        <DropdownMenuRoot
+          open={roomSwitcherOpen}
+          onOpenChange={(open) => {
+            setRoomSwitcherOpen(open);
+            if (!open) setRoomSearch("");
+          }}
         >
-          <span className="flex min-w-0 items-center gap-[7px]">
-            <span
-              className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-[#e4e4e4] bg-[#141414]"
-              aria-hidden
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex h-8 min-w-0 items-center justify-between rounded-lg pl-1.5 pr-2 text-black outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              aria-label={`Выбрать компанию. Текущая: ${roomData.name}`}
+              title="Выбрать компанию"
             >
-              <BadgePercent
-                className="size-4 text-[#A07AFF]"
-                strokeWidth={1.25}
-              />
-            </span>
-            <span className="flex min-w-0 items-center gap-0.5">
-              <span className="min-w-0 truncate text-[13px] font-medium leading-4 tracking-[-0.0325px]">
-                {roomData.name}
+              <span className="flex min-w-0 items-center gap-[7px]">
+                <span
+                  className="flex size-6 shrink-0 items-center justify-center rounded-lg border border-[#e4e4e4] bg-[#141414]"
+                  aria-hidden
+                >
+                  <BadgePercent
+                    className="size-4 text-[#A07AFF]"
+                    strokeWidth={1.25}
+                  />
+                </span>
+                <span className="flex min-w-0 items-center gap-0.5">
+                  <span className="min-w-0 truncate text-[13px] font-medium leading-4 tracking-[-0.0325px]">
+                    {roomData.name}
+                  </span>
+                  <ChevronsUpDown
+                    className="size-3 shrink-0 text-[#707070]"
+                    strokeWidth={1.5}
+                    aria-hidden
+                  />
+                </span>
               </span>
-              <ChevronsUpDown
-                className="size-3 shrink-0 text-[#707070]"
-                strokeWidth={1.5}
-                aria-hidden
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            sideOffset={6}
+            className="w-[248px] overflow-hidden rounded-lg border border-[#e4e4e4] bg-white p-0 shadow-[0_16px_16px_rgba(0,0,0,0.16)]"
+          >
+            <div className="flex h-[34px] items-center gap-1.5 px-3 pb-1 pt-3">
+              <p className="min-w-0 flex-1 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black">
+                Ваши компании
+              </p>
+              <Button
+                asChild
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-[18px] shrink-0 rounded p-0 text-black"
+              >
+                <Link to="/rooms?create=1" aria-label="Создать компанию" title="Создать компанию">
+                  <Plus className="size-[18px]" strokeWidth={1.5} aria-hidden />
+                </Link>
+              </Button>
+            </div>
+            <div className="px-3 py-1">
+              <Input
+                type="search"
+                value={roomSearch}
+                onChange={(event) => setRoomSearch(event.target.value)}
+                onKeyDown={(event) => event.stopPropagation()}
+                placeholder="Поиск..."
+                aria-label="Поиск компаний"
+                className="h-8 rounded-md border-0 bg-[#f0f0f0] px-2 text-[13px] font-medium leading-4 tracking-[-0.0325px] placeholder:text-[#636c72] shadow-none"
               />
-            </span>
-          </span>
-        </NavLink>
+            </div>
+            <div className="max-h-[352px] overflow-y-auto">
+              {roomsQuery.isLoading ? (
+                <p className="px-3 py-4 text-center text-[12px] font-medium leading-4 text-[#797979]">
+                  Загрузка…
+                </p>
+              ) : roomsQuery.isError ? (
+                <div className="px-3 py-3 text-[12px] font-medium leading-4 text-[#797979]">
+                  <p>Не удалось загрузить компании</p>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="mt-1 h-auto p-0 text-[12px]"
+                    onClick={() => void roomsQuery.refetch()}
+                  >
+                    Повторить
+                  </Button>
+                </div>
+              ) : filteredRooms.length === 0 ? (
+                <p className="px-3 py-4 text-center text-[12px] font-medium leading-4 text-[#797979]">
+                  Ничего не найдено
+                </p>
+              ) : (
+                filteredRooms.map((room) => {
+                  const active = room.id === roomData.id;
+                  return (
+                    <DropdownMenuItem key={room.id} asChild className="p-0 focus:bg-[#f7f7f7]">
+                      <Link
+                        to={`/rooms/${room.id}`}
+                        className="flex h-11 min-w-0 items-center gap-2 border-b border-[#e4e4e4] px-3 py-1.5 text-black outline-none last:border-b-0"
+                      >
+                        <span
+                          className={[
+                            "flex size-8 shrink-0 items-center justify-center overflow-hidden border border-[#e4e4e4] text-center text-[12px] font-medium leading-4 text-white",
+                            active ? "rounded-lg bg-[#141414]" : "rounded-[10px] bg-[#2563eb]",
+                          ].join(" ")}
+                          aria-hidden
+                        >
+                          {active ? (
+                            <BadgePercent className="size-[21px] text-[#A07AFF]" strokeWidth={1.25} />
+                          ) : (
+                            room.name.trim().charAt(0).toLocaleUpperCase("ru-RU") || "К"
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium leading-4 tracking-[-0.0325px]">
+                            {room.name}
+                          </span>
+                          <span className="block truncate text-[12px] font-medium leading-4 text-[#797979]">
+                            Компания
+                          </span>
+                        </span>
+                        {active ? (
+                          <Check className="size-4 shrink-0 text-[#707070]" strokeWidth={1.5} aria-hidden />
+                        ) : null}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenuRoot>
       }
       sidebarHeaderActions={
         <DropdownMenuRoot>

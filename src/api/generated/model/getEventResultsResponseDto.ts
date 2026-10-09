@@ -32,6 +32,8 @@ export interface GetEventResultsResponseDto {
   total: number;
   /** Всего страниц */
   totalPages: number;
+  /** Лидерборд есть только у конкурсного события; everyone возвращает участников без мест */
+  hasLeaderboard: boolean;
   event: BaseEventDto;
   items: EventResultEntryDto[];
 }

@@ -9,7 +9,7 @@ import type { UpdateEventRequestDtoType } from './updateEventRequestDtoType';
 import type { UpdateEventRequestDtoStatus } from './updateEventRequestDtoStatus';
 
 export interface UpdateEventRequestDto {
-  /** Конкурс или награда каждому участнику */
+  /** contest — конкурс с XP и лидербордом; everyone — награды за задания без XP и лидерборда */
   type?: UpdateEventRequestDtoType;
   /** active → reviewing → awarding → completed */
   status?: UpdateEventRequestDtoStatus;

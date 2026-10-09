@@ -17,4 +17,6 @@ export const OrdPersonItemDtoJuridicalType = {
   physical: 'physical',
   ip: 'ip',
   juridical: 'juridical',
+  foreign_physical: 'foreign_physical',
+  foreign_juridical: 'foreign_juridical',
 } as const;

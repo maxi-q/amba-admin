@@ -9,8 +9,11 @@
 export interface OrdContractPersonDto {
   /** ID записи OrdPerson */
   id: string;
-  /** ИНН */
-  inn: string;
+  /**
+   * Российский ИНН
+   * @nullable
+   */
+  inn: string | null;
   /** Наименование */
   name: string;
 }

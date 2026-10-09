@@ -293,7 +293,7 @@ export function useEventCompetitionsControllerGetRules<TData = Awaited<ReturnTyp
 
 
 /**
- * @summary Добавить правило наград события; each — каждому участнику
+ * @summary Добавить правило наград события: по рейтингу либо ручной пул; each больше не создаётся
  */
 export const eventCompetitionsControllerCreateRule = (
     eventId: string,
@@ -342,7 +342,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type EventCompetitionsControllerCreateRuleMutationError = unknown
 
     /**
- * @summary Добавить правило наград события; each — каждому участнику
+ * @summary Добавить правило наград события: по рейтингу либо ручной пул; each больше не создаётся
  */
 export const useEventCompetitionsControllerCreateRule = <TError = unknown,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventCompetitionsControllerCreateRule>>, TError,{eventId: string;data: SprintRewardRuleConfigDto}, TContext>, request?: SecondParameter<typeof customInstance>}
@@ -549,7 +549,7 @@ export const useEventCompetitionsControllerUpdateVersions = <TError = Competitio
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Состояние проверки события; задания событий появятся отдельно
+ * @summary Состояние проверки ответов на задания события
  */
 export const eventCompetitionsControllerReview = (
     eventId: string,
@@ -620,7 +620,7 @@ export function useEventCompetitionsControllerReview<TData = Awaited<ReturnType<
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Состояние проверки события; задания событий появятся отдельно
+ * @summary Состояние проверки ответов на задания события
  */
 
 export function useEventCompetitionsControllerReview<TData = Awaited<ReturnType<typeof eventCompetitionsControllerReview>>, TError = unknown>(

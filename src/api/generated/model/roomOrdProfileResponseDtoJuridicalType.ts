@@ -7,7 +7,7 @@
  */
 
 /**
- * Юридический тип
+ * Тип юридического лица
  */
 export type RoomOrdProfileResponseDtoJuridicalType = typeof RoomOrdProfileResponseDtoJuridicalType[keyof typeof RoomOrdProfileResponseDtoJuridicalType];
 
@@ -17,4 +17,6 @@ export const RoomOrdProfileResponseDtoJuridicalType = {
   physical: 'physical',
   ip: 'ip',
   juridical: 'juridical',
+  foreign_physical: 'foreign_physical',
+  foreign_juridical: 'foreign_juridical',
 } as const;
