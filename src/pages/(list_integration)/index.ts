@@ -37,6 +37,7 @@ import RewardsPage from './rewards';
 import PromoCodesPage from './promo-codes';
 import SprintLeaderboardPage from './sprints/leaderboard';
 import VkProfilePage from './vk-profile';
+import EridTokensPage from './erid-tokens';
 
 export {
     SettingPage,
@@ -78,4 +79,5 @@ export {
     PromoCodesPage,
     SprintLeaderboardPage,
     VkProfilePage,
+    EridTokensPage,
 };

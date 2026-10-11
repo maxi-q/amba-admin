@@ -21,10 +21,8 @@ import {
 } from "@senler/ui";
 import {
   BadgePercent,
-  Bell,
   Bot,
   Calendar,
-  Check,
   ChartLine,
   ChevronsUpDown,
   CircleQuestionMark,
@@ -33,12 +31,15 @@ import {
   Gift,
   Megaphone,
   Plus,
+  Settings,
   Users,
 } from "lucide-react";
+import type { GetMyRoomsResponseItemDto } from "@/api/generated/model";
 import tokenIcon from "@/assets/sprint-flow/token.svg";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRooms } from "@/hooks/rooms/useRooms";
 import { rememberLastOpenedRoom } from "../rooms/roomSelection";
+import { EditCompanyDialog } from "../rooms/components/EditCompanyDialog";
 
 interface RoomBoxProps {
   children: ReactNode | ReactNode[];
@@ -60,7 +61,6 @@ const stubSoon = () => {
 // ponytail: Figma placeholders; replace together when a sidebar-summary API is available.
 const sidebarPlaceholderCounts = {
   eridTokens: 24,
-  notifications: 1,
   sprints: 5,
   events: 5,
   participants: 23,
@@ -77,6 +77,8 @@ const RoomBox = ({ children }: RoomBoxProps) => {
   const location = useLocation();
   const [roomSwitcherOpen, setRoomSwitcherOpen] = useState(false);
   const [roomSearch, setRoomSearch] = useState("");
+  const [editingRoom, setEditingRoom] =
+    useState<GetMyRoomsResponseItemDto | null>(null);
 
   const {
     room: roomData,
@@ -294,7 +296,8 @@ const RoomBox = ({ children }: RoomBoxProps) => {
   }
 
   return (
-    <AppShell
+    <>
+      <AppShell
       navigation={navigation}
       currentPath={currentPath}
       renderLink={renderLink}
@@ -396,10 +399,14 @@ const RoomBox = ({ children }: RoomBoxProps) => {
                 filteredRooms.map((room) => {
                   const active = room.id === roomData.id;
                   return (
-                    <DropdownMenuItem key={room.id} asChild className="p-0 focus:bg-[#f7f7f7]">
+                    <div
+                      key={room.id}
+                      className="flex h-11 min-w-0 items-center border-b border-[#e4e4e4] last:border-b-0"
+                    >
                       <Link
                         to={`/rooms/${room.id}`}
-                        className="flex h-11 min-w-0 items-center gap-2 border-b border-[#e4e4e4] px-3 py-1.5 text-black outline-none last:border-b-0"
+                        className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pl-3 text-black outline-none hover:bg-[#f7f7f7] focus-visible:bg-[#f7f7f7]"
+                        onClick={() => setRoomSwitcherOpen(false)}
                       >
                         <span
                           className={[
@@ -422,11 +429,22 @@ const RoomBox = ({ children }: RoomBoxProps) => {
                             Компания
                           </span>
                         </span>
-                        {active ? (
-                          <Check className="size-4 shrink-0 text-[#707070]" strokeWidth={1.5} aria-hidden />
-                        ) : null}
                       </Link>
-                    </DropdownMenuItem>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="mr-3 size-4 shrink-0 rounded p-0 text-[#707070] hover:bg-transparent hover:text-black"
+                        onClick={() => {
+                          setRoomSwitcherOpen(false);
+                          setEditingRoom(room);
+                        }}
+                        aria-label={`Редактировать компанию «${room.name}»`}
+                        title="Редактировать компанию"
+                      >
+                        <Settings className="size-4" strokeWidth={1.5} aria-hidden />
+                      </Button>
+                    </div>
                   );
                 })
               )}
@@ -465,11 +483,15 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       sidebarTop={
         <ul className="grid gap-0">
           <li>
-            <button
-              type="button"
+            <Link
+              to={`${roomBase}/erid-tokens`}
               className={sidebarStubRowClassName}
-              onClick={stubSoon}
-              title="ERID-токены — скоро"
+              aria-current={
+                pathWithoutHash(currentPath) === `${roomBase}/erid-tokens`
+                  ? "page"
+                  : undefined
+              }
+              title="ERID-токены"
             >
               <img
                 src={tokenIcon}
@@ -481,25 +503,7 @@ const RoomBox = ({ children }: RoomBoxProps) => {
               <span className="ml-auto shrink-0 text-[13px] font-medium leading-4 text-[#797979] tabular-nums">
                 {sidebarPlaceholderCounts.eridTokens}
               </span>
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className={sidebarStubRowClassName}
-              onClick={stubSoon}
-              title="Уведомления — скоро"
-            >
-              <Bell
-                className="size-5 shrink-0 text-[#707070]"
-                strokeWidth={1.5}
-                aria-hidden
-              />
-              <span className="min-w-0 shrink truncate">Уведомления</span>
-              <span className="ml-auto flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[6px] bg-[#D52094] px-1.5 text-[12px] font-medium leading-4 tracking-normal text-white tabular-nums">
-                {sidebarPlaceholderCounts.notifications}
-              </span>
-            </button>
+            </Link>
           </li>
         </ul>
       }
@@ -545,7 +549,16 @@ const RoomBox = ({ children }: RoomBoxProps) => {
       mainClassName="min-h-0 flex-1 overflow-y-auto bg-[#FFFFFF] p-4 md:p-6"
     >
       {children}
-    </AppShell>
+      </AppShell>
+      <EditCompanyDialog
+        room={editingRoom}
+        open={Boolean(editingRoom)}
+        isActive={editingRoom?.id === roomData.id}
+        onOpenChange={(open) => {
+          if (!open) setEditingRoom(null);
+        }}
+      />
+    </>
   );
 };
 

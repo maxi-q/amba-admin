@@ -39,6 +39,7 @@ import {
   PromoCodesPage,
   SprintLeaderboardPage,
   VkProfilePage,
+  EridTokensPage,
 } from "../(list_integration)";
 
 import { ProtectedRoute } from "@components/ProtectedRoute";
@@ -129,6 +130,7 @@ export const Navigation = () => {
         <Route path="setting/info" element={<SettingsInfo />} />
         <Route path="code" element={<CodePage />} />
         <Route path="vk-profile" element={<VkProfilePage />} />
+        <Route path="erid-tokens" element={<EridTokensPage />} />
 
         <Route path="sprints" element={<SprintsLayout />}>
           <Route index element={<SprintList />} />
