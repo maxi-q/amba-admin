@@ -96,6 +96,7 @@ function RuleSummary({
 }
 
 function ContestPromoSetup({ event, scope, onDirtyChange }: Props) {
+  const prefix = event.promoCodesPrefix ?? "";
   const rules = usePromoPointsRules(scope);
   const actions = usePromoPointsActions(scope);
   const current = rules.data?.find((rule) => rule.isActive);
@@ -137,7 +138,7 @@ function ContestPromoSetup({ event, scope, onDirtyChange }: Props) {
       ) : current ? (
         <div className="-mt-px overflow-hidden rounded-b-lg border border-[#e4e4e4] bg-white">
           <RuleSummary
-            prefix={event.promoCodesPrefix}
+            prefix={prefix}
             reward={<><img src={star} alt="" className="size-3.5" />{BigInt(current.pointsPerAward).toLocaleString("ru-RU")} XP</>}
             usages={current.usagesPerAward}
             onEdit={() => setOpen(true)}
@@ -152,7 +153,7 @@ function ContestPromoSetup({ event, scope, onDirtyChange }: Props) {
             <DialogDescription>Промокод будет размещён во всех заданиях события.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <label className="block">Промокод<Input value={event.promoCodesPrefix} disabled /></label>
+            <label className="block">Промокод<Input value={prefix} disabled /></label>
             <p className="-mt-2 text-xs text-[#797979]">Префикс задаётся при создании события и дополняется уникальной частью участника.</p>
             <label className="block">Начислять XP<Input inputMode="numeric" value={points} onChange={(e) => setPoints(e.target.value)} /></label>
             <label className="block">Каждые N активаций<Input inputMode="numeric" value={usages} onChange={(e) => setUsages(e.target.value)} /></label>
@@ -185,6 +186,7 @@ function ContestPromoSetup({ event, scope, onDirtyChange }: Props) {
 }
 
 function EveryonePromoSetup({ event, scope, onDirtyChange }: Props) {
+  const prefix = event.promoCodesPrefix ?? "";
   const rules = useEventPromoRewardRules(event.id);
   const actions = useEventPromoRewardActions(event.id);
   const catalog = useRoomRewards(scope.roomId, { page: 1, size: 100 }, { allPages: true });
@@ -224,7 +226,7 @@ function EveryonePromoSetup({ event, scope, onDirtyChange }: Props) {
       ) : current ? (
         <div className="-mt-px overflow-hidden rounded-b-lg border border-[#e4e4e4] bg-white">
           <RuleSummary
-            prefix={event.promoCodesPrefix}
+            prefix={prefix}
             reward={<><Gift className="size-3.5 text-[#d52094]" aria-hidden />{current.reward.name} · {current.reward.amount.toLocaleString("ru-RU")}</>}
             usages={current.usagesPerAward}
             onEdit={() => setOpen(true)}
@@ -239,7 +241,7 @@ function EveryonePromoSetup({ event, scope, onDirtyChange }: Props) {
             <DialogDescription>Промокод будет размещён во всех заданиях события.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <label className="block">Промокод<Input value={event.promoCodesPrefix} disabled /></label>
+            <label className="block">Промокод<Input value={prefix} disabled /></label>
             <p className="-mt-2 text-xs text-[#797979]">Префикс задаётся при создании события и дополняется уникальной частью участника.</p>
             <label className="block">Каждые N активаций<Input inputMode="numeric" value={usages} onChange={(e) => setUsages(e.target.value)} /></label>
             <label className="block">Награда
@@ -269,6 +271,8 @@ function EveryonePromoSetup({ event, scope, onDirtyChange }: Props) {
 }
 
 export function EventPromoSetupCard(props: Props) {
+  if (!props.event.promoCodesPrefix) return null;
+
   return props.event.type === "contest" ? (
     <ContestPromoSetup {...props} />
   ) : (

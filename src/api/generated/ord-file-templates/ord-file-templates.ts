@@ -42,7 +42,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Создаёт запись шаблона уровня комнаты (без тела). Тело загружается через presigned-ссылку и подтверждается отдельным эндпоинтом.
+ * Фото: mediaType=photo и originalFilename, затем upload-url и confirm. Видео: mediaType=video, sourceUrl и sourcePlatform (youtube/vk), без загрузки в S3. Синхронизация — в микросервисе.
  * @summary Создать шаблон ORD-файла комнаты
  */
 export const ordFileTemplatesControllerCreateTemplate = (

@@ -59,6 +59,7 @@ const room: BaseRoomDto = {
 const ordProfilePreview = createOrdProfilePreview(room, new URLSearchParams(window.location.search).get("ord-profile") === "new");
 
 const isSenlerIoPreview = new URLSearchParams(window.location.search).get("provider") === "senler-io";
+const isEmptySprintsPreview = new URLSearchParams(window.location.search).has("empty-sprints");
 const project: GetProjectResponseDto = {
   provider: isSenlerIoPreview ? "SENLER_IO" : "SENLER_RU",
   senlerIoProjectId: isSenlerIoPreview ? "preview-senler-io-project" : null,
@@ -251,6 +252,92 @@ const ambassadors: BaseAmbassadorDto[] = [
   subscriberId: String(10001 + index),
   avatarUrl: ambassadorAvatarUrl,
 }));
+
+const customPromoCodes = [
+  {
+    id: "promo-code-streamvi-20",
+    createdAt: NOW,
+    updatedAt: NOW,
+    name: "Скидка на StreamVi Pro",
+    promoCode: "STREAMVI20",
+    rewardType: "fix" as const,
+    rewardValue: 20,
+    rewardUnits: "%",
+    promoCodeUsagesCount: 8,
+    promoCodeUsageLimit: 100,
+    startDate: "2026-01-01T00:00:00.000Z",
+    endDate: "2026-12-31T23:59:59.999Z",
+    roomId: ROOM_ID,
+  },
+  {
+    id: "promo-code-friends-500",
+    createdAt: NOW,
+    updatedAt: NOW,
+    name: "Для друзей",
+    promoCode: "FRIENDS500",
+    rewardType: "fix" as const,
+    rewardValue: 500,
+    rewardUnits: "₽",
+    promoCodeUsagesCount: 4,
+    promoCodeUsageLimit: 50,
+    startDate: "2026-01-01T00:00:00.000Z",
+    endDate: "2026-12-31T23:59:59.999Z",
+    roomId: ROOM_ID,
+  },
+];
+
+function getPreviewPromoCodeUsages(config: AxiosRequestConfig) {
+  const dateFrom = typeof config.params?.dateFrom === "string"
+    ? config.params.dateFrom
+    : new Date().toISOString().slice(0, 10);
+  const firstDay = new Date(`${dateFrom}T08:00:00.000Z`);
+  const dayOffsets = [0, 1, 1, 2, 3, 3, 4, 4, 4, 5, 6, 6];
+  const usages = dayOffsets.map((dayOffset, index) => {
+    const createdAt = new Date(firstDay);
+    createdAt.setUTCDate(createdAt.getUTCDate() + dayOffset);
+    createdAt.setUTCHours(8 + (index % 8), (index * 7) % 60);
+    const customPromoCode = customPromoCodes[index % customPromoCodes.length];
+
+    return {
+      id: `promo-usage-${index + 1}`,
+      projectId: project.id,
+      roomId: ROOM_ID,
+      sprintId: index % 4 === 3 ? SPRINT_ID : null,
+      eventId: null,
+      promoCodeId: index % 4 === 3 ? null : customPromoCode.id,
+      ambassadorId: ambassadors[index % ambassadors.length].id,
+      uniqueId: `preview-user-${1000 + index}`,
+      additionalUniqueId: null,
+      payload: {
+        promoCode: index % 4 === 3 ? "START200" : customPromoCode.promoCode,
+      },
+      createdAt: createdAt.toISOString(),
+    };
+  });
+
+  const selectedPromoCodeIds = Array.isArray(config.params?.promoCodeId)
+    ? config.params.promoCodeId
+    : [];
+  const selectedSprintIds = Array.isArray(config.params?.sprintId)
+    ? config.params.sprintId
+    : [];
+  const selectedEventIds = Array.isArray(config.params?.eventId)
+    ? config.params.eventId
+    : [];
+
+  return usages.filter((usage) => {
+    if (selectedPromoCodeIds.length > 0 && !selectedPromoCodeIds.includes(usage.promoCodeId)) {
+      return false;
+    }
+    if (selectedSprintIds.length > 0 && !selectedSprintIds.includes(usage.sprintId)) {
+      return false;
+    }
+    if (selectedEventIds.length > 0 && !selectedEventIds.includes(usage.eventId)) {
+      return false;
+    }
+    return true;
+  });
+}
 
 const participantsPreview = createParticipantsPreview(ambassadors, participantAvatar);
 
@@ -717,8 +804,37 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   if (ordProfileResponse !== undefined) return ordProfileResponse;
   if (method === "GET" && url === "/api/rooms/my") return [room];
   if (method === "GET" && url === "/api/projects/my") return project;
+  if (method === "GET" && url === `/api/promo-code/custom/${ROOM_ID}`) {
+    return customPromoCodes;
+  }
+  if (method === "GET" && url === `/api/rooms/${ROOM_ID}/analytics`) {
+    const usages = getPreviewPromoCodeUsages(config);
+    const countsByDate = new Map<string, number>();
+    for (const usage of usages) {
+      const date = usage.createdAt.slice(0, 10);
+      countsByDate.set(date, (countsByDate.get(date) ?? 0) + 1);
+    }
+    return {
+      items: [...countsByDate.entries()].map(([date, count]) => ({ date, count })),
+      total: usages.length,
+    };
+  }
+  if (method === "GET" && url === `/api/rooms/${ROOM_ID}/promo-code-usages`) {
+    const usages = getPreviewPromoCodeUsages(config);
+    const page = Number(config.params?.page ?? 1);
+    const size = Number(config.params?.size ?? 100);
+    const start = (page - 1) * size;
+    return {
+      items: usages.slice(start, start + size),
+      page,
+      size,
+      total: usages.length,
+      totalPages: Math.max(Math.ceil(usages.length / size), 1),
+    };
+  }
   if (method === "GET" && url === `/api/events/${ROOM_ID}`) return paginated([]);
   if (method === "GET" && url === `/api/sprints/${ROOM_ID}`) {
+    if (isEmptySprintsPreview) return paginated([]);
     const reviewTaskIds = new Set(
       submissions
         .filter((item) => item.status.startsWith("waiting_for_review"))
@@ -1064,6 +1180,22 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
 
   if (method === "GET" && url === "/api/ambassador") {
     return paginated(ambassadors.filter((item) => !config.params?.ambassadorIds?.length || config.params.ambassadorIds.includes(item.id)));
+  }
+  if (method === "GET" && url === "/api/ambassador/room-applications") {
+    return paginated(ambassadors.map((ambassador, index) => ({
+      id: `room-application-${ambassador.id}`,
+      createdAt: NOW,
+      updatedAt: NOW,
+      ordPersonId: `ord-person-${index + 1}`,
+      name: ambassador.username,
+      inn: 7700000000 + index,
+      phone: `+7999000000${index}`,
+      status: "approved" as const,
+      ambassadorId: ambassador.id,
+      roomId: ROOM_ID,
+      balls: 1_250 - index * 110,
+      externalUserId: ambassador.subscriberId,
+    })));
   }
 
   const submissionStatusMatch = url.match(

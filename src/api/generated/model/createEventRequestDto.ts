@@ -15,8 +15,6 @@ export interface CreateEventRequestDto {
    * @nullable
    */
   description?: string | null;
-  /** Префикс промо кода */
-  promoCodesPrefix: string;
   /** Дата начала */
   startDate: string;
   /**
@@ -40,6 +38,11 @@ export interface CreateEventRequestDto {
   rewardUnits: string;
   /** Id комнаты */
   roomId: string;
+  /**
+   * Префикс промокода; null — событийные промокоды отключены
+   * @nullable
+   */
+  promoCodesPrefix?: string | null;
   type?: CreateEventRequestDtoType;
   isDraft?: boolean;
 }

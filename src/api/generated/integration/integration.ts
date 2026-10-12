@@ -31,63 +31,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export const integrationControllerBotStepWebhook = (
-    
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<void>(
-      {url: `/api/integration/bot-step-webhook`, method: 'POST', signal
-    },
-      options);
-    }
-  
-
-
-export const getIntegrationControllerBotStepWebhookMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationControllerBotStepWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof integrationControllerBotStepWebhook>>, TError,void, TContext> => {
-
-const mutationKey = ['integrationControllerBotStepWebhook'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof integrationControllerBotStepWebhook>>, void> = () => {
-          
-
-          return  integrationControllerBotStepWebhook(requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type IntegrationControllerBotStepWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof integrationControllerBotStepWebhook>>>
-    
-    export type IntegrationControllerBotStepWebhookMutationError = unknown
-
-    export const useIntegrationControllerBotStepWebhook = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof integrationControllerBotStepWebhook>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof integrationControllerBotStepWebhook>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getIntegrationControllerBotStepWebhookMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    export const integrationControllerPrintSubscribe = (
+export const integrationControllerPrintSubscribe = (
     
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {

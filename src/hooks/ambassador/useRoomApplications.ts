@@ -3,10 +3,14 @@ import { ambassadorControllerGetRoomApplications } from '@/api/generated/ambassa
 import type { AmbassadorControllerGetRoomApplicationsParams } from '@/api/generated/model';
 import { useQuery } from '@tanstack/react-query';
 
-export function useRoomApplications(data: AmbassadorControllerGetRoomApplicationsParams) {
+export function useRoomApplications(
+  data: AmbassadorControllerGetRoomApplicationsParams,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   const { data: applicationsData, isLoading, isError, error, refetch } = useQuery({
     queryKey: [QueryKeys.ROOM_APPLICATIONS, data.status, data.roomIds, data.page, data.size],
     queryFn: () => ambassadorControllerGetRoomApplications(data),
+    enabled,
     staleTime: 0,
     retry: 2,
   });

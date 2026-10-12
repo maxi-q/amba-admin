@@ -46,17 +46,17 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary Начать OAuth Senler.io в popup без контекста встроенной страницы
  */
 export const senlerIoAuthControllerStart = (
-
+    
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customInstance<void>(
       {url: `/api/auth/senler-io/start`, method: 'GET', signal
     },
       options);
     }
-
+  
 
 
 
@@ -66,7 +66,7 @@ export const getSenlerIoAuthControllerStartQueryKey = () => {
     ] as const;
     }
 
-
+    
 export const getSenlerIoAuthControllerStartQueryOptions = <TData = Awaited<ReturnType<typeof senlerIoAuthControllerStart>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerStart>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -74,13 +74,13 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getSenlerIoAuthControllerStartQueryKey();
 
-
+  
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof senlerIoAuthControllerStart>>> = ({ signal }) => senlerIoAuthControllerStart(requestOptions, signal);
 
+      
 
-
-
+      
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerStart>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -119,7 +119,7 @@ export function useSenlerIoAuthControllerStart<TData = Awaited<ReturnType<typeof
 
 export function useSenlerIoAuthControllerStart<TData = Awaited<ReturnType<typeof senlerIoAuthControllerStart>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerStart>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
+ , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSenlerIoAuthControllerStartQueryOptions(options)
@@ -141,8 +141,8 @@ export const senlerIoAuthControllerStartEmbedded = (
     senlerIoStartDto: SenlerIoStartDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customInstance<void>(
       {url: `/api/auth/senler-io/start`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
@@ -150,7 +150,7 @@ export const senlerIoAuthControllerStartEmbedded = (
     },
       options);
     }
-
+  
 
 
 export const getSenlerIoAuthControllerStartEmbeddedMutationOptions = <TError = unknown,
@@ -164,7 +164,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof senlerIoAuthControllerStartEmbedded>>, {data: SenlerIoStartDto}> = (props) => {
@@ -173,7 +173,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  senlerIoAuthControllerStartEmbedded(data,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -205,15 +205,15 @@ export const senlerIoAuthControllerCallback = (
     params: SenlerIoAuthControllerCallbackParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customInstance<void>(
       {url: `/api/auth/senler-io/callback`, method: 'GET',
         params, signal
     },
       options);
     }
-
+  
 
 
 
@@ -223,7 +223,7 @@ export const getSenlerIoAuthControllerCallbackQueryKey = (params?: SenlerIoAuthC
     ] as const;
     }
 
-
+    
 export const getSenlerIoAuthControllerCallbackQueryOptions = <TData = Awaited<ReturnType<typeof senlerIoAuthControllerCallback>>, TError = unknown>(params: SenlerIoAuthControllerCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerCallback>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -231,13 +231,13 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getSenlerIoAuthControllerCallbackQueryKey(params);
 
-
+  
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof senlerIoAuthControllerCallback>>> = ({ signal }) => senlerIoAuthControllerCallback(params, requestOptions, signal);
 
+      
 
-
-
+      
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerCallback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -276,7 +276,7 @@ export function useSenlerIoAuthControllerCallback<TData = Awaited<ReturnType<typ
 
 export function useSenlerIoAuthControllerCallback<TData = Awaited<ReturnType<typeof senlerIoAuthControllerCallback>>, TError = unknown>(
  params: SenlerIoAuthControllerCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerCallback>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
+ , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSenlerIoAuthControllerCallbackQueryOptions(params,options)
@@ -298,8 +298,8 @@ export const senlerIoAuthControllerExchange = (
     senlerIoExchangeDto: SenlerIoExchangeDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customInstance<SenlerIoLoginResponseDto>(
       {url: `/api/auth/senler-io/exchange`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
@@ -307,7 +307,7 @@ export const senlerIoAuthControllerExchange = (
     },
       options);
     }
-
+  
 
 
 export const getSenlerIoAuthControllerExchangeMutationOptions = <TError = unknown,
@@ -321,7 +321,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof senlerIoAuthControllerExchange>>, {data: SenlerIoExchangeDto}> = (props) => {
@@ -330,7 +330,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  senlerIoAuthControllerExchange(data,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -362,8 +362,8 @@ export const senlerIoAuthControllerRefresh = (
     senlerIoRefreshDto: SenlerIoRefreshDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customInstance<SenlerIoLoginResponseDto>(
       {url: `/api/auth/senler-io/refresh`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
@@ -371,7 +371,7 @@ export const senlerIoAuthControllerRefresh = (
     },
       options);
     }
-
+  
 
 
 export const getSenlerIoAuthControllerRefreshMutationOptions = <TError = unknown,
@@ -385,7 +385,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof senlerIoAuthControllerRefresh>>, {data: SenlerIoRefreshDto}> = (props) => {
@@ -394,7 +394,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  senlerIoAuthControllerRefresh(data,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -426,8 +426,8 @@ export const senlerIoAuthControllerResume = (
     senlerIoResumeDto: SenlerIoResumeDto,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customInstance<SenlerIoResumeResponseDto>(
       {url: `/api/auth/senler-io/resume`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
@@ -435,7 +435,7 @@ export const senlerIoAuthControllerResume = (
     },
       options);
     }
-
+  
 
 
 export const getSenlerIoAuthControllerResumeMutationOptions = <TError = unknown,
@@ -449,7 +449,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof senlerIoAuthControllerResume>>, {data: SenlerIoResumeDto}> = (props) => {
@@ -458,7 +458,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  senlerIoAuthControllerResume(data,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -487,17 +487,17 @@ export const useSenlerIoAuthControllerResume = <TError = unknown,
  * @summary Проверить подключение Senler.io, при необходимости обновить токены на сервере
  */
 export const senlerIoAuthControllerCheckConnection = (
-
+    
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customInstance<SenlerIoConnectionDto>(
       {url: `/api/auth/senler-io/connection`, method: 'GET', signal
     },
       options);
     }
-
+  
 
 
 
@@ -507,7 +507,7 @@ export const getSenlerIoAuthControllerCheckConnectionQueryKey = () => {
     ] as const;
     }
 
-
+    
 export const getSenlerIoAuthControllerCheckConnectionQueryOptions = <TData = Awaited<ReturnType<typeof senlerIoAuthControllerCheckConnection>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerCheckConnection>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
@@ -515,13 +515,13 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getSenlerIoAuthControllerCheckConnectionQueryKey();
 
-
+  
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof senlerIoAuthControllerCheckConnection>>> = ({ signal }) => senlerIoAuthControllerCheckConnection(requestOptions, signal);
 
+      
 
-
-
+      
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerCheckConnection>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -560,7 +560,7 @@ export function useSenlerIoAuthControllerCheckConnection<TData = Awaited<ReturnT
 
 export function useSenlerIoAuthControllerCheckConnection<TData = Awaited<ReturnType<typeof senlerIoAuthControllerCheckConnection>>, TError = unknown>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof senlerIoAuthControllerCheckConnection>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient
+ , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSenlerIoAuthControllerCheckConnectionQueryOptions(options)

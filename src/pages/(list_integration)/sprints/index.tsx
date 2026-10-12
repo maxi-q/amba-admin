@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { PageLoader } from "@senler/ui";
@@ -5,10 +6,12 @@ import { SprintsErrorState } from "./components/SprintsErrorState";
 import { SprintsEmptyState } from "./components/SprintsEmptyState";
 import { SprintsPageToolbar } from "./components/SprintsPageToolbar";
 import { SprintCard } from "./components/SprintCard";
+import { SprintInstructionsDialog } from "./components/SprintInstructionsDialog";
 
 export default function SprintList() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
 
   const { sprints, isLoading, isError, error } = useSprints(
     { page: 1, size: 100, include: "tasksToReviewCount" },
@@ -34,7 +37,7 @@ export default function SprintList() {
 
   if (sprints.length === 0) {
     return (
-      <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-col bg-white md:-m-6 md:w-[calc(100%+3rem)]">
+      <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-col bg-white">
         <SprintsPageToolbar onCreateClick={handleCreateSprint} />
         <SprintsEmptyState onCreateClick={handleCreateSprint} />
       </div>
@@ -42,13 +45,20 @@ export default function SprintList() {
   }
 
   return (
-    <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-col bg-white md:-m-6 md:w-[calc(100%+3rem)]">
-      <SprintsPageToolbar onCreateClick={handleCreateSprint} />
+    <div className="-m-4 flex min-h-dvh w-[calc(100%+2rem)] min-w-0 flex-col bg-white">
+      <SprintsPageToolbar
+        onCreateClick={handleCreateSprint}
+        onInstructionsClick={() => setInstructionsOpen(true)}
+      />
       <div className="flex flex-col">
         {sprints.map((sprint) => (
           <SprintCard key={sprint.id} sprint={sprint} />
         ))}
       </div>
+      <SprintInstructionsDialog
+        open={instructionsOpen}
+        onOpenChange={setInstructionsOpen}
+      />
     </div>
   );
 }

@@ -55,17 +55,19 @@ function EventEditorForm({ roomId, event }: { roomId: string; event?: GetMyEvent
       pool.set(key, { reward: position.reward, manual: rule.type === 'manual', amount: Number(((pool.get(key)?.amount ?? 0) + position.amount * count).toFixed(10)) });
     }
   }
-  const valid = form.name.trim().length >= 3 && form.name.trim().length <= 100 && (form.description?.length ?? 0) <= 1000 && (form.promoCodesPrefix.trim().length >= 3 && form.promoCodesPrefix.trim().length <= 50) && !form.promoCodesPrefix.includes('_') && !!form.startDate && (form.ignoreEndDate || !!form.endDate && new Date(form.endDate) > new Date(form.startDate)) && (form.ignorePromoCodeUsageLimit || Number.isSafeInteger(form.promoCodeUsageLimit) && form.promoCodeUsageLimit! >= 0);
+  const promoCodesPrefix = form.promoCodesPrefix?.trim() ?? '';
+  const validPromoCodesPrefix = promoCodesPrefix === '' || promoCodesPrefix.length >= 3 && promoCodesPrefix.length <= 50 && !promoCodesPrefix.includes('_');
+  const valid = form.name.trim().length >= 3 && form.name.trim().length <= 100 && (form.description?.length ?? 0) <= 1000 && validPromoCodesPrefix && !!form.startDate && (form.ignoreEndDate || !!form.endDate && new Date(form.endDate) > new Date(form.startDate)) && (form.ignorePromoCodeUsageLimit || Number.isSafeInteger(form.promoCodeUsageLimit) && form.promoCodeUsageLimit! >= 0);
   const update = <K extends keyof CreateEventRequestDto>(key: K, value: CreateEventRequestDto[K]) => setForm((old) => ({ ...old, [key]: value }));
   const save = async (nextStep?: number, publish = false) => {
     try {
       if (promoDirty) { toast.error('Сначала сохраните или отмените изменения правила промокода'); return; }
       if (step === 1) {
-        if (!valid) { toast.error('Заполните название, даты и префикс промокода'); return; }
+        if (!valid) { toast.error('Проверьте название, даты и префикс промокода'); return; }
         // DTO still validates this integer even when the limit is disabled.
         const data = { ...form, endDate: form.ignoreEndDate ? null : form.endDate, promoCodeUsageLimit: form.promoCodeUsageLimit ?? 0 };
         if (!event) {
-          const created = await create.mutateAsync({ ...data, name: form.name.trim(), promoCodesPrefix: form.promoCodesPrefix.trim(), isDraft: true });
+          const created = await create.mutateAsync({ ...data, name: form.name.trim(), promoCodesPrefix: promoCodesPrefix || null, isDraft: true });
           leaving.current = true;
           navigate(`/rooms/${roomId}/events/${created.id}/edit?step=${nextStep ?? 1}`, { replace: true });
           toast.success('Черновик сохранён'); return;
@@ -103,7 +105,7 @@ function EventEditorForm({ roomId, event }: { roomId: string; event?: GetMyEvent
         <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><label htmlFor="event-name">Название</label><Input id="event-name" value={form.name} maxLength={100} onChange={(e) => update('name', e.target.value)} /></div>
         <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><label htmlFor="event-description">Описание<p className="mt-1 text-muted-foreground">Пару слов о событии</p></label><Textarea id="event-description" value={form.description ?? ''} maxLength={1000} onChange={(e) => update('description', e.target.value)} /></div>
         <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><span>Продолжительность</span><div><Calendar mode="range" numberOfMonths={2} className="max-w-full overflow-x-auto [--cell-size:28px]" selected={{ from: form.startDate ? new Date(form.startDate) : undefined, to: form.endDate ? new Date(form.endDate) : undefined }} onSelect={(range) => { update('startDate', range?.from?.toISOString() ?? ''); update('endDate', range?.to?.toISOString() ?? null); }} /><CheckBox label="Без даты окончания" checked={form.ignoreEndDate} onCheckedChange={(value) => update('ignoreEndDate', value === true)} /></div></div>
-        <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><label htmlFor="event-prefix">Префикс промокода</label><div><Input id="event-prefix" maxLength={50} disabled={!!event} value={form.promoCodesPrefix} onChange={(e) => update('promoCodesPrefix', e.target.value)} /><p className="mt-1 text-muted-foreground">Без символа _. После создания не изменяется.</p></div></div>
+        <div className="grid gap-4 border-b border-border p-4 md:grid-cols-[224px_1fr]"><label htmlFor="event-prefix">Префикс промокода</label><div><Input id="event-prefix" maxLength={50} disabled={!!event} value={form.promoCodesPrefix ?? ''} onChange={(e) => update('promoCodesPrefix', e.target.value)} /><p className="mt-1 text-muted-foreground">Необязательно. Без символа _. После создания не изменяется.</p></div></div>
         <div className="grid gap-4 p-4 md:grid-cols-[224px_1fr]"><span>Лимит активаций</span><div className="space-y-2"><CheckBox label="Без ограничения" checked={form.ignorePromoCodeUsageLimit} onCheckedChange={(value) => update('ignorePromoCodeUsageLimit', value === true)} />{!form.ignorePromoCodeUsageLimit && <Input aria-label="Лимит активаций" type="number" min={0} value={form.promoCodeUsageLimit ?? ''} onChange={(e) => update('promoCodeUsageLimit', e.target.value === '' ? undefined : Number(e.target.value))} />}</div></div>
       </div>}
       {step === 2 && <>

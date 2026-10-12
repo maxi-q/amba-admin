@@ -5,6 +5,7 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { OrdFileResponseDtoMediaType } from './ordFileResponseDtoMediaType';
 import type { OrdFileResponseDtoStatus } from './ordFileResponseDtoStatus';
 
 export interface OrdFileResponseDto {
@@ -16,6 +17,26 @@ export interface OrdFileResponseDto {
   updatedAt: string;
   /** Локальное имя файла */
   title: string;
+  /**
+   * null только у старых файлов
+   * @nullable
+   */
+  mediaType: OrdFileResponseDtoMediaType;
+  /**
+   * Исходное имя от автора, не имя из ОРД
+   * @nullable
+   */
+  originalFilename: string | null;
+  /**
+   * Внешняя ссылка на видео
+   * @nullable
+   */
+  sourceUrl: string | null;
+  /**
+   * youtube / vk для внешнего видео
+   * @nullable
+   */
+  sourcePlatform: string | null;
   /** Статус файла */
   status: OrdFileResponseDtoStatus;
   /**

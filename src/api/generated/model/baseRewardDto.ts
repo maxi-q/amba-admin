@@ -22,7 +22,7 @@ export interface BaseRewardDto {
   /** Наименование награды */
   name: string;
   /**
-   * Presigned URL иконки; null только пока загрузка ещё не подтверждена
+   * Временная ссылка S3 на основное фото (иконку); формируется при запросе награды, срок — S3_DOWNLOAD_URL_TTL. null, если нет подтверждённой иконки
    * @nullable
    */
   iconUrl: string | null;
@@ -31,7 +31,7 @@ export interface BaseRewardDto {
    * @nullable
    */
   iconUploadedAt: string | null;
-  /** Дополнительные фото галереи */
+  /** Подтверждённые фото галереи со ссылками S3 в поле url */
   photos: RewardPhotoDto[];
   /** Делимая награда: количество в правилах спринта можно задавать дробным, а пул при пропорциональном распределении делится с точностью divisionPrecision. У неделимой награды количество всегда целое */
   isDivisible: boolean;

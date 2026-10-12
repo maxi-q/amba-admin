@@ -72,3 +72,25 @@ export interface PromoCodeAutocompleteProps {
   onChange: (ids: string[]) => void;
   roomId: string;
 }
+
+export type StatisticsTab = "tasks" | "xp" | "promo-codes" | "ambassadors";
+
+export type StatisticsPeriod = "day" | "week" | "month";
+
+export interface StatisticsFilterOption {
+  id: string;
+  label: string;
+}
+
+export interface StatisticsRow {
+  id: string;
+  ambassadorName: string;
+  avatarUrl?: string | null;
+  sourceName?: string;
+  sourceType?: string;
+  taskName?: string;
+  promoCode?: string;
+  date: string;
+  xp?: number;
+  ambassadorStatus?: "joined" | "left";
+}

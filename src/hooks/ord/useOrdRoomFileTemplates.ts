@@ -59,8 +59,12 @@ export function useOrdRoomFileTemplateActions(roomId: string) {
   };
 
   const createAndUpload = async (title: string, file: File) => {
-    const created = await ordFileTemplatesControllerCreateTemplate(roomId, { title });
-    const contentType = file.type || undefined;
+    const created = await ordFileTemplatesControllerCreateTemplate(roomId, {
+      title,
+      mediaType: "photo",
+      originalFilename: file.name,
+    });
+    const contentType = file.type;
     const uploadUrl = await ordFileTemplatesControllerCreateUploadUrl(roomId, created.id, {
       contentType,
     });
@@ -73,7 +77,7 @@ export function useOrdRoomFileTemplateActions(roomId: string) {
   };
 
   const uploadBody = async (fileId: string, file: File) => {
-    const contentType = file.type || undefined;
+    const contentType = file.type;
     const uploadUrl = await ordFileTemplatesControllerCreateUploadUrl(roomId, fileId, {
       contentType,
     });

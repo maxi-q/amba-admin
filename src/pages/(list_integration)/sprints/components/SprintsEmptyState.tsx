@@ -1,12 +1,5 @@
-import { Plus } from "lucide-react";
-import {
-  Button,
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@senler/ui";
+import { Button } from "@senler/ui";
+import { SprintInstructions } from "./SprintInstructions";
 
 interface SprintsEmptyStateProps {
   onCreateClick: () => void;
@@ -14,27 +7,17 @@ interface SprintsEmptyStateProps {
 
 export const SprintsEmptyState = ({ onCreateClick }: SprintsEmptyStateProps) => {
   return (
-    <Empty className="min-h-0 flex-1 gap-3 border-0 p-6 md:p-12">
-      <EmptyHeader className="max-w-[320px] gap-1">
-        <EmptyTitle className="text-[14px] font-semibold leading-5 tracking-[-0.25px] text-foreground">
-          Спринт еще не добавлен
-        </EmptyTitle>
-        <EmptyDescription className="text-[13px] font-normal leading-4 text-[#797979] no-underline">
-          Создавайте задания, которые будут выполнять все участники
-        </EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent className="max-w-[320px]">
+    <section className="flex min-h-[664px] flex-1 justify-center px-4 pb-4 pt-10">
+      <div className="flex w-[326px] max-w-full flex-col items-center gap-3">
+        <SprintInstructions />
         <Button
           type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1 border-[#e4e4e4] bg-[#FFFFFF] px-2 text-[13px] font-medium text-foreground shadow-none hover:bg-[#f7f7f7]"
           onClick={onCreateClick}
+          className="h-10 bg-[#2563eb] px-3 text-[13px] font-medium leading-4 shadow-none hover:bg-[#2563eb]/90"
         >
-          <Plus className="size-4" aria-hidden />
-          Добавить
+          Создать первый спринт
         </Button>
-      </EmptyContent>
-    </Empty>
+      </div>
+    </section>
   );
 };

@@ -22,8 +22,11 @@ export interface GetMyEventsResponseItemDto {
    * @nullable
    */
   description?: string | null;
-  /** Префикс промо кода */
-  promoCodesPrefix: string;
+  /**
+   * Префикс промокода; null — событийные промокоды отключены
+   * @nullable
+   */
+  promoCodesPrefix: string | null;
   /** Дата начала */
   startDate: string;
   /**

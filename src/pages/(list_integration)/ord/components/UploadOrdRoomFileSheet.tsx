@@ -133,6 +133,7 @@ export function UploadOrdRoomFileSheet({
             <input
               ref={fileInputRef}
               type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
               className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
               disabled={isPending}
               onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}

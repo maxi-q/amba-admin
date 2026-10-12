@@ -31,7 +31,8 @@ import type {
   GenerateTokenResponse,
   LoginBySignRequestDto,
   RegisterProjectByAuthorizationCodeRequestDto,
-  RegisterProjectResponseDto
+  RegisterProjectResponseDto,
+  RegistrationLoginExchangeDto
 } from '.././model';
 
 import { customInstance } from '../../mutator/custom-instance';
@@ -42,6 +43,70 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * @summary Одноразовый обмен ссылки регистрации на JWT амбассадора
+ */
+export const registrationLoginControllerExchange = (
+    registrationLoginExchangeDto: RegistrationLoginExchangeDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/auth/ambassador-registration/exchange`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: registrationLoginExchangeDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getRegistrationLoginControllerExchangeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registrationLoginControllerExchange>>, TError,{data: RegistrationLoginExchangeDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof registrationLoginControllerExchange>>, TError,{data: RegistrationLoginExchangeDto}, TContext> => {
+
+const mutationKey = ['registrationLoginControllerExchange'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registrationLoginControllerExchange>>, {data: RegistrationLoginExchangeDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  registrationLoginControllerExchange(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistrationLoginControllerExchangeMutationResult = NonNullable<Awaited<ReturnType<typeof registrationLoginControllerExchange>>>
+    export type RegistrationLoginControllerExchangeMutationBody = RegistrationLoginExchangeDto
+    export type RegistrationLoginControllerExchangeMutationError = unknown
+
+    /**
+ * @summary Одноразовый обмен ссылки регистрации на JWT амбассадора
+ */
+export const useRegistrationLoginControllerExchange = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registrationLoginControllerExchange>>, TError,{data: RegistrationLoginExchangeDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof registrationLoginControllerExchange>>,
+        TError,
+        {data: RegistrationLoginExchangeDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRegistrationLoginControllerExchangeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Login by sign
  */
 export const authControllerLogin = (

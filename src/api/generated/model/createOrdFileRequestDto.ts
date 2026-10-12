@@ -5,8 +5,18 @@
  * Description
  * OpenAPI spec version: 1.0
  */
+import type { CreateOrdFileRequestDtoMediaType } from './createOrdFileRequestDtoMediaType';
+import type { CreateOrdFileRequestDtoSourcePlatform } from './createOrdFileRequestDtoSourcePlatform';
 
 export interface CreateOrdFileRequestDto {
-  /** Имя файла, которое уйдёт в ОРД как filename multipart-части */
+  /** Название медиа для отображения; исходное имя задаётся в originalFilename */
   title: string;
+  /** photo — загрузка в S3; video — только внешняя ссылка */
+  mediaType: CreateOrdFileRequestDtoMediaType;
+  /** Исходное имя файла, обязательно для фото */
+  originalFilename?: string;
+  /** Ссылка на видео YouTube/VK, обязательна для video */
+  sourceUrl?: string;
+  /** Платформа внешнего видео */
+  sourcePlatform?: CreateOrdFileRequestDtoSourcePlatform;
 }

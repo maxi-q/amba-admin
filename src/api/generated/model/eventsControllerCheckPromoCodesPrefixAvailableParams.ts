@@ -8,7 +8,9 @@
 
 export type EventsControllerCheckPromoCodesPrefixAvailableParams = {
 /**
- * Префикс промо кода
+ * Префикс промокода для проверки доступности
+ * @minLength 3
+ * @maxLength 50
  */
 promoCodesPrefix: string;
 };

@@ -49,9 +49,6 @@ export const EventCard = ({ event, roomSlug }: EventCardProps) => {
       className="flex h-12 min-w-[650px] items-center gap-4 border-b border-[#e4e4e4] px-4 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black transition-colors hover:bg-muted/30"
     >
       <span className="min-w-0 flex-1 truncate">{event.name}</span>
-      <span className="shrink-0 rounded-full bg-[#f0f0f0] px-1.5 py-1 text-[#797979]">
-        {event.type === "contest" ? "Конкурс" : "Не конкурс"}
-      </span>
       <span className="flex h-6 shrink-0 items-center gap-0.5 rounded-full border border-[#e4e4e4] px-1.5 py-1 whitespace-nowrap">
         <span className={`size-2 rounded-full border ${status.dotClassName}`} aria-hidden />
         {status.label}

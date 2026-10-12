@@ -13,7 +13,7 @@ export interface RewardPhotoDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
-  /** Presigned URL изображения */
+  /** Временная ссылка S3 для просмотра фото; формируется при запросе награды, срок — S3_DOWNLOAD_URL_TTL */
   url: string;
   /** MIME-тип изображения */
   contentType: string;

@@ -9,6 +9,6 @@
 export interface DownloadUrlResponseDto {
   /** Короткоживущая presigned-ссылка на скачивание файла */
   url: string;
-  /** Время жизни ссылки в секундах */
+  /** Время жизни S3-ссылки в секундах; 0 для исходной ссылки на внешнее видео */
   expiresIn: number;
 }

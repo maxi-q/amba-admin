@@ -7,6 +7,6 @@
  */
 
 export interface CreateUploadUrlRequestDto {
-  /** MIME-тип загружаемого файла. Если указан — закрепляется в policy загрузки. */
-  contentType?: string;
+  /** MIME фото: image/jpeg, image/png, image/gif или image/webp. Обязателен. */
+  contentType: string;
 }

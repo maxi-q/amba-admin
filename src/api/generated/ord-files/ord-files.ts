@@ -43,7 +43,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Создаёт личный медиафайл амбассадора без тела (не привязан к комнате — используется в любой). Тело загружается через presigned-ссылку (/ord-files/:fileId/upload-url) и подтверждается через /ord-files/:fileId/confirm.
+ * Фото: mediaType=photo и originalFilename, затем upload-url и confirm. Видео: mediaType=video, sourceUrl и sourcePlatform (youtube/vk), без S3. Отправку в ОРД выполняет микросервис.
  * @summary Создать ORD-файл (метаданные)
  */
 export const ordFilesControllerCreateMyOrdFile = (
@@ -202,7 +202,7 @@ export function useOrdFilesControllerGetMyOrdFiles<TData = Awaited<ReturnType<ty
 
 
 /**
- * Возвращает URL бакета и поля формы для прямой multipart/form-data POST-загрузки файла клиентом. Лимит размера задаётся на стороне S3.
+ * Только фото JPEG/PNG/GIF/WebP. Возвращает presigned PUT URL; клиент отправляет тело с указанным Content-Type. Для видео недоступно.
  * @summary Получить presigned-ссылку для загрузки тела файла
  */
 export const ordFilesControllerCreateUploadUrl = (
@@ -331,7 +331,7 @@ export const useOrdFilesControllerConfirmUpload = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Возвращает короткоживущую ссылку на скачивание тела файла напрямую из бакета.
+ * Фото: presigned S3 URL. Внешнее видео: исходная ссылка на платформу, expiresIn=0.
  * @summary Получить presigned-ссылку на скачивание файла
  */
 export const ordFilesControllerGetDownloadUrl = (
