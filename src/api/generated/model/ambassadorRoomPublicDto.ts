@@ -16,6 +16,11 @@ export interface AmbassadorRoomPublicDto {
   updatedAt: string;
   /** Название комнаты */
   name: string;
+  /**
+   * Временная ссылка на аватарку комнаты в S3
+   * @nullable
+   */
+  avatarUrl: string | null;
   /** Название проекта (сообщества), к которому относится комната */
   projectName: string;
   /** Ваш статус заявки в этой комнате */

@@ -20,4 +20,8 @@ size: number;
  * Фильтр по статусу
  */
 status?: CreativeTasksControllerGetSubmissionsStatus;
+/**
+ * Поиск амбассадора: точный ID или часть логина, имени в комнате задания либо промокода; без учёта регистра
+ */
+search?: string;
 };

@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig } from "axios";
-import type { BaseRoomDto, CreateRoomOrdProfileRequestDto, GetRoomByIdResponseDto, RoomOrdProfileResponseDto, UpdateRoomOrdProfileRequestDto } from "@/api/generated/model";
+import type { BaseRoomDto, CreateRoomOrdProfileRequestDto, GetRoomByIdResponseDto, RegistrationQuestionDto, ReplaceRegistrationQuestionsDto, RoomOrdProfileResponseDto, UpdateRoomOrdProfileRequestDto } from "@/api/generated/model";
 
 export function createOrdProfilePreview(room: BaseRoomDto, empty = false) {
   let profile: RoomOrdProfileResponseDto | null = empty ? null : {
@@ -8,11 +8,32 @@ export function createOrdProfilePreview(room: BaseRoomDto, empty = false) {
     address: null, foreignOksmCountryCode: null, foreignEpaymentMethod: null, foreignRegistrationNumber: null,
     foreignInn: null, syncedAt: null, lastSyncError: null,
   };
+  let registrationQuestions: RegistrationQuestionDto[] = [
+    { id: "question-about", roomId: room.id, text: "Расскажите о себе в трех словах", position: 0, isDeleted: false, createdAt: room.createdAt, updatedAt: room.updatedAt },
+    { id: "question-links", roomId: room.id, text: "Прикрепите ссылки на ваши платформы", position: 1, isDeleted: false, createdAt: room.createdAt, updatedAt: room.updatedAt },
+  ];
   const url = `/api/rooms/${room.id}`;
 
-  return (config: AxiosRequestConfig): GetRoomByIdResponseDto | RoomOrdProfileResponseDto | undefined => {
+  return (config: AxiosRequestConfig): GetRoomByIdResponseDto | RegistrationQuestionDto[] | RoomOrdProfileResponseDto | undefined => {
     const method = (config.method ?? "GET").toUpperCase();
-    if (method === "GET" && config.url === url) return { ...room, ordPerson: profile ? { ...profile } : null };
+    if (method === "GET" && config.url === url) return {
+      ...room,
+      registrationQuestions,
+      ordPerson: profile ? { ...profile } : null,
+    };
+    if (method === "PUT" && config.url === `${url}/registration-questions`) {
+      const data = typeof config.data === "string" ? JSON.parse(config.data) as ReplaceRegistrationQuestionsDto : config.data as ReplaceRegistrationQuestionsDto;
+      registrationQuestions = data.questions.map((question, position) => ({
+        id: question.id ?? `question-${crypto.randomUUID()}`,
+        roomId: room.id,
+        text: question.text,
+        position,
+        isDeleted: false,
+        createdAt: room.createdAt,
+        updatedAt: new Date().toISOString(),
+      }));
+      return registrationQuestions;
+    }
     if (config.url !== `${url}/ord-profile` || !["POST", "PUT"].includes(method)) return undefined;
     const data = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
     const allowed = method === "POST" ? ["inn", "name", "phone", "juridicalType", "address", "foreignOksmCountryCode", "foreignEpaymentMethod", "foreignRegistrationNumber", "foreignInn", "ordPersonId"] : ["name", "phone"];

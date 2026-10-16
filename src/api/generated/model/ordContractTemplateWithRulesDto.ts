@@ -22,6 +22,8 @@ export interface OrdContractTemplateWithRulesDto {
   updatedAt: string;
   /** Название шаблона */
   name: string;
+  /** Шаблон по умолчанию, автоматически созданный вместе с комнатой */
+  readonly isDefault: boolean;
   /** ID мастер-комнаты (заказчик в будущих договорах) */
   roomId: string;
   /** Тип договора */

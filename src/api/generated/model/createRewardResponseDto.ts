@@ -23,6 +23,11 @@ export interface CreateRewardResponseDto {
   /** Наименование награды */
   name: string;
   /**
+   * Описание награды
+   * @nullable
+   */
+  description?: string | null;
+  /**
    * Временная ссылка S3 на основное фото (иконку); формируется при запросе награды, срок — S3_DOWNLOAD_URL_TTL. null, если нет подтверждённой иконки
    * @nullable
    */

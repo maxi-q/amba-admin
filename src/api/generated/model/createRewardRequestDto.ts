@@ -12,6 +12,11 @@ export interface CreateRewardRequestDto {
   name: string;
   /** ID комнаты */
   roomId: string;
+  /**
+   * Описание награды
+   * @nullable
+   */
+  description?: string | null;
   /** Делимая награда: количество в правилах спринта можно задавать дробным, а пул при пропорциональном распределении делится с точностью divisionPrecision. У неделимой награды количество всегда целое */
   isDivisible?: boolean;
   /**

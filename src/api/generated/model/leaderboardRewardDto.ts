@@ -21,6 +21,11 @@ export interface LeaderboardRewardDto {
   rewardVersion: number;
   /** Наименование награды */
   name: string;
+  /**
+   * Описание награды
+   * @nullable
+   */
+  description: string | null;
   /** Итоговое количество награды у участника (сумма по всем правилам). У делимой награды может быть дробным — с точностью divisionPrecision */
   amount: number;
   /** Делимая ли награда */

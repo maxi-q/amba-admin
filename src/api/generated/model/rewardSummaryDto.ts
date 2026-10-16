@@ -22,6 +22,11 @@ export interface RewardSummaryDto {
   /** Наименование награды */
   name: string;
   /**
+   * Описание награды
+   * @nullable
+   */
+  description: string | null;
+  /**
    * Иконка награды
    * @nullable
    */

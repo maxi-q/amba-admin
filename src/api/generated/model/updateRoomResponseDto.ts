@@ -15,12 +15,31 @@ export interface UpdateRoomResponseDto {
   updatedAt: string;
   /** Название комнаты */
   name: string;
-  /** ID группы подписчиков в Сенлере (ожидают) */
-  pendingSubscriptionId: number;
-  /** ID группы подписчиков в Сенлере (одобренные) */
-  approvedSubscriptionId: number;
-  /** ID группы подписчиков в Сенлере (отклоненные) */
-  rejectedSubscriptionId: number;
+  /**
+   * Временная ссылка на аватарку комнаты в S3; null до подтверждения загрузки
+   * @nullable
+   */
+  avatarUrl: string | null;
+  /**
+   * ID сегмента Senler.io / группы подписчиков Senler.ru: ожидают рассмотрения
+   * @nullable
+   */
+  pendingSubscriptionId: string | null;
+  /**
+   * ID сегмента Senler.io / группы подписчиков Senler.ru: одобренные участники
+   * @nullable
+   */
+  approvedSubscriptionId: string | null;
+  /**
+   * ID сегмента Senler.io / группы подписчиков Senler.ru: отклонённые или исключённые
+   * @nullable
+   */
+  rejectedSubscriptionId: string | null;
+  /**
+   * ID сегмента Senler.io / группы подписчиков Senler.ru: заранее проверенные, вход без дополнительных вопросов и ручного одобрения
+   * @nullable
+   */
+  preapprovedSubscriptionId: string | null;
   /**
    * ID бота в Senler для уведомления об успешно принятом креативе
    * @nullable

@@ -7,12 +7,11 @@ import { useParticipantList } from "@/hooks/ambassador/useParticipantList";
 import { filterParticipants } from "@/hooks/ambassador/participants";
 import type { Participant, ParticipantSection } from "@/hooks/ambassador/participants";
 import { useApproveRoomApplications } from "@/hooks/ambassador/useApproveRoomApplications";
-import { useCreateInvitation } from "@/hooks/invitations/useCreateInvitation";
 import { useDeleteInvitation } from "@/hooks/invitations/useDeleteInvitation";
 import { useParseVkUserId } from "@/hooks/invitations/useParseVkUserId";
 import { CreativesPaginationControls } from "../creativetasks/components/CreativesPaginationControls";
 import LegacyApplicationsPage from "./LegacyApplicationsPage";
-import { AddParticipantDialog, RemoveParticipantDialog, participantPrimaryClass, participantSecondaryClass } from "./ParticipantDialogs";
+import { AddParticipantDialog, AmbassadorInviteDialog, RemoveParticipantDialog, participantPrimaryClass, participantSecondaryClass } from "./ParticipantDialogs";
 import { TeamPreviewContext, teamRoleLabels } from "./TeamPreviewContext";
 import type { TeamRole } from "./TeamPreviewContext";
 
@@ -35,10 +34,9 @@ export default function ApplicationsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const list = useParticipantList(slug, section, tab === "performers" && !legacy);
   const approval = useApproveRoomApplications();
-  const creation = useCreateInvitation();
   const removal = useDeleteInvitation();
   const parseVk = useParseVkUserId();
-  const isAdding = creation.isPending || parseVk.isPending;
+  const isAdding = parseVk.isPending;
   const matches = filterParticipants(tab === "team" ? team ?? [] : list.participants, search);
   const totalPages = Math.ceil(matches.length / PAGE_SIZE);
   const currentPage = Math.min(page, Math.max(1, totalPages));
@@ -74,29 +72,16 @@ export default function ApplicationsPage() {
     setSelectedIds(new Set());
   };
 
-  const addParticipant = async (input: string, targetTab: "team" | "performers", role: Exclude<TeamRole, "owner">) => {
+  const addTeamParticipant = async (input: string, role: Exclude<TeamRole, "owner">) => {
     setAddError("");
     try {
       const { vkUserId } = await parseVk.mutateAsync(input);
-      if (targetTab === "team") {
-        if (team === null) return;
-        setTeam([...team, { id: crypto.randomUUID(), name: `VK · ${vkUserId}`, profileUrl: `https://vk.com/id${vkUserId}`, role }]);
-        setTab("team");
-        setAddOpen(false);
-        resetList();
-        toast.success("Пользователь добавлен в демо-команду; на сервере ничего не изменено");
-        return;
-      }
-      creation.createInvitation({ roomId: slug, targets: [{ channelTypeId: 1, subscriberId: vkUserId }] }, {
-        onSuccess: () => {
-          setAddOpen(false);
-          setTab("performers");
-          setSection("invitations");
-          resetList();
-          toast.success("Приглашение создано");
-        },
-        onError: (error) => setAddError(error.message || "Не удалось создать приглашение"),
-      });
+      if (team === null) return;
+      setTeam([...team, { id: crypto.randomUUID(), name: `VK · ${vkUserId}`, profileUrl: `https://vk.com/id${vkUserId}`, role }]);
+      setTab("team");
+      setAddOpen(false);
+      resetList();
+      toast.success("Пользователь добавлен в демо-команду; на сервере ничего не изменено");
     } catch (error) {
       setAddError(error instanceof Error ? error.message : "Не удалось определить профиль VK");
     }
@@ -114,7 +99,7 @@ export default function ApplicationsPage() {
         {sections.map(([value, label]) => <Button type="button" key={value} role="tab" aria-selected={section === value} variant="ghost" onClick={() => { setSection(value); resetList(); }} className={`h-6 rounded-sm px-1.5 py-1 text-[13px] font-medium leading-4 shadow-none ${section === value ? "bg-white hover:bg-white" : "hover:bg-white/50"}`}>{label}</Button>)}
       </div> : <span className="shrink-0">Команда</span>}
       <Input type="search" aria-label="Поиск участников" placeholder="Поиск..." value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); setSelectedIds(new Set()); }} disabled={tab === "team" && !team} className="h-7 min-w-32 flex-1 rounded-md border-0 bg-[#f0f0f0] px-2 py-1.5 text-[13px] font-medium leading-4 placeholder:text-[#636c72] shadow-none" />
-      <Button className={`${participantPrimaryClass} gap-1`} onClick={() => { setAddError(""); creation.reset(); setAddOpen(true); }}><Plus className="size-4" strokeWidth={1.5} />Добавить</Button>
+      <Button disabled={tab === "team" && team === null} className={`${participantPrimaryClass} gap-1`} onClick={() => { setAddError(""); parseVk.reset(); setAddOpen(true); }}><Plus className="size-4" strokeWidth={1.5} />Добавить</Button>
     </div>
     <div className="min-w-0 w-full">
         {tab === "team" && team === null ? <div className="p-4 text-[#797979]">
@@ -166,7 +151,9 @@ export default function ApplicationsPage() {
           {tab === "team" && <p className="p-4 text-[12px] text-[#797979]">Демо-команда: изменения только на стенде, API команды пока нет. <Button variant="link" className="h-auto p-0 text-[12px]" onClick={() => setLegacy(true)}>Ранее созданные заявки</Button></p>}
         </>}
     </div>
-    {addOpen && <AddParticipantDialog open initialTab={tab} teamPreview={team !== null} onClose={() => setAddOpen(false)} onSubmit={(input, targetTab, role) => void addParticipant(input, targetTab, role)} isPending={isAdding} error={addError} />}
+    {addOpen && (tab === "performers"
+      ? <AmbassadorInviteDialog open roomId={slug} onClose={() => setAddOpen(false)} />
+      : <AddParticipantDialog open onClose={() => setAddOpen(false)} onSubmit={(input, role) => void addTeamParticipant(input, role)} isPending={isAdding} error={addError} />)}
     <RemoveParticipantDialog open={!!removeTarget} onClose={() => setRemoveTarget(null)} isPending={removal.isPending} error={removal.generalError} onConfirm={() => {
       if (removeTarget?.isTeam) {
         setTeam(team?.filter((item) => item.id !== removeTarget.id || item.role === "owner") ?? null);

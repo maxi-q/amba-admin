@@ -9,6 +9,11 @@
 export interface GrantRewardDto {
   id: string;
   name: string;
+  /**
+   * Описание награды
+   * @nullable
+   */
+  description: string | null;
   version: number;
   isDivisible: boolean;
   divisionPrecision: number;

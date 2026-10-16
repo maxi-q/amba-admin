@@ -45,9 +45,11 @@ const room: BaseRoomDto = {
   createdAt: NOW,
   updatedAt: NOW,
   name: "StreamVi promo",
-  pendingSubscriptionId: 101,
-  approvedSubscriptionId: 102,
-  rejectedSubscriptionId: 103,
+  avatarUrl: null,
+  pendingSubscriptionId: "101",
+  approvedSubscriptionId: "102",
+  rejectedSubscriptionId: "103",
+  preapprovedSubscriptionId: "104",
   notificationCreativeTaskApprovedBotId: null,
   notificationCreativeTaskRejectedBotId: null,
   webhookUrl: null,
@@ -78,6 +80,7 @@ const ordContractTemplate: OrdContractTemplateItemDto = {
   createdAt: NOW,
   updatedAt: NOW,
   name: "Основной договор",
+  isDefault: false,
   roomId: ROOM_ID,
   type: "service",
   dateStrategy: "today",
@@ -461,10 +464,10 @@ let submissions: BaseCreativeTaskSubmissionDto[] = [
 ];
 
 const rewards = {
-  money: { id: "reward-money", versionId: "reward-money-v1", version: 1, name: "Рубли", iconUrl: rewardMoneyUrl, ...indivisibleReward },
-  shirt: { id: "reward-shirt", versionId: "reward-shirt-v1", version: 1, name: "Футболка", iconUrl: rewardGiftUrl, ...indivisibleReward },
-  pro: { id: "reward-pro", versionId: "reward-pro-v1", version: 1, name: "Тариф Pro", iconUrl: rewardGiftUrl, ...indivisibleReward },
-  points: { id: "reward-points", versionId: "reward-points-v1", version: 1, name: "Баллы Senler", iconUrl: rewardGiftUrl, ...indivisibleReward },
+  money: { id: "reward-money", versionId: "reward-money-v1", version: 1, name: "Рубли", description: null, iconUrl: rewardMoneyUrl, ...indivisibleReward },
+  shirt: { id: "reward-shirt", versionId: "reward-shirt-v1", version: 1, name: "Футболка", description: null, iconUrl: rewardGiftUrl, ...indivisibleReward },
+  pro: { id: "reward-pro", versionId: "reward-pro-v1", version: 1, name: "Тариф Pro", description: null, iconUrl: rewardGiftUrl, ...indivisibleReward },
+  points: { id: "reward-points", versionId: "reward-points-v1", version: 1, name: "Баллы Senler", description: null, iconUrl: rewardGiftUrl, ...indivisibleReward },
 };
 
 const sprintReward = (
@@ -476,6 +479,7 @@ const sprintReward = (
 const leaderboardRewardVersion = (reward: (typeof rewards)[keyof typeof rewards]) => ({
   rewardVersionId: reward.versionId,
   rewardVersion: reward.version,
+  description: reward.description,
 });
 
 let catalogRewards: BaseRewardDto[] = [
@@ -542,6 +546,7 @@ const currentRewardSummary = (reward: BaseRewardDto) => ({
   versionId: `${reward.id}-v${reward.version}`,
   version: reward.version,
   name: reward.name,
+  description: reward.description ?? null,
   iconUrl: reward.iconUrl,
   isDivisible: reward.isDivisible,
   divisionPrecision: reward.divisionPrecision,
@@ -804,6 +809,32 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
   if (ordProfileResponse !== undefined) return ordProfileResponse;
   if (method === "GET" && url === "/api/rooms/my") return [room];
   if (method === "GET" && url === "/api/projects/my") return project;
+  if (method === "GET" && url === `/api/rooms/${ROOM_ID}/channels`) {
+    return [
+      { id: "preview-channel-vk", name: "StreamVi", type: "vk", avatarUrl: null, url: "https://vk.me/streamvi", isPaused: false, registrationSupported: true },
+      { id: "preview-channel-tg", name: "StreamVi Telegram", type: "tg", avatarUrl: null, url: "https://t.me/streamvi_bot", isPaused: false, registrationSupported: true },
+    ];
+  }
+  if (method === "GET" && url === `/api/rooms/${ROOM_ID}/channels/preview-channel-vk/preapproved-subscription-links`) {
+    return {
+      roomId: ROOM_ID,
+      segmentId: room.preapprovedSubscriptionId,
+      channelId: "preview-channel-vk",
+      channelType: "vk",
+      registrationCommand: "/ambassador",
+      links: [{ kind: "vk_messages_external", status: "available", url: "https://vk.me/preview-invite" }],
+    };
+  }
+  if (method === "GET" && url === `/api/rooms/${ROOM_ID}/channels/preview-channel-tg/preapproved-subscription-links`) {
+    return {
+      roomId: ROOM_ID,
+      segmentId: room.preapprovedSubscriptionId,
+      channelId: "preview-channel-tg",
+      channelType: "tg",
+      registrationCommand: "/ambassador",
+      links: [{ kind: "telegram_bot_subscription", status: "available", url: "https://t.me/preview_bot?start=ambassador" }],
+    };
+  }
   if (method === "GET" && url === `/api/promo-code/custom/${ROOM_ID}`) {
     return customPromoCodes;
   }
@@ -952,7 +983,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
         amount: Number(item.amount),
         reward: catalogRewards.find((reward) => reward.id === item.rewardId)
           ? currentRewardSummary(catalogRewards.find((reward) => reward.id === item.rewardId)!)
-          : { id: item.rewardId, versionId: null, version: 1, name: "Награда", iconUrl: null, isDivisible: false, divisionPrecision: 0 },
+          : { id: item.rewardId, versionId: null, version: 1, name: "Награда", description: null, iconUrl: null, isDivisible: false, divisionPrecision: 0 },
       })),
     };
     rewardRules = [...rewardRules, created];
@@ -977,7 +1008,7 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
         amount: Number(item.amount),
         reward: catalogRewards.find((reward) => reward.id === item.rewardId)
           ? currentRewardSummary(catalogRewards.find((reward) => reward.id === item.rewardId)!)
-          : { id: item.rewardId, versionId: null, version: 1, name: "Награда", iconUrl: null, isDivisible: false, divisionPrecision: 0 },
+          : { id: item.rewardId, versionId: null, version: 1, name: "Награда", description: null, iconUrl: null, isDivisible: false, divisionPrecision: 0 },
       })),
     };
     return rewardRules[index];

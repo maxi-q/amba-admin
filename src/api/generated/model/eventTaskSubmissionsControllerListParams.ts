@@ -18,4 +18,8 @@ page?: number;
  */
 size?: number;
 status?: EventTaskSubmissionsControllerListStatus;
+/**
+ * Поиск амбассадора: точный ID или часть логина, имени в комнате задания либо промокода; без учёта регистра
+ */
+search?: string;
 };

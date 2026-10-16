@@ -28,10 +28,13 @@ import type {
   CreateRoomOrdProfileRequestDto,
   CreateRoomRequestDto,
   CreateRoomResponseDto,
+  EnsureRoomDefaultResourcesResponseDto,
   GetMyRoomsResponseItemDto,
   GetRoomAnalyticsResponseDto,
   GetRoomByIdResponseDto,
   GetRoomPromoCodeUsagesResponseDto,
+  RoomAvatarUploadDto,
+  RoomAvatarUploadRequestDto,
   RoomOrdProfileResponseDto,
   RoomsControllerGetRoomAnalyticsParams,
   RoomsControllerGetRoomPromoCodeUsagesParams,
@@ -557,6 +560,7 @@ export const useRoomsControllerDeleteRoom = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Создаёт четыре сегмента комнаты Senler.io, затем сохраняет их ID, комнату и шаблон ОРД-договора по умолчанию (isDefault=true). Для Senler.ru сохраняется создание трёх групп подписчиков.
  * @summary Create room
  */
 export const roomsControllerCreateRoom = (
@@ -621,6 +625,69 @@ export const useRoomsControllerCreateRoom = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Создаёт отсутствующие сегменты Senler.io и шаблон договора с isDefault=true. Существующие ресурсы и настройки сохраняются; повторный вызов не создаёт дубли.
+ * @summary Создать недостающие дефолтные ресурсы комнаты
+ */
+export const roomsControllerEnsureDefaultResources = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<EnsureRoomDefaultResourcesResponseDto>(
+      {url: `/api/rooms/${id}/ensure-default-resources`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getRoomsControllerEnsureDefaultResourcesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerEnsureDefaultResources>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof roomsControllerEnsureDefaultResources>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['roomsControllerEnsureDefaultResources'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof roomsControllerEnsureDefaultResources>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  roomsControllerEnsureDefaultResources(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoomsControllerEnsureDefaultResourcesMutationResult = NonNullable<Awaited<ReturnType<typeof roomsControllerEnsureDefaultResources>>>
+    
+    export type RoomsControllerEnsureDefaultResourcesMutationError = unknown
+
+    /**
+ * @summary Создать недостающие дефолтные ресурсы комнаты
+ */
+export const useRoomsControllerEnsureDefaultResources = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerEnsureDefaultResources>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof roomsControllerEnsureDefaultResources>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRoomsControllerEnsureDefaultResourcesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Rotate room secret key
  */
 export const roomsControllerRotateSecretKey = (
@@ -678,6 +745,194 @@ export const useRoomsControllerRotateSecretKey = <TError = unknown,
       > => {
 
       const mutationOptions = getRoomsControllerRotateSecretKeyMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Получить presigned PUT URL для загрузки или замены аватарки комнаты
+ */
+export const roomsControllerCreateAvatarUploadUrl = (
+    id: string,
+    roomAvatarUploadRequestDto: RoomAvatarUploadRequestDto,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<RoomAvatarUploadDto>(
+      {url: `/api/rooms/${id}/avatar/upload-url`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: roomAvatarUploadRequestDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getRoomsControllerCreateAvatarUploadUrlMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerCreateAvatarUploadUrl>>, TError,{id: string;data: RoomAvatarUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof roomsControllerCreateAvatarUploadUrl>>, TError,{id: string;data: RoomAvatarUploadRequestDto}, TContext> => {
+
+const mutationKey = ['roomsControllerCreateAvatarUploadUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof roomsControllerCreateAvatarUploadUrl>>, {id: string;data: RoomAvatarUploadRequestDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  roomsControllerCreateAvatarUploadUrl(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoomsControllerCreateAvatarUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof roomsControllerCreateAvatarUploadUrl>>>
+    export type RoomsControllerCreateAvatarUploadUrlMutationBody = RoomAvatarUploadRequestDto
+    export type RoomsControllerCreateAvatarUploadUrlMutationError = unknown
+
+    /**
+ * @summary Получить presigned PUT URL для загрузки или замены аватарки комнаты
+ */
+export const useRoomsControllerCreateAvatarUploadUrl = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerCreateAvatarUploadUrl>>, TError,{id: string;data: RoomAvatarUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof roomsControllerCreateAvatarUploadUrl>>,
+        TError,
+        {id: string;data: RoomAvatarUploadRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getRoomsControllerCreateAvatarUploadUrlMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Проверить изображение в S3 и установить аватарку комнаты
+ */
+export const roomsControllerConfirmAvatarUpload = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<UpdateRoomResponseDto>(
+      {url: `/api/rooms/${id}/avatar/confirm`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getRoomsControllerConfirmAvatarUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerConfirmAvatarUpload>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof roomsControllerConfirmAvatarUpload>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['roomsControllerConfirmAvatarUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof roomsControllerConfirmAvatarUpload>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  roomsControllerConfirmAvatarUpload(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoomsControllerConfirmAvatarUploadMutationResult = NonNullable<Awaited<ReturnType<typeof roomsControllerConfirmAvatarUpload>>>
+    
+    export type RoomsControllerConfirmAvatarUploadMutationError = unknown
+
+    /**
+ * @summary Проверить изображение в S3 и установить аватарку комнаты
+ */
+export const useRoomsControllerConfirmAvatarUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerConfirmAvatarUpload>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof roomsControllerConfirmAvatarUpload>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRoomsControllerConfirmAvatarUploadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Удалить аватарку комнаты и незавершённую загрузку
+ */
+export const roomsControllerDeleteAvatar = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/rooms/${id}/avatar`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getRoomsControllerDeleteAvatarMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerDeleteAvatar>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof roomsControllerDeleteAvatar>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['roomsControllerDeleteAvatar'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof roomsControllerDeleteAvatar>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  roomsControllerDeleteAvatar(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RoomsControllerDeleteAvatarMutationResult = NonNullable<Awaited<ReturnType<typeof roomsControllerDeleteAvatar>>>
+    
+    export type RoomsControllerDeleteAvatarMutationError = unknown
+
+    /**
+ * @summary Удалить аватарку комнаты и незавершённую загрузку
+ */
+export const useRoomsControllerDeleteAvatar = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof roomsControllerDeleteAvatar>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof roomsControllerDeleteAvatar>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRoomsControllerDeleteAvatarMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

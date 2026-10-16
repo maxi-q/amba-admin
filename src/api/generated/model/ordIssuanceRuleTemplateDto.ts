@@ -17,6 +17,8 @@ export interface OrdIssuanceRuleTemplateDto {
   createdAt: string;
   updatedAt: string;
   name: string;
+  /** Шаблон по умолчанию, автоматически созданный вместе с комнатой */
+  readonly isDefault: boolean;
   /** ID мастер-комнаты (заказчик в выпускаемых договорах) */
   roomId: string;
   type: OrdIssuanceRuleTemplateDtoType;

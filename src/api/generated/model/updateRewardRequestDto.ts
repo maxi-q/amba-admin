@@ -9,6 +9,11 @@
 export interface UpdateRewardRequestDto {
   /** Наименование награды */
   name?: string;
+  /**
+   * Описание награды
+   * @nullable
+   */
+  description?: string | null;
   /** Делимая награда: количество в правилах спринта можно задавать дробным, а пул при пропорциональном распределении делится с точностью divisionPrecision. У неделимой награды количество всегда целое */
   isDivisible?: boolean;
   /**

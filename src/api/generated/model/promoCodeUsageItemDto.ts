@@ -40,6 +40,16 @@ export interface PromoCodeUsageItemDto {
    * @nullable
    */
   ambassadorId: string | null;
+  /**
+   * Имя амбассадора из заявки в комнате; логин, если заявки уже нет; null, если амбассадор отсутствует
+   * @nullable
+   */
+  ambassadorName: string | null;
+  /**
+   * Presigned URL аватарки амбассадора; null, если амбассадор отсутствует или загрузка не подтверждена
+   * @nullable
+   */
+  ambassadorAvatarUrl: string | null;
   /** Уникальный ID пользователя */
   uniqueId: string;
   /**

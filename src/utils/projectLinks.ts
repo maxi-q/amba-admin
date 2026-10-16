@@ -7,8 +7,10 @@ export function getProjectVkCommunityId(project?: Pick<GetProjectResponseDto, "c
   return id && /^[1-9]\d*$/.test(id) ? id : undefined;
 }
 
-export function getSenlerSubscriptionUrl(communityId: string | undefined, subscriptionId: number | null | undefined) {
-  return communityId && /^[1-9]\d*$/.test(communityId) && subscriptionId != null && Number.isSafeInteger(subscriptionId) && subscriptionId > 0
-    ? `https://vk.com/app5898182_-${communityId}#s=${subscriptionId}&force=1`
+export function getSenlerSubscriptionUrl(communityId: string | undefined, subscriptionId: string | number | null | undefined) {
+  const normalizedSubscriptionId = String(subscriptionId ?? "").trim();
+
+  return communityId && /^[1-9]\d*$/.test(communityId) && /^[1-9]\d*$/.test(normalizedSubscriptionId)
+    ? `https://vk.com/app5898182_-${communityId}#s=${normalizedSubscriptionId}&force=1`
     : "";
 }

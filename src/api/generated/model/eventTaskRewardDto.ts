@@ -11,6 +11,11 @@ export interface EventTaskRewardDto {
   rewardVersionId: string;
   version: number;
   name: string;
+  /**
+   * Описание награды
+   * @nullable
+   */
+  description: string | null;
   isDivisible: boolean;
   divisionPrecision: number;
   /** Количество с учётом делимости */
