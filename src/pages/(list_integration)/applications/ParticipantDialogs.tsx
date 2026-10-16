@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, User, X } from "lucide-react";
 import { Avatar, Button, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogRoot, DialogTitle, Input, InputField, RadioGroup, RadioGroupItem, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@senler/ui";
 import { toast } from "sonner";
 import type { RegistrationQuestionDto } from "@/api/generated/model";
@@ -9,6 +9,8 @@ import closeIcon from "@/assets/ord-profile/close.svg";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useReplaceRegistrationQuestions } from "@/hooks/rooms/useReplaceRegistrationQuestions";
 import { useRoomSenlerIoChannels, useRoomSenlerIoPreapprovedLinks } from "@/hooks/rooms/useRoomSenlerIoInvitations";
+import { useRegistrationAnswers } from "@/hooks/ambassador/useRegistrationAnswers";
+import type { Participant } from "@/hooks/ambassador/participants";
 import "./participants.css";
 import type { TeamRole } from "./TeamPreviewContext";
 
@@ -17,11 +19,68 @@ export const participantPrimaryClass = `${participantButtonClass} bg-[#2563eb] t
 export const participantSecondaryClass = `${participantButtonClass} border-[#e4e4e4] bg-white text-black hover:bg-[#f0f0f0]`;
 const modalClass = "w-[358px] max-w-[calc(100vw-32px)] gap-0 overflow-hidden rounded-lg border-0 bg-white p-0 text-black shadow-none sm:max-w-[358px]";
 
-function ModalHeader({ title, disabled }: { title: string; disabled?: boolean }) {
+function ModalHeader({ title, disabled, onBack }: { title: string; disabled?: boolean; onBack?: () => void }) {
   return <DialogHeader className="h-11 flex-row items-center justify-between gap-4 space-y-0 px-4 py-2.5 text-left">
-    <DialogTitle className="text-[15px] font-medium leading-5 tracking-[-0.135px]">{title}</DialogTitle>
-    <DialogClose asChild><Button aria-label="Закрыть" variant="ghost" disabled={disabled} className="size-6 shrink-0 p-0 hover:bg-transparent"><img src={closeIcon} alt="" className="size-6" /></Button></DialogClose>
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      {onBack && <Button type="button" aria-label="Назад" variant="ghost" disabled={disabled} onClick={onBack} className="size-6 shrink-0 p-0 hover:bg-transparent"><ArrowLeft className="size-4" strokeWidth={1.5} /></Button>}
+      <DialogTitle className="truncate text-[15px] font-medium leading-5 tracking-[-0.135px]">{title}</DialogTitle>
+    </div>
+    {!onBack && <DialogClose asChild><Button aria-label="Закрыть" variant="ghost" disabled={disabled} className="size-6 shrink-0 p-0 hover:bg-transparent"><img src={closeIcon} alt="" className="size-6" /></Button></DialogClose>}
   </DialogHeader>;
+}
+
+function AnswerValue({ value }: { value: string }) {
+  const lines = value.split(/\r?\n/).filter(Boolean);
+  return <div className="flex flex-col gap-0.5 whitespace-pre-wrap break-words">
+    {lines.length ? lines.map((line, index) => /^https?:\/\//i.test(line.trim())
+      ? <a key={`${line}-${index}`} href={line.trim()} target="_blank" rel="noopener noreferrer" className="text-[#2563eb] underline underline-offset-2">Ссылка</a>
+      : <span key={`${line}-${index}`}>{line}</span>) : <span>—</span>}
+  </div>;
+}
+
+export function ApplicationDetailsDialog({ open, roomId, participant, title, onClose }: {
+  open: boolean;
+  roomId: string;
+  participant: Participant;
+  title: string;
+  onClose: () => void;
+}) {
+  const application = participant.application;
+  const answers = useRegistrationAnswers(roomId, application?.id ?? "", open && Boolean(application));
+
+  return <DialogRoot open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
+    <DialogContent data-participant-dialog showCloseButton={false} className={modalClass}>
+      <ModalHeader title={title} />
+      <DialogDescription className="sr-only">Информация о заявке пользователя</DialogDescription>
+      <div className="max-h-[calc(100vh-184px)] overflow-y-auto px-4 py-2">
+        <Avatar src={participant.avatarUrl} name={participant.name} size="sm" shape="rounded" className="mb-4 size-[52px] rounded-[14px] border border-[#e4e4e4]" />
+        <dl className="flex flex-col gap-3 text-[13px] font-medium leading-4 tracking-[-0.0325px]">
+          <div className="flex flex-col gap-1">
+            <dt className="text-[#797979]">ФИО</dt>
+            <dd>{application?.name || participant.name}</dd>
+          </div>
+          {application?.inn != null && <div className="flex flex-col gap-1">
+            <dt className="text-[#797979]">ИНН</dt>
+            <dd>{application.inn}</dd>
+          </div>}
+          {answers.isPending && <div className="text-[#797979]">Загрузка ответов…</div>}
+          {answers.isError && <div role="alert" className="flex items-center justify-between gap-3 text-destructive">
+            <span>Не удалось загрузить ответы</span>
+            <Button type="button" variant="link" className="h-auto p-0 text-[13px]" onClick={() => void answers.refetch()}>Повторить</Button>
+          </div>}
+          {answers.data?.map((answer) => <div key={answer.id} className="flex flex-col gap-1">
+            <dt className="text-[#797979]">{answer.question.text}</dt>
+            <dd><AnswerValue value={answer.text} /></dd>
+          </div>)}
+        </dl>
+      </div>
+      <DialogFooter className="flex-row justify-end px-4 py-2.5">
+        {participant.profileUrl
+          ? <Button asChild variant="outline" className={`${participantSecondaryClass} gap-1`}><a href={participant.profileUrl} target="_blank" rel="noopener noreferrer"><User className="size-4" strokeWidth={1.5} />Профиль</a></Button>
+          : <Button type="button" variant="outline" className={`${participantSecondaryClass} gap-1`} disabled><User className="size-4" strokeWidth={1.5} />Профиль</Button>}
+      </DialogFooter>
+    </DialogContent>
+  </DialogRoot>;
 }
 
 function InvitationLinkField({ ariaLabel, url, isLoading, helperText }: {
@@ -68,7 +127,10 @@ function RegistrationQuestionsDialog({ open, roomId, questions, onClose }: {
   onClose: () => void;
 }) {
   const mutation = useReplaceRegistrationQuestions(roomId);
-  const [draft, setDraft] = useState<Array<{ id?: string; text: string }>>(() => questions.map(({ id, text }) => ({ id, text })));
+  const [draft, setDraft] = useState<Array<{ id?: string; text: string }>>(() => {
+    const current = questions.map(({ id, text }) => ({ id, text }));
+    return current.length ? current : [{ text: "" }];
+  });
 
   const save = () => {
     const normalized = draft
@@ -86,23 +148,26 @@ function RegistrationQuestionsDialog({ open, roomId, questions, onClose }: {
 
   return <DialogRoot open={open} onOpenChange={(next) => { if (!next && !mutation.isPending) onClose(); }}>
     <DialogContent data-participant-dialog showCloseButton={false} className={modalClass}>
-      <ModalHeader title="Дополнительные вопросы" disabled={mutation.isPending} />
+      <ModalHeader title="Дополнительные вопросы" disabled={mutation.isPending} onBack={onClose} />
       <DialogDescription className="sr-only">Вопросы, которые пользователь увидит при регистрации</DialogDescription>
       <div className="flex flex-col gap-2 px-4 py-2">
-        {draft.map((question, index) => <div key={question.id ?? index} className="flex items-start gap-2">
-          <Input
-            aria-label={`Вопрос ${index + 1}`}
-            value={question.text}
-            maxLength={2000}
-            disabled={mutation.isPending}
-            onChange={(event) => setDraft((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, text: event.target.value } : item))}
-            className="h-10 flex-1 rounded-md border-[#e4e4e4] bg-white px-3 text-[13px] font-medium shadow-none"
-          />
-          <Button type="button" variant="outline" aria-label={`Удалить вопрос ${index + 1}`} disabled={mutation.isPending} onClick={() => setDraft((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="size-10 shrink-0 border-[#e4e4e4] p-0 shadow-none">
-            <Trash2 className="size-4" strokeWidth={1.5} />
-          </Button>
-        </div>)}
-        <Button type="button" variant="outline" disabled={mutation.isPending} onClick={() => setDraft((current) => [...current, { text: "" }])} className="h-10 justify-start gap-2 border-[#e4e4e4] text-[13px] font-medium shadow-none">
+        {draft.length > 0 && <div className="overflow-hidden rounded-md border border-[#e4e4e4]">
+          {draft.map((question, index) => <div key={question.id ?? index} className="relative border-b border-[#e4e4e4] last:border-b-0">
+            <Input
+              aria-label={`Вопрос ${index + 1}`}
+              placeholder="Напишите вопрос пользователю"
+              value={question.text}
+              maxLength={2000}
+              disabled={mutation.isPending}
+              onChange={(event) => setDraft((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, text: event.target.value } : item))}
+              className="h-10 w-full rounded-none border-0 bg-white px-3 pr-10 text-[13px] font-medium shadow-none focus-visible:ring-0"
+            />
+            <Button type="button" variant="ghost" aria-label={`Удалить вопрос ${index + 1}`} disabled={mutation.isPending} onClick={() => setDraft((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="absolute right-2 top-2 size-6 p-0 text-[#707070] hover:bg-transparent">
+              <X className="size-4" strokeWidth={1.5} />
+            </Button>
+          </div>)}
+        </div>}
+        <Button type="button" variant="link" disabled={mutation.isPending} onClick={() => setDraft((current) => [...current, { text: "" }])} className="h-4 justify-start gap-1 p-0 text-[13px] font-medium leading-4 text-[#2563eb] no-underline hover:no-underline">
           <Plus className="size-4" strokeWidth={1.5} />Добавить вопрос
         </Button>
         {mutation.error && <p role="alert" className="text-[12px] leading-4 text-destructive">Не удалось сохранить вопросы</p>}
@@ -126,10 +191,11 @@ export function AmbassadorInviteDialog({ open, roomId, onClose }: {
   const [questionsOpen, setQuestionsOpen] = useState(false);
   const [preferredChannelId, setPreferredChannelId] = useState("");
   const channels = channelsQuery.data ?? [];
-  const defaultChannelId = channels.find((channel) => channel.registrationSupported && !channel.isPaused && channel.url)?.id
-    ?? channels.find((channel) => channel.registrationSupported && !channel.isPaused)?.id
+  const availableChannels = channels.filter((channel) => channel.registrationSupported && !channel.isPaused);
+  const defaultChannelId = availableChannels.find((channel) => channel.url)?.id
+    ?? availableChannels[0]?.id
     ?? "";
-  const selectedChannelId = channels.some((channel) => channel.id === preferredChannelId)
+  const selectedChannelId = availableChannels.some((channel) => channel.id === preferredChannelId)
     ? preferredChannelId
     : defaultChannelId;
   const selectedChannel = channels.find((channel) => channel.id === selectedChannelId);
@@ -151,32 +217,34 @@ export function AmbassadorInviteDialog({ open, roomId, onClose }: {
               {([['moderated', 'С модерацией'], ['direct', 'Напрямую']] as const).map(([value, label]) => <Button key={value} type="button" role="tab" aria-selected={mode === value} variant="ghost" onClick={() => setMode(value)} className={`h-6 flex-1 rounded-sm border-0 p-1 text-[13px] font-medium leading-4 shadow-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${mode === value ? "bg-white hover:bg-white" : "hover:bg-white/50"}`}>{label}</Button>)}
             </div>
             <p className="text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979]">
-              {mode === "moderated" ? "Вы оцениваете пользователя прежде, чем сделать его амбассадором" : "Пользователь сразу становится амбассадором без модерации"}
+              {mode === "moderated" ? "Вы оцениваете пользователя прежде, чем сделать его амбассадором" : "Пользователь сразу становится амбассадором"}
             </p>
           </div>
 
           {mode === "moderated" && <div className="flex flex-col gap-1 rounded-[10px] bg-[#f0f0f0] p-2 text-[13px] font-medium leading-4 tracking-[-0.0325px]">
-            <p className="text-[#797979]">Дополнительные вопросы</p>
-            {questions.length ? <ol className="list-decimal pl-[19.5px]">
-              {questions.map((question) => <li key={question.id}>{question.text}</li>)}
-            </ol> : <p className="text-[#797979]">Вопросы не добавлены</p>}
-            <Button type="button" variant="link" disabled={isLoading || hasLoadError} onClick={() => setQuestionsOpen(true)} className="h-4 justify-start p-0 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#2563eb] no-underline hover:no-underline">Редактировать</Button>
+            {questions.length ? <>
+              <p className="text-[#797979]">Дополнительные вопросы</p>
+              <ol className="list-decimal pl-[19.5px]">
+                {questions.map((question) => <li key={question.id}>{question.text}</li>)}
+              </ol>
+            </> : <p className="text-[#797979]">Дополнительных вопросов нет</p>}
+            <Button type="button" variant="link" disabled={isLoading || hasLoadError} onClick={() => setQuestionsOpen(true)} className="h-4 justify-start p-0 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#2563eb] no-underline hover:no-underline">{questions.length ? "Редактировать" : "Добавить"}</Button>
           </div>}
 
           <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-2">
+            {availableChannels.length > 1 && <div className="flex flex-col gap-2">
               <p className="text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979]">Выберите канал</p>
-              <Select value={selectedChannelId} onValueChange={setPreferredChannelId} disabled={channelsQuery.isLoading || channels.length === 0}>
+              <Select value={selectedChannelId} onValueChange={setPreferredChannelId} disabled={channelsQuery.isLoading}>
                 <SelectTrigger aria-label="Канал" className="h-10 w-full border-[#e4e4e4] bg-white px-3 text-[13px] font-medium text-black shadow-none">
                   <SelectValue placeholder="Выберите канал" />
                 </SelectTrigger>
                 <SelectContent>
-                  {channels.map((channel) => <SelectItem key={channel.id} value={channel.id} disabled={!channel.registrationSupported || channel.isPaused}>
+                  {availableChannels.map((channel) => <SelectItem key={channel.id} value={channel.id}>
                     <span className="flex items-center gap-1"><ChannelAvatar avatarUrl={channel.avatarUrl} name={channel.name} />{channel.name ?? "Без названия"}</span>
                   </SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
+            </div>}
 
             <div className="flex flex-col gap-2">
               {mode === "direct" && <InvitationLinkField
@@ -242,13 +310,13 @@ export function AddParticipantDialog({ open, onClose, onSubmit, isPending, error
   </DialogRoot>;
 }
 
-export function RemoveParticipantDialog({ open, onClose, onConfirm, isPending, error }: {
-  open: boolean; onClose: () => void; onConfirm: () => void; isPending: boolean; error?: string;
+export function RemoveParticipantDialog({ open, onClose, onConfirm, isPending, error, description = "Подтвердите удаление пользователя" }: {
+  open: boolean; onClose: () => void; onConfirm: () => void; isPending: boolean; error?: string; description?: string;
 }) {
   return <DialogRoot open={open} onOpenChange={(next) => { if (!next && !isPending) onClose(); }}>
     <DialogContent data-participant-dialog showCloseButton={false} className={modalClass}>
       <ModalHeader title="Удалить пользователя" disabled={isPending} />
-      <DialogDescription className="px-4 py-2 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979]">Подтвердите удаление пользователя</DialogDescription>
+      <DialogDescription className="px-4 py-2 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979]">{description}</DialogDescription>
       {error && <p role="alert" className="px-4 text-[13px] text-destructive">{error}</p>}
       <DialogFooter className="flex-row justify-end gap-2 px-4 py-2.5">
         <Button variant="outline" className={participantSecondaryClass} disabled={isPending} onClick={onClose}>Отмена</Button>

@@ -560,7 +560,7 @@ export const useRoomsControllerDeleteRoom = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Создаёт четыре сегмента комнаты Senler.io, затем сохраняет их ID, комнату и шаблон ОРД-договора по умолчанию (isDefault=true). Для Senler.ru сохраняется создание трёх групп подписчиков.
+ * Создаёт пять сегментов комнаты Senler.io, затем сохраняет их ID, комнату и шаблон ОРД-договора по умолчанию (isDefault=true). Оба сегмента регистрации предполагают опрос; preapproved даёт только автоматическое одобрение заявки. Для Senler.ru сохраняется создание трёх групп подписчиков.
  * @summary Create room
  */
 export const roomsControllerCreateRoom = (

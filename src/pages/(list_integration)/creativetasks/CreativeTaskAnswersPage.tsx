@@ -1,4 +1,4 @@
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import type { BaseCreativeTaskDto } from "@/api/generated/model";
 import { TaskDetailSubmissionsList } from "./components/TaskDetailSubmissionsList";
 import { useCompetitionReview } from "@/hooks/competitions/useCompetitionQueries";
@@ -13,6 +13,7 @@ interface OutletCtx {
  */
 export default function CreativeTaskAnswersPage() {
   const { task } = useOutletContext<OutletCtx>();
+  const { slug = "" } = useParams();
   const review = useCompetitionReview({ kind: 'sprint', id: task.sprintId, roomId: task.roomId });
   const closed = review.data?.resultsFixedAt || review.data?.status === 'awarding' || review.data?.status === 'completed';
 
@@ -24,6 +25,12 @@ export default function CreativeTaskAnswersPage() {
       minimalRewardInBalls={task.minimalRewardInBalls}
       isFrozen={task.isFrozen}
       reviewUnavailable={closed ? 'Итоги спринта зафиксированы. Выполнения доступны только для просмотра.' : !review.data ? 'Проверяем доступность модерации…' : undefined}
+      participantProfilePath={
+        task.sprintId
+          ? (ambassadorId) =>
+              `/rooms/${slug}/sprints/${task.sprintId}/participants/${ambassadorId}?taskId=${encodeURIComponent(task.id)}`
+          : undefined
+      }
     />
     </>
   );

@@ -8,7 +8,10 @@
 import type { CompetitionRewardRuleDto } from './competitionRewardRuleDto';
 
 export interface CompetitionRewardVersionsResponseDto {
-  /** @minimum 0 */
+  /**
+   * Число обновлённых позиций правил, заданий и действующих промокодных правил
+   * @minimum 0
+   */
   updatedCount: number;
   items: CompetitionRewardRuleDto[];
 }

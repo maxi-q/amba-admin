@@ -35,6 +35,7 @@ export enum MutationKeys {
   CREATE_REWARD = 'createReward',
   UPDATE_REWARD = 'updateReward',
   DELETE_REWARD = 'deleteReward',
+  APPLY_REWARD_VERSIONS = 'applyRewardVersions',
 
   CREATE_CUSTOM_PROMO_CODE = 'createCustomPromoCode',
   UPDATE_CUSTOM_PROMO_CODE = 'updateCustomPromoCode',

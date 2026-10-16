@@ -33,6 +33,7 @@ import type {
   GetRewardsResponseDto,
   RewardImageUploadDto,
   RewardImageUploadRequestDto,
+  RewardUsagesResponseDto,
   RewardsControllerGetRewardsParams,
   UpdateRewardPhotoRequestDto,
   UpdateRewardRequestDto,
@@ -227,6 +228,98 @@ export function useRewardsControllerGetRewardByIdForAmbassador<TData = Awaited<R
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getRewardsControllerGetRewardByIdForAmbassadorQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Все использования награды в правилах спринтов/событий, заданиях и промокодных правилах
+ */
+export const rewardsControllerGetRewardUsages = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<RewardUsagesResponseDto>(
+      {url: `/api/rewards/${id}/usages`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getRewardsControllerGetRewardUsagesQueryKey = (id?: string,) => {
+    return [
+    `/api/rewards/${id}/usages`
+    ] as const;
+    }
+
+    
+export const getRewardsControllerGetRewardUsagesQueryOptions = <TData = Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRewardsControllerGetRewardUsagesQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>> = ({ signal }) => rewardsControllerGetRewardUsages(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RewardsControllerGetRewardUsagesQueryResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>>
+export type RewardsControllerGetRewardUsagesQueryError = unknown
+
+
+export function useRewardsControllerGetRewardUsages<TData = Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>,
+          TError,
+          Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRewardsControllerGetRewardUsages<TData = Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>,
+          TError,
+          Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRewardsControllerGetRewardUsages<TData = Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Все использования награды в правилах спринтов/событий, заданиях и промокодных правилах
+ */
+
+export function useRewardsControllerGetRewardUsages<TData = Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof rewardsControllerGetRewardUsages>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRewardsControllerGetRewardUsagesQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -539,7 +632,7 @@ export const rewardsControllerCreateIconUploadUrl = (
   
 
 
-export const getRewardsControllerCreateIconUploadUrlMutationOptions = <TError = unknown,
+export const getRewardsControllerCreateIconUploadUrlMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>, TError,{id: string;data: RewardImageUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>, TError,{id: string;data: RewardImageUploadRequestDto}, TContext> => {
 
@@ -566,12 +659,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RewardsControllerCreateIconUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>>
     export type RewardsControllerCreateIconUploadUrlMutationBody = RewardImageUploadRequestDto
-    export type RewardsControllerCreateIconUploadUrlMutationError = unknown
+    export type RewardsControllerCreateIconUploadUrlMutationError = void
 
     /**
  * @summary Получить presigned URL для загрузки или замены иконки награды
  */
-export const useRewardsControllerCreateIconUploadUrl = <TError = unknown,
+export const useRewardsControllerCreateIconUploadUrl = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>, TError,{id: string;data: RewardImageUploadRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof rewardsControllerCreateIconUploadUrl>>,
@@ -601,7 +694,7 @@ export const rewardsControllerConfirmIconUpload = (
   
 
 
-export const getRewardsControllerConfirmIconUploadMutationOptions = <TError = unknown,
+export const getRewardsControllerConfirmIconUploadMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>, TError,{id: string}, TContext> => {
 
@@ -628,12 +721,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RewardsControllerConfirmIconUploadMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>>
     
-    export type RewardsControllerConfirmIconUploadMutationError = unknown
+    export type RewardsControllerConfirmIconUploadMutationError = void
 
     /**
  * @summary Подтвердить загрузку иконки награды в S3
  */
-export const useRewardsControllerConfirmIconUpload = <TError = unknown,
+export const useRewardsControllerConfirmIconUpload = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof rewardsControllerConfirmIconUpload>>,
@@ -643,6 +736,68 @@ export const useRewardsControllerConfirmIconUpload = <TError = unknown,
       > => {
 
       const mutationOptions = getRewardsControllerConfirmIconUploadMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Очищает текущую иконку и отменяет ожидающую загрузку. Исторические версии сохраняют свои изображения.
+ * @summary Удалить основное фото (иконку) награды
+ */
+export const rewardsControllerDeleteIcon = (
+    id: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/rewards/${id}/icon`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getRewardsControllerDeleteIconMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerDeleteIcon>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerDeleteIcon>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['rewardsControllerDeleteIcon'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rewardsControllerDeleteIcon>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  rewardsControllerDeleteIcon(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RewardsControllerDeleteIconMutationResult = NonNullable<Awaited<ReturnType<typeof rewardsControllerDeleteIcon>>>
+    
+    export type RewardsControllerDeleteIconMutationError = void
+
+    /**
+ * @summary Удалить основное фото (иконку) награды
+ */
+export const useRewardsControllerDeleteIcon = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rewardsControllerDeleteIcon>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rewardsControllerDeleteIcon>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRewardsControllerDeleteIconMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

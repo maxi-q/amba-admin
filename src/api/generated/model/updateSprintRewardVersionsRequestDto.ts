@@ -7,6 +7,6 @@
  */
 
 export interface UpdateSprintRewardVersionsRequestDto {
-  /** ID наград спринта, которые нужно переключить на их актуальные версии */
+  /** ID наград спринта или события, которые нужно переключить на их актуальные версии */
   rewardIds: string[];
 }

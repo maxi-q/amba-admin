@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig } from "axios";
-import type { BaseAfterRegistrationInvitationDto, BaseAmbassadorDto, BaseAmbassadorRoomApplicationDto, CreateInvitationRequestDto, UpdateRoomApplicationsStatusRequestDto } from "@/api/generated/model";
+import type { BaseAfterRegistrationInvitationDto, BaseAmbassadorDto, BaseAmbassadorRoomApplicationDto, CreateInvitationRequestDto, RegistrationAnswerDto, UpdateRoomApplicationsStatusRequestDto } from "@/api/generated/model";
 
 const roomId = "preview-room";
 const timestamp = "2026-09-15T09:00:00.000Z";
@@ -47,6 +47,32 @@ export function createParticipantsPreview(sourceAmbassadors: BaseAmbassadorDto[]
     }
     if (method === "GET" && url === "/api/ambassador/room-applications") {
       return paginate(applications.filter((item) => (!config.params?.status || item.status === config.params.status) && (!config.params?.roomIds?.length || config.params.roomIds.includes(item.roomId))), config.params);
+    }
+    const registrationAnswersMatch = url.match(/^\/api\/rooms\/([^/]+)\/applications\/([^/]+)\/registration-answers$/);
+    if (method === "GET" && registrationAnswersMatch) {
+      const application = applications.find((item) => item.roomId === registrationAnswersMatch[1] && item.id === registrationAnswersMatch[2]);
+      if (!application) throw new Error("Заявка не найдена");
+      const questions = [
+        "Расскажите о себе в трех словах",
+        "Прикрепите ссылки на ваши социальные сети",
+      ];
+      return questions.map((text, index): RegistrationAnswerDto => ({
+        id: `registration-answer-${application.id}-${index}`,
+        ambassadorRoomId: application.id,
+        roomId: application.roomId,
+        questionId: `registration-question-${index}`,
+        text: index === 0 ? "Целеустремленный, коммуникабельный, ответственный" : "https://vk.com/id10001\nhttps://t.me/example",
+        createdAt: timestamp,
+        question: {
+          id: `registration-question-${index}`,
+          roomId: application.roomId,
+          text,
+          position: index,
+          isDeleted: false,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        },
+      }));
     }
     if (method === "PATCH" && url === "/api/ambassador/room-applications/status") {
       const update = data as UpdateRoomApplicationsStatusRequestDto;

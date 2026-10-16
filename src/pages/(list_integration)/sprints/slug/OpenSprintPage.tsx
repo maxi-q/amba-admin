@@ -4,8 +4,6 @@ import pencil from "@/assets/task-flow/pencil.svg";
 import plus from "@/assets/task-flow/plus-muted.svg";
 import { Alert, AlertDescription, Button, Input, PageLoader } from "@senler/ui";
 import { CompetitionLifecycle } from "@/components/competitions/CompetitionLifecycle";
-import { PromoPointsPanel } from "@/components/competitions/PromoPointsPanel";
-import { ManualAwardPicker } from "@/components/competitions/ManualAwardPicker";
 import { useSprints } from "@/hooks/sprints/useSprints";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
 import { useRoomCreativeTasks } from "@/hooks/creativetasks/useRoomCreativeTasks";
@@ -16,7 +14,7 @@ import { OpenSprintSidebar } from "./components/OpenSprintSidebar";
 import { OpenSprintLeaderboardTab } from "./components/OpenSprintLeaderboardTab";
 import SprintSetting from "./index";
 
-type OpenSprintTab = "quests" | "leaderboard" | "promo";
+type OpenSprintTab = "quests" | "leaderboard";
 
 export default function OpenSprintPage() {
   const { sprintId = "", slug = "" } = useParams();
@@ -84,15 +82,20 @@ export default function OpenSprintPage() {
   }
 
   const isAwarding = sprint.status === "awarding";
-  const canEditSprint = sprint.status === "active";
-  const unavailableActionReason =
+  const canEditSprint = sprint.status === "active" || sprint.status === "reviewing";
+  const canAddTask = sprint.status === "active";
+  const editUnavailableReason =
+    sprint.status === "awarding"
+      ? "во время выдачи наград"
+      : "после завершения спринта";
+  const taskUnavailableReason =
     sprint.status === "reviewing"
       ? "во время проверки"
       : sprint.status === "awarding"
         ? "во время выдачи наград"
         : "после завершения спринта";
   const defaultTab: OpenSprintTab =
-    urlParams.get("tab") === "leaderboard" || isAwarding || sprint.status === "completed" ? "leaderboard" : "quests";
+    urlParams.get("tab") === "leaderboard" || isAwarding ? "leaderboard" : "quests";
   const tab =
     tabState?.sprintId === sprint.id ? tabState.value : defaultTab;
   const search =
@@ -107,15 +110,14 @@ export default function OpenSprintPage() {
             {sprint.name}
           </h1>
           <div className="flex shrink-0 items-center gap-1">
-            {sprint.status !== 'completed' && <ManualAwardPicker scope={{ kind: 'sprint', id: sprint.id, roomId }} />}
             <Button
               type="button"
               variant="outline"
               size="icon"
               disabled={!canEditSprint}
               className="size-7 border-[#e4e4e4] shadow-none disabled:opacity-100"
-              aria-label={canEditSprint ? "Редактировать спринт" : `Редактирование недоступно ${unavailableActionReason}`}
-              title={canEditSprint ? "Редактировать спринт" : `Редактирование недоступно ${unavailableActionReason}`}
+              aria-label={canEditSprint ? "Редактировать спринт" : `Редактирование недоступно ${editUnavailableReason}`}
+              title={canEditSprint ? "Редактировать спринт" : `Редактирование недоступно ${editUnavailableReason}`}
               onClick={() =>
                 navigate(`/rooms/${slug}/sprints/${sprint.id}/edit`)
               }
@@ -126,10 +128,10 @@ export default function OpenSprintPage() {
               type="button"
               variant="outline"
               size="icon"
-              disabled={!canEditSprint}
+              disabled={!canAddTask}
               className="size-7 border-[#e4e4e4] shadow-none disabled:opacity-100"
-              aria-label={canEditSprint ? "Добавить задание" : `Добавление заданий недоступно ${unavailableActionReason}`}
-              title={canEditSprint ? "Добавить задание" : `Добавление заданий недоступно ${unavailableActionReason}`}
+              aria-label={canAddTask ? "Добавить задание" : `Добавление заданий недоступно ${taskUnavailableReason}`}
+              title={canAddTask ? "Добавить задание" : `Добавление заданий недоступно ${taskUnavailableReason}`}
               onClick={() =>
                 navigate(
                   `/rooms/${slug}/sprints/${sprint.id}/edit?step=tasks`
@@ -141,12 +143,15 @@ export default function OpenSprintPage() {
           </div>
         </div>
 
-        <CompetitionLifecycle scope={{ kind: 'sprint', id: sprint.id, roomId }} status={sprint.status} onReview={() => setTabState({ sprintId: sprint.id, value: 'quests' })} />
+        {sprint.status === "active" ? (
+          <CompetitionLifecycle
+            scope={{ kind: "sprint", id: sprint.id, roomId }}
+            status={sprint.status}
+          />
+        ) : null}
 
         <div
-          className={`flex h-12 items-center gap-2 border-y border-[#e4e4e4] px-4 py-2.5 ${
-            isAwarding ? "" : "mt-1"
-          }`}
+          className="flex h-12 items-center gap-2 border-b border-t border-[#e4e4e4] px-4 py-2.5"
         >
           <div className="inline-flex h-7 shrink-0 items-center gap-0.5 rounded-md bg-[#f0f0f0] p-0.5">
             <button
@@ -175,23 +180,29 @@ export default function OpenSprintPage() {
             >
               Рейтинг
             </button>
-            <Button variant="ghost" className={`h-6 px-1.5 text-[13px] ${tab === 'promo' ? 'bg-white' : ''}`} onClick={() => setTabState({ sprintId: sprint.id, value: 'promo' })}>Промокод</Button>
           </div>
-          <Input
-            type="search"
-            value={search}
-            onChange={(event) =>
-              setSearchState({ sprintId: sprint.id, value: event.target.value })
-            }
-            placeholder="Поиск..."
-            aria-label={
-              tab === "quests" ? "Поиск по заданиям" : "Поиск по рейтингу"
-            }
-            className="h-7 flex-1 rounded-md border-0 bg-[#f0f0f0] px-2 py-1.5 text-[13px] shadow-none focus-visible:border-transparent"
-          />
+          {isAwarding && tab === "leaderboard" ? (
+            <Input
+              type="search"
+              value={search}
+              onChange={(event) =>
+                setSearchState({ sprintId: sprint.id, value: event.target.value })
+              }
+              placeholder="Поиск..."
+              aria-label="Поиск по рейтингу"
+              className="h-7 flex-1 rounded-md border-0 bg-[#f0f0f0] px-2 py-1.5 text-[13px] shadow-none focus-visible:border-transparent"
+            />
+          ) : null}
         </div>
 
-        {tab === "promo" ? <div className="p-4"><PromoPointsPanel scope={{ kind: 'sprint', id: sprint.id, roomId }} editable={sprint.status === 'active'} /></div> : tab === "quests" ? (
+        {sprint.status !== "active" ? (
+          <CompetitionLifecycle
+            scope={{ kind: "sprint", id: sprint.id, roomId }}
+            status={sprint.status}
+          />
+        ) : null}
+
+        {tab === "quests" ? (
           isTasksError ? <Alert variant="destructive" className="m-4 w-auto"><AlertDescription>Не удалось загрузить задания.<Button variant="outline" className="ml-2" onClick={() => void refetchTasks()}>Повторить</Button></AlertDescription></Alert> : isLoadingTasks ? (
             <div className="flex justify-center py-10">
               <PageLoader label="Загрузка…" />
@@ -234,6 +245,7 @@ export default function OpenSprintPage() {
             roomId={roomId}
             sprintId={sprint.id}
             rules={rules}
+            status={sprint.status}
             search={search}
           />
         )}

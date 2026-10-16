@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { User } from "lucide-react";
 import { useAmbassadors } from "@/hooks/ambassador/useAmbassadors";
 import { useSubmissions } from "@/hooks/creativetasks/useSubmissions";
@@ -16,6 +16,7 @@ interface TaskDetailSubmissionsListProps {
   minimalRewardInBalls: number;
   isFrozen?: boolean;
   reviewUnavailable?: string;
+  participantProfilePath?: (ambassadorId: string) => string;
 }
 
 const SUBMISSION_PROGRESS: Record<
@@ -77,6 +78,7 @@ export function TaskDetailSubmissionsList({
   minimalRewardInBalls,
   isFrozen = false,
   reviewUnavailable,
+  participantProfilePath,
 }: TaskDetailSubmissionsListProps) {
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -188,32 +190,58 @@ export function TaskDetailSubmissionsList({
               const ambassadorName =
                 ambassador?.username ?? submission.ambassadorId;
 
+              const profilePath = participantProfilePath?.(
+                submission.ambassadorId,
+              );
+
               return (
-                <button
+                <div
                   key={submission.id}
-                  type="button"
-                  className="flex h-12 w-full items-center gap-4 border-b border-[#e4e4e4] px-4 text-left hover:bg-[#fafafa]"
-                  onClick={() => { reset(); setLogSubmission(submission); }}
-                  aria-label={`Открыть статус задания: ${ambassadorName}`}
+                  className="flex h-12 w-full items-center border-b border-[#e4e4e4] hover:bg-[#fafafa]"
                 >
-                  <span className="flex min-w-0 flex-1 items-center gap-2">
-                    <Avatar
-                      src={ambassador?.avatarUrl}
-                      size="sm"
-                      shape="rounded"
-                      name={ambassadorName}
-                      colorKey={submission.ambassadorId}
-                      fallbackClassName="border border-[#e4e4e4] bg-[#f0f0f0] text-[#797979]"
-                    />
-                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 text-black">
-                      {ambassadorName}
+                  <button
+                    type="button"
+                    className="flex h-full min-w-0 flex-1 items-center gap-4 pl-4 text-left"
+                    onClick={() => {
+                      reset();
+                      setLogSubmission(submission);
+                    }}
+                    aria-label={`Открыть статус задания: ${ambassadorName}`}
+                  >
+                    <span className="flex min-w-0 flex-1 items-center gap-2">
+                      <Avatar
+                        src={ambassador?.avatarUrl}
+                        size="sm"
+                        shape="rounded"
+                        name={ambassadorName}
+                        colorKey={submission.ambassadorId}
+                        fallbackClassName="border border-[#e4e4e4] bg-[#f0f0f0] text-[#797979]"
+                      />
+                      <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 text-black">
+                        {ambassadorName}
+                      </span>
                     </span>
-                  </span>
-                  <SubmissionProgress submission={submission} />
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-[6px] border border-[#e4e4e4] text-[#797979]">
-                    <User className="size-4" aria-hidden />
-                  </span>
-                </button>
+                    <SubmissionProgress submission={submission} />
+                  </button>
+                  {profilePath ? (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="mx-4 size-7 shrink-0 border-[#e4e4e4] p-0 text-[#797979] shadow-none"
+                    >
+                      <Link
+                        to={profilePath}
+                        aria-label={`Профиль исполнителя: ${ambassadorName}`}
+                      >
+                        <User className="size-4" aria-hidden />
+                      </Link>
+                    </Button>
+                  ) : (
+                    <span className="mx-4 flex size-7 shrink-0 items-center justify-center rounded-[6px] border border-[#e4e4e4] text-[#797979]">
+                      <User className="size-4" aria-hidden />
+                    </span>
+                  )}
+                </div>
               );
             })}
           </div>

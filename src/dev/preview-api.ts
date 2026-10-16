@@ -50,6 +50,7 @@ const room: BaseRoomDto = {
   approvedSubscriptionId: "102",
   rejectedSubscriptionId: "103",
   preapprovedSubscriptionId: "104",
+  registrationSubscriptionId: "105",
   notificationCreativeTaskApprovedBotId: null,
   notificationCreativeTaskRejectedBotId: null,
   webhookUrl: null,
@@ -485,6 +486,7 @@ const leaderboardRewardVersion = (reward: (typeof rewards)[keyof typeof rewards]
 let catalogRewards: BaseRewardDto[] = [
   {
     id: rewards.money.id,
+    isSystem: true,
     version: 2,
     createdAt: NOW,
     updatedAt: NOW,
@@ -499,6 +501,7 @@ let catalogRewards: BaseRewardDto[] = [
   },
   {
     id: rewards.points.id,
+    isSystem: false,
     version: 2,
     createdAt: NOW,
     updatedAt: NOW,
@@ -513,6 +516,7 @@ let catalogRewards: BaseRewardDto[] = [
   },
   {
     id: rewards.shirt.id,
+    isSystem: false,
     version: 1,
     createdAt: NOW,
     updatedAt: NOW,
@@ -527,6 +531,7 @@ let catalogRewards: BaseRewardDto[] = [
   },
   {
     id: rewards.pro.id,
+    isSystem: false,
     version: 1,
     createdAt: NOW,
     updatedAt: NOW,
@@ -1028,9 +1033,48 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     return paginated(catalogRewards);
   }
 
+  const rewardUsagesMatch = url.match(/^\/api\/rewards\/([^/]+)\/usages$/);
+  if (method === "GET" && rewardUsagesMatch) {
+    const rewardId = rewardUsagesMatch[1];
+    const items = rewardRules.flatMap((rule) => {
+      const sprint = sprints.find((item) => item.id === rule.sprintId);
+      return rule.rewards
+        .filter((item) => item.rewardId === rewardId)
+        .map((item) => ({
+          type: "sprintRule" as const,
+          id: item.id,
+          ruleId: rule.id,
+          sprintId: rule.sprintId,
+          eventId: null,
+          competitionName: sprint?.name ?? null,
+          status: sprint?.status ?? "active",
+          isDraft: sprint?.isDraft ?? false,
+          isDeleted: false,
+          isActive: true,
+          ruleType: rule.type,
+          taskTitle: null,
+          rewardVersionId: item.rewardVersionId,
+          rewardVersion: item.reward.version,
+          hasNewVersion:
+            item.reward.version <
+            (catalogRewards.find((reward) => reward.id === rewardId)?.version ??
+              item.reward.version),
+          amount: item.amount,
+        }));
+    });
+    return {
+      rewardId,
+      currentVersion:
+        catalogRewards.find((reward) => reward.id === rewardId)?.version ?? 1,
+      items,
+      total: items.length,
+    };
+  }
+
   if (method === "POST" && url === "/api/rewards") {
     const data = requestData<{
       name: string;
+      description?: string | null;
       roomId: string;
       isDivisible?: boolean;
       divisionPrecision?: number;
@@ -1038,10 +1082,12 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
     const id = `reward-${crypto.randomUUID()}`;
     const created: BaseRewardDto = {
       id,
+      isSystem: false,
       version: 1,
       createdAt: NOW,
       updatedAt: NOW,
       name: data.name,
+      description: data.description ?? null,
       iconUrl: null,
       iconUploadedAt: null,
       photos: [],
@@ -1068,6 +1114,20 @@ async function mockRequest(config: AxiosRequestConfig): Promise<unknown> {
       updatedAt: NOW,
     };
     return catalogRewards[index];
+  }
+
+  const rewardIconMatch = url.match(/^\/api\/rewards\/([^/]+)\/icon$/);
+  if (method === "DELETE" && rewardIconMatch) {
+    const index = catalogRewards.findIndex((item) => item.id === rewardIconMatch[1]);
+    if (index < 0) throw new Error(`Mock reward not found: ${rewardIconMatch[1]}`);
+    catalogRewards[index] = {
+      ...catalogRewards[index],
+      iconUrl: null,
+      iconUploadedAt: null,
+      version: catalogRewards[index].version + 1,
+      updatedAt: NOW,
+    };
+    return undefined;
   }
 
   const rewardPhotosMatch = url.match(/^\/api\/rewards\/([^/]+)\/photos$/);

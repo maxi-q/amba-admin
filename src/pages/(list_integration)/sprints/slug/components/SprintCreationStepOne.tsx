@@ -28,6 +28,8 @@ interface SprintCreationStepOneProps {
   onDateRangeChange: (from?: Date, to?: Date) => void;
   onSaveDraft: () => void;
   onContinue: () => void;
+  endDateOnly?: boolean;
+  continueLabel?: string;
 }
 
 const parseFormDate = (value: string | null | undefined) => {
@@ -69,6 +71,8 @@ export const SprintCreationStepOne = ({
   onDateRangeChange,
   onSaveDraft,
   onContinue,
+  endDateOnly = false,
+  continueLabel,
 }: SprintCreationStepOneProps) => {
   const isDesktop = useDesktopCalendar();
   const selectedRange = useMemo<DateRange>(
@@ -85,6 +89,11 @@ export const SprintCreationStepOne = ({
   const endDateError = fieldErrors?.endDate?.[0];
 
   const handleRangeSelect = (range: DateRange | undefined) => {
+    if (endDateOnly) {
+      const nextEnd = range?.to ?? range?.from;
+      onDateRangeChange(selectedRange.from, nextEnd);
+      return;
+    }
     onDateRangeChange(range?.from, range?.to);
   };
 
@@ -94,6 +103,7 @@ export const SprintCreationStepOne = ({
         activeStep={1}
         isSaving={isSaving}
         onSaveDraft={onSaveDraft}
+        saveLabel={endDateOnly ? "Сохранить" : undefined}
       />
 
       <div className="mx-auto mt-9 flex w-full max-w-[700px] flex-col items-end gap-3">
@@ -110,6 +120,7 @@ export const SprintCreationStepOne = ({
                 id="sprint-name"
                 value={formData.name}
                 onChange={onNameChange}
+                disabled={endDateOnly}
                 aria-invalid={Boolean(nameError)}
                 className="h-10 border-[#e4e4e4] bg-white text-[13px] shadow-none"
               />
@@ -135,6 +146,7 @@ export const SprintCreationStepOne = ({
               id="sprint-description"
               value={description}
               onChange={(event) => onDescriptionChange(event.target.value)}
+              disabled={endDateOnly}
               className="min-h-[72px] border-[#e4e4e4] bg-white text-[13px] shadow-none"
               aria-label="Описание спринта"
             />
@@ -158,6 +170,7 @@ export const SprintCreationStepOne = ({
                     : ""
                 }
                 onChange={onRewardValueChange}
+                disabled={endDateOnly}
                 aria-invalid={Boolean(rewardValueError)}
                 className="h-10 border-[#e4e4e4] bg-white text-[13px] shadow-none"
               />
@@ -177,6 +190,7 @@ export const SprintCreationStepOne = ({
               <Select
                 value={formData.rewardUnits}
                 onValueChange={onRewardUnitsChange}
+                disabled={endDateOnly}
               >
                 <SelectTrigger
                   aria-label="Единицы награды"
@@ -213,6 +227,11 @@ export const SprintCreationStepOne = ({
                   onSelect={handleRangeSelect}
                   numberOfMonths={isDesktop ? 2 : 1}
                   defaultMonth={selectedRange.from}
+                  disabled={
+                    endDateOnly && selectedRange.from
+                      ? { before: selectedRange.from }
+                      : undefined
+                  }
                   className="p-3 [--cell-size:28px]"
                   classNames={{
                     months:
@@ -266,7 +285,7 @@ export const SprintCreationStepOne = ({
           disabled={isSaving}
           onClick={onContinue}
         >
-          {isSaving ? "Сохранение…" : "Продолжить"}
+          {isSaving ? "Сохранение…" : continueLabel ?? "Продолжить"}
         </Button>
       </div>
     </div>

@@ -120,6 +120,8 @@ const SprintSetting = () => {
   }, { allPages: true });
 
   const [sprint, setSprint] = useState<BaseSprintDto | null>(null);
+  const isReviewDateEdit =
+    isEditSprint && sprint?.status === "reviewing";
   const [description, setDescription] = useState("");
   const [creationStep, setCreationStep] = useState<1 | 2 | 3>(
     isEditSprint && new URLSearchParams(search).get("step") === "tasks" ? 3 : 1
@@ -769,6 +771,45 @@ const SprintSetting = () => {
     }
   };
 
+  const handleReviewDateSave = async () => {
+    if (!sprintId || !slug || !sprint || savingRef.current) return;
+    if (!formData.endDate) {
+      setFieldErrors({ endDate: ["Выберите дату окончания"] });
+      return;
+    }
+
+    const endDate =
+      sprint.endDate && dateToInput(sprint.endDate) === formData.endDate
+        ? sprint.endDate
+        : formDateToIso(formData.endDate);
+
+    savingRef.current = true;
+    setIsLaunching(true);
+    setFieldErrors({});
+    setGeneralError("");
+    try {
+      await patchSprintAsync({
+        sprintId,
+        data: { endDate },
+      });
+      toast.success("Дата окончания обновлена");
+      leavingRef.current = true;
+      setHasUnsavedChanges(false);
+      setAllowLeave(true);
+      navigate(`/rooms/${slug}/sprints/${sprintId}`);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Не удалось обновить дату окончания";
+      setGeneralError(message);
+      toast.error(message);
+    } finally {
+      savingRef.current = false;
+      setIsLaunching(false);
+    }
+  };
+
   if (isLoadingSprints || ((isNewSprint || isEditSprint) && isLoadingRoom)) {
     return (
       <div className="flex min-h-dvh w-full items-center justify-center">
@@ -833,7 +874,7 @@ const SprintSetting = () => {
             <AlertDescription>{generalError}</AlertDescription>
           </Alert>
         ) : null}
-        {creationStep === 1 ? (
+        {creationStep === 1 || isReviewDateEdit ? (
           <SprintCreationStepOne
             formData={formData}
             description={description}
@@ -850,12 +891,19 @@ const SprintSetting = () => {
             }}
             onDateRangeChange={handleDateRangeChange}
             onSaveDraft={() => {
-              void handleDraftClick();
+              if (isReviewDateEdit) void handleReviewDateSave();
+              else void handleDraftClick();
             }}
-            onContinue={handleCreationStepOneContinue}
+            onContinue={
+              isReviewDateEdit
+                ? () => void handleReviewDateSave()
+                : handleCreationStepOneContinue
+            }
+            endDateOnly={isReviewDateEdit}
+            continueLabel={isReviewDateEdit ? "Сохранить" : undefined}
           />
         ) : null}
-        {creationStep === 2 ? (
+        {!isReviewDateEdit && creationStep === 2 ? (
           <SprintCreationStepTwo
             roomId={roomId}
             roomSlug={slug ?? ""}
@@ -882,7 +930,7 @@ const SprintSetting = () => {
             }}
           />
         ) : null}
-        {creationStep === 3 ? (
+        {!isReviewDateEdit && creationStep === 3 ? (
           <SprintCreationStepThree
             roomId={roomId}
             roomSlug={slug ?? ""}

@@ -16,6 +16,7 @@ import {
 import type {
   LeaderboardEntryDto,
   LeaderboardRewardDto,
+  BaseSprintDtoStatus,
   SprintRewardRuleDto,
 } from "@/api/generated/model";
 import { useSprintLeaderboard } from "@/hooks/sprints/useSprintLeaderboard";
@@ -28,6 +29,7 @@ interface OpenSprintLeaderboardTabProps {
   roomId: string;
   sprintId: string;
   rules: SprintRewardRuleDto[];
+  status: BaseSprintDtoStatus;
   search?: string;
 }
 
@@ -227,6 +229,7 @@ export function OpenSprintLeaderboardTab({
   roomId,
   sprintId,
   rules,
+  status,
   search = "",
 }: OpenSprintLeaderboardTabProps) {
   const { slug = "" } = useParams();
@@ -314,6 +317,15 @@ export function OpenSprintLeaderboardTab({
             (nextEntry
               ? nextEntry.rewards.length === 0
               : currentPage === totalPages && entryIndex === entries.length - 1);
+          const participantGrants = (grants.data?.items ?? []).filter(
+            (grant) => grant.ambassadorId === entry.ambassadorId,
+          );
+          const deliveryLabel =
+            status !== "awarding" || participantGrants.length === 0
+              ? null
+              : participantGrants.every((grant) => Boolean(grant.deliveredAt))
+                ? "Награды отправлены"
+                : "Выдайте награды";
 
           return (
             <Fragment key={entry.ambassadorId}>
@@ -330,9 +342,20 @@ export function OpenSprintLeaderboardTab({
                     colorKey={entry.ambassadorId}
                     className="shrink-0"
                   />
-                  <p className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 tracking-[-0.25px] text-foreground">
-                    {entry.username}
-                  </p>
+                  <div className="min-w-0 flex-1 text-[13px] font-medium leading-4 tracking-[-0.25px]">
+                    <p className="truncate text-foreground">{entry.username}</p>
+                    {deliveryLabel ? (
+                      <p
+                        className={`truncate ${
+                          deliveryLabel === "Выдайте награды"
+                            ? "text-[#22c55e]"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {deliveryLabel}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
 
                 {visibleRewards.length > 0 ? (

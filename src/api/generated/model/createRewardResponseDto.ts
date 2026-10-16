@@ -15,6 +15,8 @@ export interface CreateRewardResponseDto {
   createdAt: string;
   /** Timestamp of the last update of the record */
   updatedAt: string;
+  /** Системная награда: изменение и удаление запрещены */
+  readonly isSystem: boolean;
   /**
    * Номер актуальной версии награды
    * @minimum 1
@@ -28,7 +30,7 @@ export interface CreateRewardResponseDto {
    */
   description?: string | null;
   /**
-   * Временная ссылка S3 на основное фото (иконку); формируется при запросе награды, срок — S3_DOWNLOAD_URL_TTL. null, если нет подтверждённой иконки
+   * Временная ссылка S3 на основное фото (иконку); формируется при запросе награды, срок — S3_DOWNLOAD_URL_TTL. null, если иконка удалена или ещё не загружена. Удаление: DELETE /api/rewards/:id/icon
    * @nullable
    */
   iconUrl: string | null;

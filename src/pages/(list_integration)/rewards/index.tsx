@@ -25,6 +25,7 @@ import {
   Alert,
   AlertDescription,
   Button,
+  CheckBox,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -45,6 +46,7 @@ import {
   TabsList,
   TabsRoot,
   TabsTrigger,
+  Textarea,
 } from "@senler/ui";
 import type { BaseRewardDto, RewardPhotoDto } from "@/api/generated/model";
 import { useGetRoomById } from "@/hooks/rooms/useGetRoomById";
@@ -55,6 +57,11 @@ import {
   useUpdateReward,
 } from "@/hooks/rewards/useRewardMutations";
 import {
+  useApplyRewardVersions,
+  useRewardUsageTargets,
+  type RewardUsageTarget,
+} from "@/hooks/rewards/useRewardVersionPropagation";
+import {
   SprintCreationStepTwo,
   type DraftManualReward,
   type DraftProportionalReward,
@@ -63,8 +70,10 @@ import {
 
 type RewardFormState = {
   name: string;
+  description: string;
   iconFile: File | null;
   existingIconUrl: string | null;
+  deleteExistingIcon: boolean;
   existingPhotos: RewardPhotoDto[];
   photoFiles: File[];
   removedPhotoIds: string[];
@@ -74,8 +83,10 @@ type RewardFormState = {
 
 const emptyForm = (): RewardFormState => ({
   name: "",
+  description: "",
   iconFile: null,
   existingIconUrl: null,
+  deleteExistingIcon: false,
   existingPhotos: [],
   photoFiles: [],
   removedPhotoIds: [],
@@ -91,6 +102,9 @@ const precisionLabel = (reward: BaseRewardDto) =>
     ? `точность ${precisionValue(reward.divisionPrecision)}`
     : "точность до целого";
 
+const usageTargetKey = (target: RewardUsageTarget) =>
+  `${target.kind}:${target.id}`;
+
 function RewardImagePicker({
   form,
   setForm,
@@ -98,37 +112,76 @@ function RewardImagePicker({
   form: RewardFormState;
   setForm: Dispatch<SetStateAction<RewardFormState>>;
 }) {
+  const maxImages = 3;
   const inputRef = useRef<HTMLInputElement>(null);
   const pickerMode = useRef<"icon" | "gallery">("icon");
+  const [selectedImageKey, setSelectedImageKey] = useState("icon");
   const localUrls = useMemo(
     () =>
       [form.iconFile, ...form.photoFiles]
         .filter((file): file is File => Boolean(file))
         .map((file) => URL.createObjectURL(file)),
-    [form.iconFile, form.photoFiles]
+    [form.iconFile, form.photoFiles],
   );
 
   useEffect(
     () => () => localUrls.forEach((url) => URL.revokeObjectURL(url)),
-    [localUrls]
+    [localUrls],
   );
 
   const iconUrl = form.iconFile ? localUrls[0] : form.existingIconUrl;
   const photoUrlOffset = form.iconFile ? 1 : 0;
-  const gallery = [
-    ...form.existingPhotos.map((photo) => ({
-      key: photo.id,
-      url: photo.url,
-      photo,
-      fileIndex: -1,
-    })),
-    ...form.photoFiles.map((_, fileIndex) => ({
-      key: `file-${fileIndex}`,
-      url: localUrls[fileIndex + photoUrlOffset],
-      photo: null,
-      fileIndex,
-    })),
-  ];
+  const images = useMemo(
+    () => [
+      ...(iconUrl
+        ? [
+            {
+              key: "icon",
+              url: iconUrl,
+              kind: "icon" as const,
+              photo: null,
+              fileIndex: -1,
+              removable: true,
+            },
+          ]
+        : []),
+      ...form.existingPhotos.map((photo) => ({
+        key: photo.id,
+        url: photo.url,
+        kind: "photo" as const,
+        photo,
+        fileIndex: -1,
+        removable: true,
+      })),
+      ...form.photoFiles.map((_, fileIndex) => ({
+        key: `file-${fileIndex}`,
+        url: localUrls[fileIndex + photoUrlOffset],
+        kind: "photo" as const,
+        photo: null,
+        fileIndex,
+        removable: true,
+      })),
+    ],
+    [
+      form.existingPhotos,
+      form.iconFile,
+      form.photoFiles,
+      iconUrl,
+      localUrls,
+      photoUrlOffset,
+    ],
+  );
+  const selectedImage =
+    images.find((image) => image.key === selectedImageKey) ?? images[0];
+
+  useEffect(() => {
+    if (
+      images.length > 0 &&
+      !images.some((image) => image.key === selectedImageKey)
+    ) {
+      setSelectedImageKey(images[0].key);
+    }
+  }, [images, selectedImageKey]);
 
   const openPicker = (mode: "icon" | "gallery") => {
     pickerMode.current = mode;
@@ -139,10 +192,19 @@ function RewardImagePicker({
     const selected = Array.from(event.target.files ?? []);
     event.target.value = "";
     if (selected.length === 0) return;
-    if (selected.length > 3) {
-      toast.message("Можно выбрать не больше трех изображений за раз");
+    const nonIconCount = images.length - (iconUrl ? 1 : 0);
+    const available =
+      pickerMode.current === "icon"
+        ? Math.max(0, maxImages - nonIconCount)
+        : Math.max(0, maxImages - images.length);
+    if (available === 0) {
+      toast.message("Можно добавить не больше трех изображений");
+      return;
     }
-    const files = selected.slice(0, 3);
+    if (selected.length > available) {
+      toast.message("Можно добавить не больше трех изображений");
+    }
+    const files = selected.slice(0, available);
 
     setForm((previous) => {
       if (pickerMode.current === "icon") {
@@ -154,9 +216,36 @@ function RewardImagePicker({
       }
       return { ...previous, photoFiles: [...previous.photoFiles, ...files] };
     });
+    if (pickerMode.current === "icon") setSelectedImageKey("icon");
   };
 
-  const removePhoto = (photo: RewardPhotoDto | null, fileIndex: number) => {
+  const removeImage = (
+    kind: "icon" | "photo",
+    photo: RewardPhotoDto | null,
+    fileIndex: number,
+  ) => {
+    if (kind === "icon") {
+      setForm((previous) => {
+        if (previous.iconFile && previous.existingIconUrl) {
+          return { ...previous, iconFile: null };
+        }
+        if (previous.existingIconUrl) {
+          return {
+            ...previous,
+            existingIconUrl: null,
+            deleteExistingIcon: true,
+          };
+        }
+        const [nextIcon = null, ...remainingPhotos] = previous.photoFiles;
+        return {
+          ...previous,
+          iconFile: nextIcon,
+          photoFiles: remainingPhotos,
+        };
+      });
+      setSelectedImageKey("icon");
+      return;
+    }
     setForm((previous) =>
       photo
         ? {
@@ -167,7 +256,7 @@ function RewardImagePicker({
         : {
             ...previous,
             photoFiles: previous.photoFiles.filter((_, index) => index !== fileIndex),
-          }
+          },
     );
   };
 
@@ -183,50 +272,71 @@ function RewardImagePicker({
         aria-label="Изображения награды"
       />
 
-      {iconUrl ? (
-        <div className="grid h-[241px] grid-cols-[minmax(0,1fr)_72px] gap-3">
+      {selectedImage ? (
+        <div className="grid h-[241px] grid-cols-[241px_73px] gap-3">
           <button
             type="button"
             className="overflow-hidden rounded-md bg-[#f0f0f0] text-left"
-            onClick={() => openPicker("icon")}
-            aria-label="Заменить основное изображение"
+            onClick={() =>
+              openPicker(
+                !iconUrl || selectedImage.kind === "icon" ? "icon" : "gallery",
+              )
+            }
+            aria-label="Изменить выбранное изображение"
           >
             <img
-              src={iconUrl}
+              src={selectedImage.url}
               alt="Изображение награды"
               className="size-full object-cover"
             />
           </button>
-          <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
-            {gallery.map((item) => (
+          <div className="flex min-h-0 flex-col gap-[11px] overflow-y-auto">
+            {images.map((item) => (
               <div
                 key={item.key}
-                className="group relative aspect-square shrink-0 overflow-hidden rounded-md bg-[#f0f0f0]"
+                className={`group relative aspect-square shrink-0 overflow-hidden rounded-md bg-[#f0f0f0] ${
+                  item.key === selectedImage.key
+                    ? "border-2 border-[#2563eb]"
+                    : "border border-transparent"
+                }`}
               >
-                <img src={item.url} alt="" className="size-full object-cover" />
                 <button
                   type="button"
-                  className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-black/45 text-white"
-                  onClick={() => removePhoto(item.photo, item.fileIndex)}
-                  aria-label="Удалить изображение"
+                  className="size-full"
+                  onClick={() => setSelectedImageKey(item.key)}
+                  aria-label="Показать изображение"
                 >
-                  <X className="size-3" strokeWidth={2} />
+                  <img src={item.url} alt="" className="size-full object-cover" />
                 </button>
+                {item.removable ? (
+                  <button
+                    type="button"
+                    className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-black/45 text-white"
+                    onClick={() =>
+                      removeImage(item.kind, item.photo, item.fileIndex)
+                    }
+                    aria-label="Удалить изображение"
+                  >
+                    <X className="size-3" strokeWidth={2} />
+                  </button>
+                ) : null}
               </div>
             ))}
-            <button
-              type="button"
-              className="flex aspect-square shrink-0 items-center justify-center rounded-md border-2 border-dashed border-[#2563eb] text-[#797979] hover:bg-[#f7f9ff]"
-              onClick={() => openPicker("gallery")}
-              aria-label="Добавить изображения"
-            >
-              <span className="relative">
-                <Plus className="size-6" strokeWidth={1.5} />
-                <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[#21c55d] text-white">
-                  <Plus className="size-3" strokeWidth={2} />
+            {images.length < maxImages ? (
+              <button
+                type="button"
+                className="flex aspect-square shrink-0 items-center justify-center rounded-md border-2 border-dashed border-[#2563eb] text-[#797979] hover:bg-[#f7f9ff]"
+                onClick={() => openPicker(iconUrl ? "gallery" : "icon")}
+                aria-label="Добавить изображения"
+              >
+                <span className="relative">
+                  <Plus className="size-6" strokeWidth={1.5} />
+                  <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-[#21c55d] text-white">
+                    <Plus className="size-3" strokeWidth={2} />
+                  </span>
                 </span>
-              </span>
-            </button>
+              </button>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -279,7 +389,7 @@ function RewardsPreview({
       <div className="flex min-h-12 items-start gap-2 bg-[#fff4e8] px-4 py-2 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black">
         <TriangleAlert className="size-4 shrink-0 text-[#f97316]" strokeWidth={1.5} />
         <p className="min-w-0 flex-1 break-words">
-          Вы находитесь в режиме превью, где можно посмотреть, как награды будут распределяться в режиме спринта. Чтобы применить награды, необходимо создать спринт
+          Вы находитесь в режиме превью, где можно посмотреть, как награды будут распределяться в режиме спринта/конкурса. Чтобы применить награды, необходимо создать спринт/конкурс
         </p>
       </div>
       <header className="flex h-12 items-center justify-between border-b border-[#e4e4e4] px-4">
@@ -324,9 +434,24 @@ export default function RewardsPage() {
   }, { allPages: true });
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editing, setEditing] = useState<BaseRewardDto | null>(null);
   const [form, setForm] = useState<RewardFormState>(emptyForm);
+  const [updatedRewardId, setUpdatedRewardId] = useState("");
+  const [pendingUsageTargets, setPendingUsageTargets] = useState<
+    RewardUsageTarget[]
+  >([]);
+  const [selectedUsageTargets, setSelectedUsageTargets] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const rewardUsage = useRewardUsageTargets(
+    roomId,
+    editing?.id ?? "",
+    dialogOpen && Boolean(editing),
+  );
+  const rewardVersionApply = useApplyRewardVersions(roomId);
 
   const {
     createReward,
@@ -371,8 +496,10 @@ export default function RewardsPage() {
     setEditing(reward);
     setForm({
       name: reward.name,
+      description: reward.description ?? "",
       iconFile: null,
       existingIconUrl: reward.iconUrl,
+      deleteExistingIcon: false,
       existingPhotos: reward.photos,
       photoFiles: [],
       removedPhotoIds: [],
@@ -385,6 +512,7 @@ export default function RewardsPage() {
   const handleSubmit = () => {
     if (isPending || !roomId || !form.name.trim()) return;
     const divisionPrecision = form.isDivisible ? form.divisionPrecision : 0;
+    const description = form.description.trim() || null;
     const onPhotoConfirmed = (file: File, reward: BaseRewardDto) => setForm((previous) => ({
       ...previous,
       photoFiles: previous.photoFiles.filter((pending) => pending !== file),
@@ -397,18 +525,28 @@ export default function RewardsPage() {
           id: editing.id,
           data: {
             name: form.name.trim(),
+            description,
             isDivisible: form.isDivisible,
             divisionPrecision,
           },
           iconFile: form.iconFile,
+          deleteExistingIcon: form.deleteExistingIcon,
           photoFiles: form.photoFiles,
           photoIdsToDelete: form.removedPhotoIds,
           onPhotoConfirmed,
         },
         {
-          onSuccess: () => {
-            toast.success("Награда обновлена");
+          onSuccess: async (reward) => {
+            const usageResult = await rewardUsage.refetch();
+            const targets = usageResult.data ?? [];
+            setUpdatedRewardId(reward.id);
+            setPendingUsageTargets(targets);
+            setSelectedUsageTargets(
+              new Set(targets.map((target) => usageTargetKey(target))),
+            );
             setDialogOpen(false);
+            if (targets.length > 0) setApplyDialogOpen(true);
+            else toast.success("Награда обновлена");
             void refetch();
           },
         }
@@ -420,6 +558,7 @@ export default function RewardsPage() {
     createReward(
       {
         name: form.name.trim(),
+        description,
         roomId,
         iconFile: form.iconFile,
         photoFiles: form.photoFiles,
@@ -435,6 +574,25 @@ export default function RewardsPage() {
           void refetch();
         },
       }
+    );
+  };
+
+  const finishVersionApply = (message: string) => {
+    setApplyDialogOpen(false);
+    setUpdatedRewardId("");
+    setPendingUsageTargets([]);
+    setSelectedUsageTargets(new Set());
+    toast.success(message);
+  };
+
+  const handleApplyVersions = () => {
+    const targets = pendingUsageTargets.filter((target) =>
+      selectedUsageTargets.has(usageTargetKey(target)),
+    );
+    if (!updatedRewardId || targets.length === 0) return;
+    rewardVersionApply.applyRewardVersions(
+      { rewardId: updatedRewardId, targets },
+      { onSuccess: () => finishVersionApply("Изменения применены") },
     );
   };
 
@@ -508,12 +666,12 @@ export default function RewardsPage() {
           ) : null}
 
           {rewards.length === 0 && !isError ? (
-            <Empty className="min-h-0 flex-1 gap-3 border-0 p-6 md:p-12">
+            <Empty className="min-h-0 flex-1 gap-4 border-0 p-6 md:p-12">
               <EmptyHeader className="max-w-[320px] gap-1">
-                <EmptyTitle className="text-[14px] font-semibold leading-5 tracking-[-0.25px] text-black">
+                <EmptyTitle className="text-[15px] font-medium leading-5 tracking-[-0.135px] text-black">
                   Награды еще не добавлены
                 </EmptyTitle>
-                <EmptyDescription className="text-[13px] font-normal leading-4 text-[#797979] no-underline">
+                <EmptyDescription className="text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979] no-underline">
                   Создавайте вознаграждения за выполнение заданий для исполнителей
                 </EmptyDescription>
               </EmptyHeader>
@@ -541,7 +699,7 @@ export default function RewardsPage() {
                   >
                     <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#e4e4e4] bg-[#f0f0f0]">
                       {imageUrl ? (
-                        <img src={imageUrl} alt="" className="size-full object-cover" />
+                        <img src={imageUrl} alt="" className="size-10 object-cover" />
                       ) : (
                         <Gift className="size-6 text-[#797979]" strokeWidth={1.5} />
                       )}
@@ -550,10 +708,11 @@ export default function RewardsPage() {
                       <p className="truncate text-[13px] font-medium leading-4 tracking-[-0.25px] text-black">
                         {reward.name}
                       </p>
-                      <p className="mt-1 truncate text-[11px] font-medium uppercase leading-4 tracking-[0.3px] text-[#797979]">
+                      <p className="mt-1 truncate text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979]">
                         {precisionLabel(reward)}
                       </p>
                     </div>
+                    {!reward.isSystem ? (
                       <div className="flex shrink-0 items-center gap-1">
                         <Button
                           type="button"
@@ -578,6 +737,7 @@ export default function RewardsPage() {
                           <Trash2 className="size-4" strokeWidth={1.5} />
                         </Button>
                       </div>
+                    ) : null}
                   </div>
                 );
               })}
@@ -608,7 +768,7 @@ export default function RewardsPage() {
             </Button>
           </DialogHeader>
 
-          <fieldset disabled={isPending} className="m-0 min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto border-0 px-4 pb-3 pt-0">
+          <fieldset disabled={isPending} className="m-0 min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto border-0 px-4 pb-4 pt-0">
             <RewardImagePicker form={form} setForm={setForm} />
 
             <div className="space-y-2">
@@ -625,6 +785,28 @@ export default function RewardsPage() {
                 className="h-10 border-[#e4e4e4] text-[13px] shadow-none"
                 aria-label="Название награды"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[13px] font-medium leading-4 tracking-[-0.25px] text-[#797979]">
+                Описание
+              </label>
+              <Textarea
+                value={form.description}
+                onChange={(event) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    description: event.target.value,
+                  }))
+                }
+                className="h-[72px] min-h-[72px] resize-none border-[#e4e4e4] text-[13px] shadow-none"
+                aria-label="Описание награды"
+              />
+              {validationErrors.description?.[0] ? (
+                <p className="text-xs text-destructive">
+                  {validationErrors.description[0]}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -654,7 +836,7 @@ export default function RewardsPage() {
                 </TabsList>
               </TabsRoot>
               {form.isDivisible ? (
-                <div className="space-y-1">
+                <div className="space-y-1 pt-1">
                   <Select
                     value={String(form.divisionPrecision)}
                     onValueChange={(value) =>
@@ -689,16 +871,139 @@ export default function RewardsPage() {
                 <AlertDescription>{generalError}</AlertDescription>
               </Alert>
             ) : null}
+
+            {editing && rewardUsage.isError ? (
+              <Alert variant="destructive">
+                <AlertDescription className="space-y-2">
+                  <p>Не удалось проверить, где используется награда.</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 bg-white"
+                    onClick={() => void rewardUsage.refetch()}
+                  >
+                    Повторить
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : null}
           </fieldset>
 
-          <DialogFooter className="h-12 shrink-0 flex-row items-center justify-end px-4 py-2.5 sm:justify-end">
+          <DialogFooter className="h-12 shrink-0 flex-row items-center justify-end gap-2 px-4 py-2.5 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-7 border-[#e4e4e4] bg-white px-2 text-[13px] font-medium shadow-none"
+              onClick={() => setDialogOpen(false)}
+              disabled={isPending}
+            >
+              Отмена
+            </Button>
             <Button
               type="button"
               className="h-7 bg-[#2563eb] px-2 text-[13px] font-medium hover:bg-[#2563eb]/90"
               onClick={handleSubmit}
-              disabled={isPending || !form.name.trim() || (!editing && !form.iconFile)}
+              disabled={
+                isPending ||
+                !form.name.trim() ||
+                (!editing && !form.iconFile) ||
+                Boolean(editing && (rewardUsage.isLoading || rewardUsage.isError))
+              }
             >
               {isCreating || isUpdating ? "Сохранение…" : "Сохранить"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
+
+      <DialogRoot
+        open={applyDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !rewardVersionApply.isPending) {
+            finishVersionApply("Награда обновлена");
+          }
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="w-[min(358px,calc(100vw-2rem))] gap-0 overflow-hidden rounded-lg border-0 bg-white p-0 sm:max-w-[358px]"
+        >
+          <DialogHeader className="h-11 shrink-0 flex-row items-center gap-4 space-y-0 px-4 py-2.5">
+            <DialogTitle className="flex-1 text-left text-[15px] font-medium leading-5 tracking-[-0.9px] text-black">
+              Применить изменения
+            </DialogTitle>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon_sm"
+              className="size-6 text-[#797979]"
+              onClick={() => finishVersionApply("Награда обновлена")}
+              disabled={rewardVersionApply.isPending}
+              aria-label="Закрыть"
+            >
+              <X className="size-5" strokeWidth={1.5} />
+            </Button>
+          </DialogHeader>
+
+          <div className="space-y-3 px-4 pb-2 pt-2">
+            <p className="text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979]">
+              Хотите применить изменения для текущих и запланированных событий?
+            </p>
+            <div className="space-y-2">
+              {pendingUsageTargets.map((target) => {
+                const key = usageTargetKey(target);
+                return (
+                  <div key={key} className="flex h-4 min-w-0 items-center gap-2.5">
+                    <CheckBox
+                      checked={selectedUsageTargets.has(key)}
+                      onCheckedChange={(checked) =>
+                        setSelectedUsageTargets((previous) => {
+                          const next = new Set(previous);
+                          if (checked === true) next.add(key);
+                          else next.delete(key);
+                          return next;
+                        })
+                      }
+                      aria-label={`Применить изменения: ${target.name}`}
+                      disabled={rewardVersionApply.isPending}
+                    />
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium leading-4 tracking-[-0.0325px] text-black">
+                      {target.name}
+                    </span>
+                    <span className="shrink-0 text-[13px] font-medium leading-4 tracking-[-0.0325px] text-[#797979]">
+                      {target.kind === "sprint" ? "Спринт" : "Событие"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {rewardVersionApply.generalError ? (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {rewardVersionApply.generalError}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </div>
+
+          <DialogFooter className="h-12 shrink-0 flex-row items-center justify-end gap-2 px-4 py-2.5 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-7 border-[#e4e4e4] bg-white px-2 text-[13px] font-medium shadow-none"
+              onClick={() => finishVersionApply("Награда обновлена")}
+              disabled={rewardVersionApply.isPending}
+            >
+              Не применять
+            </Button>
+            <Button
+              type="button"
+              className="h-7 bg-[#2563eb] px-2 text-[13px] font-medium hover:bg-[#2563eb]/90"
+              onClick={handleApplyVersions}
+              disabled={rewardVersionApply.isPending || selectedUsageTargets.size === 0}
+            >
+              {rewardVersionApply.isPending ? "Применение…" : "Применить"}
             </Button>
           </DialogFooter>
         </DialogContent>

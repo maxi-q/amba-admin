@@ -36,10 +36,15 @@ export interface CreateRoomResponseDto {
    */
   rejectedSubscriptionId: string | null;
   /**
-   * ID сегмента Senler.io / группы подписчиков Senler.ru: заранее проверенные, вход без дополнительных вопросов и ручного одобрения
+   * ID сегмента Senler.io / группы подписчиков Senler.ru: регистрация с опросом и автоматическим одобрением заявки после заполнения
    * @nullable
    */
   preapprovedSubscriptionId: string | null;
+  /**
+   * ID сегмента Senler.io / группы подписчиков Senler.ru: обычная регистрация с опросом и ручным одобрением заявки
+   * @nullable
+   */
+  registrationSubscriptionId: string | null;
   /**
    * ID бота в Senler для уведомления об успешно принятом креативе
    * @nullable

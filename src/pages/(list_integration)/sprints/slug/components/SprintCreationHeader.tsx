@@ -5,6 +5,7 @@ interface SprintCreationHeaderProps {
   activeStep: 1 | 2 | 3;
   isSaving?: boolean;
   onSaveDraft: () => void;
+  saveLabel?: string;
 }
 
 const steps = ["Настройка спринта", "Награды", "Задания"];
@@ -13,6 +14,7 @@ export const SprintCreationHeader = ({
   activeStep,
   isSaving = false,
   onSaveDraft,
+  saveLabel,
 }: SprintCreationHeaderProps) => (
   <div className="border-b border-[#e4e4e4]">
     <div
@@ -70,7 +72,7 @@ export const SprintCreationHeader = ({
         disabled={isSaving}
         onClick={onSaveDraft}
       >
-        {isSaving ? "Сохранение…" : "Сохранить черновик"}
+        {isSaving ? "Сохранение…" : saveLabel ?? "Сохранить черновик"}
       </Button>
     </div>
   </div>

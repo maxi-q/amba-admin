@@ -16,6 +16,7 @@ export interface Participant {
   name: string;
   avatarUrl?: string | null;
   profileUrl?: string;
+  application?: BaseAmbassadorRoomApplicationDto;
   invitationId?: string;
   cancellationUnavailable?: string;
   role?: "owner" | "admin" | "editor" | "viewer";
@@ -36,6 +37,7 @@ export function applicationParticipants(applications: BaseAmbassadorRoomApplicat
       name: item.name || profile?.username || item.ambassadorId,
       avatarUrl: profile?.avatarUrl,
       profileUrl: profile ? vkProfileUrl(profile.channelTypeId, profile.subscriberId) : undefined,
+      application: item,
     };
   });
 }

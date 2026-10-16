@@ -485,7 +485,8 @@ export const useEventCompetitionsControllerDeleteRule = <TError = unknown,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Явно обновить версии наград события до актуальных
+ * Задания с ответами и назначенные награды обновлять нельзя. Промокодное правило получает новую ревизию с новым отсчётом активаций; прежние начисления сохраняются. items содержит правила распределения; задания и промокодные правила после обновления следует запросить повторно.
+ * @summary Применить актуальные версии наград к правилам, заданиям и промокодным правилам события
  */
 export const eventCompetitionsControllerUpdateVersions = (
     eventId: string,
@@ -533,7 +534,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type EventCompetitionsControllerUpdateVersionsMutationError = CompetitionRewardVersionsResponseDto
 
     /**
- * @summary Явно обновить версии наград события до актуальных
+ * @summary Применить актуальные версии наград к правилам, заданиям и промокодным правилам события
  */
 export const useEventCompetitionsControllerUpdateVersions = <TError = CompetitionRewardVersionsResponseDto,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventCompetitionsControllerUpdateVersions>>, TError,{eventId: string;data: UpdateSprintRewardVersionsRequestDto}, TContext>, request?: SecondParameter<typeof customInstance>}

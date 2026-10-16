@@ -8,6 +8,7 @@ import {
   rewardsControllerCreateIconUploadUrl,
   rewardsControllerCreatePhoto,
   rewardsControllerCreateReward,
+  rewardsControllerDeleteIcon,
   rewardsControllerDeletePhoto,
   rewardsControllerDeleteReward,
   rewardsControllerUpdateReward,
@@ -36,6 +37,7 @@ const getErrorState = (error: unknown) => ({
 
 export interface CreateRewardInput {
   name: string;
+  description: string | null;
   roomId: string;
   iconFile: File;
   photoFiles?: File[];
@@ -49,6 +51,7 @@ export interface UpdateRewardInput {
   id: string;
   data: UpdateRewardRequestDto;
   iconFile?: File | null;
+  deleteExistingIcon?: boolean;
   photoFiles?: File[];
   photoIdsToDelete?: string[];
   onPhotoConfirmed?: (file: File, reward: BaseRewardDto) => void;
@@ -115,6 +118,7 @@ export function useCreateReward() {
     mutationKey: [MutationKeys.CREATE_REWARD],
     mutationFn: async ({
       name,
+      description,
       roomId,
       iconFile,
       photoFiles = [],
@@ -127,9 +131,21 @@ export function useCreateReward() {
       photoFiles.forEach(getContentType);
       let reward: BaseRewardDto;
       if (progress.current.rewardId) {
-        reward = await rewardsControllerUpdateReward(progress.current.rewardId, { name, isDivisible, divisionPrecision });
+        reward = await rewardsControllerUpdateReward(progress.current.rewardId, {
+          name,
+          description,
+          isDivisible,
+          divisionPrecision,
+        });
       } else {
-        const created = await rewardsControllerCreateReward({ name, roomId, contentType, isDivisible, divisionPrecision });
+        const created = await rewardsControllerCreateReward({
+          name,
+          description,
+          roomId,
+          contentType,
+          isDivisible,
+          divisionPrecision,
+        });
         reward = created;
         progress.current.rewardId = created.id;
         progress.current.icon = { file: iconFile, upload: created.iconUpload, uploaded: false, confirmed: false };
@@ -167,6 +183,7 @@ export function useUpdateReward() {
       id,
       data,
       iconFile,
+      deleteExistingIcon = false,
       photoFiles = [],
       photoIdsToDelete = [],
       onPhotoConfirmed,
@@ -178,6 +195,7 @@ export function useUpdateReward() {
       photoFiles.forEach(getContentType);
       const reward = await rewardsControllerUpdateReward(id, data);
       const result = await uploadRewardImages(reward, iconFile, photoFiles, progress.current, rewardUploadActions(id, onPhotoConfirmed));
+      if (deleteExistingIcon && !iconFile) await rewardsControllerDeleteIcon(id);
       await deleteRequestedPhotos(id, photoIdsToDelete, progress.current);
       return result;
     },

@@ -22,6 +22,7 @@ import type {
 
 import type {
   RoomPreapprovedSubscriptionLinksDto,
+  RoomRegistrationSubscriptionLinksDto,
   RoomSenlerIoChannelDto
 } from '.././model';
 
@@ -33,7 +34,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Поле url содержит обычную ссылку на VK/Telegram без вступления в сегмент: для приглашения с модерацией и второго шага приглашения напрямую после preapproved-ссылки. При отсутствии username или неподдерживаемом типе url=null.
+ * Поле url содержит обычную ссылку на VK/Telegram без вступления в сегмент. Для приглашений есть отдельные ссылки registration (опрос и ручная модерация) и preapproved (опрос и автоматическое одобрение). При отсутствии username или неподдерживаемом типе url=null.
  * @summary Каналы проекта комнаты Senler.io
  */
 export const roomSenlerIoControllerChannels = (
@@ -126,7 +127,7 @@ export function useRoomSenlerIoControllerChannels<TData = Awaited<ReturnType<typ
 
 
 /**
- * VK может вернуть два варианта ссылки. Недоступные варианты содержат причину. Для регистрации после подтверждённого вступления отправьте /ambassador.
+ * Опрос обязателен; членство в preapproved даёт только автоматическое одобрение после заполнения анкеты. VK может вернуть два варианта ссылки. Недоступные варианты содержат причину. После подтверждённого вступления отправьте /ambassador.
  * @summary Ссылки вступления в preapproved комнаты через выбранный канал
  */
 export const roomSenlerIoControllerLinks = (
@@ -214,6 +215,106 @@ export function useRoomSenlerIoControllerLinks<TData = Awaited<ReturnType<typeof
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getRoomSenlerIoControllerLinksQueryOptions(roomId,channelId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * Ссылка на пятый сегмент registration. После подтверждённого вступления отправьте /ambassador, пройдите юридические и дополнительные вопросы; новая заявка получит pending и будет ждать подтверждения.
+ * @summary Ссылки обычной регистрации в комнату с опросом и ручной модерацией
+ */
+export const roomSenlerIoControllerRegistrationLinks = (
+    roomId: string,
+    channelId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<RoomRegistrationSubscriptionLinksDto>(
+      {url: `/api/rooms/${roomId}/channels/${channelId}/registration-subscription-links`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getRoomSenlerIoControllerRegistrationLinksQueryKey = (roomId?: string,
+    channelId?: string,) => {
+    return [
+    `/api/rooms/${roomId}/channels/${channelId}/registration-subscription-links`
+    ] as const;
+    }
+
+    
+export const getRoomSenlerIoControllerRegistrationLinksQueryOptions = <TData = Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError = unknown>(roomId: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRoomSenlerIoControllerRegistrationLinksQueryKey(roomId,channelId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>> = ({ signal }) => roomSenlerIoControllerRegistrationLinks(roomId,channelId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(roomId && channelId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type RoomSenlerIoControllerRegistrationLinksQueryResult = NonNullable<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>>
+export type RoomSenlerIoControllerRegistrationLinksQueryError = unknown
+
+
+export function useRoomSenlerIoControllerRegistrationLinks<TData = Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError = unknown>(
+ roomId: string,
+    channelId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoomSenlerIoControllerRegistrationLinks<TData = Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError = unknown>(
+ roomId: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useRoomSenlerIoControllerRegistrationLinks<TData = Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError = unknown>(
+ roomId: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Ссылки обычной регистрации в комнату с опросом и ручной модерацией
+ */
+
+export function useRoomSenlerIoControllerRegistrationLinks<TData = Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError = unknown>(
+ roomId: string,
+    channelId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof roomSenlerIoControllerRegistrationLinks>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getRoomSenlerIoControllerRegistrationLinksQueryOptions(roomId,channelId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
